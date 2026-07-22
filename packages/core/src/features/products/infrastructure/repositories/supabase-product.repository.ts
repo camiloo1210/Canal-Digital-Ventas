@@ -7,7 +7,7 @@ import { DbProductRow } from '@/products/infrastructure/types/supabase-product.t
 
 export class SupabaseProductRepository implements ProductRepositoryPort {
 
-    // Dependency Injection of Supabase Client
+    // Dependency Injection of Supabase Clients
     constructor(private readonly supabase: SupabaseClient) { }
 
     async findById(id: string): Promise<Product | null> {
