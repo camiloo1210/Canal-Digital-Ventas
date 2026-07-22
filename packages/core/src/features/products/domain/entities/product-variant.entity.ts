@@ -1,12 +1,14 @@
 import { Money } from '@/shared/domain/value-objects/money.vo';
 import { ProductStatus } from '@/products/domain/enums/product-status.enum';
+import { Sku } from "@/products/domain/value-objects/sku.vo";
+import { ProductName } from "@/products/domain/value-objects/product-name.vo";
 
 
 export interface ProductVariantProps {
     id: string;
     productId: string;
-    sku: string;
-    name: string;
+    sku: Sku;
+    name: ProductName;
     attributes: Record<string, string>;
     priceOverride: Money | null;
     stock: number;
@@ -17,8 +19,8 @@ export class ProductVariant {
     private constructor(
         private readonly id: string,
         private readonly productId: string,
-        private sku: string,
-        private name: string,
+        private sku: Sku,
+        private name: ProductName,
         private attributes: Record<string, string>,
         private priceOverride: Money | null,
         private stock: number,
@@ -29,8 +31,8 @@ export class ProductVariant {
     public static create(
         id: string,
         productId: string,
-        sku: string,
-        name: string,
+        sku: Sku,
+        name: ProductName,
         attributes: Record<string, string>,
         stock: number,
         priceOverride?: Money,
@@ -106,8 +108,8 @@ export class ProductVariant {
 
     public getId(): string { return this.id; }
     public getProductId(): string { return this.productId; }
-    public getSku(): string { return this.sku; }
-    public getName(): string { return this.name; }
+    public getSku(): string { return this.sku.getValue(); }
+    public getName(): string { return this.name.getValue(); }
     public getAttributes(): Record<string, string> { return { ...this.attributes }; }
     public getPriceOverride(): Money | null { return this.priceOverride; }
     public getStock(): number { return this.stock; }
