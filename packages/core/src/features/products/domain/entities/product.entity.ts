@@ -198,6 +198,17 @@ export class Product {
         this.isVatExempt = isExempt;
     }
 
+    public updateHasVariants(hasVariants: boolean): void {
+        this.hasVariants = hasVariants;
+    }
+    public updateSku(newSku: string): void {
+        this.sku = Sku.from(newSku);
+    }
+
+    public updateSeasonIds(newSeasonIds: string[]): void {
+        this.seasonIds = newSeasonIds;
+    }
+
     public setVariants(variants: ProductVariant[]): void {
         this.variants = variants;
         this.hasVariants = variants.length > 0;
