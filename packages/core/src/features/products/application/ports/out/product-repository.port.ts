@@ -2,6 +2,15 @@ import { Product } from '@/products/domain/entities/product.entity';
 import { ProductStatus } from '@/products/domain/enums/product-status.enum';
 import { PaginationOptions, PaginatedResult } from '@/shared/domain/pagination/pagination';
 
+export interface ProductFilters {
+    id?: string;
+    name?: string;
+    categoryId?: string;
+    sku?: string;
+    tenantId?: number;
+    status?: ProductStatus;
+}
+
 export interface ProductRepositoryPort {
 
     save(product: Product): Promise<void>;
@@ -12,17 +21,9 @@ export interface ProductRepositoryPort {
 
     findById(id: string): Promise<Product | null>;
 
-    findBySku(sku: string, tenantId: number): Promise<Product | null>;
-
     findAll(tenantId: number, pagination?: PaginationOptions): Promise<PaginatedResult<Product>>;
 
-    findByCategory(categoryId: string, tenantId: number): Promise<Product[]>;
-
-
-    findByStatus(status: ProductStatus, tenantId: number): Promise<Product[]>;
-
-
-    findAvailable(tenantId: number): Promise<Product[]>;
+    searchByFilters(filters: ProductFilters): Promise<Product[]>
 
     searchProductsByName(query: string, tenantId: number): Promise<Product[]>;
 }
