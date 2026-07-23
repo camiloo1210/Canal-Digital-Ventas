@@ -8,7 +8,12 @@ export interface UpdateProductDto {
     stock?: number;
     categoryId?: string;
     sku?: string;
-    tenantId?: number;
     seasonIds?: string[];
     isVatExempt?: boolean;
+    status?: string;
+    expirationDate?: string;
+    imagePath?: string;
+    imageUrl?: string;
+    hasVariants?: boolean;
+    variants?: any[];
 }
