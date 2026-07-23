@@ -4,11 +4,32 @@ import { ProductRepositoryPort } from '@/products/application/ports/out/product-
 import { Product } from '@/products/domain/entities/product.entity';
 import { SupabaseProductMapper } from '@/products/infrastructure/mappers/supabase-product.mapper';
 import { DbProductRow } from '@/products/infrastructure/types/supabase-product.types';
+import { ProductStatus } from '@/products/domain/enums/product-status.enum';
+import { PaginationOptions, PaginatedResult } from '@/shared/domain/pagination/pagination';
 
 export class SupabaseProductRepository implements ProductRepositoryPort {
 
-    // Dependency Injection of Supabase Client
+    // Dependency Injection of Supabase Clients
     constructor(private readonly supabase: SupabaseClient) { }
+
+    findBySku(sku: string, tenantId: number): Promise<Product | null> {
+        throw new Error('Method not implemented.');
+    }
+    findAll(tenantId: number, pagination?: PaginationOptions): Promise<PaginatedResult<Product>> {
+        throw new Error('Method not implemented.');
+    }
+    findByCategory(categoryId: string, tenantId: number): Promise<Product[]> {
+        throw new Error('Method not implemented.');
+    }
+    findByStatus(status: ProductStatus, tenantId: number): Promise<Product[]> {
+        throw new Error('Method not implemented.');
+    }
+    findAvailable(tenantId: number): Promise<Product[]> {
+        throw new Error('Method not implemented.');
+    }
+    searchProductsByName(query: string, tenantId: number): Promise<Product[]> {
+        throw new Error('Method not implemented.');
+    }
 
     async findById(id: string): Promise<Product | null> {
         const { data, error } = await this.supabase
