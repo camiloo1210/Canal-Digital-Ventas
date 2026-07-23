@@ -1,0 +1,4 @@
+npx husky run pre-push
+
+# Ejecutar pruebas antes de subir código
+pnpm test

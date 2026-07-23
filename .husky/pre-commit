@@ -1,1 +1,5 @@
-# pnpm test
+# Formatear y verificar código solo en archivos listos para commit
+npx lint-staged
+
+# (Opcional) Verificación de tipos en TypeScript para todo el proyecto
+# pnpm tsc --noEmit
