@@ -4,11 +4,15 @@ import { ProductName } from '@/products/domain/value-objects/product-name.vo';
 import { Sku } from '@/products/domain/value-objects/sku.vo';
 import { Money } from '@/shared/domain/value-objects/money.vo';
 import { ProductRepositoryPort } from '@/products/application/ports/out/product-repository.port';
+import { FileStoragePort } from '@/products/application/ports/out/file-storage.port';
 
 export class CreateProductUseCase {
 
 
-    constructor(private readonly productRepository: ProductRepositoryPort) { }
+    constructor(
+        private readonly productRepository: ProductRepositoryPort,
+        private readonly fileStorage?: FileStoragePort
+    ) { }
 
     async execute(dto: CreateProductDto): Promise<string> {
 
@@ -18,6 +22,17 @@ export class CreateProductUseCase {
         const price = Money.from(dto.price);
         const cost = Money.from(dto.cost);
         const wholesalePrice = dto.wholesalePrice ? Money.from(dto.wholesalePrice) : undefined;
+
+        let imagePath: string | undefined = undefined;
+        let imageUrl: string | undefined = undefined;
+
+        if (dto.image && this.fileStorage) {
+            const ext = dto.image.name?.split('.').pop() || 'jpg';
+            const destinationPath = `products/${dto.id}.${ext}`;
+            const uploadResult = await this.fileStorage.upload(dto.image, destinationPath);
+            imagePath = uploadResult.path;
+            imageUrl = uploadResult.url;
+        }
 
         const newProduct = Product.create(
             dto.id,
@@ -32,11 +47,15 @@ export class CreateProductUseCase {
             undefined,
             undefined,
             dto.seasonIds,
-            undefined,
+            imagePath,
             [],
             dto.isVatExempt,
             wholesalePrice
         );
+
+        if (imageUrl) {
+            newProduct.updateImageUrl(imageUrl);
+        }
 
         await this.productRepository.save(newProduct);
 

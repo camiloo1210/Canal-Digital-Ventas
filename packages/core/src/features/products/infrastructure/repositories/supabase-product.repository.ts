@@ -11,15 +11,80 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
 
   constructor(private readonly supabase: SupabaseClient) { }
 
-  searchByFilters(filters: ProductFilters): Promise<Product[]> {
-    throw new Error('Method not implemented.');
+  async searchByFilters(filters: ProductFilters, pagination?: PaginationOptions): Promise<PaginatedResult<Product>> {
+    let query = this.supabase
+      .from('products')
+      .select('*, product_variants(*)', { count: 'exact' })
+      .eq('tenant_id', filters.tenantId);
+
+    if (filters.status) query = query.eq('status', filters.status);
+    if (filters.categoryId) query = query.eq('category_id', filters.categoryId);
+    if (filters.sku) query = query.eq('sku', filters.sku);
+    if (filters.name) query = query.ilike('name', `%${filters.name}%`);
+    if (filters.id) query = query.eq('id', filters.id);
+
+
+    const page = pagination?.page ?? 1;
+    const limit = pagination?.limit ?? 20;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+    query = query.range(from, to);
+
+    const { data, error, count } = await query;
+
+    if (error) throw new Error(`Failed to search products: ${error.message}`);
+
+    const totalItems = count ?? 0;
+    const products = (data ?? []).map((row: DbProductRow) =>
+      SupabaseProductMapper.toDomain(row)
+    );
+
+    return {
+      items: products,
+      totalItems,
+      totalPages: Math.ceil(totalItems / limit),
+      currentPage: page,
+    };
   }
 
-  findAll(tenantId: number, pagination?: PaginationOptions): Promise<PaginatedResult<Product>> {
-    throw new Error('Method not implemented.');
+
+  async findAll(tenantId: number, pagination?: PaginationOptions): Promise<PaginatedResult<Product>> {
+    const page = pagination?.page ?? 1;
+    const limit = pagination?.limit ?? 20;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    const { data, error, count } = await this.supabase
+      .from('products')
+      .select('*, product_variants(*)', { count: 'exact' })
+      .eq('tenant_id', tenantId)
+      .range(from, to);
+
+    if (error) throw new Error(`Failed to get products from this tenant: ${error.message}`);
+
+    const totalItems = count ?? 0;
+    const products = (data ?? []).map((row: DbProductRow) =>
+      SupabaseProductMapper.toDomain(row)
+    );
+
+    return {
+      items: products,
+      totalItems,
+      totalPages: Math.ceil(totalItems / limit),
+      currentPage: page,
+    };
   }
-  searchProductsByName(query: string, tenantId: number): Promise<Product[]> {
-    throw new Error('Method not implemented.');
+
+  async searchProductsByName(query: string, tenantId: number): Promise<Product[]> {
+    const { data, error } = await this.supabase
+      .from('products')
+      .select('*, product_variants(*)')
+      .eq('tenant_id', tenantId)
+      .ilike('name', `%${query}%`);
+
+    if (error) throw new Error(`Failed to search products: ${error.message}`);
+
+    return (data ?? []).map((row: DbProductRow) => SupabaseProductMapper.toDomain(row));
   }
 
   async findById(id: string): Promise<Product | null> {

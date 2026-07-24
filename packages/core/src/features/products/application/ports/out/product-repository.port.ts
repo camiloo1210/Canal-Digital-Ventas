@@ -7,7 +7,7 @@ export interface ProductFilters {
     name?: string;
     categoryId?: string;
     sku?: string;
-    tenantId?: number;
+    tenantId: number;
     status?: ProductStatus;
 }
 
@@ -23,7 +23,8 @@ export interface ProductRepositoryPort {
 
     findAll(tenantId: number, pagination?: PaginationOptions): Promise<PaginatedResult<Product>>;
 
-    searchByFilters(filters: ProductFilters): Promise<Product[]>
+    searchByFilters(filters: ProductFilters, pagination?: PaginationOptions): Promise<PaginatedResult<Product>>;
+
 
     searchProductsByName(query: string, tenantId: number): Promise<Product[]>;
 }
