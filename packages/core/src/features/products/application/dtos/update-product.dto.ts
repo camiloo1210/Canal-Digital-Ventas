@@ -14,6 +14,7 @@ export interface UpdateProductDto {
     expirationDate?: string;
     imagePath?: string;
     imageUrl?: string;
+    image?: any;
     hasVariants?: boolean;
     variants?: any[];
 }
