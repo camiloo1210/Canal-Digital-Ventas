@@ -149,6 +149,9 @@ export class Product {
     }
 
     public updateWholesalePrice(newPrice: Money): void {
+        if (newPrice.getValue() < 0) {
+            throw new Error('Wholesale price cannot be negative.');
+        }
         this.wholesalePrice = newPrice;
     }
 
@@ -234,4 +237,5 @@ export class Product {
     public getHasVariants(): boolean { return this.hasVariants; }
     public getVariants(): ProductVariant[] { return [...this.variants]; }
     public getIsVatExempt(): boolean { return this.isVatExempt; }
+    public isWholesale(): boolean { return this.wholesalePrice.getValue() > 0; }
 }
