@@ -1,6 +1,11 @@
 #  Papelería Costa Azul - Canal de Ventas Digital 
 
-<img src="/public/Logo.svg" alt="Logo" width="200" />
+<img 
+  src="/public/Logo.svg" 
+  alt="Logo" 
+  width="200" 
+  style="display: block; margin: 0 auto;" 
+/>
 
 ##  Resumen del Proyecto
 Este proyecto consiste en el diseño e implementación de un **sistema web responsive** orientado a transformar y expandir el alcance comercial de la **Papelería Costa Azul** (ubicada en Manta, Ecuador). La plataforma actúa como un canal de ventas digital para mayoristas conectando el extenso inventario de la papelería directamente con compradores corporativos, negocios e instituciones.
