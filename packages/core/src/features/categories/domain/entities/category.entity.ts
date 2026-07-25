@@ -1,5 +1,7 @@
 import { CategoryStatus } from "@/categories/domain/enums/category-status.enum";
-
+import { InvalidCategoryNameException } from "@/categories/domain/exceptions/invalid-category-name.exception";
+import { InvalidCategoryDescriptionException } from "@/categories/domain/exceptions/invalid-category-description.exception";
+import { InvalidTenantIdException } from "@/shared/domain/exceptions/invalid-tenant-id.exception";
 export interface CategoryProps {
     id: string;
     name: string;
@@ -54,19 +56,19 @@ export class Category {
     // Validations
     private static validateDescription(description: string): void {
         if (description && description.length > 200) {
-            throw new Error('Description must not exceed 200 characters.');
+            throw new InvalidCategoryDescriptionException('must not exceed 200 characters.');
         }
     }
 
     private static validateName(name: string): void {
         if (!name || name.trim().length === 0 || name.length > 100) {
-            throw new Error('Name is required and must not exceed 100 characters.');
+            throw new InvalidCategoryNameException('is required and must not exceed 100 characters.');
         }
     }
 
     private static validateTenantId(tenantId: number): void {
         if (tenantId === undefined || tenantId === null) {
-            throw new Error('Tenant ID is required.');
+            throw new InvalidTenantIdException('is required.');
         }
     }
 
