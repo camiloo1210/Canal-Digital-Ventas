@@ -18,7 +18,7 @@ export class UpdateProductUseCase {
 
         const product = await this.productRepository.findById(dto.id);
 
-        if (!product) {
+        if (!product || product.getTenantId() !== dto.tenantId) {
             throw new ProductNotFoundException(dto.id);
         }
         if (dto.name !== undefined) {

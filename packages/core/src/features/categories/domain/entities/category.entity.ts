@@ -2,6 +2,7 @@ import { CategoryStatus } from "@/categories/domain/enums/category-status.enum";
 import { InvalidCategoryNameException } from "@/categories/domain/exceptions/invalid-category-name.exception";
 import { InvalidCategoryDescriptionException } from "@/categories/domain/exceptions/invalid-category-description.exception";
 import { InvalidTenantIdException } from "@/shared/domain/exceptions/invalid-tenant-id.exception";
+
 export interface CategoryProps {
     id: string;
     name: string;
@@ -94,8 +95,11 @@ export class Category {
 
 
 
-    //Updates
+    // Updates
     public updateStatus(newStatus: CategoryStatus): void {
+        if (this.status === CategoryStatus.ARCHIVED) {
+            throw new Error('Cannot change the status of an archived category.');
+        }
         this.status = newStatus;
     }
 

@@ -1,5 +1,6 @@
 export interface UpdateProductDto {
     id: string;
+    tenantId: number;
     name?: string;
     price?: number;
     cost?: number;
