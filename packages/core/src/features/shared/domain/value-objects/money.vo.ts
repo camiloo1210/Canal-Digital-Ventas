@@ -9,6 +9,7 @@ export class Money {
         if (amount === undefined || amount === null || isNaN(amount)) {
             throw new Error('Invalid amount for Money');
         }
+        if (amount < 0) throw new Error('Amount cannot be negative.');
         return new Money(amount, currency.toUpperCase());
     }
 

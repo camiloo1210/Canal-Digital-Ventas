@@ -25,6 +25,7 @@ export interface ProductRepositoryPort {
 
     searchByFilters(filters: ProductFilters, pagination?: PaginationOptions): Promise<PaginatedResult<Product>>;
 
+    findByCategoryId(categoryId: string, tenantId: number): Promise<Product[]>;
 
     searchProductsByName(query: string, tenantId: number): Promise<Product[]>;
 }

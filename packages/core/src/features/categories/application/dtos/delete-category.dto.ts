@@ -1,4 +1,4 @@
-export interface DeleteProductDto {
+export interface DeleteCategoryDto {
     id: string;
     tenantId: number;
 }
