@@ -87,6 +87,18 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
     return (data ?? []).map((row: DbProductRow) => SupabaseProductMapper.toDomain(row));
   }
 
+  async findByCategoryId(categoryId: string, tenantId: number): Promise<Product[]> {
+    const { data, error } = await this.supabase
+      .from('products')
+      .select('*, product_variants(*)')
+      .eq('tenant_id', tenantId)
+      .eq('category_id', categoryId);
+
+    if (error) throw new Error(`Failed to find products by category: ${error.message}`);
+
+    return (data ?? []).map((row: DbProductRow) => SupabaseProductMapper.toDomain(row));
+  }
+
   async findById(id: string): Promise<Product | null> {
     const { data, error } = await this.supabase
       .from('products')

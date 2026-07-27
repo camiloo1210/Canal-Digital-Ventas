@@ -2,8 +2,15 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/shared/*": ["src/features/shared/*"],
-      "@/products/*": ["src/features/products/*"]
+      "@/shared/*": [
+        "src/features/shared/*"
+      ],
+      "@/products/*": [
+        "src/features/products/*"
+      ],
+      "@/categories/*": [
+        "src/features/categories/*"
+      ]
     }
   }
 }
