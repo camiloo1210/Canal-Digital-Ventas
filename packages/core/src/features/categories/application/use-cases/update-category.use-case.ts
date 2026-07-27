@@ -4,20 +4,17 @@ import { CategoryNotFoundException } from '@/categories/application/exceptions/c
 import { parseCategoryStatus } from '@/categories/domain/enums/category-status.enum';
 
 export class UpdateCategoryUseCase {
-
-
     constructor(
         private readonly categoryRepository: CategoryRepositoryPort
     ) { }
 
-
     async execute(dto: UpdateCategoryDto): Promise<void> {
+        const category = await this.categoryRepository.findById(dto.id, dto.tenantId);
 
-        const category = await this.categoryRepository.findById(dto.id);
-
-        if (!category || category.getTenantId() !== dto.tenantId) {
+        if (!category) {
             throw new CategoryNotFoundException(dto.id);
         }
+        
         if (dto.name !== undefined) {
             category.updateName(dto.name);
         }
@@ -27,6 +24,7 @@ export class UpdateCategoryUseCase {
         if (dto.status !== undefined) {
             category.updateStatus(parseCategoryStatus(dto.status));
         }
+        
         await this.categoryRepository.save(category);
     }
 }

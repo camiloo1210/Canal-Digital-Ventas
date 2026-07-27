@@ -1,7 +1,8 @@
 import { CategoryStatus } from "@/categories/domain/enums/category-status.enum";
-import { InvalidCategoryNameException } from "@/categories/domain/exceptions/invalid-category-name.exception";
-import { InvalidCategoryDescriptionException } from "@/categories/domain/exceptions/invalid-category-description.exception";
 import { InvalidTenantIdException } from "@/shared/domain/exceptions/invalid-tenant-id.exception";
+import { CategoryName } from "@/categories/domain/value-objects/category-name.vo";
+import { CategoryDescription } from "@/categories/domain/value-objects/category-description.vo";
+import { InvalidCategoryStatusException } from "@/categories/domain/exceptions/invalid-category-status.exception";
 
 export interface CategoryProps {
     id: string;
@@ -14,12 +15,11 @@ export interface CategoryProps {
 export class Category {
     private constructor(
         private readonly id: string,
-        private name: string,
-        private tenantId: number,
-        private description: string,
+        private name: CategoryName,
+        private readonly tenantId: number,
+        private description: CategoryDescription,
         private status: CategoryStatus
-    ) {
-    }
+    ) {}
 
     public static create(
         id: string,
@@ -28,45 +28,35 @@ export class Category {
         description: string,
         status: CategoryStatus
     ): Category {
-
         Category.validateId(id);
-        Category.validateDescription(description);
-        Category.validateName(name);
         Category.validateTenantId(tenantId);
         Category.validateStatus(status);
+        
         return new Category(
             id,
-            name,
+            CategoryName.from(name),
             tenantId,
-            description,
+            CategoryDescription.from(description),
             status
         );
     }
 
     // Reconstitute
     public static reconstitute(props: CategoryProps): Category {
+        Category.validateId(props.id);
+        Category.validateTenantId(props.tenantId);
+        Category.validateStatus(props.status);
+
         return new Category(
             props.id,
-            props.name,
+            CategoryName.from(props.name),
             props.tenantId,
-            props.description,
+            CategoryDescription.from(props.description),
             props.status
         );
     }
 
     // Validations
-    private static validateDescription(description: string): void {
-        if (description && description.length > 200) {
-            throw new InvalidCategoryDescriptionException('must not exceed 200 characters.');
-        }
-    }
-
-    private static validateName(name: string): void {
-        if (!name || name.trim().length === 0 || name.length > 100) {
-            throw new InvalidCategoryNameException('is required and must not exceed 100 characters.');
-        }
-    }
-
     private static validateTenantId(tenantId: number): void {
         if (tenantId === undefined || tenantId === null) {
             throw new InvalidTenantIdException('is required.');
@@ -75,7 +65,7 @@ export class Category {
 
     private static validateStatus(status: CategoryStatus): void {
         if (!status || !Object.values(CategoryStatus).includes(status)) {
-            throw new Error('Status is required and must be a valid category status.');
+            throw new InvalidCategoryStatusException('Status is required and must be a valid category status.');
         }
     }
 
@@ -88,32 +78,27 @@ export class Category {
     // Actions
     public archive(): void {
         if (this.status === CategoryStatus.ARCHIVED) {
-            throw new Error('Category is already archived.');
+            throw new InvalidCategoryStatusException('Category is already archived.');
         }
         this.status = CategoryStatus.ARCHIVED;
     }
 
-
-
     // Updates
     public updateStatus(newStatus: CategoryStatus): void {
         if (this.status === CategoryStatus.ARCHIVED) {
-            throw new Error('Cannot change the status of an archived category.');
+            throw new InvalidCategoryStatusException('Cannot change the status of an archived category.');
         }
+        Category.validateStatus(newStatus);
         this.status = newStatus;
     }
 
     public updateName(newName: string): void {
-        Category.validateName(newName);
-        this.name = newName;
+        this.name = CategoryName.from(newName);
     }
 
     public updateDescription(newDescription: string): void {
-        Category.validateDescription(newDescription);
-        this.description = newDescription;
+        this.description = CategoryDescription.from(newDescription);
     }
-
-
 
     // Getters
     public getId(): string {
@@ -121,7 +106,7 @@ export class Category {
     }
 
     public getName(): string {
-        return this.name;
+        return this.name.getValue();
     }
 
     public getTenantId(): number {
@@ -129,11 +114,10 @@ export class Category {
     }
 
     public getDescription(): string {
-        return this.description;
+        return this.description.getValue();
     }
 
     public getStatus(): CategoryStatus {
         return this.status;
     }
-
 }

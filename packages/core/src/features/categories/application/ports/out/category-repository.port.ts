@@ -12,11 +12,9 @@ export interface CategoryFilters {
 export interface CategoryRepositoryPort {
     save(category: Category): Promise<void>;
 
-    deleteById(id: string): Promise<void>;
+    deleteById(id: string, tenantId: number): Promise<void>;
 
-    archive(id: string): Promise<void>;
-
-    findById(id: string): Promise<Category | null>;
+    findById(id: string, tenantId: number): Promise<Category | null>;
 
     findAll(tenantId: number, pagination?: PaginationOptions): Promise<PaginatedResult<Category>>;
 
