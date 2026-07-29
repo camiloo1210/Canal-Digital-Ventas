@@ -1,0 +1,69 @@
+{
+  "id": "sprint",
+  "name": "Sprint",
+  "icon": "calendar",
+  "color": "#f97316",
+  "default_status": "open",
+  "fields": [
+    {
+      "id": -4,
+      "key": "status",
+      "name": "Status",
+      "type": "select",
+      "obligatory": true,
+      "options_source": "config.statuses"
+    },
+    {
+      "id": -3,
+      "key": "assignee",
+      "name": "Assignee",
+      "type": "user",
+      "obligatory": false
+    },
+    {
+      "id": -2,
+      "key": "labels",
+      "name": "Labels",
+      "type": "multi-select",
+      "obligatory": false,
+      "options_source": "config.labels"
+    },
+    {
+      "id": -1,
+      "key": "relations",
+      "name": "Relations",
+      "type": "relations",
+      "obligatory": false
+    },
+    {
+      "id": 1,
+      "key": "start_date",
+      "name": "Fecha de Inicio",
+      "type": "text",
+      "obligatory": true
+    },
+    {
+      "id": 2,
+      "key": "end_date",
+      "name": "Fecha de Fin",
+      "type": "text",
+      "obligatory": true
+    },
+    {
+      "id": 3,
+      "key": "total_points",
+      "name": "Story Points",
+      "type": "text",
+      "obligatory": true
+    }
+  ],
+  "sections": [
+    {
+      "id": 1,
+      "key": "description",
+      "name": "Resumen del Sprint",
+      "obligatory": true,
+      "default": ""
+    }
+  ]
+}

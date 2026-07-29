@@ -1,0 +1,41 @@
+{
+  "id": "user-story",
+  "name": "User Story",
+  "icon": "book-open",
+  "color": "#3b82f6",
+  "default_status": "open",
+  "fields": [
+    {
+      "id": 1,
+      "key": "story_points",
+      "name": "Story points",
+      "type": "select",
+      "obligatory": true,
+      "options": [
+        "1",
+        "2",
+        "3",
+        "5",
+        "8",
+        "13",
+        "21"
+      ]
+    }
+  ],
+  "sections": [
+    {
+      "id": 1,
+      "key": "user_story",
+      "name": "User story",
+      "obligatory": true,
+      "default": "**As a** ___\\n**I want** ___\\n**so that** ___."
+    },
+    {
+      "id": 2,
+      "key": "acceptance",
+      "name": "Acceptance criteria",
+      "obligatory": true,
+      "default": ""
+    }
+  ]
+}
