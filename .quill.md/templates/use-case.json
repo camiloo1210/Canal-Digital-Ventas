@@ -1,0 +1,126 @@
+{
+	"id": "use-case",
+	"name": "Use Case",
+	"icon": "play-circle",
+	"color": "#06b6d4",
+	"default_status": "open",
+	"fields": [
+		{
+			"id": -4,
+			"key": "status",
+			"name": "Status",
+			"type": "select",
+			"obligatory": true,
+			"options_source": "config.statuses"
+		},
+		{
+			"id": -3,
+			"key": "assignee",
+			"name": "Assignee",
+			"type": "user",
+			"obligatory": false
+		},
+		{
+			"id": -2,
+			"key": "labels",
+			"name": "Labels",
+			"type": "multi-select",
+			"obligatory": false,
+			"options_source": "config.labels"
+		},
+		{
+			"id": -1,
+			"key": "relations",
+			"name": "Relations",
+			"type": "relations",
+			"obligatory": false
+		},
+		{
+			"id": 1,
+			"key": "actores",
+			"name": "Actores",
+			"type": "text",
+			"obligatory": true
+		},
+		{
+			"id": 2,
+			"key": "frecuencia",
+			"name": "Frecuencia",
+			"type": "select",
+			"options": [
+				"Baja",
+				"Media",
+				"Alta"
+			],
+			"obligatory": true
+		},
+		{
+			"id": 3,
+			"key": "importancia",
+			"name": "Importancia",
+			"type": "select",
+			"options": [
+				"Baja",
+				"Media",
+				"Alta"
+			],
+			"obligatory": true
+		},
+		{
+			"id": 4,
+			"key": "urgencia",
+			"name": "Urgencia",
+			"type": "select",
+			"options": [
+				"Baja",
+				"Media",
+				"Alta"
+			],
+			"obligatory": true
+		},
+		{
+			"id": 5,
+			"key": "rendimiento",
+			"name": "Rendimiento",
+			"type": "text",
+			"obligatory": true
+		}
+	],
+	"sections": [
+		{
+			"id": 1,
+			"key": "description",
+			"name": "Descripción",
+			"obligatory": true,
+			"default": ""
+		},
+		{
+			"id": 2,
+			"key": "preconditions",
+			"name": "Pre-condiciones",
+			"obligatory": true,
+			"default": ""
+		},
+		{
+			"id": 3,
+			"key": "postconditions",
+			"name": "Post-condiciones",
+			"obligatory": true,
+			"default": ""
+		},
+		{
+			"id": 4,
+			"key": "sequence",
+			"name": "Secuencia Normal",
+			"obligatory": true,
+			"default": ""
+		},
+		{
+			"id": 5,
+			"key": "exceptions",
+			"name": "Excepciones",
+			"obligatory": true,
+			"default": ""
+		}
+	]
+}
