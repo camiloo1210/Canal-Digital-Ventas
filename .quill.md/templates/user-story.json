@@ -1,41 +1,85 @@
 {
-  "id": "user-story",
-  "name": "User Story",
-  "icon": "book-open",
-  "color": "#3b82f6",
-  "default_status": "open",
-  "fields": [
-    {
-      "id": 1,
-      "key": "story_points",
-      "name": "Story points",
-      "type": "select",
-      "obligatory": true,
-      "options": [
-        "1",
-        "2",
-        "3",
-        "5",
-        "8",
-        "13",
-        "21"
-      ]
-    }
-  ],
-  "sections": [
-    {
-      "id": 1,
-      "key": "user_story",
-      "name": "User story",
-      "obligatory": true,
-      "default": "**As a** ___\\n**I want** ___\\n**so that** ___."
-    },
-    {
-      "id": 2,
-      "key": "acceptance",
-      "name": "Acceptance criteria",
-      "obligatory": true,
-      "default": ""
-    }
-  ]
+	"id": "user-story",
+	"name": "User Story",
+	"icon": "book-open",
+	"color": "#3b82f6",
+	"default_status": "open",
+	"fields": [
+		{
+			"id": -3,
+			"key": "assignee",
+			"name": "Assignee",
+			"type": "select",
+			"obligatory": false,
+			"options_source": "config.users"
+		},
+		{
+			"id": 100,
+			"key": "status",
+			"name": "Status",
+			"type": "select",
+			"obligatory": true,
+			"options_source": "config.statuses"
+		},
+		{
+			"id": 102,
+			"key": "labels",
+			"name": "Labels",
+			"type": "multi-select",
+			"obligatory": false,
+			"options_source": "config.labels"
+		},
+		{
+			"id": 103,
+			"key": "relations",
+			"name": "Relations",
+			"type": "relations",
+			"obligatory": false
+		},
+		{
+			"id": 104,
+			"key": "story_points",
+			"name": "Story points",
+			"type": "select",
+			"obligatory": true,
+			"options": [
+				"1",
+				"2",
+				"3",
+				"5",
+				"8",
+				"13",
+				"21"
+			]
+		},
+		{
+			"id": 105,
+			"key": "priority",
+			"name": "Prioridad",
+			"type": "select",
+			"obligatory": true,
+			"options": [
+				"Must",
+				"Should",
+				"Could",
+				"Won't"
+			]
+		}
+	],
+	"sections": [
+		{
+			"id": 1,
+			"key": "user_story",
+			"name": "User story",
+			"obligatory": true,
+			"default": ""
+		},
+		{
+			"id": 2,
+			"key": "acceptance",
+			"name": "Criterios de Aceptación",
+			"obligatory": true,
+			"default": ""
+		}
+	]
 }
