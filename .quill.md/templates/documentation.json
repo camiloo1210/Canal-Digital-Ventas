@@ -1,8 +1,8 @@
 {
-	"id": "sprint",
-	"name": "Sprint",
-	"icon": "calendar",
-	"color": "#ef4444",
+	"id": "documentation",
+	"name": "Documentación",
+	"icon": "file-text",
+	"color": "#7351C9",
 	"default_status": "open",
 	"fields": [
 		{
@@ -40,8 +40,8 @@
 	"sections": [
 		{
 			"id": 1,
-			"key": "description",
-			"name": "Fechas y Metas",
+			"key": "content",
+			"name": "Contenido",
 			"obligatory": true,
 			"default": ""
 		}
