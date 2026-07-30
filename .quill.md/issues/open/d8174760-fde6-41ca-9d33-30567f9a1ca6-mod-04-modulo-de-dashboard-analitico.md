@@ -3,7 +3,7 @@ id: d8174760-fde6-41ca-9d33-30567f9a1ca6
 title: "MOD-04: Módulo de Dashboard Analítico"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-29"
+updated_date: "2026-07-30"
 issue_type: module
 status: open
 labels:
@@ -11,7 +11,7 @@ labels:
 relations:
   - type: parent
     id: e651f3ed-4102-4e1b-9a94-9f5a179dd2b1
-integrity_hash: "sha256:c48493cfa51cb7bc560919d5b8d1fec2dd657b5ae67d74892666f6375c287a80"
+integrity_hash: "sha256:04020f2c5d7e87c985c181be5cc9df3bd894c0a4f71a4d01a77c579c7ad70847"
 ---
 
 ## Descripción del Módulo
@@ -21,6 +21,7 @@ Actúa como el centro de inteligencia de negocios de la plataforma, facilitando 
 
 ## Diagrama (Mermaid)
 <!-- [SECTION_START: Diagrama (Mermaid)] -->
+```mermaid
 flowchart LR
     Admin([Administrador])
     
@@ -33,4 +34,5 @@ flowchart LR
     Admin --> CU2
     Admin --> CU3
     Admin --> CU4
+```
 <!-- [SECTION_END: Diagrama (Mermaid)] -->

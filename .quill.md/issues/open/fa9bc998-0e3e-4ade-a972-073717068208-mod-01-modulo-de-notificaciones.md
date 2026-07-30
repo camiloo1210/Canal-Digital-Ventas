@@ -3,7 +3,7 @@ id: fa9bc998-0e3e-4ade-a972-073717068208
 title: "MOD-01: Módulo de Notificaciones"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-29"
+updated_date: "2026-07-30"
 issue_type: module
 status: open
 labels:
@@ -11,7 +11,7 @@ labels:
 relations:
   - type: parent
     id: e651f3ed-4102-4e1b-9a94-9f5a179dd2b1
-integrity_hash: "sha256:d592aaa5261b936d5d5af1d8f638988dc57e795527c9321ae26a979c2822f5b0"
+integrity_hash: "sha256:965a713732c9d72983f629e2266e2a2804a60c03fb4471f96caa85765e61983e"
 ---
 
 ## Descripción del Módulo
@@ -21,6 +21,7 @@ El Módulo de Notificaciones actúa como el canal oficial de comunicación direc
 
 ## Diagrama (Mermaid)
 <!-- [SECTION_START: Diagrama (Mermaid)] -->
+```mermaid
 flowchart LR
     Admin([Administrador])
     Sistema([Módulo de Pedidos - Sistema])
@@ -35,4 +36,5 @@ flowchart LR
     Sistema --> CU2
     Comprador --> CU3
     Comprador --> CU4
+```
 <!-- [SECTION_END: Diagrama (Mermaid)] -->
