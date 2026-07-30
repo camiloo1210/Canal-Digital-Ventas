@@ -3,7 +3,7 @@ id: 000e03fb-32bf-4228-920a-1ea3ae81a362
 title: "CU-MOD6-03: Gestionar Categorías y Niveles de Stock"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-29"
+updated_date: "2026-07-30"
 issue_type: use-case
 status: open
 labels:
@@ -14,7 +14,7 @@ relations:
 frecuencia: Alta
 importancia: Vital
 urgencia: Media
-integrity_hash: "sha256:81447f381e6cf1a1cbd9e56a983298d9395fca0212df3a292c59642bff4aae50"
+integrity_hash: "sha256:ffbce9efd5803807b3bce0ac63adae190f7b365630daff8a29b381b21cfd019a"
 ---
 
 ## Actores
