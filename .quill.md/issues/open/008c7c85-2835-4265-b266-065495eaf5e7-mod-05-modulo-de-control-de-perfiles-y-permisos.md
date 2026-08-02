@@ -3,7 +3,7 @@ id: 008c7c85-2835-4265-b266-065495eaf5e7
 title: "MOD-05: Módulo de Control de Perfiles y Permisos"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-29"
+updated_date: "2026-08-02"
 issue_type: module
 status: open
 labels:
@@ -11,7 +11,7 @@ labels:
 relations:
   - type: parent
     id: e651f3ed-4102-4e1b-9a94-9f5a179dd2b1
-integrity_hash: "sha256:cf0747c78c68204f0817f33a347f348a650219a473c6009e63a66f475ff091c2"
+integrity_hash: "sha256:4f8293ca00dac098e7cdec625bd107851a9f99ffe2cd3696385f3ff8719ba95e"
 ---
 
 ## Descripción del Módulo
@@ -21,6 +21,7 @@ Actúa como el cimiento de seguridad e identidad de la plataforma, garantizando 
 
 ## Diagrama (Mermaid)
 <!-- [SECTION_START: Diagrama (Mermaid)] -->
+```mermaid
 flowchart LR
     Admin([Administrador])
     Vendedor([Vendedor / Dependiente])
@@ -38,4 +39,5 @@ flowchart LR
     
     Vendedor --> CU4
     Comprador --> CU4
+```
 <!-- [SECTION_END: Diagrama (Mermaid)] -->

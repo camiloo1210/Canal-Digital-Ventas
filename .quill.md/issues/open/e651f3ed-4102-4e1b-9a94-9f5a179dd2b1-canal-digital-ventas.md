@@ -3,12 +3,12 @@ id: e651f3ed-4102-4e1b-9a94-9f5a179dd2b1
 title: Canal Digital Ventas
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-29"
+updated_date: "2026-08-02"
 issue_type: module
 status: open
 labels:
   - ai-generated
-integrity_hash: "sha256:46bac7800a6277b80f851c0cf5543af4533ab891c407e0e3ca95e2508a9e24c4"
+integrity_hash: "sha256:c1b6fb2bbbbd861eebd57490c4c94100073ee97e3a218a623bc288b47334a38c"
 ---
 
 ## Descripción del Módulo
@@ -18,6 +18,7 @@ Módulo Maestro que orquesta todo el Canal Digital de Ventas de la Papelería Co
 
 ## Diagrama (Mermaid)
 <!-- [SECTION_START: Diagrama (Mermaid)] -->
+```mermaid
 flowchart LR
     Comprador([Comprador Mayorista])
     Vendedor([Vendedor / Dependiente])
@@ -41,4 +42,5 @@ flowchart LR
     Admin --> M4
     Admin --> M5
     Admin --> M6
+```
 <!-- [SECTION_END: Diagrama (Mermaid)] -->

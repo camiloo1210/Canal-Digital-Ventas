@@ -3,7 +3,7 @@ id: 85ec2bcf-6220-4ffc-b64e-87346d3346be
 title: "MOD-06: Administración del Catálogo y Precios"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-29"
+updated_date: "2026-08-02"
 issue_type: module
 status: open
 labels:
@@ -11,7 +11,7 @@ labels:
 relations:
   - type: parent
     id: e651f3ed-4102-4e1b-9a94-9f5a179dd2b1
-integrity_hash: "sha256:17045da3dd5a5ee5046e4bc1e902e875bb04b2daf2fabb7a8430d9d45fdf1e89"
+integrity_hash: "sha256:e716b2c80d116c037bafb8c8b049baa91c8d15b8747ab5dd224b7b19fecce84f"
 ---
 
 ## Descripción del Módulo
@@ -21,6 +21,7 @@ Actúa como el motor operativo y de control central del canal de mayoristas. Con
 
 ## Diagrama (Mermaid)
 <!-- [SECTION_START: Diagrama (Mermaid)] -->
+```mermaid
 flowchart LR
     Admin([Administrador])
     
@@ -33,4 +34,5 @@ flowchart LR
     Admin --> CU2
     Admin --> CU3
     Admin --> CU4
+```
 <!-- [SECTION_END: Diagrama (Mermaid)] -->
