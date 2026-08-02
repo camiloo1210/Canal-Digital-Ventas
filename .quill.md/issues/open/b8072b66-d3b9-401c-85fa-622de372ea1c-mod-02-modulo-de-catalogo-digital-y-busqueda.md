@@ -3,7 +3,7 @@ id: b8072b66-d3b9-401c-85fa-622de372ea1c
 title: "MOD-02: Módulo de Catálogo Digital y Búsqueda"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-30"
+updated_date: "2026-08-02"
 issue_type: module
 status: open
 labels:
@@ -11,7 +11,7 @@ labels:
 relations:
   - type: parent
     id: e651f3ed-4102-4e1b-9a94-9f5a179dd2b1
-integrity_hash: "sha256:49e4cf52c84448f43ed6d27ec34655d6f86b5738b447f97e531c319d3be6cb15"
+integrity_hash: "sha256:cd900ae6e79db829a4adf8625dafca7945e7a14ae066b70e6b6cef63cb8f398e"
 ---
 
 ## Descripción del Módulo

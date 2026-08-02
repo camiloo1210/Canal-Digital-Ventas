@@ -1,10 +1,10 @@
 ---
-id: 9e753018-468d-4186-a850-e0b873174c78
+id: ce7ceccf-e984-43d2-be23-d91749d72283
 immutable: false
-integrity_hash: "sha256:58289d17901b70bb59910cad428242d7efea286f977c0bf0b14dbabf484d1297"
+integrity_hash: "sha256:c62051751e44f2434792ed8895aa85c49d77c8e5fe2cf909c270ad26d7586160"
 ---
 
-# 0002-politica-de-ramas-y-ci-cd
+# es/0002-politica-de-ramas-y-ci-cd
 
 ## Status
 Accepted

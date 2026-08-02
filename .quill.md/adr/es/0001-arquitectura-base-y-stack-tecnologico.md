@@ -1,10 +1,10 @@
 ---
-id: b4da8ee4-bfee-4ceb-a8e3-0649b39ef111
+id: a034516a-e038-4aee-9548-67f1490b551d
 immutable: false
-integrity_hash: "sha256:a9fa8417b0fab4164355289ac3c5f0cef40385ba5f5a2d014b82b87fc8a3599c"
+integrity_hash: "sha256:51d12a897f052cc509d4a459ccfc01b7a363b00deb8613db3885a7e96b21ead5"
 ---
 
-# 0001-arquitectura-base-y-stack-tecnologico
+# es/0001-arquitectura-base-y-stack-tecnologico
 
 ## Status
 Accepted
