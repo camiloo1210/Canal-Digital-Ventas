@@ -2,35 +2,47 @@
 	"id": "documentation",
 	"name": "Documentación",
 	"icon": "file-text",
-	"color": "#7351C9",
+	"color": "#ef4444",
 	"default_status": "open",
 	"fields": [
 		{
-			"id": -3,
+			"id": 1,
 			"key": "assignee",
 			"name": "Assignee",
 			"type": "select",
 			"obligatory": false,
-			"options_source": "config.users"
+			"options_source": "config.users",
+			"options": [
+				"Option 1",
+				"Option 2"
+			]
 		},
 		{
-			"id": -2,
+			"id": 2,
 			"key": "labels",
 			"name": "Labels",
 			"type": "multi-select",
 			"obligatory": false,
-			"options_source": "config.labels"
+			"options_source": "config.labels",
+			"options": [
+				"Option 1",
+				"Option 2"
+			]
 		},
 		{
-			"id": 100,
+			"id": 3,
 			"key": "status",
 			"name": "Status",
 			"type": "select",
 			"obligatory": true,
-			"options_source": "config.statuses"
+			"options_source": "config.statuses",
+			"options": [
+				"Option 1",
+				"Option 2"
+			]
 		},
 		{
-			"id": 103,
+			"id": 4,
 			"key": "relations",
 			"name": "Relations",
 			"type": "relations",

@@ -3,7 +3,7 @@ id: d8174760-fde6-41ca-9d33-30567f9a1ca6
 title: "MOD-04: Módulo de Dashboard Analítico"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-30"
+updated_date: "2026-08-02"
 issue_type: module
 status: open
 labels:
@@ -11,7 +11,7 @@ labels:
 relations:
   - type: parent
     id: e651f3ed-4102-4e1b-9a94-9f5a179dd2b1
-integrity_hash: "sha256:04020f2c5d7e87c985c181be5cc9df3bd894c0a4f71a4d01a77c579c7ad70847"
+integrity_hash: "sha256:4ad70e5d7d7325b1785114ca05913bffbb3e4f8687bdca27ca20a95c95fe8221"
 ---
 
 ## Descripción del Módulo

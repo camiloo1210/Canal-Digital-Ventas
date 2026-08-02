@@ -3,12 +3,12 @@ id: e651f3ed-4102-4e1b-9a94-9f5a179dd2b1
 title: Canal Digital Ventas
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-30"
+updated_date: "2026-08-02"
 issue_type: module
 status: open
 labels:
   - ai-generated
-integrity_hash: "sha256:4e44dd3bc6e97784e00041537801055d0fb346091f03d8126c4b7d2ae704c588"
+integrity_hash: "sha256:c1b6fb2bbbbd861eebd57490c4c94100073ee97e3a218a623bc288b47334a38c"
 ---
 
 ## Descripción del Módulo

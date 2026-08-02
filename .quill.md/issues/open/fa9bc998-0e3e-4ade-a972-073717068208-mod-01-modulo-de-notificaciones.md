@@ -3,7 +3,7 @@ id: fa9bc998-0e3e-4ade-a972-073717068208
 title: "MOD-01: Módulo de Notificaciones"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-30"
+updated_date: "2026-08-02"
 issue_type: module
 status: open
 labels:
@@ -11,7 +11,7 @@ labels:
 relations:
   - type: parent
     id: e651f3ed-4102-4e1b-9a94-9f5a179dd2b1
-integrity_hash: "sha256:965a713732c9d72983f629e2266e2a2804a60c03fb4471f96caa85765e61983e"
+integrity_hash: "sha256:a8bda843ae6f55715b86d951119efa76d3441f96040540661dc4ee93e86cc113"
 ---
 
 ## Descripción del Módulo

@@ -3,7 +3,7 @@ id: 85ec2bcf-6220-4ffc-b64e-87346d3346be
 title: "MOD-06: Administración del Catálogo y Precios"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-30"
+updated_date: "2026-08-02"
 issue_type: module
 status: open
 labels:
@@ -11,7 +11,7 @@ labels:
 relations:
   - type: parent
     id: e651f3ed-4102-4e1b-9a94-9f5a179dd2b1
-integrity_hash: "sha256:a52941cc5c8cd41f6a76da0558b8dd7135307eeac91ec0baf994865b6fd3f313"
+integrity_hash: "sha256:e716b2c80d116c037bafb8c8b049baa91c8d15b8747ab5dd224b7b19fecce84f"
 ---
 
 ## Descripción del Módulo
