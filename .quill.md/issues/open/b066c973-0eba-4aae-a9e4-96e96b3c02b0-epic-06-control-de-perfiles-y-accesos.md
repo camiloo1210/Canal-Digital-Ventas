@@ -11,7 +11,7 @@ labels:
 relations:
   - type: relates_to
     id: 008c7c85-2835-4265-b266-065495eaf5e7
-integrity_hash: "sha256:1210633f96896f2283786bc62654cb2de18bfbbff6f408c5272e4c1498ef2938"
+integrity_hash: "sha256:48bed0d311257d729793124f1442b136ceb50ae90b08398f1714f65162a13206"
 ---
 
 ## Acceptance criteria

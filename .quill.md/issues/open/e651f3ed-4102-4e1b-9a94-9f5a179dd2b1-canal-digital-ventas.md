@@ -8,7 +8,7 @@ issue_type: module
 status: open
 labels:
   - ai-generated
-integrity_hash: "sha256:5876d1343bb6cb8b6b301707b894083d682839de8f594861c27b2ce76f668ab5"
+integrity_hash: "sha256:c1b6fb2bbbbd861eebd57490c4c94100073ee97e3a218a623bc288b47334a38c"
 ---
 
 ## Descripción del Módulo

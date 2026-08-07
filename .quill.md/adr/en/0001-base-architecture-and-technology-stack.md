@@ -1,7 +1,7 @@
 ---
 id: 0956a991-d1fb-4a35-b6ca-827a5317e102
 immutable: false
-integrity_hash: "sha256:de8f1cf5a75cd11b5c187d9f50c5c81b5a33e90e42185bd8f606d9e7f303853c"
+integrity_hash: "sha256:367cd36f16d88f760876575a73cb8ccd69245127a483d54e32f82fade7673488"
 ---
 
 # en/0001-base-architecture-and-technology-stack

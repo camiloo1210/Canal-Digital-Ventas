@@ -17,7 +17,7 @@ relations:
     id: 1d3df663-96b8-41a7-919f-69eedf4de567
 priority: Could
 story_points: "3"
-integrity_hash: "sha256:25379962d6453a3d88ffbb2f16e5fce07aba51b3e9cdb2cf422a337a5d75a2ed"
+integrity_hash: "sha256:cca0480fea232bf6627ae396cbfa0c556288ce9ecafcc80f3738e3b52e72c0e3"
 ---
 
 ## Criterios de Aceptación

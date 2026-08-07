@@ -1,7 +1,7 @@
 ---
 id: f7ac948d-ded6-40d2-811f-f0cde531776d
 immutable: false
-integrity_hash: "sha256:07d71a349d90dd51d032cf906dfbb46c5590282049e574f31aca86326385c57c"
+integrity_hash: "sha256:5d9dc30b5c1a009b9e8e01a3879f3a11a37e5708961f7e726523e62794bef943"
 ---
 
 # en/0002-branching-policy-and-ci-cd

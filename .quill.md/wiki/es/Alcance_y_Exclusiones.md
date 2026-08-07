@@ -1,7 +1,7 @@
 ---
 id: 97f675cf-3e55-49bf-8f8d-d3f1c384906c
 immutable: false
-integrity_hash: "sha256:5b9c65adad36a83b11c5b10c2c92d0e21f451c0401e9e94e83ce0fedd5129002"
+integrity_hash: "sha256:a4f86ea108e9b5284db2b0310b1d615bacd0e133b206e7c25b37504f332d8bf8"
 ---
 
 # Alcance y Exclusiones del Proyecto
