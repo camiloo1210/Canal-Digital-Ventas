@@ -1,7 +1,7 @@
 ---
 id: 6b8876b5-cd77-44fd-bf7e-05dfd315d823
 immutable: false
-integrity_hash: "sha256:e9fc5693718f1fda5d30803a9e05c7f420db9b2000bf50ad0a88e757c2b04eb3"
+integrity_hash: "sha256:c4344498b30732605beda3a2654014e3b096d4fed15d7e717cca49b994d2f03c"
 ---
 
 # Pipeline CI/CD, Despliegue y Política de Ramas

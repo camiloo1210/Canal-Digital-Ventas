@@ -11,7 +11,7 @@ labels:
 relations:
   - type: parent
     id: e651f3ed-4102-4e1b-9a94-9f5a179dd2b1
-integrity_hash: "sha256:4ad70e5d7d7325b1785114ca05913bffbb3e4f8687bdca27ca20a95c95fe8221"
+integrity_hash: "sha256:573503a2ba05d490013e04b7b7fd4e81cc896ae5e352cf45eff83d40a9e33593"
 ---
 
 ## Descripción del Módulo

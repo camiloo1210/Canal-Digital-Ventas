@@ -1,7 +1,7 @@
 ---
 id: a034516a-e038-4aee-9548-67f1490b551d
 immutable: false
-integrity_hash: "sha256:51d12a897f052cc509d4a459ccfc01b7a363b00deb8613db3885a7e96b21ead5"
+integrity_hash: "sha256:d9e2d994c05eb635dbdbe4631d64b426ec67313f53925703218dac2cffa927d9"
 ---
 
 # es/0001-arquitectura-base-y-stack-tecnologico

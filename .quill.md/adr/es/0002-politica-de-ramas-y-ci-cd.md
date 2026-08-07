@@ -1,7 +1,7 @@
 ---
 id: ce7ceccf-e984-43d2-be23-d91749d72283
 immutable: false
-integrity_hash: "sha256:c62051751e44f2434792ed8895aa85c49d77c8e5fe2cf909c270ad26d7586160"
+integrity_hash: "sha256:29da0d13d84029f6a8264f33da9c402837bcca52b3252847ff2e07763d8a82b0"
 ---
 
 # es/0002-politica-de-ramas-y-ci-cd

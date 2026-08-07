@@ -14,7 +14,7 @@ relations:
 frecuencia: Alta
 importancia: Alta
 urgencia: Media
-integrity_hash: "sha256:f84bac8a54e6bb57ac62b222c6318c31f5b85475ddaf03d35effad861aa097fb"
+integrity_hash: "sha256:f3eeb0aacbde33ee2e7c9a06e6f8e930a93f86c426ee7a05b9b436941c701eae"
 ---
 
 ## Actores

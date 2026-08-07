@@ -8,7 +8,7 @@ issue_type: sprint
 status: open
 labels:
   - ai-generated
-integrity_hash: "sha256:4ff07cd04e2e32cb07cc14ff9e4d7cc50828d180ed0d33a092dc753c540b4654"
+integrity_hash: "sha256:1713b341cedeb5b7aaabc5915123f62aed1fe3b6fd673a426835b8075f23dfc9"
 ---
 
 ## Fechas y Metas

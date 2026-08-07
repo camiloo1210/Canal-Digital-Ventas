@@ -1,7 +1,7 @@
 ---
 id: df4ed31b-b2f4-4bfb-b1c5-0369e492372d
 immutable: false
-integrity_hash: "sha256:e5b2a830b566e97e5cb607da5c5aca9995f6d5190b754baf067e351e9559d9fa"
+integrity_hash: "sha256:38b4cee8854682363dfcefb9b89c069377f1d15de8cd69d02496191566803c29"
 ---
 
 # Limitaciones y Restricciones del Proyecto

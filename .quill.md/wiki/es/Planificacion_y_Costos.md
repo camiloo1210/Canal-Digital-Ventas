@@ -1,7 +1,7 @@
 ---
 id: cce915ac-4257-40fd-8666-2982f275bd46
 immutable: false
-integrity_hash: "sha256:9774c49b5fd931ff427916deaf2f2c0554617b8fdd7be7bfbdae5bc9a3fd25e5"
+integrity_hash: "sha256:8f24b1bedb61a1ef06d4295b0f8146f714cc16ea90cb4ebd5172846c6fd0b46f"
 ---
 
 # Planificación y Costos Operativos

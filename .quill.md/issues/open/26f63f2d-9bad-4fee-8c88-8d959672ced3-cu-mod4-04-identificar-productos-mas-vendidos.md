@@ -11,7 +11,7 @@ labels:
 relations:
   - type: parent
     id: d8174760-fde6-41ca-9d33-30567f9a1ca6
-integrity_hash: "sha256:e6855862070aa26d0be16cc0c812cd771ccef5f9e941f2f6130ceba448ba396b"
+integrity_hash: "sha256:5d98268ff5219e273cd62c3b49539c2bf469745fbcc640d2ddfbcf2622107b27"
 ---
 
 ## Actores

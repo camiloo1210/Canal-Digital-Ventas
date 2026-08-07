@@ -1,7 +1,7 @@
 ---
 id: cefe2907-a08e-43e5-b34e-deec7881e839
 immutable: false
-integrity_hash: "sha256:65b4735dc6a9d6446d2006d593a92f23ac8e47e2d9fccc047d22afec7938f8c7"
+integrity_hash: "sha256:773e45c138c10c26e8dd7b7039cc4f9eab594a27f54c8b6118f14ed80ada7e91"
 ---
 
 # CI/CD Pipeline, Deployment, and Branching Policy
