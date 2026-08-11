@@ -3,9 +3,9 @@ id: bc37155d-20de-49c9-ab98-fdc95a126258
 title: "HU-1: Gestión de Catálogo Maestro"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-29"
+updated_date: "2026-08-11"
 issue_type: user-story
-status: open
+status: in_progress
 labels:
   - ai-generated
 relations:
@@ -17,7 +17,7 @@ relations:
     id: 4e827f18-62cf-4a56-913a-fcda56ac82e0
 priority: Must
 story_points: "5"
-integrity_hash: "sha256:c7d144ca58d9772d303f6ab3803ffb6c34887ab6dd223fbb5d93782754eba955"
+integrity_hash: "sha256:4564e4d0574ff45476e39925c3db626a501912db8c68c190ca16138165bfea8e"
 ---
 
 ## Criterios de Aceptación
