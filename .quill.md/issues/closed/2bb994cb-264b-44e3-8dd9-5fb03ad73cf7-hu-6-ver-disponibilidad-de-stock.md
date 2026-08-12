@@ -3,9 +3,9 @@ id: 2bb994cb-264b-44e3-8dd9-5fb03ad73cf7
 title: "HU-6: Ver Disponibilidad de Stock"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-29"
+updated_date: "2026-08-12"
 issue_type: user-story
-status: open
+status: done
 labels:
   - ai-generated
 relations:
@@ -17,7 +17,7 @@ relations:
     id: 7578823e-3d83-4583-9d92-f1746f3b08db
 priority: Must
 story_points: "2"
-integrity_hash: "sha256:817ab6dc1fd173cd30355efab6788fd0166797640117488207bc23f09218106b"
+integrity_hash: "sha256:2460a5b080e09927d669596de5e7e9f34483c94a03e4f62db23751855a6feb89"
 ---
 
 ## Criterios de Aceptación
