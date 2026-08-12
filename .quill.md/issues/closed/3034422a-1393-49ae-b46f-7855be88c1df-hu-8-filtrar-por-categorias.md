@@ -3,9 +3,9 @@ id: 3034422a-1393-49ae-b46f-7855be88c1df
 title: "HU-8: Filtrar por Categorías"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-29"
+updated_date: "2026-08-12"
 issue_type: user-story
-status: open
+status: done
 labels:
   - ai-generated
 relations:
@@ -17,7 +17,7 @@ relations:
     id: dc57d213-f9b8-4e02-80bb-23d2c0b278ff
 priority: Should
 story_points: "2"
-integrity_hash: "sha256:a3c19df18b6431e2f7c348aa127fcbfc92e335c24eef0d043a77765774ae6821"
+integrity_hash: "sha256:fc25ceff2921ef5d413e42535e7867981a27539eb6c75b8199155d27a1716be8"
 ---
 
 ## Criterios de Aceptación
