@@ -48,8 +48,6 @@ export class OrderItem {
   }
   // Reconstitute
   public static reconstitute(props: OrderItemProps): OrderItem {
-    OrderItem.validateQuantity(props.quantity);
-    OrderItem.validateUnitPrice(props.unitPrice.getValue());
     return new OrderItem(
       props.id,
       props.productId,
@@ -72,7 +70,8 @@ export class OrderItem {
   //Actions
 
   //Domain Methods
-  public updateQuantity(newQuantity: number): void {
+
+  public changeQuantity(newQuantity: number): void {
     OrderItem.validateQuantity(newQuantity);
     this.quantity = newQuantity;
     this.subtotal = this.unitPrice.multiply(newQuantity);
