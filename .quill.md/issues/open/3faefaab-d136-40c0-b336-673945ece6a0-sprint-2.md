@@ -3,12 +3,12 @@ id: 3faefaab-d136-40c0-b336-673945ece6a0
 title: Sprint 2
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-08-11"
+updated_date: "2026-08-12"
 issue_type: sprint
-status: ready
+status: in_progress
 labels:
   - ai-generated
-integrity_hash: "sha256:61ffe049bcaadf62bd72477ae6af6796125ef728512a05060dffe4f53086031d"
+integrity_hash: "sha256:9131da2aef1ad46eadb5307270f9bae1946953ac769c40865e100e0e0e53e5ae"
 ---
 
 ## Fechas y Metas
