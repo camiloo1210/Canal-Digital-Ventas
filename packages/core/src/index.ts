@@ -10,7 +10,10 @@ export { CategoryDescription } from './features/categories/domain/value-objects/
 export { InvalidCategoryStatusException } from './features/categories/domain/exceptions/invalid-category-status.exception';
 
 // Application (Ports)
-export type { CategoryRepositoryPort, CategoryFilters } from './features/categories/application/ports/out/category-repository.port';
+export type {
+  CategoryRepositoryPort,
+  CategoryFilters,
+} from './features/categories/application/ports/out/category-repository.port';
 
 // Application (Use Cases)
 export { ArchiveCategoryUseCase } from './features/categories/application/use-cases/archive-category.use-case';
@@ -23,7 +26,6 @@ export { UpdateCategoryUseCase } from './features/categories/application/use-cas
 // Infrastructure
 export { SupabaseCategoryRepository } from './features/categories/infrastructure/repositories/supabase-category.repository';
 
-
 // ==========================================
 // PRODUCTS EXPORTS
 // ==========================================
@@ -34,7 +36,10 @@ export { ProductVariant } from './features/products/domain/entities/product-vari
 export { ProductStatus } from './features/products/domain/enums/product-status.enum';
 
 // Application (Ports)
-export type { ProductRepositoryPort, ProductFilters } from './features/products/application/ports/out/product-repository.port';
+export type {
+  ProductRepositoryPort,
+  ProductFilters,
+} from './features/products/application/ports/out/product-repository.port';
 
 // Application (Use Cases)
 export { ArchiveProductUseCase } from './features/products/application/use-cases/archive-product.use-case';
@@ -47,13 +52,15 @@ export { UpdateProductUseCase } from './features/products/application/use-cases/
 // Infrastructure
 export { SupabaseProductRepository } from './features/products/infrastructure/repositories/supabase-product.repository';
 
-
 // ==========================================
 // SHARED EXPORTS
 // ==========================================
 
 // Domain
-export type { PaginatedResult, PaginationOptions } from './features/shared/domain/pagination/pagination';
+export type {
+  PaginatedResult,
+  PaginationOptions,
+} from './features/shared/domain/pagination/pagination';
 export { DomainException } from './features/shared/domain/exceptions/domain.exception';
 export { InvalidTenantIdException } from './features/shared/domain/exceptions/invalid-tenant-id.exception';
 export { Money } from './features/shared/domain/value-objects/money.vo';

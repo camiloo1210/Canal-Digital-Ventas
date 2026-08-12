@@ -1,19 +1,24 @@
 import { SupabaseClient } from '@supabase/supabase-js';
-import { CategoryRepositoryPort, CategoryFilters } from '@/categories/application/ports/out/category-repository.port';
+import {
+  CategoryRepositoryPort,
+  CategoryFilters,
+} from '@/categories/application/ports/out/category-repository.port';
 import { Category } from '@/categories/domain/entities/category.entity';
 import { SupabaseCategoryMapper } from '@/categories/infrastructure/mappers/supabase-category.mapper';
 import { DbCategoryRow } from '@/categories/infrastructure/types/supabase-category.types';
 import { PaginationOptions, PaginatedResult } from '@/shared/domain/pagination/pagination';
 
 export class SupabaseCategoryRepository implements CategoryRepositoryPort {
-
-  constructor(private readonly supabase: SupabaseClient) { }
+  constructor(private readonly supabase: SupabaseClient) {}
 
   private escapeLike(value: string): string {
-      return value.replace(/[%_\\]/g, '\\$&');
+    return value.replace(/[%_\\]/g, '\\$&');
   }
 
-  async searchByFilters(filters: CategoryFilters, pagination?: PaginationOptions): Promise<PaginatedResult<Category>> {
+  async searchByFilters(
+    filters: CategoryFilters,
+    pagination?: PaginationOptions,
+  ): Promise<PaginatedResult<Category>> {
     let query = this.supabase
       .from('categories')
       .select('*', { count: 'exact' })
@@ -35,7 +40,7 @@ export class SupabaseCategoryRepository implements CategoryRepositoryPort {
 
     const totalItems = count ?? 0;
     const categories = (data ?? []).map((row: DbCategoryRow) =>
-      SupabaseCategoryMapper.toDomain(row)
+      SupabaseCategoryMapper.toDomain(row),
     );
 
     return {
@@ -46,7 +51,10 @@ export class SupabaseCategoryRepository implements CategoryRepositoryPort {
     };
   }
 
-  async findAll(tenantId: number, pagination?: PaginationOptions): Promise<PaginatedResult<Category>> {
+  async findAll(
+    tenantId: number,
+    pagination?: PaginationOptions,
+  ): Promise<PaginatedResult<Category>> {
     const page = pagination?.page ?? 1;
     const limit = pagination?.limit ?? 20;
     const from = (page - 1) * limit;
@@ -62,7 +70,7 @@ export class SupabaseCategoryRepository implements CategoryRepositoryPort {
 
     const totalItems = count ?? 0;
     const categories = (data ?? []).map((row: DbCategoryRow) =>
-      SupabaseCategoryMapper.toDomain(row)
+      SupabaseCategoryMapper.toDomain(row),
     );
 
     return {
@@ -113,10 +121,10 @@ export class SupabaseCategoryRepository implements CategoryRepositoryPort {
 
   async deleteById(id: string, tenantId: number): Promise<void> {
     const { error } = await this.supabase
-        .from('categories')
-        .delete()
-        .eq('id', id)
-        .eq('tenant_id', tenantId);
+      .from('categories')
+      .delete()
+      .eq('id', id)
+      .eq('tenant_id', tenantId);
 
     if (error) throw new Error(`Failed to delete category: ${error.message}`);
   }
