@@ -3,7 +3,7 @@ id: 6ecfa1ff-fe33-4f1c-ab41-dcc6e3678f67
 title: "HU-2: Configuración de Precios al por Mayor"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-08-11"
+updated_date: "2026-08-12"
 issue_type: user-story
 status: done
 labels:
@@ -17,7 +17,7 @@ relations:
     id: 3402b937-36ec-4dd3-ac6f-36a903e542f6
 priority: Must
 story_points: "3"
-integrity_hash: "sha256:c9b42443179fd17080f14aebbb296103078c48aa56a45a8bf7ef4d6e75e28438"
+integrity_hash: "sha256:02decfb9e4d6ab9a760266bd49265866d8d73e5e3279ab3d57e1312586a713ea"
 ---
 
 ## Criterios de Aceptación
@@ -27,5 +27,5 @@ Dado que ingreso un valor numérico > 0, Cuando guardo, Entonces el sistema acti
 
 ## User story
 <!-- [SECTION_START: User story] -->
-Como Admin, Quiero configurar precios al por mayor, Para fijar el valor B2B de un SKU.
+Como Admin, Quiero configurar precios al por mayor, Para fijar el valor al por mayor de un SKU.
 <!-- [SECTION_END: User story] -->
