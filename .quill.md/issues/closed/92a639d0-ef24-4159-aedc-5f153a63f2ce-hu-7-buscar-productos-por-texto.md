@@ -3,9 +3,9 @@ id: 92a639d0-ef24-4159-aedc-5f153a63f2ce
 title: "HU-7: Buscar Productos por Texto"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-29"
+updated_date: "2026-08-12"
 issue_type: user-story
-status: open
+status: done
 labels:
   - ai-generated
 relations:
@@ -17,7 +17,7 @@ relations:
     id: 79bf540e-9f2d-47cc-a1cf-c6b1a648ecfd
 priority: Must
 story_points: "3"
-integrity_hash: "sha256:cff9fdbc130b0111ed1e049dd156c3fc71c0b5a9236181a4449e3e2f569b5523"
+integrity_hash: "sha256:1e4d002a68cdfc4734e3992971864e1f0203be9164491554695d8f17d8e0d4e9"
 ---
 
 ## Criterios de Aceptación
