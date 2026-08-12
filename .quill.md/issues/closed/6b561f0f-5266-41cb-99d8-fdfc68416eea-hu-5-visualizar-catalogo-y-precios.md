@@ -3,9 +3,9 @@ id: 6b561f0f-5266-41cb-99d8-fdfc68416eea
 title: "HU-5: Visualizar Catálogo y Precios"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-29"
+updated_date: "2026-08-12"
 issue_type: user-story
-status: open
+status: done
 labels:
   - ai-generated
 relations:
@@ -17,7 +17,7 @@ relations:
     id: 522238b4-2ae2-4651-af4e-d7483b816725
 priority: Must
 story_points: "3"
-integrity_hash: "sha256:9bae36076a82a2d71262b9ca62a8a33a8428ed946eb6c6d74d5196acc10ea213"
+integrity_hash: "sha256:ea290b90ac829d89666e15d0cd047fdd3ed5f273dfb61a4158af0b9136320034"
 ---
 
 ## Criterios de Aceptación
