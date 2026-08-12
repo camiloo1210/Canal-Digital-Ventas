@@ -3,9 +3,9 @@ id: 458d17d8-04f6-42b6-b555-7f03d6854e9c
 title: "HU-3: Gestionar Categorías y Stock"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-29"
+updated_date: "2026-08-12"
 issue_type: user-story
-status: open
+status: done
 labels:
   - ai-generated
 relations:
@@ -17,7 +17,7 @@ relations:
     id: 000e03fb-32bf-4228-920a-1ea3ae81a362
 priority: Must
 story_points: "3"
-integrity_hash: "sha256:80d33bcf27d6fc13ef688fef50b2a3b286c1762e94f39430289d339452d08fcd"
+integrity_hash: "sha256:ecb529cef34539ee2accde5b9dfd1de977ed56a23b080307bd14d025efbf3ef1"
 ---
 
 ## Criterios de Aceptación
