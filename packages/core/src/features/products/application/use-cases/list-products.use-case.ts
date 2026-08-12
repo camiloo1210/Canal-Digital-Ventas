@@ -4,11 +4,9 @@ import { PaginatedResult } from '@/shared/domain/pagination/pagination';
 import { Product } from '@/products/domain/entities/product.entity';
 
 export class ListProductsUseCase {
+  constructor(private readonly productRepository: ProductRepositoryPort) {}
 
-
-    constructor(private readonly productRepository: ProductRepositoryPort) { }
-
-    async execute(dto: ListProductsDto): Promise<PaginatedResult<Product>> {
-        return await this.productRepository.findAll(dto.tenantId, dto.pagination);
-    }
+  async execute(dto: ListProductsDto): Promise<PaginatedResult<Product>> {
+    return await this.productRepository.findAll(dto.tenantId, dto.pagination);
+  }
 }
