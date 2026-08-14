@@ -6,11 +6,16 @@ import { Address } from '@/shared/domain/value-objects/adress.vo';
 import { InvalidOrderStateException } from '@/orders/domain/exceptions/invalid-order-state.exception';
 import { InvalidOrderAttributeException } from '@/orders/domain/exceptions/invalid-order-attribute.exception';
 import { DomainEvent } from '@/shared/domain/events/domain-event.interface';
+import { OrderId } from '@/orders/domain/types/order-id.type';
+import { CustomerId } from '@/orders/domain/types/customer-id.type';
+import { TenantId } from '@/orders/domain/types/tenant-id.type';
+import { PaymentGatewayId } from '@/orders/domain/types/payment-gateway-id.type';
+
 export interface OrderProps {
-  id: string;
+  id: OrderId;
   orderNumber: string;
-  customerId: string;
-  tenantId: number;
+  customerId: CustomerId;
+  tenantId: TenantId;
   items: OrderItem[];
   status: OrderStatus;
   subtotal: Money;
@@ -19,7 +24,7 @@ export interface OrderProps {
   shippingCost: Money;
   totalAmount: Money;
   shippingAddress: Address;
-  paymentGatewayId: string | null;
+  paymentGatewayId: PaymentGatewayId | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -28,10 +33,10 @@ export class Order {
   private readonly _domainEvents: DomainEvent[] = [];
 
   private constructor(
-    private readonly id: string,
+    private readonly id: OrderId,
     private readonly orderNumber: string,
-    private readonly customerId: string,
-    private readonly tenantId: number,
+    private readonly customerId: CustomerId,
+    private readonly tenantId: TenantId,
     private items: OrderItem[],
     private status: OrderStatus,
     private subtotal: Money,
@@ -40,16 +45,16 @@ export class Order {
     private shippingCost: Money,
     private totalAmount: Money,
     private shippingAddress: Address,
-    private paymentGatewayId: string | null,
+    private paymentGatewayId: PaymentGatewayId | null,
     private readonly createdAt: Date,
     private updatedAt: Date,
   ) {}
 
   public static create(
-    id: string,
+    id: OrderId,
     orderNumber: string,
-    customerId: string,
-    tenantId: number,
+    customerId: CustomerId,
+    tenantId: TenantId,
     items: OrderItem[],
     subtotal: Money,
     taxAmount: Money,
@@ -88,7 +93,7 @@ export class Order {
     return order;
   }
   //Validations
-  private static validateId(id: string): void {
+  private static validateId(id: OrderId): void {
     if (!id || id.trim().length === 0) {
       throw new InvalidOrderAttributeException('Order ID is required.');
     }
@@ -100,13 +105,13 @@ export class Order {
     }
   }
 
-  private static validateCustomerId(customerId: string): void {
+  private static validateCustomerId(customerId: CustomerId): void {
     if (!customerId || customerId.trim().length === 0) {
       throw new InvalidOrderAttributeException('Customer ID is required.');
     }
   }
 
-  private static validateTenantId(tenantId: number): void {
+  private static validateTenantId(tenantId: TenantId): void {
     if (tenantId === undefined || tenantId === null || tenantId <= 0) {
       throw new InvalidTenantIdException('Tenant ID is required and must be a positive number.');
     }
@@ -146,7 +151,7 @@ export class Order {
       throw new InvalidOrderAttributeException('Shipping address is required.');
     }
   }
-  private static validatePaymentGatewayId(paymentGatewayId: string | null): void {
+  private static validatePaymentGatewayId(paymentGatewayId: PaymentGatewayId | null): void {
     if (paymentGatewayId !== null && paymentGatewayId.trim().length === 0) {
       throw new InvalidOrderAttributeException('Invalid payment gateway ID.');
     }
@@ -205,7 +210,7 @@ export class Order {
     this.addDomainEvent({ eventName: 'OrderShippedEvent', orderId: this.id });
   }
 
-  public markAsPaid(paymentGatewayId: string): void {
+  public markAsPaid(paymentGatewayId: PaymentGatewayId): void {
     if (this.status !== OrderStatus.PENDING_PAYMENT) {
       throw new InvalidOrderStateException('Order must be pending to be paid.');
     }
@@ -270,13 +275,12 @@ export class Order {
     if (this.items.length === 0) return;
     const currency = this.items[0].getUnitPrice().getCurrency();
 
-    let newSubtotalValue = 0;
+    let newSubtotal = Money.from(0, currency);
     for (const item of this.items) {
-      newSubtotalValue += item.getSubtotal().getValue();
+      newSubtotal = newSubtotal.add(item.getSubtotal());
     }
 
-    const moneyClass = this.subtotal.constructor as any;
-    this.subtotal = moneyClass.from(newSubtotalValue, currency);
+    this.subtotal = newSubtotal;
 
     this.totalAmount = this.subtotal
       .add(this.taxAmount)
@@ -299,7 +303,7 @@ export class Order {
 
   //Getters
 
-  public getId(): string {
+  public getId(): OrderId {
     return this.id;
   }
 
@@ -307,11 +311,11 @@ export class Order {
     return this.orderNumber;
   }
 
-  public getCustomerId(): string {
+  public getCustomerId(): CustomerId {
     return this.customerId;
   }
 
-  public getTenantId(): number {
+  public getTenantId(): TenantId {
     return this.tenantId;
   }
 
@@ -347,7 +351,7 @@ export class Order {
     return this.shippingAddress;
   }
 
-  public getPaymentGatewayId(): string | null {
+  public getPaymentGatewayId(): PaymentGatewayId | null {
     return this.paymentGatewayId;
   }
 
