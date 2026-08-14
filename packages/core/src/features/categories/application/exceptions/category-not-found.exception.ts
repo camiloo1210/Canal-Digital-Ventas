@@ -1,6 +1,6 @@
-import { DomainException } from '@/shared/domain/exceptions/domain.exception';
+import { ApplicationException } from '@/shared/application/exceptions/application.exception';
 
-export class CategoryNotFoundException extends DomainException {
+export class CategoryNotFoundException extends ApplicationException {
   constructor(id: string) {
     super(`Category with ID '${id}' was not found.`);
   }
