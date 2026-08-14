@@ -3,6 +3,7 @@ import { AddItemToCartDto } from '@/orders/application/dtos/add-item-to-cart.dto
 import { OrderItem } from '@/orders/domain/entities/order-item.entity';
 import { Money } from '@/shared/domain/value-objects/money.vo';
 import { OrderItemId } from '@/orders/domain/types/order-item-id.type';
+import { OrderNotFoundException } from '@/orders/application/exceptions/order-not-found.exception';
 
 export class AddItemToCartUseCase {
   constructor(private readonly orderRepository: OrderRepositoryPort) {}
@@ -11,7 +12,9 @@ export class AddItemToCartUseCase {
     const order = await this.orderRepository.findPendingByCustomerId(dto.customerId, dto.tenantId);
 
     if (!order) {
-      throw new Error('No active cart found for this customer. Please create an order first.');
+      throw new OrderNotFoundException(
+        'No active cart found for this customer. Please create an order first.',
+      );
     }
 
     // In a real system, you might get the currency from the DTO or the tenant settings

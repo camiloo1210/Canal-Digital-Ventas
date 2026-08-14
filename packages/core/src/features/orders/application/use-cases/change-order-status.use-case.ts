@@ -1,6 +1,8 @@
 import { OrderRepositoryPort } from '@/orders/application/ports/out/order-repository.port';
 import { ChangeOrderStatusDto } from '@/orders/application/dtos/change-order-status.dto';
 import { OrderStatus } from '@/orders/domain/enums/order-status.enum';
+import { OrderNotFoundException } from '@/orders/application/exceptions/order-not-found.exception';
+import { UnsupportedOrderStatusException } from '@/orders/application/exceptions/unsupported-order-status.exception';
 
 export class ChangeOrderStatusUseCase {
   constructor(private readonly orderRepository: OrderRepositoryPort) {}
@@ -9,7 +11,7 @@ export class ChangeOrderStatusUseCase {
     const order = await this.orderRepository.findById(dto.orderId, dto.tenantId);
 
     if (!order) {
-      throw new Error('Order not found');
+      throw new OrderNotFoundException();
     }
 
     switch (dto.status) {
@@ -23,7 +25,7 @@ export class ChangeOrderStatusUseCase {
         order.cancel();
         break;
       default:
-        throw new Error(`Cannot manually change status to ${dto.status} through this use case.`);
+        throw new UnsupportedOrderStatusException(dto.status);
     }
 
     await this.orderRepository.save(order);

@@ -77,7 +77,7 @@ export class Order {
       customerId,
       tenantId,
       items,
-      OrderStatus.PENDING_PAYMENT,
+      OrderStatus.DRAFT,
       subtotal,
       taxAmount,
       discountAmount,
@@ -166,10 +166,10 @@ export class Order {
   }
   //Updates
   public changeShippingAddress(shippingAddress: Address): void {
-    const allowedStates = [OrderStatus.PENDING_PAYMENT, OrderStatus.PROCESSING];
+    const allowedStates = [OrderStatus.DRAFT, OrderStatus.PENDING_PAYMENT, OrderStatus.PROCESSING];
     if (!allowedStates.includes(this.status)) {
       throw new InvalidOrderStateException(
-        'Solo se puede cambiar la dirección de envío en órdenes pendientes o en proceso.',
+        'Solo se puede cambiar la dirección de envío en estado de borrador, pendiente de pago o en proceso.',
       );
     }
     Order.validateShippingAddress(shippingAddress);
@@ -210,6 +210,20 @@ export class Order {
     this.addDomainEvent({ eventName: 'OrderShippedEvent', orderId: this.id });
   }
 
+  public confirm(): void {
+    if (this.status !== OrderStatus.DRAFT) {
+      throw new InvalidOrderStateException(
+        'Solo los pedidos en estado de carrito (DRAFT) pueden ser confirmados.',
+      );
+    }
+    if (this.items.length === 0) {
+      throw new InvalidOrderStateException('No se puede confirmar un pedido sin productos.');
+    }
+
+    this.status = OrderStatus.PENDING_PAYMENT;
+    // this.addDomainEvent({ eventName: 'OrderConfirmedEvent', orderId: this.id });
+  }
+
   public markAsPaid(paymentGatewayId: PaymentGatewayId): void {
     if (this.status !== OrderStatus.PENDING_PAYMENT) {
       throw new InvalidOrderStateException('Order must be pending to be paid.');
@@ -237,8 +251,10 @@ export class Order {
   }
 
   public addOrderItem(item: OrderItem): void {
-    if (this.status !== OrderStatus.PENDING_PAYMENT) {
-      throw new InvalidOrderStateException('Cannot add items to an order that is not pending.');
+    if (this.status !== OrderStatus.DRAFT) {
+      throw new InvalidOrderStateException(
+        'Solo se pueden añadir productos cuando el pedido es un carrito (DRAFT).',
+      );
     }
     this.items.push(item);
     this.recalculateAllTotals();
@@ -246,9 +262,9 @@ export class Order {
   }
 
   public removeOrderItem(itemId: string): void {
-    if (this.status !== OrderStatus.PENDING_PAYMENT) {
+    if (this.status !== OrderStatus.DRAFT) {
       throw new InvalidOrderStateException(
-        'Cannot remove items from an order that is not pending.',
+        'Solo se pueden eliminar productos cuando el pedido es un carrito (DRAFT).',
       );
     }
     this.items = this.items.filter((i) => i.getId() !== itemId);
@@ -259,9 +275,9 @@ export class Order {
   }
 
   public changeItemQuantity(itemId: string, quantity: number): void {
-    if (this.status !== OrderStatus.PENDING_PAYMENT) {
+    if (this.status !== OrderStatus.DRAFT) {
       throw new InvalidOrderStateException(
-        'Cannot change quantities on an order that is not pending.',
+        'Solo se pueden cambiar cantidades cuando el pedido es un carrito (DRAFT).',
       );
     }
     const item = this.items.find((i) => i.getId() === itemId);

@@ -1,5 +1,6 @@
 import { OrderRepositoryPort } from '@/orders/application/ports/out/order-repository.port';
 import { GenerateCommercialOrderDto } from '@/orders/application/dtos/generate-commercial-order.dto';
+import { OrderNotFoundException } from '@/orders/application/exceptions/order-not-found.exception';
 
 export class GenerateCommercialOrderUseCase {
   constructor(private readonly orderRepository: OrderRepositoryPort) {}
@@ -8,16 +9,9 @@ export class GenerateCommercialOrderUseCase {
     const order = await this.orderRepository.findById(dto.orderId, dto.tenantId);
 
     if (!order) {
-      throw new Error('Order not found');
+      throw new OrderNotFoundException();
     }
-
-    // Business Logic:
-    // In this step, the user confirms the cart.
-    // Depending on your domain, this could change the status from a draft state to PENDING_PAYMENT,
-    // freeze the prices, or trigger an OrderGeneratedDomainEvent.
-    // Currently, Order initializes in PENDING_PAYMENT.
-
-    // Example: order.confirm();
+    order.confirm();
 
     await this.orderRepository.save(order);
   }
