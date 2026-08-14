@@ -1,37 +1,41 @@
 import { Money } from '@/shared/domain/value-objects/money.vo';
 import { InvalidQuantityException } from '@/orders/domain/exceptions/invalid-quantity.exception';
 import { InvalidUnitPriceException } from '@/orders/domain/exceptions/invalid-unit-price.exception';
+import { ProductId } from '@/orders/domain/types/product-id.type';
+import { OrderItemId } from '@/orders/domain/types/order-item-id.type';
+import { VariantId } from '@/orders/domain/types/variant-id.type';
+
 export interface OrderItemProps {
-  id: string;
-  productId: string;
+  id: OrderItemId;
+  productId: ProductId;
   productName: string;
   quantity: number;
   unitPrice: Money;
-  variantId: string | null;
+  variantId: VariantId | null;
   sku: string;
   subtotal: Money;
 }
 
 export class OrderItem {
   private constructor(
-    private readonly id: string,
-    private readonly productId: string,
+    private readonly id: OrderItemId,
+    private readonly productId: ProductId,
     private readonly productName: string,
     private quantity: number,
     private readonly unitPrice: Money,
-    private readonly variantId: string | null,
+    private readonly variantId: VariantId | null,
     private readonly sku: string,
     private subtotal: Money,
   ) {}
 
   public static create(
-    id: string,
-    productId: string,
+    id: OrderItemId,
+    productId: ProductId,
     productName: string,
     quantity: number,
     unitPrice: Money,
     sku: string,
-    variantId?: string,
+    variantId?: VariantId,
   ): OrderItem {
     if (quantity <= 0) throw new InvalidQuantityException();
     const subtotal = unitPrice.multiply(quantity);
@@ -48,8 +52,6 @@ export class OrderItem {
   }
   // Reconstitute
   public static reconstitute(props: OrderItemProps): OrderItem {
-    OrderItem.validateQuantity(props.quantity);
-    OrderItem.validateUnitPrice(props.unitPrice.getValue());
     return new OrderItem(
       props.id,
       props.productId,
@@ -72,17 +74,18 @@ export class OrderItem {
   //Actions
 
   //Domain Methods
-  public updateQuantity(newQuantity: number): void {
+
+  public changeQuantity(newQuantity: number): void {
     OrderItem.validateQuantity(newQuantity);
     this.quantity = newQuantity;
     this.subtotal = this.unitPrice.multiply(newQuantity);
   }
 
   //Getters
-  public getId(): string {
+  public getId(): OrderItemId {
     return this.id;
   }
-  public getProductId(): string {
+  public getProductId(): ProductId {
     return this.productId;
   }
   public getProductName(): string {
@@ -94,7 +97,7 @@ export class OrderItem {
   public getUnitPrice(): Money {
     return this.unitPrice;
   }
-  public getVariantId(): string {
+  public getVariantId(): VariantId | null {
     return this.variantId;
   }
   public getSku(): string {
