@@ -7,59 +7,54 @@ import { ProductRepositoryPort } from '@/products/application/ports/out/product-
 import { FileStoragePort } from '@/products/application/ports/out/file-storage.port';
 
 export class CreateProductUseCase {
+  constructor(
+    private readonly productRepository: ProductRepositoryPort,
+    private readonly fileStorage?: FileStoragePort,
+  ) {}
 
+  async execute(dto: CreateProductDto): Promise<string> {
+    const name = ProductName.from(dto.name);
+    const sku = Sku.from(dto.sku);
+    const price = Money.from(dto.price);
+    const cost = Money.from(dto.cost);
+    const wholesalePrice = dto.wholesalePrice ? Money.from(dto.wholesalePrice) : undefined;
 
-    constructor(
-        private readonly productRepository: ProductRepositoryPort,
-        private readonly fileStorage?: FileStoragePort
-    ) { }
+    let imagePath: string | undefined = undefined;
+    let imageUrl: string | undefined = undefined;
 
-    async execute(dto: CreateProductDto): Promise<string> {
-
-
-        const name = ProductName.from(dto.name);
-        const sku = Sku.from(dto.sku);
-        const price = Money.from(dto.price);
-        const cost = Money.from(dto.cost);
-        const wholesalePrice = dto.wholesalePrice ? Money.from(dto.wholesalePrice) : undefined;
-
-        let imagePath: string | undefined = undefined;
-        let imageUrl: string | undefined = undefined;
-
-        if (dto.image && this.fileStorage) {
-            const ext = dto.image.name?.split('.').pop() || 'jpg';
-            const destinationPath = `products/${dto.id}.${ext}`;
-            const uploadResult = await this.fileStorage.upload(dto.image, destinationPath);
-            imagePath = uploadResult.path;
-            imageUrl = uploadResult.url;
-        }
-
-        const newProduct = Product.create(
-            dto.id,
-            name,
-            price,
-            cost,
-            dto.description,
-            dto.stock,
-            dto.categoryId,
-            sku,
-            dto.tenantId,
-            undefined,
-            undefined,
-            dto.seasonIds,
-            imagePath,
-            [],
-            dto.isVatExempt,
-            wholesalePrice
-        );
-
-        if (imageUrl) {
-            newProduct.updateImageUrl(imageUrl);
-        }
-
-        await this.productRepository.save(newProduct);
-
-
-        return newProduct.getId();
+    if (dto.image && this.fileStorage) {
+      const ext = dto.image.name?.split('.').pop() || 'jpg';
+      const destinationPath = `products/${dto.id}.${ext}`;
+      const uploadResult = await this.fileStorage.upload(dto.image, destinationPath);
+      imagePath = uploadResult.path;
+      imageUrl = uploadResult.url;
     }
+
+    const newProduct = Product.create(
+      dto.id,
+      name,
+      price,
+      cost,
+      dto.description,
+      dto.stock,
+      dto.categoryId,
+      sku,
+      dto.tenantId,
+      undefined,
+      undefined,
+      dto.seasonIds,
+      imagePath,
+      [],
+      dto.isVatExempt,
+      wholesalePrice,
+    );
+
+    if (imageUrl) {
+      newProduct.updateImageUrl(imageUrl);
+    }
+
+    await this.productRepository.save(newProduct);
+
+    return newProduct.getId();
+  }
 }

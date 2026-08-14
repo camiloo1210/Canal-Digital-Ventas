@@ -1,4 +1,4 @@
 export interface DeleteProductDto {
-    id: string;
-    tenantId: number;
+  id: string;
+  tenantId: number;
 }

@@ -2,4 +2,4 @@
 npx lint-staged
 
 # (Opcional) Verificación de tipos en TypeScript para todo el proyecto
-# pnpm tsc --noEmit
+pnpm tsc --noEmit

@@ -8,10 +8,12 @@ import { ProductFilters } from '@/products/application/ports/out/product-reposit
 import { PaginationOptions, PaginatedResult } from '@/shared/domain/pagination/pagination';
 
 export class SupabaseProductRepository implements ProductRepositoryPort {
+  constructor(private readonly supabase: SupabaseClient) {}
 
-  constructor(private readonly supabase: SupabaseClient) { }
-
-  async searchByFilters(filters: ProductFilters, pagination?: PaginationOptions): Promise<PaginatedResult<Product>> {
+  async searchByFilters(
+    filters: ProductFilters,
+    pagination?: PaginationOptions,
+  ): Promise<PaginatedResult<Product>> {
     let query = this.supabase
       .from('products')
       .select('*, product_variants(*)', { count: 'exact' })
@@ -22,7 +24,6 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
     if (filters.sku) query = query.eq('sku', filters.sku);
     if (filters.name) query = query.ilike('name', `%${filters.name}%`);
     if (filters.id) query = query.eq('id', filters.id);
-
 
     const page = pagination?.page ?? 1;
     const limit = pagination?.limit ?? 20;
@@ -35,9 +36,7 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
     if (error) throw new Error(`Failed to search products: ${error.message}`);
 
     const totalItems = count ?? 0;
-    const products = (data ?? []).map((row: DbProductRow) =>
-      SupabaseProductMapper.toDomain(row)
-    );
+    const products = (data ?? []).map((row: DbProductRow) => SupabaseProductMapper.toDomain(row));
 
     return {
       items: products,
@@ -47,8 +46,10 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
     };
   }
 
-
-  async findAll(tenantId: number, pagination?: PaginationOptions): Promise<PaginatedResult<Product>> {
+  async findAll(
+    tenantId: number,
+    pagination?: PaginationOptions,
+  ): Promise<PaginatedResult<Product>> {
     const page = pagination?.page ?? 1;
     const limit = pagination?.limit ?? 20;
     const from = (page - 1) * limit;
@@ -63,9 +64,7 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
     if (error) throw new Error(`Failed to get products from this tenant: ${error.message}`);
 
     const totalItems = count ?? 0;
-    const products = (data ?? []).map((row: DbProductRow) =>
-      SupabaseProductMapper.toDomain(row)
-    );
+    const products = (data ?? []).map((row: DbProductRow) => SupabaseProductMapper.toDomain(row));
 
     return {
       items: products,

@@ -1,4 +1,4 @@
 export interface ArchiveCategoryDto {
-    id: string;
-    tenantId: number;
+  id: string;
+  tenantId: number;
 }
