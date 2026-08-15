@@ -57,7 +57,6 @@
 	},
 	"collaboration": {
 		"enabled": true,
-		"server_url": "wss://hocuspocus.kirokusolutions.com",
-		"display_name": "CamiloTest2"
+		"server_url": "wss://hocuspocus.kirokusolutions.com"
 	}
 }
