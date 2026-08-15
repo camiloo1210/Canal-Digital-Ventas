@@ -58,6 +58,6 @@
 	"collaboration": {
 		"enabled": true,
 		"server_url": "wss://hocuspocus.kirokusolutions.com",
-		"display_name": ""
+		"display_name": "CamiloTest1"
 	}
 }
