@@ -57,7 +57,7 @@
 	},
 	"collaboration": {
 		"enabled": true,
-		"server_url": "",
+		"server_url": "wss://hocuspocus.kirokusolutions.com",
 		"display_name": ""
 	}
 }
