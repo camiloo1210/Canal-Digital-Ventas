@@ -1,58 +1,63 @@
 {
-  "product_goal": "Build and ship increments of value that meet the Definition of Done every Sprint.",
-  "definition_of_done": [
-    "Code is peer-reviewed and merged to the trunk.",
-    "Unit tests pass and coverage meets the team threshold."
-  ],
-  "statuses": [
-    {
-      "id": "open",
-      "name": "Open",
-      "color": "#6b7280",
-      "category": "todo"
-    },
-    {
-      "id": "ready",
-      "name": "Ready",
-      "color": "#0ea5e9",
-      "category": "todo"
-    },
-    {
-      "id": "in_progress",
-      "name": "In progress",
-      "color": "#3b82f6",
-      "category": "doing"
-    },
-    {
-      "id": "in_review",
-      "name": "In review",
-      "color": "#f59e0b",
-      "category": "doing"
-    },
-    {
-      "id": "done",
-      "name": "Done",
-      "color": "#10b981",
-      "category": "done"
-    }
-  ],
-  "default_status": "open",
-  "labels": [],
-  "users": [],
-  "kanban": {
-    "columns": [
-      "open",
-      "ready",
-      "in_progress",
-      "in_review",
-      "done"
-    ]
-  },
-  "gantt": {
-    "group_by": "issue_type",
-    "default_view": "weeks"
-  },
-  "remote": {
-    "cors_proxy": "https://cors.isomorphic-git.org"
-  }
+	"product_goal": "Build and ship increments of value that meet the Definition of Done every Sprint.",
+	"definition_of_done": [
+		"Code is peer-reviewed and merged to the trunk.",
+		"Unit tests pass and coverage meets the team threshold."
+	],
+	"statuses": [
+		{
+			"id": "open",
+			"name": "Open",
+			"color": "#6b7280",
+			"category": "todo"
+		},
+		{
+			"id": "ready",
+			"name": "Ready",
+			"color": "#0ea5e9",
+			"category": "todo"
+		},
+		{
+			"id": "in_progress",
+			"name": "In progress",
+			"color": "#3b82f6",
+			"category": "doing"
+		},
+		{
+			"id": "in_review",
+			"name": "In review",
+			"color": "#f59e0b",
+			"category": "doing"
+		},
+		{
+			"id": "done",
+			"name": "Done",
+			"color": "#10b981",
+			"category": "done"
+		}
+	],
+	"default_status": "open",
+	"labels": [],
+	"users": [],
+	"kanban": {
+		"columns": [
+			"open",
+			"ready",
+			"in_progress",
+			"in_review",
+			"done"
+		]
+	},
+	"gantt": {
+		"group_by": "issue_type",
+		"default_view": "weeks"
+	},
+	"remote": {
+		"cors_proxy": "https://cors.isomorphic-git.org"
+	},
+	"collaboration": {
+		"enabled": true,
+		"server_url": "",
+		"display_name": ""
+	}
 }
