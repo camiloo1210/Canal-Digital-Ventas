@@ -34,6 +34,7 @@ export interface DbOrderRow {
   payment_gateway_id: string | null;
   created_at: string;
   updated_at: string;
+  version: number;
 
   // Supabase JOIN generated relation
   order_items?: DbOrderItemRow[];

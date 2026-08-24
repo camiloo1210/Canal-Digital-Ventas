@@ -27,6 +27,7 @@ export interface OrderProps {
   paymentGatewayId: PaymentGatewayId | null;
   createdAt: Date;
   updatedAt: Date;
+  version: number;
 }
 
 export class Order {
@@ -48,6 +49,7 @@ export class Order {
     private paymentGatewayId: PaymentGatewayId | null,
     private readonly createdAt: Date,
     private updatedAt: Date,
+    private version: number,
   ) {}
 
   public static create(
@@ -87,6 +89,7 @@ export class Order {
       null,
       new Date(),
       new Date(),
+      0, // Initial version
     );
 
     order.addDomainEvent({ eventName: 'OrderCreatedEvent', orderId: id });
@@ -179,6 +182,7 @@ export class Order {
 
   private updateUpdatedAt(): void {
     this.updatedAt = new Date();
+    this.version++;
   }
 
   //Reconstitute
@@ -199,6 +203,7 @@ export class Order {
       props.paymentGatewayId,
       props.createdAt,
       props.updatedAt,
+      props.version,
     );
   }
   //Actions(Business Logic)
@@ -256,7 +261,14 @@ export class Order {
         'Solo se pueden añadir productos cuando el pedido es un carrito (DRAFT).',
       );
     }
-    this.items.push(item);
+    const existingItem = this.items.find(
+      (i) => i.getProductId() === item.getProductId() && i.getVariantId() === item.getVariantId(),
+    );
+    if (existingItem) {
+      existingItem.changeQuantity(existingItem.getQuantity() + item.getQuantity());
+    } else {
+      this.items.push(item);
+    }
     this.recalculateAllTotals();
     this.updateUpdatedAt();
   }
@@ -377,5 +389,9 @@ export class Order {
 
   public getUpdatedAt(): Date {
     return this.updatedAt;
+  }
+
+  public getVersion(): number {
+    return this.version;
   }
 }

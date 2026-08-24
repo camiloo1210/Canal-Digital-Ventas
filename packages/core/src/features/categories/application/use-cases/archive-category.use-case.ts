@@ -1,11 +1,12 @@
 import { CategoryRepositoryPort } from '@/categories/application/ports/out/category-repository.port';
 import { ArchiveCategoryDto } from '@/categories/application/dtos/archive-category.dto';
 import { CategoryNotFoundException } from '@/categories/application/exceptions/category-not-found.exception';
+import { CategoryId } from '@/categories/domain/types/category-id.type';
 
 export class ArchiveCategoryUseCase {
   constructor(private readonly categoryRepository: CategoryRepositoryPort) {}
 
-  async execute(dto: ArchiveCategoryDto): Promise<string> {
+  async execute(dto: ArchiveCategoryDto): Promise<CategoryId> {
     const category = await this.categoryRepository.findById(dto.id, dto.tenantId);
 
     if (!category) {

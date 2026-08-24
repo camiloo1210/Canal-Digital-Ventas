@@ -3,9 +3,12 @@ import { ProductRepositoryPort } from '@/products/application/ports/out/product-
 import { Product } from '@/products/domain/entities/product.entity';
 import { SupabaseProductMapper } from '@/products/infrastructure/mappers/supabase-product.mapper';
 import { DbProductRow } from '@/products/infrastructure/types/supabase-product.types';
-import { ProductStatus } from '@/products/domain/enums/product-status.enum';
+
 import { ProductFilters } from '@/products/application/ports/out/product-repository.port';
 import { PaginationOptions, PaginatedResult } from '@/shared/domain/pagination/pagination';
+import { ProductId } from '@/products/domain/types/product-id.type';
+import { CategoryId } from '@/products/domain/types/category-id.type';
+import { TenantId } from '@/products/domain/types/tenant-id.type';
 
 export class SupabaseProductRepository implements ProductRepositoryPort {
   constructor(private readonly supabase: SupabaseClient) {}
@@ -47,7 +50,7 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
   }
 
   async findAll(
-    tenantId: number,
+    tenantId: TenantId,
     pagination?: PaginationOptions,
   ): Promise<PaginatedResult<Product>> {
     const page = pagination?.page ?? 1;
@@ -74,7 +77,7 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
     };
   }
 
-  async searchProductsByName(query: string, tenantId: number): Promise<Product[]> {
+  async searchProductsByName(query: string, tenantId: TenantId): Promise<Product[]> {
     const { data, error } = await this.supabase
       .from('products')
       .select('*, product_variants(*)')
@@ -86,7 +89,7 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
     return (data ?? []).map((row: DbProductRow) => SupabaseProductMapper.toDomain(row));
   }
 
-  async findByCategoryId(categoryId: string, tenantId: number): Promise<Product[]> {
+  async findByCategoryId(categoryId: CategoryId, tenantId: TenantId): Promise<Product[]> {
     const { data, error } = await this.supabase
       .from('products')
       .select('*, product_variants(*)')
@@ -98,15 +101,18 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
     return (data ?? []).map((row: DbProductRow) => SupabaseProductMapper.toDomain(row));
   }
 
-  async findById(id: string): Promise<Product | null> {
+  async findById(id: ProductId, tenantId: TenantId): Promise<Product | null> {
     const { data, error } = await this.supabase
       .from('products')
       .select('*, product_variants(*)')
       .eq('id', id)
+      .eq('tenant_id', tenantId) // Ensure tenantId is checked at db level
       .single();
 
     if (error || !data) {
-      console.error(error);
+      if (error && error.code !== 'PGRST116') {
+        console.error(error);
+      }
       return null;
     }
 
@@ -146,17 +152,12 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
     }
   }
 
-  async archive(id: string): Promise<void> {
+  async delete(id: ProductId, tenantId: TenantId): Promise<void> {
     const { error } = await this.supabase
       .from('products')
-      .update({ status: 'archived' })
-      .eq('id', id);
-
-    if (error) throw new Error(`Failed to archive product: ${error.message}`);
-  }
-
-  async deleteById(id: string): Promise<void> {
-    const { error } = await this.supabase.from('products').delete().eq('id', id);
+      .delete()
+      .eq('id', id)
+      .eq('tenant_id', tenantId);
 
     if (error) throw new Error(`Failed to delete product: ${error.message}`);
   }

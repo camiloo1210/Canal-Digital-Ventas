@@ -7,6 +7,6 @@ export class ListProductsUseCase {
   constructor(private readonly productRepository: ProductRepositoryPort) {}
 
   async execute(dto: ListProductsDto): Promise<PaginatedResult<Product>> {
-    return await this.productRepository.findAll(dto.tenantId, dto.pagination);
+    return this.productRepository.findAll(dto.tenantId, dto.pagination);
   }
 }
