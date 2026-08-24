@@ -21,9 +21,9 @@ export class SupabaseOrderMapper {
         variantId: itemRow.variant_id ? (itemRow.variant_id as VariantId) : null,
         productName: itemRow.product_name,
         sku: itemRow.sku,
-        unitPrice: Money.from(itemRow.unit_price_cents / 100, 'USD'),
+        unitPrice: Money.from(itemRow.unit_price_cents, 'USD'),
         quantity: itemRow.quantity,
-        subtotal: Money.from(itemRow.subtotal_cents / 100, 'USD'),
+        subtotal: Money.from(itemRow.subtotal_cents, 'USD'),
       }),
     );
 
@@ -46,17 +46,18 @@ export class SupabaseOrderMapper {
       tenantId: row.tenant_id as TenantId,
       items,
       status: parseOrderStatus(row.status),
-      subtotal: Money.from(row.subtotal_cents / 100, 'USD'),
-      taxAmount: Money.from(row.tax_amount_cents / 100, 'USD'),
-      discountAmount: Money.from(row.discount_amount_cents / 100, 'USD'),
-      shippingCost: Money.from(row.shipping_cost_cents / 100, 'USD'),
-      totalAmount: Money.from(row.total_amount_cents / 100, 'USD'),
+      subtotal: Money.from(row.subtotal_cents, 'USD'),
+      taxAmount: Money.from(row.tax_amount_cents, 'USD'),
+      discountAmount: Money.from(row.discount_amount_cents, 'USD'),
+      shippingCost: Money.from(row.shipping_cost_cents, 'USD'),
+      totalAmount: Money.from(row.total_amount_cents, 'USD'),
       shippingAddress: shippingAddress as Address,
       paymentGatewayId: row.payment_gateway_id
         ? (row.payment_gateway_id as PaymentGatewayId)
         : null,
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at),
+      version: row.version ?? 0,
     });
   }
 
@@ -67,11 +68,11 @@ export class SupabaseOrderMapper {
       customer_id: order.getCustomerId(),
       tenant_id: order.getTenantId(),
       status: order.getStatus(),
-      subtotal_cents: Math.round(order.getSubtotal().getValue() * 100),
-      tax_amount_cents: Math.round(order.getTaxAmount().getValue() * 100),
-      discount_amount_cents: Math.round(order.getDiscountAmount().getValue() * 100),
-      shipping_cost_cents: Math.round(order.getShippingCost().getValue() * 100),
-      total_amount_cents: Math.round(order.getTotalAmount().getValue() * 100),
+      subtotal_cents: order.getSubtotal().getValue(),
+      tax_amount_cents: order.getTaxAmount().getValue(),
+      discount_amount_cents: order.getDiscountAmount().getValue(),
+      shipping_cost_cents: order.getShippingCost().getValue(),
+      total_amount_cents: order.getTotalAmount().getValue(),
       shipping_address: order.getShippingAddress()
         ? {
             street: order.getShippingAddress().getStreet(),
@@ -85,6 +86,7 @@ export class SupabaseOrderMapper {
       payment_gateway_id: order.getPaymentGatewayId(),
       created_at: order.getCreatedAt().toISOString(),
       updated_at: order.getUpdatedAt().toISOString(),
+      version: order.getVersion(),
     };
 
     const orderItemsRows: DbOrderItemRow[] = order.getItems().map((item: OrderItem) => ({
@@ -94,9 +96,9 @@ export class SupabaseOrderMapper {
       variant_id: item.getVariantId(),
       product_name: item.getProductName(),
       sku: item.getSku(),
-      unit_price_cents: Math.round(item.getUnitPrice().getValue() * 100),
+      unit_price_cents: item.getUnitPrice().getValue(),
       quantity: item.getQuantity(),
-      subtotal_cents: Math.round(item.getSubtotal().getValue() * 100),
+      subtotal_cents: item.getSubtotal().getValue(),
       created_at: order.getCreatedAt().toISOString(),
       updated_at: order.getUpdatedAt().toISOString(),
     }));

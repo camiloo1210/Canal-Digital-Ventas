@@ -18,20 +18,18 @@ export class SupabaseOrderRepository implements OrderRepositoryPort {
   async save(order: Order): Promise<void> {
     const { orderRow, orderItemsRows } = SupabaseOrderMapper.toPersistence(order);
 
-    // 1. Upsert the Order
-    const { error: orderError } = await this.supabase.from('orders').upsert(orderRow);
+    const { error } = await this.supabase.rpc('upsert_order_transactional', {
+      order_data: orderRow,
+      items_data: orderItemsRows,
+    });
 
-    if (orderError) {
-      throw new OrderRepositoryException(`Failed to save order: ${orderError.message}`);
-    }
-
-    // 2. Upsert the Order Items
-    if (orderItemsRows.length > 0) {
-      const { error: itemsError } = await this.supabase.from('order_items').upsert(orderItemsRows);
-
-      if (itemsError) {
-        throw new OrderRepositoryException(`Failed to save order items: ${itemsError.message}`);
+    if (error) {
+      if (error.code === 'P0001') {
+        throw new OrderRepositoryException(
+          `Optimistic locking failed: the order has been updated by another transaction.`,
+        );
       }
+      throw new OrderRepositoryException(`Failed to save order transactionally: ${error.message}`);
     }
   }
 
