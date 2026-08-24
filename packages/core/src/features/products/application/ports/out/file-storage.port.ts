@@ -4,6 +4,6 @@ export interface FileUploadResult {
 }
 
 export interface FileStoragePort {
-  upload(file: any, destinationPath: string): Promise<FileUploadResult>;
+  upload(file: unknown, destinationPath: string): Promise<FileUploadResult>;
   delete(path: string): Promise<void>;
 }

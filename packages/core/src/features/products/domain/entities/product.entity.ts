@@ -3,20 +3,26 @@ import { ProductStatus } from '@/products/domain/enums/product-status.enum';
 import { ProductVariant } from '@/products/domain/entities/product-variant.entity';
 import { Sku } from '@/products/domain/value-objects/sku.vo';
 import { ProductName } from '@/products/domain/value-objects/product-name.vo';
+import { DomainEvent } from '@/shared/domain/events/domain-event.interface';
+import { ProductId } from '@/products/domain/types/product-id.type';
+import { CategoryId } from '@/products/domain/types/category-id.type';
+import { TenantId } from '@/products/domain/types/tenant-id.type';
+import { InvalidProductAttributeException } from '@/products/domain/exceptions/invalid-product-attribute.exception';
+import { InvalidProductStateException } from '@/products/domain/exceptions/invalid-product-state.exception';
 
 export interface ProductProps {
-  id: string;
+  id: ProductId;
   name: ProductName;
   price: Money;
   cost: Money;
   wholesalePrice: Money;
   description: string;
   stock: number;
-  categoryId: string;
+  categoryId: CategoryId;
   expirationDate: Date | null;
   status: ProductStatus;
   sku: Sku;
-  tenantId: number;
+  tenantId: TenantId;
   seasonIds: string[];
   imagePath: string | null;
   imageUrl: string | null;
@@ -26,19 +32,21 @@ export interface ProductProps {
 }
 
 export class Product {
+  private readonly _domainEvents: DomainEvent[] = [];
+
   private constructor(
-    private readonly id: string,
+    private readonly id: ProductId,
     private name: ProductName,
     private price: Money,
     private cost: Money,
     private wholesalePrice: Money,
     private description: string,
     private stock: number,
-    private categoryId: string,
+    private categoryId: CategoryId,
     private expirationDate: Date | null,
     private status: ProductStatus,
     private sku: Sku,
-    private readonly tenantId: number,
+    private readonly tenantId: TenantId,
     private seasonIds: string[],
     private imagePath: string | null,
     private imageUrl: string | null,
@@ -48,45 +56,38 @@ export class Product {
   ) {}
 
   public static create(
-    id: string,
+    id: ProductId,
     name: ProductName,
     price: Money,
     cost: Money,
     description: string,
     stock: number,
-    categoryId: string,
+    categoryId: CategoryId,
     sku: Sku,
-    tenantId: number,
-    expirationDate?: Date,
-    status?: ProductStatus,
-    seasonIds: string[] = [],
-    imagePath?: string,
-    variants: ProductVariant[] = [],
-    isVatExempt: boolean = false,
-    wholesalePrice?: Money,
+    tenantId: TenantId,
+    expirationDate: Date | null,
+    status: ProductStatus | null,
+    seasonIds: string[],
+    imagePath: string | null,
+    variants: ProductVariant[],
+    isVatExempt: boolean,
+    wholesalePrice: Money | null,
   ): Product {
+    Product.validateId(id);
+    Product.validateCategoryId(categoryId);
+    Product.validateTenantId(tenantId);
+    Product.validateStock(stock);
     Product.validateDescription(description);
-
-    if (stock < 0) {
-      throw new Error('Stock must be a non-negative integer.');
-    }
-    if (!categoryId || !tenantId) {
-      throw new Error('Category ID and Tenant ID are required.');
-    }
-    if (expirationDate && expirationDate <= new Date()) {
-      throw new Error('Expiration date must be a future date.');
+    if (expirationDate) {
+      Product.validateExpirationDate(expirationDate);
     }
 
-    let initialStatus = status;
-    if (!initialStatus) {
-      initialStatus = stock === 0 ? ProductStatus.OUT_OF_STOCK : ProductStatus.ACTIVE;
-    }
-
+    const initialStatus =
+      status || (stock === 0 ? ProductStatus.OUT_OF_STOCK : ProductStatus.ACTIVE);
     const hasVariants = variants.length > 0;
-
     const finalWholesalePrice = wholesalePrice ?? Money.from(0, price.getCurrency());
 
-    return new Product(
+    const product = new Product(
       id,
       name,
       price,
@@ -95,17 +96,20 @@ export class Product {
       description,
       stock,
       categoryId,
-      expirationDate || null,
+      expirationDate,
       initialStatus,
       sku,
       tenantId,
       seasonIds,
-      imagePath || null,
+      imagePath,
       null,
       hasVariants,
       variants,
       isVatExempt,
     );
+
+    product.addDomainEvent({ eventName: 'ProductCreatedEvent', productId: id });
+    return product;
   }
 
   public static reconstitute(props: ProductProps): Product {
@@ -131,93 +135,101 @@ export class Product {
     );
   }
 
+  // Validations
+  private static validateId(id: ProductId): void {
+    if (!id || id.trim().length === 0)
+      throw new InvalidProductAttributeException('Product ID is required.');
+  }
+  private static validateCategoryId(categoryId: CategoryId): void {
+    if (!categoryId || categoryId.trim().length === 0)
+      throw new InvalidProductAttributeException('Category ID is required.');
+  }
+  private static validateTenantId(tenantId: TenantId): void {
+    if (tenantId === undefined || tenantId === null || tenantId <= 0) {
+      throw new InvalidProductAttributeException(
+        'Tenant ID is required and must be a positive number.',
+      );
+    }
+  }
+  private static validateStock(stock: number): void {
+    if (stock < 0)
+      throw new InvalidProductAttributeException('Stock must be a non-negative integer.');
+  }
   private static validateDescription(description: string): void {
     if (description && description.length > 200) {
-      throw new Error('Description must not exceed 200 characters.');
+      throw new InvalidProductAttributeException('Description must not exceed 200 characters.');
     }
   }
+  private static validateExpirationDate(date: Date): void {
+    if (date <= new Date())
+      throw new InvalidProductAttributeException('Expiration date must be a future date.');
+  }
 
+  // Business Actions
   public archive(): void {
     if (this.status === ProductStatus.ARCHIVED) {
-      throw new Error('Product is already archived.');
+      throw new InvalidProductStateException('Product is already archived.');
     }
     this.status = ProductStatus.ARCHIVED;
+    this.addDomainEvent({ eventName: 'ProductArchivedEvent', productId: this.id });
   }
 
-  public updateName(newName: string): void {
-    this.name = ProductName.from(newName);
+  public changeDetails(
+    name: ProductName,
+    description: string,
+    categoryId: CategoryId,
+    sku: Sku,
+    seasonIds: string[],
+    isVatExempt: boolean,
+  ): void {
+    Product.validateDescription(description);
+    Product.validateCategoryId(categoryId);
+    this.name = name;
+    this.description = description;
+    this.categoryId = categoryId;
+    this.sku = sku;
+    this.seasonIds = seasonIds;
+    this.isVatExempt = isVatExempt;
+    this.addDomainEvent({ eventName: 'ProductDetailsChangedEvent', productId: this.id });
   }
 
-  public updatePrice(newPrice: Money): void {
-    this.price = newPrice;
-  }
-
-  public updateCost(newCost: Money): void {
-    this.cost = newCost;
-  }
-
-  public updateWholesalePrice(newPrice: Money): void {
-    if (newPrice.getValue() < 0) {
-      throw new Error('Wholesale price cannot be negative.');
+  public changePricing(price: Money, cost: Money, wholesalePrice: Money): void {
+    if (wholesalePrice.getValue() < 0) {
+      throw new InvalidProductAttributeException('Wholesale price cannot be negative.');
     }
-    this.wholesalePrice = newPrice;
+    this.price = price;
+    this.cost = cost;
+    this.wholesalePrice = wholesalePrice;
+    this.addDomainEvent({ eventName: 'ProductPricingChangedEvent', productId: this.id });
   }
 
-  public updateDescription(newDescription: string): void {
-    Product.validateDescription(newDescription);
-    this.description = newDescription;
-  }
-
-  public updateStock(newStock: number): void {
-    if (newStock < 0) throw new Error('Stock must be a non-negative integer.');
+  public adjustStock(newStock: number): void {
+    Product.validateStock(newStock);
     this.stock = newStock;
-
     if (this.stock === 0 && this.status === ProductStatus.ACTIVE) {
       this.status = ProductStatus.OUT_OF_STOCK;
     } else if (this.stock > 0 && this.status === ProductStatus.OUT_OF_STOCK) {
       this.status = ProductStatus.ACTIVE;
     }
+    this.addDomainEvent({
+      eventName: 'ProductStockAdjustedEvent',
+      productId: this.id,
+      stock: this.stock,
+    });
   }
 
-  public updateCategory(newCategoryId: string): void {
-    if (!newCategoryId) throw new Error('Category ID must be provided.');
-    this.categoryId = newCategoryId;
-  }
-
-  public updateExpirationDate(newDate: Date): void {
-    if (newDate <= new Date()) throw new Error('Expiration date must be in the future.');
+  public changeExpirationDate(newDate: Date | null): void {
+    if (newDate) Product.validateExpirationDate(newDate);
     this.expirationDate = newDate;
   }
 
-  public updateStatus(newStatus: ProductStatus): void {
+  public changeStatus(newStatus: ProductStatus): void {
     this.status = newStatus;
   }
 
-  public updateSeasons(newSeasonIds: string[]): void {
-    this.seasonIds = newSeasonIds;
-  }
-
-  public updateImagePath(newPath: string | null): void {
-    this.imagePath = newPath;
-  }
-
-  public updateImageUrl(newUrl: string | null): void {
-    this.imageUrl = newUrl;
-  }
-
-  public updateIsVatExempt(isExempt: boolean): void {
-    this.isVatExempt = isExempt;
-  }
-
-  public updateHasVariants(hasVariants: boolean): void {
-    this.hasVariants = hasVariants;
-  }
-  public updateSku(newSku: string): void {
-    this.sku = Sku.from(newSku);
-  }
-
-  public updateSeasonIds(newSeasonIds: string[]): void {
-    this.seasonIds = newSeasonIds;
+  public updateImages(imagePath: string | null, imageUrl: string | null): void {
+    this.imagePath = imagePath;
+    this.imageUrl = imageUrl;
   }
 
   public setVariants(variants: ProductVariant[]): void {
@@ -225,7 +237,19 @@ export class Product {
     this.hasVariants = variants.length > 0;
   }
 
-  public getId(): string {
+  // Domain Events Management
+  private addDomainEvent(event: Omit<DomainEvent, 'occurredOn'>): void {
+    this._domainEvents.push({ ...event, occurredOn: new Date() } as DomainEvent);
+  }
+  public get domainEvents(): DomainEvent[] {
+    return [...this._domainEvents];
+  }
+  public clearDomainEvents(): void {
+    this._domainEvents.length = 0;
+  }
+
+  // Getters
+  public getId(): ProductId {
     return this.id;
   }
   public getName(): string {
@@ -246,7 +270,7 @@ export class Product {
   public getStock(): number {
     return this.stock;
   }
-  public getCategory(): string {
+  public getCategory(): CategoryId {
     return this.categoryId;
   }
   public getExpirationDate(): Date | null {
@@ -258,7 +282,7 @@ export class Product {
   public getSku(): string {
     return this.sku.getValue();
   }
-  public getTenantId(): number {
+  public getTenantId(): TenantId {
     return this.tenantId;
   }
   public getSeasonIds(): string[] {

@@ -1,27 +1,29 @@
 import { Category } from '@/categories/domain/entities/category.entity';
 import { PaginationOptions, PaginatedResult } from '@/shared/domain/pagination/pagination';
 import { CategoryStatus } from '@/categories/domain/enums/category-status.enum';
+import { CategoryId } from '@/categories/domain/types/category-id.type';
+import { TenantId } from '@/categories/domain/types/tenant-id.type';
 
 export interface CategoryFilters {
-  id?: string;
+  id?: CategoryId;
   name?: string;
-  tenantId: number;
+  tenantId: TenantId;
   status?: CategoryStatus;
 }
 
 export interface CategoryRepositoryPort {
   save(category: Category): Promise<void>;
 
-  deleteById(id: string, tenantId: number): Promise<void>;
+  deleteById(id: CategoryId, tenantId: TenantId): Promise<void>;
 
-  findById(id: string, tenantId: number): Promise<Category | null>;
+  findById(id: CategoryId, tenantId: TenantId): Promise<Category | null>;
 
-  findAll(tenantId: number, pagination?: PaginationOptions): Promise<PaginatedResult<Category>>;
+  findAll(tenantId: TenantId, pagination?: PaginationOptions): Promise<PaginatedResult<Category>>;
 
   searchByFilters(
     filters: CategoryFilters,
     pagination?: PaginationOptions,
   ): Promise<PaginatedResult<Category>>;
 
-  searchCategoriesByName(query: string, tenantId: number): Promise<Category[]>;
+  searchCategoriesByName(query: string, tenantId: TenantId): Promise<Category[]>;
 }

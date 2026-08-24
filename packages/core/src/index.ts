@@ -34,6 +34,11 @@ export { SupabaseCategoryRepository } from './features/categories/infrastructure
 export { Product } from './features/products/domain/entities/product.entity';
 export { ProductVariant } from './features/products/domain/entities/product-variant.entity';
 export { ProductStatus } from './features/products/domain/enums/product-status.enum';
+export type { ProductId } from './features/products/domain/types/product-id.type';
+export type { CategoryId } from './features/products/domain/types/category-id.type';
+export type { TenantId as ProductTenantId } from './features/products/domain/types/tenant-id.type';
+export { InvalidProductAttributeException } from './features/products/domain/exceptions/invalid-product-attribute.exception';
+export { InvalidProductStateException } from './features/products/domain/exceptions/invalid-product-state.exception';
 
 // Application (Ports)
 export type {

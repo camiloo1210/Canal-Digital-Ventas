@@ -5,6 +5,9 @@ import { Money } from '@/shared/domain/value-objects/money.vo';
 import { ProductName } from '@/products/domain/value-objects/product-name.vo';
 import { Sku } from '@/products/domain/value-objects/sku.vo';
 import { DbProductRow, DbProductVariantRow } from '../types/supabase-product.types';
+import { ProductId } from '@/products/domain/types/product-id.type';
+import { CategoryId } from '@/products/domain/types/category-id.type';
+import { TenantId } from '@/products/domain/types/tenant-id.type';
 
 export class SupabaseProductMapper {
   public static toDomain(row: DbProductRow): Product {
@@ -25,18 +28,18 @@ export class SupabaseProductMapper {
       ) || [];
 
     return Product.reconstitute({
-      id: row.id,
+      id: row.id as ProductId,
       name: ProductName.from(row.name),
       price: Money.from(row.price_cents / 100),
       cost: Money.from(row.cost_cents / 100),
       wholesalePrice: Money.from(row.wholesale_price_cents / 100),
       description: row.description,
       stock: row.stock,
-      categoryId: row.category_id,
+      categoryId: row.category_id as CategoryId,
       expirationDate: row.expiration_date ? new Date(row.expiration_date) : null,
       status: row.status as ProductStatus,
       sku: Sku.from(row.sku),
-      tenantId: row.tenant_id,
+      tenantId: row.tenant_id as TenantId,
       seasonIds: row.season_ids || [],
       imagePath: row.image_path,
       imageUrl: row.image_url,
