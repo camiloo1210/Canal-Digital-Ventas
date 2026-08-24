@@ -1,33 +1,34 @@
 import { Product } from '@/products/domain/entities/product.entity';
 import { ProductStatus } from '@/products/domain/enums/product-status.enum';
 import { PaginationOptions, PaginatedResult } from '@/shared/domain/pagination/pagination';
+import { ProductId } from '@/products/domain/types/product-id.type';
+import { CategoryId } from '@/products/domain/types/category-id.type';
+import { TenantId } from '@/products/domain/types/tenant-id.type';
 
 export interface ProductFilters {
-  id?: string;
+  id?: ProductId;
   name?: string;
-  categoryId?: string;
+  categoryId?: CategoryId;
   sku?: string;
-  tenantId: number;
+  tenantId: TenantId;
   status?: ProductStatus;
 }
 
 export interface ProductRepositoryPort {
   save(product: Product): Promise<void>;
 
-  deleteById(id: string): Promise<void>;
+  delete(id: ProductId, tenantId: TenantId): Promise<void>;
 
-  archive(id: string): Promise<void>;
+  findById(id: ProductId, tenantId: TenantId): Promise<Product | null>;
 
-  findById(id: string): Promise<Product | null>;
-
-  findAll(tenantId: number, pagination?: PaginationOptions): Promise<PaginatedResult<Product>>;
+  findAll(tenantId: TenantId, pagination?: PaginationOptions): Promise<PaginatedResult<Product>>;
 
   searchByFilters(
     filters: ProductFilters,
     pagination?: PaginationOptions,
   ): Promise<PaginatedResult<Product>>;
 
-  findByCategoryId(categoryId: string, tenantId: number): Promise<Product[]>;
+  findByCategoryId(categoryId: CategoryId, tenantId: TenantId): Promise<Product[]>;
 
-  searchProductsByName(query: string, tenantId: number): Promise<Product[]>;
+  searchProductsByName(query: string, tenantId: TenantId): Promise<Product[]>;
 }

@@ -93,7 +93,9 @@ export class SupabaseOrderRepository implements OrderRepositoryPort {
     }
 
     const totalItems = count ?? 0;
-    const orders = (data ?? []).map((row: any) => SupabaseOrderMapper.toDomain(row as DbOrderRow));
+    const orders = (data ?? []).map((row: unknown) =>
+      SupabaseOrderMapper.toDomain(row as DbOrderRow),
+    );
 
     return {
       items: orders,

@@ -6,13 +6,13 @@ export class DeleteProductUseCase {
   constructor(private readonly productRepository: ProductRepositoryPort) {}
 
   async execute(dto: DeleteProductDto): Promise<string> {
-    const product = await this.productRepository.findById(dto.id);
+    const product = await this.productRepository.findById(dto.id, dto.tenantId);
 
-    if (!product || product.getTenantId() !== dto.tenantId) {
+    if (!product) {
       throw new ProductNotFoundException(dto.id);
     }
 
-    await this.productRepository.deleteById(dto.id);
+    await this.productRepository.delete(dto.id, dto.tenantId);
 
     return dto.id;
   }

@@ -5,10 +5,12 @@ import { Sku } from '@/products/domain/value-objects/sku.vo';
 import { Money } from '@/shared/domain/value-objects/money.vo';
 import { ProductRepositoryPort } from '@/products/application/ports/out/product-repository.port';
 import { FileStoragePort } from '@/products/application/ports/out/file-storage.port';
+import { EventBusPort } from '@/shared/application/ports/out/event-bus.port';
 
 export class CreateProductUseCase {
   constructor(
     private readonly productRepository: ProductRepositoryPort,
+    private readonly eventBus: EventBusPort,
     private readonly fileStorage?: FileStoragePort,
   ) {}
 
@@ -17,13 +19,14 @@ export class CreateProductUseCase {
     const sku = Sku.from(dto.sku);
     const price = Money.from(dto.price);
     const cost = Money.from(dto.cost);
-    const wholesalePrice = dto.wholesalePrice ? Money.from(dto.wholesalePrice) : undefined;
+    const wholesalePrice = dto.wholesalePrice ? Money.from(dto.wholesalePrice) : null;
 
-    let imagePath: string | undefined = undefined;
-    let imageUrl: string | undefined = undefined;
+    let imagePath: string | null = null;
+    let imageUrl: string | null = null;
 
     if (dto.image && this.fileStorage) {
-      const ext = dto.image.name?.split('.').pop() || 'jpg';
+      const imageFile = dto.image as { name?: string };
+      const ext = imageFile.name?.split('.').pop() || 'jpg';
       const destinationPath = `products/${dto.id}.${ext}`;
       const uploadResult = await this.fileStorage.upload(dto.image, destinationPath);
       imagePath = uploadResult.path;
@@ -40,20 +43,25 @@ export class CreateProductUseCase {
       dto.categoryId,
       sku,
       dto.tenantId,
-      undefined,
-      undefined,
+      null, // expirationDate
+      null, // status
       dto.seasonIds,
       imagePath,
-      [],
+      [], // variants
       dto.isVatExempt,
       wholesalePrice,
     );
 
     if (imageUrl) {
-      newProduct.updateImageUrl(imageUrl);
+      newProduct.updateImages(imagePath, imageUrl);
     }
 
     await this.productRepository.save(newProduct);
+
+    if (newProduct.domainEvents.length > 0) {
+      await this.eventBus.publish(newProduct.domainEvents);
+    }
+    newProduct.clearDomainEvents();
 
     return newProduct.getId();
   }

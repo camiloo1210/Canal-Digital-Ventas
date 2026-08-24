@@ -1,5 +1,5 @@
 export interface DomainEvent {
   eventName: string;
   occurredOn: Date;
-  [key: string]: any;
+  [key: string]: unknown;
 }
