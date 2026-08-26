@@ -5,7 +5,7 @@ author: AI Agent (MCP)
 creation_date: "2026-07-29"
 updated_date: "2026-08-26"
 issue_type: use-case
-status: done
+status: in_progress
 labels:
   - ai-generated
 relations:
@@ -14,7 +14,7 @@ relations:
 frecuencia: Alta
 importancia: Vital
 urgencia: Inmediata
-integrity_hash: "sha256:f6b6c9778b0a7017c7f307a9ffbde22b41cf88c1d7e147b5135578c405930209"
+integrity_hash: "sha256:c9e09604854b349b8fa05983d9a4ab2caa9d3e9ec43c772a7eb86a95b18b3612"
 ---
 
 ## Actores
