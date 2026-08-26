@@ -3,9 +3,9 @@ id: 0ff03e82-b222-4721-a942-fbea375643b3
 title: "HU-9: Agregar Productos al Carrito"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-29"
+updated_date: "2026-08-26"
 issue_type: user-story
-status: open
+status: in_progress
 labels:
   - ai-generated
 relations:
@@ -17,7 +17,7 @@ relations:
     id: b16a27c2-19c3-4e75-bf77-55440bfe7a23
 priority: Must
 story_points: "3"
-integrity_hash: "sha256:f2bcf31e5555d0292e2d123ff942def5ef42bc2800a820c1188fded3c9e42648"
+integrity_hash: "sha256:c63450909c6bd67e00ee639fcc805665656e3af4ee27c1b7ffb38ef604ce768f"
 ---
 
 ## Criterios de Aceptación
