@@ -3,9 +3,9 @@ id: b16a27c2-19c3-4e75-bf77-55440bfe7a23
 title: "CU-MOD3-01: Agregar Productos al Carrito"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-29"
+updated_date: "2026-08-26"
 issue_type: use-case
-status: open
+status: done
 labels:
   - ai-generated
 relations:
@@ -14,7 +14,7 @@ relations:
 frecuencia: Alta
 importancia: Alta
 urgencia: Inmediata
-integrity_hash: "sha256:bf90afddec79f6e68111e850411b83a59f00732bc045e4525fa7dbc065d4361e"
+integrity_hash: "sha256:a311bba35c9ecb9374f7277c7d10a26d4b7421128f4a65fbbd7881e5d7e2a759"
 ---
 
 ## Actores
