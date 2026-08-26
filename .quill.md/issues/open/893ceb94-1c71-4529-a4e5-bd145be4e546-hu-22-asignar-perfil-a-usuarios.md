@@ -3,9 +3,9 @@ id: 893ceb94-1c71-4529-a4e5-bd145be4e546
 title: "HU-22: Asignar Perfil a Usuarios"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-29"
+updated_date: "2026-08-26"
 issue_type: user-story
-status: open
+status: in_progress
 labels:
   - ai-generated
 relations:
@@ -17,7 +17,7 @@ relations:
     id: 52ea6f77-5dc4-47a8-bf2a-a15c8c79bcc7
 priority: Must
 story_points: "3"
-integrity_hash: "sha256:3b9e353572a58fe9ca1c006fe3eb3f014ef0cd48b26fcd2a199a5fd2298983b2"
+integrity_hash: "sha256:8351def83dc8469b9cc006f3598c606db899092d0793bc709aacadec97ccbd69"
 ---
 
 ## Criterios de Aceptación
