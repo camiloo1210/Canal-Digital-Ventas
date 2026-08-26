@@ -5,7 +5,8 @@
       "@/shared/*": ["src/features/shared/*"],
       "@/products/*": ["src/features/products/*"],
       "@/categories/*": ["src/features/categories/*"],
-      "@/orders/*": ["src/features/orders/*"]
+      "@/orders/*": ["src/features/orders/*"],
+      "@/customers/*": ["src/features/customers/*"]
     }
   }
 }
