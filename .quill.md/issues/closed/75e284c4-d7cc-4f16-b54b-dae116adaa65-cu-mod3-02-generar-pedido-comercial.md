@@ -3,9 +3,9 @@ id: 75e284c4-d7cc-4f16-b54b-dae116adaa65
 title: "CU-MOD3-02: Generar Pedido Comercial"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-29"
+updated_date: "2026-08-26"
 issue_type: use-case
-status: open
+status: done
 labels:
   - ai-generated
 relations:
@@ -14,7 +14,7 @@ relations:
 frecuencia: Alta
 importancia: Vital
 urgencia: Inmediata
-integrity_hash: "sha256:21a0e9f4c40a0df2444fabce1176d2bb38e6097d649b1141e97db9c9a7fc7d04"
+integrity_hash: "sha256:f6b6c9778b0a7017c7f307a9ffbde22b41cf88c1d7e147b5135578c405930209"
 ---
 
 ## Actores
