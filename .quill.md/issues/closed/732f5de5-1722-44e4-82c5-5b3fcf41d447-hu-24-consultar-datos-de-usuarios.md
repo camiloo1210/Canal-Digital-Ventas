@@ -3,9 +3,9 @@ id: 732f5de5-1722-44e4-82c5-5b3fcf41d447
 title: "HU-24: Consultar Datos de Usuarios"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-29"
+updated_date: "2026-08-26"
 issue_type: user-story
-status: open
+status: done
 labels:
   - ai-generated
 relations:
@@ -17,7 +17,7 @@ relations:
     id: 32ef6ff2-110c-4ff4-8ab7-a5a57b6c8ad5
 priority: Must
 story_points: "2"
-integrity_hash: "sha256:c3ff10fc41bb8716080cab51a2531363d760aa1234b4667f4d49135217abcbaf"
+integrity_hash: "sha256:6f2cc096e4005be9c54924330a71283527e8d9c9fd7256c2d9ce98a33ce82075"
 ---
 
 ## Criterios de Aceptación
