@@ -93,16 +93,14 @@ export class Customer {
   }
 
   // Updates / Actions
-  public updateContactInfo(email: Email, phone: PhoneNumber): void {
+  public updateProfile(name: CustomerName, phone: PhoneNumber): void {
     if (this.status === CustomerStatus.SUSPENDED) {
-      throw new InvalidCustomerStateException(
-        'Cannot update contact info for a suspended customer.',
-      );
+      throw new InvalidCustomerStateException('Cannot update profile for a suspended customer.');
     }
-    this.email = email;
+    this.name = name;
     this.phone = phone;
     this.updateUpdatedAt();
-    this.addDomainEvent({ eventName: 'CustomerContactInfoUpdatedEvent', customerId: this.id });
+    this.addDomainEvent({ eventName: 'CustomerProfileUpdatedEvent', customerId: this.id });
   }
 
   public changeAddress(address: Address): void {
