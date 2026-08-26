@@ -3,9 +3,9 @@ id: 702a9b67-84b3-448a-91eb-5f8d97909a25
 title: "HU-25: Actualizar Datos Personales"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-29"
+updated_date: "2026-08-26"
 issue_type: user-story
-status: open
+status: done
 labels:
   - ai-generated
 relations:
@@ -17,7 +17,7 @@ relations:
     id: 583bd319-d3a7-4d69-a5d2-402460d03f27
 priority: Should
 story_points: "3"
-integrity_hash: "sha256:f06dde8cecd56e2a651b5b09cb2c8941fc31febb3f5a0ddf9ca0811f53b14e78"
+integrity_hash: "sha256:11c7dafe01c00cfd136729623bc8e32a609cc97a312085dbb126380bbbda8e7a"
 ---
 
 ## Criterios de Aceptación
