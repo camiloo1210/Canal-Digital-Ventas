@@ -6,7 +6,8 @@
       "@/products/*": ["src/features/products/*"],
       "@/categories/*": ["src/features/categories/*"],
       "@/orders/*": ["src/features/orders/*"],
-      "@/customers/*": ["src/features/customers/*"]
+      "@/customers/*": ["src/features/customers/*"],
+      "@/carts/*": ["src/features/carts/*"]
     }
   }
 }
