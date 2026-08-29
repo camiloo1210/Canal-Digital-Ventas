@@ -3,9 +3,9 @@ id: cffa6a0e-d424-42b7-9439-26b9f2c17cc4
 title: "CU-MOD3-03: Pagar Pedido (Pasarela Lemon Squeezy)"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-29"
+updated_date: "2026-08-29"
 issue_type: use-case
-status: open
+status: done
 labels:
   - ai-generated
 relations:
@@ -14,7 +14,7 @@ relations:
 frecuencia: Alta
 importancia: Vital
 urgencia: Alta
-integrity_hash: "sha256:4cd804dc1d2b80dd6f2fbb86e44dd7fa46c318c664f102694ac51d562c4188f9"
+integrity_hash: "sha256:9da631a191c469dfe1a76a29c11a7703d4f799dd9ef3419c2c12a7b252d9ca61"
 ---
 
 ## Actores
