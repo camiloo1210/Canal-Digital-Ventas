@@ -3,15 +3,15 @@ id: a80dfdb8-a769-4a1a-8f93-ba7c29cd16a6
 title: "MOD-03: Módulo de Gestión de Pedidos y Pagos"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-08-02"
+updated_date: "2026-08-29"
 issue_type: module
-status: open
+status: in_progress
 labels:
   - ai-generated
 relations:
   - type: parent
     id: e651f3ed-4102-4e1b-9a94-9f5a179dd2b1
-integrity_hash: "sha256:28d69fcdf566c16891c40e8768028bec9658aa85297067303130d63adf1790ff"
+integrity_hash: "sha256:e1f8792870fd85fc40b127512f43e6459d5ccc56f75c1e7d3b5ebcb4a339a923"
 ---
 
 ## Descripción del Módulo
