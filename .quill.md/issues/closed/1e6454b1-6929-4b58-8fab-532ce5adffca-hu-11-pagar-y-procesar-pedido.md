@@ -3,9 +3,9 @@ id: 1e6454b1-6929-4b58-8fab-532ce5adffca
 title: "HU-11: Pagar y Procesar Pedido"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-29"
+updated_date: "2026-08-29"
 issue_type: user-story
-status: open
+status: done
 labels:
   - ai-generated
 relations:
@@ -17,7 +17,7 @@ relations:
     id: cffa6a0e-d424-42b7-9439-26b9f2c17cc4
 priority: Must
 story_points: "8"
-integrity_hash: "sha256:7dd350c043cdd1958852a789cf87243b3862381689f1a467ca568537284cee01"
+integrity_hash: "sha256:4db8778d278c705b0dd3f7f53413a592adfd9512aa4e5459690aa741eef249c8"
 ---
 
 ## Criterios de Aceptación
