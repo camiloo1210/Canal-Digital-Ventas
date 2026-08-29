@@ -18,7 +18,6 @@ export class GeneratePaymentCheckoutUseCase {
     const paymentId = crypto.randomUUID() as PaymentId;
     const amountMoney = Money.from(dto.amount, 'USD');
 
-    // 1. Instanciar la entidad de dominio Payment (PENDING)
     const payment = Payment.create(
       paymentId,
       dto.orderId,
@@ -28,16 +27,12 @@ export class GeneratePaymentCheckoutUseCase {
       amountMoney,
     );
 
-    // 2. Obtener el gateway dinámico usando la fábrica (Strategy)
     const gatewayPort = this.paymentGatewayFactory.getGateway(dto.gateway);
 
-    // 3. Generar la URL de checkout
     const checkoutUrl = await gatewayPort.createCheckoutSession(payment);
 
-    // 4. Persistir el pago
     await this.paymentRepository.save(payment);
 
-    // 5. Publicar eventos de dominio (PaymentCreatedEvent)
     await this.eventBus.publish(payment.domainEvents);
     payment.clearDomainEvents();
 

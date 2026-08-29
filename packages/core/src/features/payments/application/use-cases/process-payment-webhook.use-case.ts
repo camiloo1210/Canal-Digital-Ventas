@@ -3,7 +3,6 @@ import { PaymentRepositoryPort } from '@/payments/application/ports/out/payment-
 import { EventBusPort } from '@/shared/application/ports/out/event-bus.port';
 import { ProcessWebhookDto } from '@/payments/application/dtos/process-webhook.dto';
 import { PaymentNotFoundException } from '@/payments/application/exceptions/payment-not-found.exception';
-import { PaymentId } from '@/payments/domain/types/payment-id.type';
 import { PaymentStatus } from '@/payments/domain/enums/payment-status.enum';
 
 export class ProcessPaymentWebhookUseCase {
