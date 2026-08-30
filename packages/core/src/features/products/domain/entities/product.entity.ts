@@ -145,9 +145,9 @@ export class Product {
       throw new InvalidProductAttributeException('Category ID is required.');
   }
   private static validateTenantId(tenantId: TenantId): void {
-    if (tenantId === undefined || tenantId === null || tenantId <= 0) {
+    if (!tenantId || typeof tenantId !== 'string' || tenantId.trim().length === 0) {
       throw new InvalidProductAttributeException(
-        'Tenant ID is required and must be a positive number.',
+        'Tenant ID is required and must be a valid string.',
       );
     }
   }

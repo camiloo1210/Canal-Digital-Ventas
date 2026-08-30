@@ -22,7 +22,7 @@ export interface DbProductRow {
   expiration_date: string | null;
   status: string;
   sku: string;
-  tenant_id: number;
+  tenant_id: string;
   season_ids: string[];
   image_path: string | null;
   image_url: string | null;

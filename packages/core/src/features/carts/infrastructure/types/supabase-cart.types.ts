@@ -14,7 +14,7 @@ export interface DbCartItemRow {
 
 export interface DbCartRow {
   id: string;
-  tenant_id: number;
+  tenant_id: string;
   customer_id: string | null;
   status: string;
   subtotal_cents: number;

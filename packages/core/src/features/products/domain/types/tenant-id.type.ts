@@ -1,1 +1,3 @@
-export type TenantId = number & { readonly __brand: 'TenantId' };
+import { Brand } from '@/shared/domain/types/brand.type';
+
+export type TenantId = Brand<string, 'TenantId'>;

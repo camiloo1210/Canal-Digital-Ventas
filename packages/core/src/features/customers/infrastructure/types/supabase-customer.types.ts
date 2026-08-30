@@ -1,6 +1,6 @@
 export interface DbCustomerRow {
   id: string;
-  tenant_id: number;
+  tenant_id: string;
   full_name: string;
   email: string;
   phone: string;

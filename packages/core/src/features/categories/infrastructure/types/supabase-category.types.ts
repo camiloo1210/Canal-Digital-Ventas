@@ -3,5 +3,5 @@ export interface DbCategoryRow {
   name: string;
   description: string;
   status: string;
-  tenant_id: number;
+  tenant_id: string;
 }
