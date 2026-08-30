@@ -67,8 +67,8 @@ export class Category {
 
   // Validations
   private static validateTenantId(tenantId: TenantId): void {
-    if (tenantId === undefined || tenantId === null || tenantId <= 0) {
-      throw new InvalidTenantIdException('Tenant ID is required and must be a positive number.');
+    if (!tenantId || typeof tenantId !== 'string' || tenantId.trim().length === 0) {
+      throw new InvalidTenantIdException('Tenant ID is required and must be a valid string.');
     }
   }
 

@@ -16,7 +16,7 @@ export interface DbOrderRow {
   id: string;
   order_number: string;
   customer_id: string;
-  tenant_id: number;
+  tenant_id: string;
   status: string;
   subtotal_cents: number;
   tax_amount_cents: number;

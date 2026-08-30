@@ -1,7 +1,7 @@
 export interface DbPaymentRow {
   id: string;
   order_id: string;
-  tenant_id: number;
+  tenant_id: string;
   customer_id: string;
   status: string;
   gateway: string;

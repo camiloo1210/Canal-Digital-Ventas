@@ -7,7 +7,8 @@ import { Category } from '@/categories/domain/entities/category.entity';
 import { SupabaseCategoryMapper } from '@/categories/infrastructure/mappers/supabase-category.mapper';
 import { DbCategoryRow } from '@/categories/infrastructure/types/supabase-category.types';
 import { PaginationOptions, PaginatedResult } from '@/shared/domain/pagination/pagination';
-
+import { TenantId } from '@/categories/domain/types/tenant-id.type';
+import { CategoryId } from '@/categories/domain/types/category-id.type';
 export class SupabaseCategoryRepository implements CategoryRepositoryPort {
   constructor(private readonly supabase: SupabaseClient) {}
 
@@ -52,7 +53,7 @@ export class SupabaseCategoryRepository implements CategoryRepositoryPort {
   }
 
   async findAll(
-    tenantId: number,
+    tenantId: TenantId,
     pagination?: PaginationOptions,
   ): Promise<PaginatedResult<Category>> {
     const page = pagination?.page ?? 1;
@@ -81,7 +82,7 @@ export class SupabaseCategoryRepository implements CategoryRepositoryPort {
     };
   }
 
-  async searchCategoriesByName(query: string, tenantId: number): Promise<Category[]> {
+  async searchCategoriesByName(query: string, tenantId: TenantId): Promise<Category[]> {
     const { data, error } = await this.supabase
       .from('categories')
       .select('*')
@@ -93,7 +94,7 @@ export class SupabaseCategoryRepository implements CategoryRepositoryPort {
     return (data ?? []).map((row: DbCategoryRow) => SupabaseCategoryMapper.toDomain(row));
   }
 
-  async findById(id: string, tenantId: number): Promise<Category | null> {
+  async findById(id: CategoryId, tenantId: TenantId): Promise<Category | null> {
     const { data, error } = await this.supabase
       .from('categories')
       .select('*')
@@ -119,7 +120,7 @@ export class SupabaseCategoryRepository implements CategoryRepositoryPort {
     }
   }
 
-  async deleteById(id: string, tenantId: number): Promise<void> {
+  async deleteById(id: CategoryId, tenantId: TenantId): Promise<void> {
     const { error } = await this.supabase
       .from('categories')
       .delete()
