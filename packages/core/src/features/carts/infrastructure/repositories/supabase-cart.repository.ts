@@ -5,7 +5,7 @@ import { SupabaseCartMapper } from '@/carts/infrastructure/mappers/supabase-cart
 import { DbCartRow } from '@/carts/infrastructure/types/supabase-cart.types';
 import { CartId } from '@/carts/domain/types/cart-id.type';
 import { CustomerId } from '@/carts/domain/types/customer-id.type';
-import { TenantId } from '@/carts/domain/types/tenant-id.type';
+import { TenantId } from '@/shared/domain/types/tenant-id.type';
 import { CartRepositoryException } from '@/carts/infrastructure/exceptions/cart-repository.exception';
 
 export class SupabaseCartRepository implements CartRepositoryPort {
@@ -14,48 +14,22 @@ export class SupabaseCartRepository implements CartRepositoryPort {
   async save(cart: Cart): Promise<void> {
     const { cartRow, cartItemsRows } = SupabaseCartMapper.toPersistence(cart);
 
-    // 1. Upsert Cart Header
-    const { error: cartError } = await this.supabase.from('carts').upsert(cartRow);
+    const { error } = await this.supabase.rpc('upsert_cart_transactional', {
+      cart_data: cartRow,
+      items_data: cartItemsRows,
+    });
 
-    if (cartError) {
-      throw new CartRepositoryException(`Failed to save cart: ${cartError.message}`);
-    }
-
-    // 2. Handle Cart Items
-    // To ensure items removed in memory are removed in DB, we delete items not in the current list
-    const currentItemIds = cartItemsRows.map((item) => item.id);
-
-    if (currentItemIds.length > 0) {
-      const { error: deleteError } = await this.supabase
-        .from('cart_items')
-        .delete()
-        .eq('cart_id', cart.getId())
-        .not('id', 'in', `(${currentItemIds.join(',')})`);
-
-      if (deleteError) {
+    if (error) {
+      if (error.code === 'P0001') {
         throw new CartRepositoryException(
-          `Failed to cleanup removed cart items: ${deleteError.message}`,
+          `Optimistic locking failed: the cart has been updated by another transaction.`,
+          error,
         );
       }
-
-      // Upsert current items
-      const { error: itemsError } = await this.supabase.from('cart_items').upsert(cartItemsRows);
-
-      if (itemsError) {
-        throw new CartRepositoryException(`Failed to save cart items: ${itemsError.message}`);
-      }
-    } else {
-      // If no items are in the cart, delete all items associated with it
-      const { error: deleteError } = await this.supabase
-        .from('cart_items')
-        .delete()
-        .eq('cart_id', cart.getId());
-
-      if (deleteError) {
-        throw new CartRepositoryException(
-          `Failed to delete all cart items: ${deleteError.message}`,
-        );
-      }
+      throw new CartRepositoryException(
+        `Failed to save cart transactionally: ${error.message}`,
+        error,
+      );
     }
   }
 
