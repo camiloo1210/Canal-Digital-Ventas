@@ -36,9 +36,9 @@ export { ProductVariant } from './features/products/domain/entities/product-vari
 export { ProductStatus } from './features/products/domain/enums/product-status.enum';
 export type { ProductId } from './features/products/domain/types/product-id.type';
 export type { CategoryId } from './features/products/domain/types/category-id.type';
-export type { TenantId as ProductTenantId } from './features/products/domain/types/tenant-id.type';
 export { InvalidProductAttributeException } from './features/products/domain/exceptions/invalid-product-attribute.exception';
 export { InvalidProductStateException } from './features/products/domain/exceptions/invalid-product-state.exception';
+export { ProductRepositoryException } from './features/products/application/exceptions/product-repository.exception';
 
 // Application (Ports)
 export type {

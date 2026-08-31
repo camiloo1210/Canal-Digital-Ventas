@@ -6,6 +6,9 @@ import { Money } from '@/shared/domain/value-objects/money.vo';
 import { ProductRepositoryPort } from '@/products/application/ports/out/product-repository.port';
 import { FileStoragePort } from '@/products/application/ports/out/file-storage.port';
 import { EventBusPort } from '@/shared/application/ports/out/event-bus.port';
+import { createProductId } from '@/products/domain/types/product-id.type';
+import { createCategoryId } from '@/products/domain/types/category-id.type';
+import { createTenantId } from '@/shared/domain/types/tenant-id.type';
 
 export class CreateProductUseCase {
   constructor(
@@ -33,16 +36,20 @@ export class CreateProductUseCase {
       imageUrl = uploadResult.url;
     }
 
+    const productId = createProductId(dto.id);
+    const categoryId = createCategoryId(dto.categoryId);
+    const tenantId = createTenantId(dto.tenantId);
+
     const newProduct = Product.create(
-      dto.id,
+      productId,
       name,
       price,
       cost,
       dto.description,
       dto.stock,
-      dto.categoryId,
+      categoryId,
       sku,
-      dto.tenantId,
+      tenantId,
       null, // expirationDate
       null, // status
       dto.seasonIds,
