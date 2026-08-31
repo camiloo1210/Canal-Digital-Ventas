@@ -1,9 +1,6 @@
-import { CustomerId } from '@/customers/domain/types/customer-id.type';
-import { TenantId } from '@/customers/domain/types/tenant-id.type';
-
 export interface CreateCustomerDto {
-  id: CustomerId;
-  tenantId: TenantId;
+  id: string;
+  tenantId: string;
   name: string;
   email: string;
   phone: string;

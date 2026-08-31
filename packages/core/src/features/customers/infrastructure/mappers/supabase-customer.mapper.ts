@@ -1,7 +1,7 @@
 import { Customer } from '@/customers/domain/entities/customer.entity';
 import { DbCustomerRow } from '@/customers/infrastructure/types/supabase-customer.types';
 import { CustomerId } from '@/customers/domain/types/customer-id.type';
-import { TenantId } from '@/customers/domain/types/tenant-id.type';
+import { TenantId } from '@/shared/domain/types/tenant-id.type';
 import { CustomerStatus } from '@/customers/domain/enums/customer-status.enum';
 import { CustomerName } from '@/customers/domain/value-objects/customer-name.vo';
 import { Email } from '@/customers/domain/value-objects/email.vo';

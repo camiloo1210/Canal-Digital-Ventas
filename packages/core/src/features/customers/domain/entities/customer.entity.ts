@@ -1,5 +1,5 @@
 import { CustomerId } from '@/customers/domain/types/customer-id.type';
-import { TenantId } from '@/customers/domain/types/tenant-id.type';
+import { TenantId } from '@/shared/domain/types/tenant-id.type';
 import { CustomerStatus } from '@/customers/domain/enums/customer-status.enum';
 import { CustomerName } from '@/customers/domain/value-objects/customer-name.vo';
 import { Email } from '@/customers/domain/value-objects/email.vo';
@@ -10,6 +10,12 @@ import { DomainEvent } from '@/shared/domain/events/domain-event.interface';
 import { InvalidCustomerAttributeException } from '@/customers/domain/exceptions/invalid-customer-attribute.exception';
 import { InvalidCustomerStateException } from '@/customers/domain/exceptions/invalid-customer-state.exception';
 import { InvalidTenantIdException } from '@/shared/domain/exceptions/invalid-tenant-id.exception';
+import { CustomerCreatedEvent } from '@/customers/domain/events/customer-created.event';
+import { CustomerProfileUpdatedEvent } from '@/customers/domain/events/customer-profile-updated.event';
+import { CustomerAddressChangedEvent } from '@/customers/domain/events/customer-address-changed.event';
+import { CustomerSuspendedEvent } from '@/customers/domain/events/customer-suspended.event';
+import { CustomerActivatedEvent } from '@/customers/domain/events/customer-activated.event';
+import { CustomerDeactivatedEvent } from '@/customers/domain/events/customer-deactivated.event';
 
 export interface CustomerProps {
   id: CustomerId;
@@ -69,7 +75,7 @@ export class Customer {
       0, // Initial version
     );
 
-    customer.addDomainEvent({ eventName: 'CustomerCreatedEvent', customerId: id });
+    customer.addDomainEvent(new CustomerCreatedEvent(id));
     return customer;
   }
 
@@ -100,7 +106,7 @@ export class Customer {
     this.name = name;
     this.phone = phone;
     this.updateUpdatedAt();
-    this.addDomainEvent({ eventName: 'CustomerProfileUpdatedEvent', customerId: this.id });
+    this.addDomainEvent(new CustomerProfileUpdatedEvent(this.id));
   }
 
   public changeAddress(address: Address): void {
@@ -110,7 +116,7 @@ export class Customer {
     }
     this.address = address;
     this.updateUpdatedAt();
-    this.addDomainEvent({ eventName: 'CustomerAddressChangedEvent', customerId: this.id });
+    this.addDomainEvent(new CustomerAddressChangedEvent(this.id));
   }
 
   public suspend(): void {
@@ -119,7 +125,7 @@ export class Customer {
     }
     this.status = CustomerStatus.SUSPENDED;
     this.updateUpdatedAt();
-    this.addDomainEvent({ eventName: 'CustomerSuspendedEvent', customerId: this.id });
+    this.addDomainEvent(new CustomerSuspendedEvent(this.id));
   }
 
   public activate(): void {
@@ -128,7 +134,7 @@ export class Customer {
     }
     this.status = CustomerStatus.ACTIVE;
     this.updateUpdatedAt();
-    this.addDomainEvent({ eventName: 'CustomerActivatedEvent', customerId: this.id });
+    this.addDomainEvent(new CustomerActivatedEvent(this.id));
   }
 
   public deactivate(): void {
@@ -137,7 +143,7 @@ export class Customer {
     }
     this.status = CustomerStatus.INACTIVE;
     this.updateUpdatedAt();
-    this.addDomainEvent({ eventName: 'CustomerDeactivatedEvent', customerId: this.id });
+    this.addDomainEvent(new CustomerDeactivatedEvent(this.id));
   }
 
   private updateUpdatedAt(): void {
