@@ -14,12 +14,12 @@ export class ChangeOrderStatusUseCase {
   ) {}
 
   async execute(dto: ChangeOrderStatusDto): Promise<void> {
-    const orderId = createOrderId(dto.orderId); 
+    const orderId = createOrderId(dto.orderId);
     const tenantId = createTenantId(dto.tenantId);
-    const status = parseOrderStatus(dto.status); 
+    const status = parseOrderStatus(dto.status);
 
     const order = await this.orderRepository.findById(orderId, tenantId);
-    
+
     if (!order) {
       throw new OrderNotFoundException();
     }
