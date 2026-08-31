@@ -1,6 +1,6 @@
 import { Payment } from '@/payments/domain/entities/payment.entity';
 import { PaymentId } from '@/payments/domain/types/payment-id.type';
-import { TenantId } from '@/payments/domain/types/tenant-id.type';
+import { TenantId } from '@/shared/domain/types/tenant-id.type';
 import { PaymentStatus } from '@/payments/domain/enums/payment-status.enum';
 import { PaginatedResult, PaginationOptions } from '@/shared/domain/pagination/pagination';
 

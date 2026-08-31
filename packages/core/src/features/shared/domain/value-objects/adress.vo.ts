@@ -1,3 +1,5 @@
+import { InvalidAddressException } from '@/shared/domain/exceptions/invalid-address.exception';
+
 export class Address {
   private constructor(
     private readonly street: string,
@@ -17,7 +19,7 @@ export class Address {
     reference?: string,
   ): Address {
     if (!street || !city || !state || !country) {
-      throw new Error('Street, city, state, and country are required.');
+      throw new InvalidAddressException('Street, city, state, and country are required.');
     }
     return new Address(
       street.trim(),
