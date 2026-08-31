@@ -6,7 +6,7 @@ import { Address } from '@/shared/domain/value-objects/adress.vo';
 import { parseOrderStatus } from '@/orders/domain/enums/order-status.enum';
 import { OrderId } from '@/orders/domain/types/order-id.type';
 import { CustomerId } from '@/orders/domain/types/customer-id.type';
-import { TenantId } from '@/orders/domain/types/tenant-id.type';
+import { TenantId } from '@/shared/domain/types/tenant-id.type';
 import { PaymentGatewayId } from '@/orders/domain/types/payment-gateway-id.type';
 import { OrderItemId } from '@/orders/domain/types/order-item-id.type';
 import { ProductId } from '@/orders/domain/types/product-id.type';
