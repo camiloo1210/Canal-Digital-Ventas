@@ -1,7 +1,4 @@
-import { TenantId } from '@/carts/domain/types/tenant-id.type';
-import { CartId } from '@/carts/domain/types/cart-id.type';
-
 export interface ClearCartDto {
-  cartId: CartId;
-  tenantId: TenantId;
+  cartId: string;
+  tenantId: string;
 }

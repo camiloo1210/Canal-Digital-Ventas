@@ -2,6 +2,8 @@ import { CartRepositoryPort } from '@/carts/application/ports/out/cart-repositor
 import { EventBusPort } from '@/shared/application/ports/out/event-bus.port';
 import { ClearCartDto } from '@/carts/application/dtos/clear-cart.dto';
 import { CartNotFoundException } from '@/carts/application/exceptions/cart-not-found.exception';
+import { createCartId } from '@/carts/domain/types/cart-id.type';
+import { createTenantId } from '@/shared/domain/types/tenant-id.type';
 
 export class ClearCartUseCase {
   constructor(
@@ -10,7 +12,10 @@ export class ClearCartUseCase {
   ) {}
 
   async execute(dto: ClearCartDto): Promise<void> {
-    const cart = await this.cartRepository.findById(dto.cartId, dto.tenantId);
+    const cartId = createCartId(dto.cartId);
+    const tenantId = createTenantId(dto.tenantId);
+
+    const cart = await this.cartRepository.findById(cartId, tenantId);
 
     if (!cart) {
       throw new CartNotFoundException();
