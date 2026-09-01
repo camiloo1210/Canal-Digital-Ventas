@@ -4,17 +4,16 @@ import { ProductName } from '@/products/domain/value-objects/product-name.vo';
 import { Sku } from '@/products/domain/value-objects/sku.vo';
 import { Money } from '@/shared/domain/value-objects/money.vo';
 import { ProductRepositoryPort } from '@/products/application/ports/out/product-repository.port';
-import { FileStoragePort } from '@/products/application/ports/out/file-storage.port';
 import { EventBusPort } from '@/shared/application/ports/out/event-bus.port';
 import { createProductId } from '@/products/domain/types/product-id.type';
 import { createCategoryId } from '@/products/domain/types/category-id.type';
 import { createTenantId } from '@/shared/domain/types/tenant-id.type';
+import { createSeasonId } from '@/products/domain/types/season-id.type';
 
 export class CreateProductUseCase {
   constructor(
     private readonly productRepository: ProductRepositoryPort,
     private readonly eventBus: EventBusPort,
-    private readonly fileStorage?: FileStoragePort,
   ) {}
 
   async execute(dto: CreateProductDto): Promise<string> {
@@ -24,17 +23,8 @@ export class CreateProductUseCase {
     const cost = Money.from(dto.cost);
     const wholesalePrice = dto.wholesalePrice ? Money.from(dto.wholesalePrice) : null;
 
-    let imagePath: string | null = null;
-    let imageUrl: string | null = null;
-
-    if (dto.image && this.fileStorage) {
-      const imageFile = dto.image as { name?: string };
-      const ext = imageFile.name?.split('.').pop() || 'jpg';
-      const destinationPath = `products/${dto.id}.${ext}`;
-      const uploadResult = await this.fileStorage.upload(dto.image, destinationPath);
-      imagePath = uploadResult.path;
-      imageUrl = uploadResult.url;
-    }
+    const imagePath = dto.imagePath || null;
+    const imageUrl = dto.imageUrl || null;
 
     const productId = createProductId(dto.id);
     const categoryId = createCategoryId(dto.categoryId);
@@ -52,7 +42,7 @@ export class CreateProductUseCase {
       tenantId,
       null, // expirationDate
       null, // status
-      dto.seasonIds,
+      dto.seasonIds.map((id) => createSeasonId(id)),
       imagePath,
       [], // variants
       dto.isVatExempt,

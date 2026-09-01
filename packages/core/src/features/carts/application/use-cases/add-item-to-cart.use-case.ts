@@ -3,6 +3,7 @@ import { EventBusPort } from '@/shared/application/ports/out/event-bus.port';
 import { AddItemToCartDto } from '@/carts/application/dtos/add-item-to-cart.dto';
 import { CartItem } from '@/carts/domain/entities/cart-item.entity';
 import { Money } from '@/shared/domain/value-objects/money.vo';
+import { Currency } from '@/shared/domain/enums/currency.enum';
 import { createCartItemId } from '@/carts/domain/types/cart-item-id.type';
 import { CartNotFoundException } from '@/carts/application/exceptions/cart-not-found.exception';
 import { createCartId } from '@/carts/domain/types/cart-id.type';
@@ -27,7 +28,7 @@ export class AddItemToCartUseCase {
       throw new CartNotFoundException();
     }
 
-    const unitPrice = Money.from(dto.unitPriceValue, 'USD');
+    const unitPrice = Money.from(dto.unitPriceValue, Currency.USD);
     const cartItemId = createCartItemId(crypto.randomUUID());
     const productId = createProductId(dto.productId);
     const variantId = dto.variantId ? createVariantId(dto.variantId) : undefined;

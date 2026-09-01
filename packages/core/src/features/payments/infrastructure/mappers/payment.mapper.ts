@@ -6,6 +6,7 @@ import { TenantId } from '@/shared/domain/types/tenant-id.type';
 import { PaymentStatus } from '@/payments/domain/enums/payment-status.enum';
 import { PaymentGateway } from '@/payments/domain/enums/payment-gateway.enum';
 import { Money } from '@/shared/domain/value-objects/money.vo';
+import { Currency } from '@/shared/domain/enums/currency.enum';
 import { DbPaymentRow } from '@/payments/infrastructure/types/supabase-payment.types';
 
 export class PaymentMapper {
@@ -17,7 +18,7 @@ export class PaymentMapper {
       customerId: row.customer_id as CustomerId,
       status: row.status as PaymentStatus,
       gateway: row.gateway as PaymentGateway,
-      amount: Money.from(row.amount_cents / 100, 'USD'), // Assuming amount_cents is saved
+      amount: Money.from(row.amount_cents, Currency.USD),
       gatewayTransactionId: row.gateway_transaction_id,
       failureReason: row.failure_reason,
       createdAt: new Date(row.created_at),
@@ -36,7 +37,7 @@ export class PaymentMapper {
       customer_id: entity.getCustomerId(),
       status: entity.getStatus(),
       gateway: entity.getGateway(),
-      amount_cents: Math.round(entity.getAmount().getValue() * 100),
+      amount_cents: entity.getAmount().getValue(),
       gateway_transaction_id: entity.getGatewayTransactionId(),
       failure_reason: entity.getFailureReason(),
       created_at: entity.getCreatedAt().toISOString(),

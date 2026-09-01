@@ -111,7 +111,12 @@ export class SupabaseCategoryRepository implements CategoryRepositoryPort {
       .single();
 
     if (error || !data) {
-      console.error(error);
+      if (error && error.code !== 'PGRST116') {
+        throw new CategoryRepositoryException(
+          `Database error searching category: ${error.message}`,
+          error,
+        );
+      }
       return null;
     }
 

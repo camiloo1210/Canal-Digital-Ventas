@@ -1,4 +1,5 @@
 import { CategoryRepositoryPort } from '@/categories/application/ports/out/category-repository.port';
+import { EventBusPort } from '@/shared/application/ports/out/event-bus.port';
 import { ArchiveCategoryDto } from '@/categories/application/dtos/archive-category.dto';
 import { CategoryNotFoundException } from '@/categories/application/exceptions/category-not-found.exception';
 import { CategoryId } from '@/categories/domain/types/category-id.type';
@@ -7,7 +8,10 @@ import { createCategoryId } from '@/categories/domain/types/category-id.type';
 import { createTenantId } from '@/shared/domain/types/tenant-id.type';
 
 export class ArchiveCategoryUseCase {
-  constructor(private readonly categoryRepository: CategoryRepositoryPort) {}
+  constructor(
+    private readonly categoryRepository: CategoryRepositoryPort,
+    private readonly eventBus: EventBusPort,
+  ) {}
 
   async execute(dto: ArchiveCategoryDto): Promise<CategoryId> {
     const categoryId = createCategoryId(dto.id);
@@ -20,6 +24,8 @@ export class ArchiveCategoryUseCase {
 
     category.archive();
     await this.categoryRepository.save(category);
+    await this.eventBus.publish(category.domainEvents);
+    category.clearDomainEvents();
 
     return category.getId();
   }

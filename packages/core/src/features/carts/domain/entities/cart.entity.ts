@@ -4,6 +4,7 @@ import { CustomerId } from '@/carts/domain/types/customer-id.type';
 import { CartStatus } from '@/carts/domain/enums/cart-status.enum';
 import { CartItem } from '@/carts/domain/entities/cart-item.entity';
 import { Money } from '@/shared/domain/value-objects/money.vo';
+import { Currency } from '@/shared/domain/enums/currency.enum';
 import { InvalidCartAttributeException } from '@/carts/domain/exceptions/invalid-cart-attribute.exception';
 import { InvalidCartStateException } from '@/carts/domain/exceptions/invalid-cart-state.exception';
 import { InvalidTenantIdException } from '@/shared/domain/exceptions/invalid-tenant-id.exception';
@@ -58,7 +59,7 @@ export class Cart {
       customerId,
       [],
       CartStatus.ACTIVE,
-      Money.from(0, 'USD'), // Default currency, will adapt on first item added
+      Money.from(0, Currency.USD), // Default currency, will adapt on first item added
       expiresAt,
       new Date(),
       new Date(),
@@ -190,7 +191,7 @@ export class Cart {
 
   private recalculateSubtotal(): void {
     if (this.items.length === 0) {
-      this.subtotal = Money.from(0, 'USD'); // Fallback currency
+      this.subtotal = Money.from(0, Currency.USD);
       return;
     }
 

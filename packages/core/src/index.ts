@@ -21,7 +21,8 @@ export { CreateCategoryUseCase } from './features/categories/application/use-cas
 export { DeleteCategoryUseCase } from './features/categories/application/use-cases/delete-category.use-case';
 export { ListCategoriesUseCase } from './features/categories/application/use-cases/list-categories.use-case';
 export { SearchCategoryUseCase } from './features/categories/application/use-cases/search-category.use-case';
-export { UpdateCategoryUseCase } from './features/categories/application/use-cases/update-category.use-case';
+export { ChangeCategoryDetailsUseCase } from './features/categories/application/use-cases/change-category-details.use-case';
+export { ChangeCategoryStatusUseCase } from './features/categories/application/use-cases/change-category-status.use-case';
 
 // Infrastructure
 export { SupabaseCategoryRepository } from './features/categories/infrastructure/repositories/supabase-category.repository';
@@ -52,7 +53,12 @@ export { CreateProductUseCase } from './features/products/application/use-cases/
 export { DeleteProductUseCase } from './features/products/application/use-cases/delete-product.use-case';
 export { ListProductsUseCase } from './features/products/application/use-cases/list-products.use-case';
 export { SearchProductsUseCase } from './features/products/application/use-cases/search-products.use-case';
-export { UpdateProductUseCase } from './features/products/application/use-cases/update-product-use-case';
+export { ChangeProductPricingUseCase } from './features/products/application/use-cases/change-product-pricing.use-case';
+export { ChangeProductDetailsUseCase } from './features/products/application/use-cases/change-product-details.use-case';
+export { AdjustProductStockUseCase } from './features/products/application/use-cases/adjust-product-stock.use-case';
+export { ChangeProductStatusUseCase } from './features/products/application/use-cases/change-product-status.use-case';
+export { UpdateProductImagesUseCase } from './features/products/application/use-cases/update-product-images.use-case';
+export { SetProductVariantsUseCase } from './features/products/application/use-cases/set-product-variants.use-case';
 
 // Infrastructure
 export { SupabaseProductRepository } from './features/products/infrastructure/repositories/supabase-product.repository';

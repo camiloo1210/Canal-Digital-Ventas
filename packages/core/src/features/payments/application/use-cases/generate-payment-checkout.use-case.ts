@@ -9,6 +9,7 @@ import { createTenantId } from '@/shared/domain/types/tenant-id.type';
 import { createCustomerId } from '@/payments/domain/types/customer-id.type';
 import { parsePaymentGateway } from '@/payments/domain/enums/payment-gateway.enum';
 import { Money } from '@/shared/domain/value-objects/money.vo';
+import { Currency } from '@/shared/domain/enums/currency.enum';
 import * as crypto from 'crypto';
 
 export class GeneratePaymentCheckoutUseCase {
@@ -24,7 +25,7 @@ export class GeneratePaymentCheckoutUseCase {
     const tenantId = createTenantId(dto.tenantId);
     const customerId = createCustomerId(dto.customerId);
     const gateway = parsePaymentGateway(dto.gateway);
-    const amountMoney = Money.from(dto.amount, 'USD');
+    const amountMoney = Money.from(dto.amount, Currency.USD);
 
     const payment = Payment.create(paymentId, orderId, tenantId, customerId, gateway, amountMoney);
 
