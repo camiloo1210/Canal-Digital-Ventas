@@ -28,6 +28,8 @@ export interface DbProductRow {
   image_url: string | null;
   has_variants: boolean;
   is_vat_exempt: boolean;
+  version: number;
+  updated_at: string;
   // Supabase JOIN generated relation
   product_variants?: DbProductVariantRow[];
 }

@@ -6,6 +6,7 @@ import { EventBusPort } from '@/shared/application/ports/out/event-bus.port';
 import { UpdateTenantProfileDto } from '@/tenants/application/dtos/update-tenant-profile.dto';
 import { TenantNotFoundException } from '@/tenants/application/exceptions/tenant-not-found.exception';
 import { TenantSlugAlreadyInUseException } from '@/tenants/application/exceptions/tenant-slug-already-in-use.exception';
+import { createTenantId } from '@/shared/domain/types/tenant-id.type';
 
 export class UpdateTenantProfileUseCase {
   constructor(
@@ -14,7 +15,8 @@ export class UpdateTenantProfileUseCase {
   ) {}
 
   async execute(dto: UpdateTenantProfileDto): Promise<void> {
-    const tenant = await this.tenantRepository.findById(dto.tenantId);
+    const tenantId = createTenantId(dto.tenantId);
+    const tenant = await this.tenantRepository.findById(tenantId);
     if (!tenant) {
       throw new TenantNotFoundException();
     }

@@ -8,6 +8,9 @@ import { PhoneNumber } from '@/customers/domain/value-objects/phone-number.vo';
 import { DocumentId } from '@/customers/domain/value-objects/document-id.vo';
 import { Address } from '@/shared/domain/value-objects/adress.vo';
 
+import { createCustomerId } from '@/customers/domain/types/customer-id.type';
+import { createTenantId } from '@/shared/domain/types/tenant-id.type';
+
 export class CreateCustomerUseCase {
   constructor(
     private readonly customerRepository: CustomerRepositoryPort,
@@ -15,6 +18,9 @@ export class CreateCustomerUseCase {
   ) {}
 
   async execute(dto: CreateCustomerDto): Promise<void> {
+    const id = createCustomerId(dto.id);
+    const tenantId = createTenantId(dto.tenantId);
+
     const name = CustomerName.from(dto.name);
     const email = Email.from(dto.email);
     const phone = PhoneNumber.from(dto.phone);
@@ -27,7 +33,7 @@ export class CreateCustomerUseCase {
       dto.address.country,
     );
 
-    const customer = Customer.create(dto.id, dto.tenantId, name, email, phone, documentId, address);
+    const customer = Customer.create(id, tenantId, name, email, phone, documentId, address);
 
     await this.customerRepository.save(customer);
     await this.eventBus.publish(customer.domainEvents);

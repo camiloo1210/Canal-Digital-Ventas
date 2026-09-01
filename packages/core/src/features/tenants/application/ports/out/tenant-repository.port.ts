@@ -1,5 +1,5 @@
 import { Tenant } from '@/tenants/domain/entities/tenant.entity';
-import { TenantId } from '@/tenants/domain/types/tenant-id.type';
+import { TenantId } from '@/shared/domain/types/tenant-id.type';
 import { TenantSlug } from '@/tenants/domain/value-objects/tenant-slug.vo';
 import { TenantStatus } from '@/tenants/domain/enums/tenant-status.enum';
 import { PaginatedResult, PaginationOptions } from '@/shared/domain/pagination/pagination';

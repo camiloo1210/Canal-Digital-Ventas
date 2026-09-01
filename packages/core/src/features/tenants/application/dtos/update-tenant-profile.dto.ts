@@ -1,7 +1,5 @@
-import { TenantId } from '@/tenants/domain/types/tenant-id.type';
-
 export interface UpdateTenantProfileDto {
-  tenantId: TenantId;
+  tenantId: string;
   name: string;
   slug: string;
   contactEmail: string;

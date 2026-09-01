@@ -4,6 +4,9 @@ import { ChangeCustomerAddressDto } from '@/customers/application/dtos/change-cu
 import { CustomerNotFoundException } from '@/customers/application/exceptions/customer-not-found.exception';
 import { Address } from '@/shared/domain/value-objects/adress.vo';
 
+import { createCustomerId } from '@/customers/domain/types/customer-id.type';
+import { createTenantId } from '@/shared/domain/types/tenant-id.type';
+
 export class ChangeCustomerAddressUseCase {
   constructor(
     private readonly customerRepository: CustomerRepositoryPort,
@@ -11,7 +14,10 @@ export class ChangeCustomerAddressUseCase {
   ) {}
 
   async execute(dto: ChangeCustomerAddressDto): Promise<void> {
-    const customer = await this.customerRepository.findById(dto.customerId, dto.tenantId);
+    const customerId = createCustomerId(dto.customerId);
+    const tenantId = createTenantId(dto.tenantId);
+
+    const customer = await this.customerRepository.findById(customerId, tenantId);
 
     if (!customer) {
       throw new CustomerNotFoundException();

@@ -8,7 +8,7 @@ import { SupabaseCustomerMapper } from '@/customers/infrastructure/mappers/supab
 import { DbCustomerRow } from '@/customers/infrastructure/types/supabase-customer.types';
 import { PaginationOptions, PaginatedResult } from '@/shared/domain/pagination/pagination';
 import { CustomerId } from '@/customers/domain/types/customer-id.type';
-import { TenantId } from '@/customers/domain/types/tenant-id.type';
+import { TenantId } from '@/shared/domain/types/tenant-id.type';
 import { CustomerRepositoryException } from '@/customers/infrastructure/exceptions/customer-repository.exception';
 
 export class SupabaseCustomerRepository implements CustomerRepositoryPort {
@@ -17,12 +17,18 @@ export class SupabaseCustomerRepository implements CustomerRepositoryPort {
   async save(customer: Customer): Promise<void> {
     const customerRow = SupabaseCustomerMapper.toPersistence(customer);
 
-    const { error } = await this.supabase
-      .from('customers')
-      .upsert(customerRow, { onConflict: 'id' });
+    const { error } = await this.supabase.rpc('upsert_customer_transactional', {
+      customer_data: customerRow,
+    });
 
     if (error) {
-      throw new CustomerRepositoryException(`Failed to save customer: ${error.message}`);
+      if (error.code === 'P0001') {
+        throw new CustomerRepositoryException(
+          'Optimistic locking failure: The customer was updated by another transaction.',
+          error,
+        );
+      }
+      throw new CustomerRepositoryException(`Failed to save customer: ${error.message}`, error);
     }
   }
 

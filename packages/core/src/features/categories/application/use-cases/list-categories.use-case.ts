@@ -3,10 +3,13 @@ import { CategoryRepositoryPort } from '@/categories/application/ports/out/categ
 import { PaginatedResult } from '@/shared/domain/pagination/pagination';
 import { Category } from '@/categories/domain/entities/category.entity';
 
+import { createTenantId } from '@/shared/domain/types/tenant-id.type';
+
 export class ListCategoriesUseCase {
   constructor(private readonly categoryRepository: CategoryRepositoryPort) {}
 
   async execute(dto: ListCategoriesDto): Promise<PaginatedResult<Category>> {
-    return await this.categoryRepository.findAll(dto.tenantId, dto.pagination);
+    const tenantId = createTenantId(dto.tenantId);
+    return await this.categoryRepository.findAll(tenantId, dto.pagination);
   }
 }

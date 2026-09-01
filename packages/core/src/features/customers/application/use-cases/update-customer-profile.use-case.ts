@@ -5,6 +5,9 @@ import { CustomerNotFoundException } from '@/customers/application/exceptions/cu
 import { CustomerName } from '@/customers/domain/value-objects/customer-name.vo';
 import { PhoneNumber } from '@/customers/domain/value-objects/phone-number.vo';
 
+import { createCustomerId } from '@/customers/domain/types/customer-id.type';
+import { createTenantId } from '@/shared/domain/types/tenant-id.type';
+
 export class UpdateCustomerProfileUseCase {
   constructor(
     private readonly customerRepository: CustomerRepositoryPort,
@@ -12,7 +15,10 @@ export class UpdateCustomerProfileUseCase {
   ) {}
 
   async execute(dto: UpdateCustomerProfileDto): Promise<void> {
-    const customer = await this.customerRepository.findById(dto.customerId, dto.tenantId);
+    const customerId = createCustomerId(dto.customerId);
+    const tenantId = createTenantId(dto.tenantId);
+
+    const customer = await this.customerRepository.findById(customerId, tenantId);
 
     if (!customer) {
       throw new CustomerNotFoundException();

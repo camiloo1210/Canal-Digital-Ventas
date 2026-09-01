@@ -3,15 +3,18 @@ import { SearchCustomersDto } from '@/customers/application/dtos/search-customer
 import { PaginatedResult } from '@/shared/domain/pagination/pagination';
 import { Customer } from '@/customers/domain/entities/customer.entity';
 
+import { createTenantId } from '@/shared/domain/types/tenant-id.type';
+import { CustomerStatus } from '@/customers/domain/enums/customer-status.enum';
+
 export class SearchCustomersUseCase {
   constructor(private readonly customerRepository: CustomerRepositoryPort) {}
 
   async execute(dto: SearchCustomersDto): Promise<PaginatedResult<Customer>> {
     return this.customerRepository.searchByFilters(
       {
-        tenantId: dto.tenantId,
+        tenantId: createTenantId(dto.tenantId),
         searchTerm: dto.searchTerm,
-        status: dto.status,
+        status: dto.status as CustomerStatus[],
       },
       dto.pagination,
     );

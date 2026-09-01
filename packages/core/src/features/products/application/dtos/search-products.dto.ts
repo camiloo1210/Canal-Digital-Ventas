@@ -1,14 +1,11 @@
 import { PaginationOptions } from '@/shared/domain/pagination/pagination';
-import { ProductId } from '@/products/domain/types/product-id.type';
-import { CategoryId } from '@/products/domain/types/category-id.type';
-import { TenantId } from '@/products/domain/types/tenant-id.type';
 
 export interface SearchProductsDto {
-  id?: ProductId;
+  id?: string;
   name?: string;
-  categoryId?: CategoryId;
+  categoryId?: string;
   sku?: string;
-  tenantId: TenantId;
+  tenantId: string;
   status?: string;
   pagination?: PaginationOptions;
 }

@@ -5,7 +5,7 @@ import { Money } from '@/shared/domain/value-objects/money.vo';
 import { parseCartStatus } from '@/carts/domain/enums/cart-status.enum';
 import { CartId } from '@/carts/domain/types/cart-id.type';
 import { CustomerId } from '@/carts/domain/types/customer-id.type';
-import { TenantId } from '@/carts/domain/types/tenant-id.type';
+import { TenantId } from '@/shared/domain/types/tenant-id.type';
 import { CartItemId } from '@/carts/domain/types/cart-item-id.type';
 import { ProductId } from '@/carts/domain/types/product-id.type';
 import { VariantId } from '@/carts/domain/types/variant-id.type';
