@@ -3,7 +3,7 @@ import { ProductStatus } from '@/products/domain/enums/product-status.enum';
 import { PaginationOptions, PaginatedResult } from '@/shared/domain/pagination/pagination';
 import { ProductId } from '@/products/domain/types/product-id.type';
 import { CategoryId } from '@/products/domain/types/category-id.type';
-import { TenantId } from '@/products/domain/types/tenant-id.type';
+import { TenantId } from '@/shared/domain/types/tenant-id.type';
 
 export interface ProductFilters {
   id?: ProductId;

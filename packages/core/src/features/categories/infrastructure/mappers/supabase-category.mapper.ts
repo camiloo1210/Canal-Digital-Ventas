@@ -2,7 +2,7 @@ import { Category } from '@/categories/domain/entities/category.entity';
 import { CategoryStatus } from '@/categories/domain/enums/category-status.enum';
 import { DbCategoryRow } from '@/categories/infrastructure/types/supabase-category.types';
 import { CategoryId } from '@/categories/domain/types/category-id.type';
-import { TenantId } from '@/categories/domain/types/tenant-id.type';
+import { TenantId } from '@/shared/domain/types/tenant-id.type';
 
 export class SupabaseCategoryMapper {
   public static toDomain(row: DbCategoryRow): Category {

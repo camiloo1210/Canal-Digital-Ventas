@@ -7,6 +7,9 @@ import { FileStoragePort } from '@/products/application/ports/out/file-storage.p
 import { EventBusPort } from '@/shared/application/ports/out/event-bus.port';
 import { ProductName } from '@/products/domain/value-objects/product-name.vo';
 import { Sku } from '@/products/domain/value-objects/sku.vo';
+import { createProductId } from '@/products/domain/types/product-id.type';
+import { createCategoryId } from '@/products/domain/types/category-id.type';
+import { createTenantId } from '@/shared/domain/types/tenant-id.type';
 
 export class UpdateProductUseCase {
   constructor(
@@ -16,7 +19,10 @@ export class UpdateProductUseCase {
   ) {}
 
   async execute(dto: UpdateProductDto): Promise<void> {
-    const product = await this.productRepository.findById(dto.id, dto.tenantId);
+    const productId = createProductId(dto.id);
+    const tenantId = createTenantId(dto.tenantId);
+
+    const product = await this.productRepository.findById(productId, tenantId);
 
     if (!product) {
       throw new ProductNotFoundException(dto.id);
@@ -37,7 +43,7 @@ export class UpdateProductUseCase {
       product.changeDetails(
         dto.name !== undefined ? ProductName.from(dto.name) : ProductName.from(product.getName()),
         dto.description !== undefined ? dto.description : product.getDescription(),
-        dto.categoryId !== undefined ? dto.categoryId : product.getCategory(),
+        dto.categoryId !== undefined ? createCategoryId(dto.categoryId) : product.getCategory(),
         dto.sku !== undefined ? Sku.from(dto.sku) : Sku.from(product.getSku()),
         dto.seasonIds !== undefined ? dto.seasonIds : product.getSeasonIds(),
         dto.isVatExempt !== undefined ? dto.isVatExempt : product.getIsVatExempt(),

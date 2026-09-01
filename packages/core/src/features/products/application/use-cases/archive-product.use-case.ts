@@ -2,6 +2,8 @@ import { ProductRepositoryPort } from '@/products/application/ports/out/product-
 import { ArchiveProductDto } from '@/products/application/dtos/archive-product.dto';
 import { ProductNotFoundException } from '@/products/application/exceptions/product-not-found.exception';
 import { EventBusPort } from '@/shared/application/ports/out/event-bus.port';
+import { createProductId } from '@/products/domain/types/product-id.type';
+import { createTenantId } from '@/shared/domain/types/tenant-id.type';
 
 export class ArchiveProductUseCase {
   constructor(
@@ -10,7 +12,10 @@ export class ArchiveProductUseCase {
   ) {}
 
   async execute(dto: ArchiveProductDto): Promise<string> {
-    const product = await this.productRepository.findById(dto.id, dto.tenantId);
+    const productId = createProductId(dto.id);
+    const tenantId = createTenantId(dto.tenantId);
+
+    const product = await this.productRepository.findById(productId, tenantId);
 
     if (!product) {
       throw new ProductNotFoundException(dto.id);

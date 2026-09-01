@@ -8,7 +8,8 @@ import { ProductFilters } from '@/products/application/ports/out/product-reposit
 import { PaginationOptions, PaginatedResult } from '@/shared/domain/pagination/pagination';
 import { ProductId } from '@/products/domain/types/product-id.type';
 import { CategoryId } from '@/products/domain/types/category-id.type';
-import { TenantId } from '@/products/domain/types/tenant-id.type';
+import { TenantId } from '@/shared/domain/types/tenant-id.type';
+import { ProductRepositoryException } from '@/products/application/exceptions/product-repository.exception';
 
 export class SupabaseProductRepository implements ProductRepositoryPort {
   constructor(private readonly supabase: SupabaseClient) {}
@@ -36,7 +37,9 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
 
     const { data, error, count } = await query;
 
-    if (error) throw new Error(`Failed to search products: ${error.message}`);
+    if (error) {
+      throw new ProductRepositoryException(`Failed to search products: ${error.message}`, error);
+    }
 
     const totalItems = count ?? 0;
     const products = (data ?? []).map((row: DbProductRow) => SupabaseProductMapper.toDomain(row));
@@ -64,7 +67,12 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
       .eq('tenant_id', tenantId)
       .range(from, to);
 
-    if (error) throw new Error(`Failed to get products from this tenant: ${error.message}`);
+    if (error) {
+      throw new ProductRepositoryException(
+        `Failed to get products from this tenant: ${error.message}`,
+        error,
+      );
+    }
 
     const totalItems = count ?? 0;
     const products = (data ?? []).map((row: DbProductRow) => SupabaseProductMapper.toDomain(row));
@@ -84,7 +92,9 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
       .eq('tenant_id', tenantId)
       .ilike('name', `%${query}%`);
 
-    if (error) throw new Error(`Failed to search products: ${error.message}`);
+    if (error) {
+      throw new ProductRepositoryException(`Failed to search products: ${error.message}`, error);
+    }
 
     return (data ?? []).map((row: DbProductRow) => SupabaseProductMapper.toDomain(row));
   }
@@ -96,7 +106,12 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
       .eq('tenant_id', tenantId)
       .eq('category_id', categoryId);
 
-    if (error) throw new Error(`Failed to find products by category: ${error.message}`);
+    if (error) {
+      throw new ProductRepositoryException(
+        `Failed to find products by category: ${error.message}`,
+        error,
+      );
+    }
 
     return (data ?? []).map((row: DbProductRow) => SupabaseProductMapper.toDomain(row));
   }
@@ -121,15 +136,10 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
 
   async save(product: Product): Promise<void> {
     const productData = SupabaseProductMapper.toPersistence(product);
-
-    const { error: productError } = await this.supabase.from('products').upsert(productData);
-
-    if (productError) {
-      throw new Error(`Failed to save product: ${productError.message}`);
-    }
+    let variantsData: Record<string, unknown>[] = [];
 
     if (product.getHasVariants()) {
-      const variantsData = product.getVariants().map((v) => ({
+      variantsData = product.getVariants().map((v) => ({
         id: v.getId(),
         product_id: v.getProductId(),
         sku: v.getSku(),
@@ -141,14 +151,24 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
         stock: v.getStock(),
         status: v.getStatus(),
       }));
+    }
 
-      const { error: variantError } = await this.supabase
-        .from('product_variants')
-        .upsert(variantsData);
+    const { error } = await this.supabase.rpc('upsert_product_transactional', {
+      product_data: productData,
+      variants_data: variantsData,
+    });
 
-      if (variantError) {
-        throw new Error(`Failed to save variants: ${variantError.message}`);
+    if (error) {
+      if (error.code === 'P0001') {
+        throw new ProductRepositoryException(
+          `Optimistic locking failed: the product has been updated by another transaction.`,
+          error,
+        );
       }
+      throw new ProductRepositoryException(
+        `Failed to save product transactionally: ${error.message}`,
+        error,
+      );
     }
   }
 
@@ -159,6 +179,8 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
       .eq('id', id)
       .eq('tenant_id', tenantId);
 
-    if (error) throw new Error(`Failed to delete product: ${error.message}`);
+    if (error) {
+      throw new ProductRepositoryException(`Failed to delete product: ${error.message}`, error);
+    }
   }
 }

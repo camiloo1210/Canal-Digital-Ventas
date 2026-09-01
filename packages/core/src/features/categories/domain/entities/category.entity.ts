@@ -6,7 +6,12 @@ import { InvalidCategoryStatusException } from '@/categories/domain/exceptions/i
 import { InvalidCategoryAttributeException } from '@/categories/domain/exceptions/invalid-category-attribute.exception';
 import { DomainEvent } from '@/shared/domain/events/domain-event.interface';
 import { CategoryId } from '@/categories/domain/types/category-id.type';
-import { TenantId } from '@/categories/domain/types/tenant-id.type';
+import { TenantId } from '@/shared/domain/types/tenant-id.type';
+import { CategoryCreatedEvent } from '@/categories/domain/events/category-created.event';
+import { CategoryArchivedEvent } from '@/categories/domain/events/category-archived.event';
+import { CategoryStatusUpdatedEvent } from '@/categories/domain/events/category-status-updated.event';
+import { CategoryNameUpdatedEvent } from '@/categories/domain/events/category-name-updated.event';
+import { CategoryDescriptionUpdatedEvent } from '@/categories/domain/events/category-description-updated.event';
 
 export interface CategoryProps {
   id: CategoryId;
@@ -46,7 +51,7 @@ export class Category {
       status,
     );
 
-    category.addDomainEvent({ eventName: 'CategoryCreatedEvent', categoryId: id });
+    category.addDomainEvent(new CategoryCreatedEvent(id));
     return category;
   }
 
@@ -67,8 +72,8 @@ export class Category {
 
   // Validations
   private static validateTenantId(tenantId: TenantId): void {
-    if (tenantId === undefined || tenantId === null || tenantId <= 0) {
-      throw new InvalidTenantIdException('Tenant ID is required and must be a positive number.');
+    if (!tenantId || typeof tenantId !== 'string' || tenantId.trim().length === 0) {
+      throw new InvalidTenantIdException('Tenant ID is required and must be a valid string.');
     }
   }
 
@@ -92,7 +97,7 @@ export class Category {
       throw new InvalidCategoryStatusException('Category is already archived.');
     }
     this.status = CategoryStatus.ARCHIVED;
-    this.addDomainEvent({ eventName: 'CategoryArchivedEvent', categoryId: this.id });
+    this.addDomainEvent(new CategoryArchivedEvent(this.id));
   }
 
   // Updates
@@ -102,25 +107,17 @@ export class Category {
     }
     Category.validateStatus(newStatus);
     this.status = newStatus;
-    this.addDomainEvent({
-      eventName: 'CategoryStatusUpdatedEvent',
-      categoryId: this.id,
-      newStatus,
-    });
+    this.addDomainEvent(new CategoryStatusUpdatedEvent(this.id, newStatus));
   }
 
   public updateName(newName: string): void {
     this.name = CategoryName.from(newName);
-    this.addDomainEvent({ eventName: 'CategoryNameUpdatedEvent', categoryId: this.id, newName });
+    this.addDomainEvent(new CategoryNameUpdatedEvent(this.id, newName));
   }
 
   public updateDescription(newDescription: string): void {
     this.description = CategoryDescription.from(newDescription);
-    this.addDomainEvent({
-      eventName: 'CategoryDescriptionUpdatedEvent',
-      categoryId: this.id,
-      newDescription,
-    });
+    this.addDomainEvent(new CategoryDescriptionUpdatedEvent(this.id, newDescription));
   }
 
   private addDomainEvent(event: Omit<DomainEvent, 'occurredOn'>): void {

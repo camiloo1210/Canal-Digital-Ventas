@@ -1,9 +1,6 @@
-import { PaymentGateway } from '@/payments/domain/enums/payment-gateway.enum';
-import { TenantId } from '@/payments/domain/types/tenant-id.type';
-
 export interface ProcessWebhookDto {
-  gateway: PaymentGateway;
+  gateway: string;
   payload: string;
   signature: string;
-  tenantId: TenantId;
+  tenantId: string;
 }

@@ -1,11 +1,9 @@
 import { PaginationOptions } from '@/shared/domain/pagination/pagination';
-import { CategoryId } from '@/categories/domain/types/category-id.type';
-import { TenantId } from '@/categories/domain/types/tenant-id.type';
 
 export interface SearchCategoriesDto {
-  id?: CategoryId;
+  id?: string;
   name?: string;
-  tenantId: TenantId;
+  tenantId: string;
   status?: string;
   pagination?: PaginationOptions;
 }

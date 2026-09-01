@@ -5,6 +5,9 @@ import { CustomerNotFoundException } from '@/customers/application/exceptions/cu
 import { UnsupportedCustomerStatusException } from '@/customers/application/exceptions/unsupported-customer-status.exception';
 import { CustomerStatus } from '@/customers/domain/enums/customer-status.enum';
 
+import { createCustomerId } from '@/customers/domain/types/customer-id.type';
+import { createTenantId } from '@/shared/domain/types/tenant-id.type';
+
 export class ChangeCustomerStatusUseCase {
   constructor(
     private readonly customerRepository: CustomerRepositoryPort,
@@ -12,7 +15,10 @@ export class ChangeCustomerStatusUseCase {
   ) {}
 
   async execute(dto: ChangeCustomerStatusDto): Promise<void> {
-    const customer = await this.customerRepository.findById(dto.customerId, dto.tenantId);
+    const customerId = createCustomerId(dto.customerId);
+    const tenantId = createTenantId(dto.tenantId);
+
+    const customer = await this.customerRepository.findById(customerId, tenantId);
 
     if (!customer) {
       throw new CustomerNotFoundException();

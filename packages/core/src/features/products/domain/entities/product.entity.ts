@@ -6,9 +6,14 @@ import { ProductName } from '@/products/domain/value-objects/product-name.vo';
 import { DomainEvent } from '@/shared/domain/events/domain-event.interface';
 import { ProductId } from '@/products/domain/types/product-id.type';
 import { CategoryId } from '@/products/domain/types/category-id.type';
-import { TenantId } from '@/products/domain/types/tenant-id.type';
+import { TenantId } from '@/shared/domain/types/tenant-id.type';
 import { InvalidProductAttributeException } from '@/products/domain/exceptions/invalid-product-attribute.exception';
 import { InvalidProductStateException } from '@/products/domain/exceptions/invalid-product-state.exception';
+import { ProductCreatedEvent } from '@/products/domain/events/product-created.event';
+import { ProductArchivedEvent } from '@/products/domain/events/product-archived.event';
+import { ProductDetailsChangedEvent } from '@/products/domain/events/product-details-changed.event';
+import { ProductPricingChangedEvent } from '@/products/domain/events/product-pricing-changed.event';
+import { ProductStockAdjustedEvent } from '@/products/domain/events/product-stock-adjusted.event';
 
 export interface ProductProps {
   id: ProductId;
@@ -29,6 +34,8 @@ export interface ProductProps {
   hasVariants: boolean;
   variants: ProductVariant[];
   isVatExempt: boolean;
+  updatedAt: Date;
+  version: number;
 }
 
 export class Product {
@@ -53,6 +60,8 @@ export class Product {
     private hasVariants: boolean,
     private variants: ProductVariant[],
     private isVatExempt: boolean,
+    private updatedAt: Date,
+    private version: number,
   ) {}
 
   public static create(
@@ -106,9 +115,11 @@ export class Product {
       hasVariants,
       variants,
       isVatExempt,
+      new Date(),
+      0, // Initial version
     );
 
-    product.addDomainEvent({ eventName: 'ProductCreatedEvent', productId: id });
+    product.addDomainEvent(new ProductCreatedEvent(id));
     return product;
   }
 
@@ -132,6 +143,8 @@ export class Product {
       props.hasVariants,
       props.variants,
       props.isVatExempt,
+      props.updatedAt,
+      props.version,
     );
   }
 
@@ -145,9 +158,9 @@ export class Product {
       throw new InvalidProductAttributeException('Category ID is required.');
   }
   private static validateTenantId(tenantId: TenantId): void {
-    if (tenantId === undefined || tenantId === null || tenantId <= 0) {
+    if (!tenantId || typeof tenantId !== 'string' || tenantId.trim().length === 0) {
       throw new InvalidProductAttributeException(
-        'Tenant ID is required and must be a positive number.',
+        'Tenant ID is required and must be a valid string.',
       );
     }
   }
@@ -171,7 +184,13 @@ export class Product {
       throw new InvalidProductStateException('Product is already archived.');
     }
     this.status = ProductStatus.ARCHIVED;
-    this.addDomainEvent({ eventName: 'ProductArchivedEvent', productId: this.id });
+    this.addDomainEvent(new ProductArchivedEvent(this.id));
+    this.updateUpdatedAt();
+  }
+
+  private updateUpdatedAt(): void {
+    this.updatedAt = new Date();
+    this.version++;
   }
 
   public changeDetails(
@@ -190,7 +209,8 @@ export class Product {
     this.sku = sku;
     this.seasonIds = seasonIds;
     this.isVatExempt = isVatExempt;
-    this.addDomainEvent({ eventName: 'ProductDetailsChangedEvent', productId: this.id });
+    this.addDomainEvent(new ProductDetailsChangedEvent(this.id));
+    this.updateUpdatedAt();
   }
 
   public changePricing(price: Money, cost: Money, wholesalePrice: Money): void {
@@ -200,7 +220,8 @@ export class Product {
     this.price = price;
     this.cost = cost;
     this.wholesalePrice = wholesalePrice;
-    this.addDomainEvent({ eventName: 'ProductPricingChangedEvent', productId: this.id });
+    this.addDomainEvent(new ProductPricingChangedEvent(this.id));
+    this.updateUpdatedAt();
   }
 
   public adjustStock(newStock: number): void {
@@ -211,35 +232,36 @@ export class Product {
     } else if (this.stock > 0 && this.status === ProductStatus.OUT_OF_STOCK) {
       this.status = ProductStatus.ACTIVE;
     }
-    this.addDomainEvent({
-      eventName: 'ProductStockAdjustedEvent',
-      productId: this.id,
-      stock: this.stock,
-    });
+    this.addDomainEvent(new ProductStockAdjustedEvent(this.id, this.stock));
+    this.updateUpdatedAt();
   }
 
   public changeExpirationDate(newDate: Date | null): void {
     if (newDate) Product.validateExpirationDate(newDate);
     this.expirationDate = newDate;
+    this.updateUpdatedAt();
   }
 
   public changeStatus(newStatus: ProductStatus): void {
     this.status = newStatus;
+    this.updateUpdatedAt();
   }
 
   public updateImages(imagePath: string | null, imageUrl: string | null): void {
     this.imagePath = imagePath;
     this.imageUrl = imageUrl;
+    this.updateUpdatedAt();
   }
 
   public setVariants(variants: ProductVariant[]): void {
     this.variants = variants;
     this.hasVariants = variants.length > 0;
+    this.updateUpdatedAt();
   }
 
   // Domain Events Management
-  private addDomainEvent(event: Omit<DomainEvent, 'occurredOn'>): void {
-    this._domainEvents.push({ ...event, occurredOn: new Date() } as DomainEvent);
+  private addDomainEvent(event: DomainEvent): void {
+    this._domainEvents.push(event);
   }
   public get domainEvents(): DomainEvent[] {
     return [...this._domainEvents];
@@ -305,5 +327,11 @@ export class Product {
   }
   public isWholesale(): boolean {
     return this.wholesalePrice.getValue() > 0;
+  }
+  public getUpdatedAt(): Date {
+    return this.updatedAt;
+  }
+  public getVersion(): number {
+    return this.version;
   }
 }

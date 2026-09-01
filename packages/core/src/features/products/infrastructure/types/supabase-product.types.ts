@@ -22,12 +22,14 @@ export interface DbProductRow {
   expiration_date: string | null;
   status: string;
   sku: string;
-  tenant_id: number;
+  tenant_id: string;
   season_ids: string[];
   image_path: string | null;
   image_url: string | null;
   has_variants: boolean;
   is_vat_exempt: boolean;
+  version: number;
+  updated_at: string;
   // Supabase JOIN generated relation
   product_variants?: DbProductVariantRow[];
 }

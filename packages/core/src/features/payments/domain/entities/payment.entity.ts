@@ -1,5 +1,5 @@
 import { PaymentId } from '@/payments/domain/types/payment-id.type';
-import { TenantId } from '@/payments/domain/types/tenant-id.type';
+import { TenantId } from '@/shared/domain/types/tenant-id.type';
 import { OrderId } from '@/payments/domain/types/order-id.type';
 import { CustomerId } from '@/payments/domain/types/customer-id.type';
 import { PaymentStatus } from '@/payments/domain/enums/payment-status.enum';
@@ -9,6 +9,10 @@ import { DomainEvent } from '@/shared/domain/events/domain-event.interface';
 import { InvalidPaymentAttributeException } from '@/payments/domain/exceptions/invalid-payment-attribute.exception';
 import { InvalidPaymentStateException } from '@/payments/domain/exceptions/invalid-payment-state.exception';
 import { InvalidTenantIdException } from '@/shared/domain/exceptions/invalid-tenant-id.exception';
+import { PaymentCreatedEvent } from '@/payments/domain/events/payment-created.event';
+import { PaymentCompletedEvent } from '@/payments/domain/events/payment-completed.event';
+import { PaymentFailedEvent } from '@/payments/domain/events/payment-failed.event';
+import { PaymentRefundedEvent } from '@/payments/domain/events/payment-refunded.event';
 
 export interface PaymentProps {
   id: PaymentId;
@@ -73,7 +77,7 @@ export class Payment {
       0, // initial version
     );
 
-    payment.addDomainEvent({ eventName: 'PaymentCreatedEvent', paymentId: id });
+    payment.addDomainEvent(new PaymentCreatedEvent(id));
     return payment;
   }
 
@@ -91,8 +95,8 @@ export class Payment {
   }
 
   private static validateTenantId(tenantId: TenantId): void {
-    if (tenantId === undefined || tenantId === null || tenantId <= 0) {
-      throw new InvalidTenantIdException('Tenant ID is required and must be a positive number.');
+    if (!tenantId || typeof tenantId !== 'string' || tenantId.trim().length === 0) {
+      throw new InvalidTenantIdException('Tenant ID is required and must be a valid string.');
     }
   }
 
@@ -151,11 +155,7 @@ export class Payment {
 
     this.status = PaymentStatus.COMPLETED;
     this.gatewayTransactionId = gatewayTransactionId;
-    this.addDomainEvent({
-      eventName: 'PaymentCompletedEvent',
-      paymentId: this.id,
-      orderId: this.orderId,
-    });
+    this.addDomainEvent(new PaymentCompletedEvent(this.id, this.orderId));
     this.updateUpdatedAt();
   }
 
@@ -169,12 +169,7 @@ export class Payment {
 
     this.status = PaymentStatus.FAILED;
     this.failureReason = reason;
-    this.addDomainEvent({
-      eventName: 'PaymentFailedEvent',
-      paymentId: this.id,
-      orderId: this.orderId,
-      reason,
-    });
+    this.addDomainEvent(new PaymentFailedEvent(this.id, this.orderId, reason));
     this.updateUpdatedAt();
   }
 
@@ -184,11 +179,7 @@ export class Payment {
     }
 
     this.status = PaymentStatus.REFUNDED;
-    this.addDomainEvent({
-      eventName: 'PaymentRefundedEvent',
-      paymentId: this.id,
-      orderId: this.orderId,
-    });
+    this.addDomainEvent(new PaymentRefundedEvent(this.id, this.orderId));
     this.updateUpdatedAt();
   }
 

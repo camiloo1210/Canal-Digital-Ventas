@@ -2,6 +2,8 @@ import { OrderRepositoryPort } from '@/orders/application/ports/out/order-reposi
 import { EventBusPort } from '@/shared/application/ports/out/event-bus.port';
 import { CancelOrderDto } from '@/orders/application/dtos/cancel-order.dto';
 import { OrderNotFoundException } from '@/orders/application/exceptions/order-not-found.exception';
+import { createOrderId } from '@/orders/domain/types/order-id.type';
+import { createTenantId } from '@/shared/domain/types/tenant-id.type';
 
 export class CancelOrderUseCase {
   constructor(
@@ -10,7 +12,10 @@ export class CancelOrderUseCase {
   ) {}
 
   async execute(dto: CancelOrderDto): Promise<void> {
-    const order = await this.orderRepository.findById(dto.orderId, dto.tenantId);
+    const orderId = createOrderId(dto.orderId);
+    const tenantId = createTenantId(dto.tenantId);
+
+    const order = await this.orderRepository.findById(orderId, tenantId);
 
     if (!order) {
       throw new OrderNotFoundException();

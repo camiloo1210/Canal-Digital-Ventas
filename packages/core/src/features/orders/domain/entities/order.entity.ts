@@ -7,8 +7,14 @@ import { InvalidOrderStateException } from '@/orders/domain/exceptions/invalid-o
 import { InvalidOrderAttributeException } from '@/orders/domain/exceptions/invalid-order-attribute.exception';
 import { DomainEvent } from '@/shared/domain/events/domain-event.interface';
 import { OrderId } from '@/orders/domain/types/order-id.type';
+import { OrderCreatedEvent } from '@/orders/domain/events/order-created.event';
+import { OrderShippedEvent } from '@/orders/domain/events/order-shipped.event';
+import { OrderPaidEvent } from '@/orders/domain/events/order-paid.event';
+import { OrderProcessingEvent } from '@/orders/domain/events/order-processing.event';
+import { OrderCancelledEvent } from '@/orders/domain/events/order-cancelled.event';
+import { OrderConfirmedEvent } from '@/orders/domain/events/order-confirmed.event';
 import { CustomerId } from '@/orders/domain/types/customer-id.type';
-import { TenantId } from '@/orders/domain/types/tenant-id.type';
+import { TenantId } from '@/shared/domain/types/tenant-id.type';
 import { PaymentGatewayId } from '@/orders/domain/types/payment-gateway-id.type';
 
 export interface OrderProps {
@@ -92,7 +98,7 @@ export class Order {
       0, // Initial version
     );
 
-    order.addDomainEvent({ eventName: 'OrderCreatedEvent', orderId: id });
+    order.addDomainEvent(new OrderCreatedEvent(id));
     return order;
   }
   //Validations
@@ -115,8 +121,8 @@ export class Order {
   }
 
   private static validateTenantId(tenantId: TenantId): void {
-    if (tenantId === undefined || tenantId === null || tenantId <= 0) {
-      throw new InvalidTenantIdException('Tenant ID is required and must be a positive number.');
+    if (!tenantId || typeof tenantId !== 'string' || tenantId.trim().length === 0) {
+      throw new InvalidTenantIdException('Tenant ID is required and must be a valid string.');
     }
   }
   private static validateStatus(status: OrderStatus): void {
@@ -212,7 +218,8 @@ export class Order {
       throw new InvalidOrderStateException('Order must be paid or processing to be shipped.');
     }
     this.status = OrderStatus.SHIPPED;
-    this.addDomainEvent({ eventName: 'OrderShippedEvent', orderId: this.id });
+    this.addDomainEvent(new OrderShippedEvent(this.id));
+    this.updateUpdatedAt();
   }
 
   public confirm(): void {
@@ -226,7 +233,8 @@ export class Order {
     }
 
     this.status = OrderStatus.PENDING_PAYMENT;
-    // this.addDomainEvent({ eventName: 'OrderConfirmedEvent', orderId: this.id });
+    this.addDomainEvent(new OrderConfirmedEvent(this.id));
+    this.updateUpdatedAt();
   }
 
   public markAsPaid(paymentGatewayId: PaymentGatewayId): void {
@@ -235,7 +243,8 @@ export class Order {
     }
     this.status = OrderStatus.PAID;
     this.paymentGatewayId = paymentGatewayId;
-    this.addDomainEvent({ eventName: 'OrderPaidEvent', orderId: this.id, paymentGatewayId });
+    this.addDomainEvent(new OrderPaidEvent(this.id, paymentGatewayId));
+    this.updateUpdatedAt();
   }
 
   public markAsProcessing(): void {
@@ -243,7 +252,8 @@ export class Order {
       throw new InvalidOrderStateException('Order must be paid to be processed.');
     }
     this.status = OrderStatus.PROCESSING;
-    this.addDomainEvent({ eventName: 'OrderProcessingEvent', orderId: this.id });
+    this.addDomainEvent(new OrderProcessingEvent(this.id));
+    this.updateUpdatedAt();
   }
   public cancel(): void {
     if (this.status === OrderStatus.SHIPPED || this.status === OrderStatus.DELIVERED) {
@@ -252,7 +262,8 @@ export class Order {
       );
     }
     this.status = OrderStatus.CANCELLED;
-    this.addDomainEvent({ eventName: 'OrderCancelledEvent', orderId: this.id });
+    this.addDomainEvent(new OrderCancelledEvent(this.id));
+    this.updateUpdatedAt();
   }
 
   public addOrderItem(item: OrderItem): void {
@@ -316,11 +327,8 @@ export class Order {
       .subtract(this.discountAmount);
   }
 
-  private addDomainEvent(event: Omit<DomainEvent, 'occurredOn'>): void {
-    this._domainEvents.push({
-      ...event,
-      occurredOn: new Date(),
-    } as DomainEvent);
+  private addDomainEvent(event: DomainEvent): void {
+    this._domainEvents.push(event);
   }
   public get domainEvents(): DomainEvent[] {
     return [...this._domainEvents];

@@ -2,7 +2,7 @@ import { Payment, PaymentProps } from '@/payments/domain/entities/payment.entity
 import { PaymentId } from '@/payments/domain/types/payment-id.type';
 import { OrderId } from '@/payments/domain/types/order-id.type';
 import { CustomerId } from '@/payments/domain/types/customer-id.type';
-import { TenantId } from '@/payments/domain/types/tenant-id.type';
+import { TenantId } from '@/shared/domain/types/tenant-id.type';
 import { PaymentStatus } from '@/payments/domain/enums/payment-status.enum';
 import { PaymentGateway } from '@/payments/domain/enums/payment-gateway.enum';
 import { Money } from '@/shared/domain/value-objects/money.vo';

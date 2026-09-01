@@ -3,8 +3,13 @@ import { EventBusPort } from '@/shared/application/ports/out/event-bus.port';
 import { AddItemToCartDto } from '@/carts/application/dtos/add-item-to-cart.dto';
 import { CartItem } from '@/carts/domain/entities/cart-item.entity';
 import { Money } from '@/shared/domain/value-objects/money.vo';
-import { CartItemId } from '@/carts/domain/types/cart-item-id.type';
+import { createCartItemId } from '@/carts/domain/types/cart-item-id.type';
 import { CartNotFoundException } from '@/carts/application/exceptions/cart-not-found.exception';
+import { createCartId } from '@/carts/domain/types/cart-id.type';
+import { createTenantId } from '@/shared/domain/types/tenant-id.type';
+import { createProductId } from '@/carts/domain/types/product-id.type';
+import { createVariantId } from '@/carts/domain/types/variant-id.type';
+import * as crypto from 'crypto';
 
 export class AddItemToCartUseCase {
   constructor(
@@ -13,23 +18,28 @@ export class AddItemToCartUseCase {
   ) {}
 
   async execute(dto: AddItemToCartDto): Promise<void> {
-    const cart = await this.cartRepository.findById(dto.cartId, dto.tenantId);
+    const cartId = createCartId(dto.cartId);
+    const tenantId = createTenantId(dto.tenantId);
+
+    const cart = await this.cartRepository.findById(cartId, tenantId);
 
     if (!cart) {
       throw new CartNotFoundException();
     }
 
     const unitPrice = Money.from(dto.unitPriceValue, 'USD');
-    const cartItemId = crypto.randomUUID() as CartItemId;
+    const cartItemId = createCartItemId(crypto.randomUUID());
+    const productId = createProductId(dto.productId);
+    const variantId = dto.variantId ? createVariantId(dto.variantId) : undefined;
 
     const item = CartItem.create(
       cartItemId,
-      dto.productId,
+      productId,
       dto.productName,
       dto.quantity,
       unitPrice,
       dto.sku,
-      dto.variantId,
+      variantId,
     );
 
     cart.addItem(item);

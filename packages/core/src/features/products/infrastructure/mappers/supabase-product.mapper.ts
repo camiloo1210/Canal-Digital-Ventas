@@ -7,7 +7,7 @@ import { Sku } from '@/products/domain/value-objects/sku.vo';
 import { DbProductRow, DbProductVariantRow } from '../types/supabase-product.types';
 import { ProductId } from '@/products/domain/types/product-id.type';
 import { CategoryId } from '@/products/domain/types/category-id.type';
-import { TenantId } from '@/products/domain/types/tenant-id.type';
+import { TenantId } from '@/shared/domain/types/tenant-id.type';
 
 export class SupabaseProductMapper {
   public static toDomain(row: DbProductRow): Product {
@@ -46,6 +46,8 @@ export class SupabaseProductMapper {
       hasVariants: row.has_variants,
       variants: variants,
       isVatExempt: row.is_vat_exempt,
+      updatedAt: new Date(row.updated_at),
+      version: row.version,
     });
   }
 
@@ -68,6 +70,8 @@ export class SupabaseProductMapper {
       image_url: product.getImageUrl(),
       has_variants: product.getHasVariants(),
       is_vat_exempt: product.getIsVatExempt(),
+      version: product.getVersion(),
+      updated_at: product.getUpdatedAt().toISOString(),
     };
   }
 }

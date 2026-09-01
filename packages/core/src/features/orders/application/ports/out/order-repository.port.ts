@@ -2,7 +2,7 @@ import { Order } from '@/orders/domain/entities/order.entity';
 import { PaginatedResult, PaginationOptions } from '@/shared/domain/pagination/pagination';
 import { OrderId } from '@/orders/domain/types/order-id.type';
 import { CustomerId } from '@/orders/domain/types/customer-id.type';
-import { TenantId } from '@/orders/domain/types/tenant-id.type';
+import { TenantId } from '@/shared/domain/types/tenant-id.type';
 import { OrderStatus } from '@/orders/domain/enums/order-status.enum';
 
 export interface OrderFilters {

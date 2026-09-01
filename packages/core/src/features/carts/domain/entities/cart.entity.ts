@@ -1,4 +1,4 @@
-import { TenantId } from '@/carts/domain/types/tenant-id.type';
+import { TenantId } from '@/shared/domain/types/tenant-id.type';
 import { CartId } from '@/carts/domain/types/cart-id.type';
 import { CustomerId } from '@/carts/domain/types/customer-id.type';
 import { CartStatus } from '@/carts/domain/enums/cart-status.enum';
@@ -9,6 +9,9 @@ import { InvalidCartStateException } from '@/carts/domain/exceptions/invalid-car
 import { InvalidTenantIdException } from '@/shared/domain/exceptions/invalid-tenant-id.exception';
 import { DomainEvent } from '@/shared/domain/events/domain-event.interface';
 import { CartItemId } from '@/carts/domain/types/cart-item-id.type';
+import { CartCreatedEvent } from '@/carts/domain/events/cart-created.event';
+import { CartAbandonedEvent } from '@/carts/domain/events/cart-abandoned.event';
+import { CartCompletedEvent } from '@/carts/domain/events/cart-completed.event';
 
 export interface CartProps {
   id: CartId;
@@ -62,7 +65,7 @@ export class Cart {
       0,
     );
 
-    cart.addDomainEvent({ eventName: 'CartCreatedEvent', cartId: id });
+    cart.addDomainEvent(new CartCreatedEvent(id));
     return cart;
   }
 
@@ -74,8 +77,8 @@ export class Cart {
   }
 
   private static validateTenantId(tenantId: TenantId): void {
-    if (tenantId === undefined || tenantId === null || tenantId <= 0) {
-      throw new InvalidTenantIdException('Tenant ID is required and must be a positive number.');
+    if (!tenantId || typeof tenantId !== 'string' || tenantId.trim().length === 0) {
+      throw new InvalidTenantIdException('Tenant ID is required and must be a valid string.');
     }
   }
 
@@ -154,7 +157,7 @@ export class Cart {
     this.ensureIsActive();
     this.status = CartStatus.ABANDONED;
     this.updateUpdatedAt();
-    this.addDomainEvent({ eventName: 'CartAbandonedEvent', cartId: this.id });
+    this.addDomainEvent(new CartAbandonedEvent(this.id));
   }
 
   public complete(): void {
@@ -164,7 +167,7 @@ export class Cart {
     }
     this.status = CartStatus.COMPLETED;
     this.updateUpdatedAt();
-    this.addDomainEvent({ eventName: 'CartCompletedEvent', cartId: this.id });
+    this.addDomainEvent(new CartCompletedEvent(this.id));
   }
 
   public assignCustomer(customerId: CustomerId): void {
