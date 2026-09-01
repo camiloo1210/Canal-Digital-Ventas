@@ -5,7 +5,7 @@ import {
 } from '@/payments/application/ports/out/payment-repository.port';
 import { Payment } from '@/payments/domain/entities/payment.entity';
 import { PaymentId } from '@/payments/domain/types/payment-id.type';
-import { TenantId } from '@/payments/domain/types/tenant-id.type';
+import { TenantId } from '@/shared/domain/types/tenant-id.type';
 import { PaginatedResult, PaginationOptions } from '@/shared/domain/pagination/pagination';
 import { PaymentRepositoryException } from '@/payments/infrastructure/exceptions/payment-repository.exception';
 import { DbPaymentRow } from '@/payments/infrastructure/types/supabase-payment.types';
@@ -17,12 +17,21 @@ export class SupabasePaymentRepository implements PaymentRepositoryPort {
   async save(payment: Payment): Promise<void> {
     const row = PaymentMapper.toPersistence(payment);
 
-    const { error } = await this.supabase.from('payments').upsert(row, {
-      onConflict: 'id',
+    const { error: paymentError } = await this.supabase.rpc('upsert_payment_transactional', {
+      payment_data: row,
     });
 
-    if (error) {
-      throw new PaymentRepositoryException(`Failed to save payment: ${error.message}`);
+    if (paymentError) {
+      if (paymentError.code === 'P0001') {
+        throw new PaymentRepositoryException(
+          'Optimistic locking failure: The payment was updated by another transaction.',
+          paymentError,
+        );
+      }
+      throw new PaymentRepositoryException(
+        `Failed to save payment: ${paymentError.message}`,
+        paymentError,
+      );
     }
   }
 
@@ -36,7 +45,7 @@ export class SupabasePaymentRepository implements PaymentRepositoryPort {
 
     if (error) {
       if (error.code === 'PGRST116') return null; // Not Found
-      throw new PaymentRepositoryException(`Failed to find payment: ${error.message}`);
+      throw new PaymentRepositoryException(`Failed to find payment: ${error.message}`, error);
     }
 
     return PaymentMapper.toDomain(data as DbPaymentRow);
@@ -58,7 +67,7 @@ export class SupabasePaymentRepository implements PaymentRepositoryPort {
       .order('created_at', { ascending: false });
 
     if (error) {
-      throw new PaymentRepositoryException(`Failed to find all payments: ${error.message}`);
+      throw new PaymentRepositoryException(`Failed to find all payments: ${error.message}`, error);
     }
 
     const payments = (data as DbPaymentRow[]).map(PaymentMapper.toDomain);
@@ -97,7 +106,7 @@ export class SupabasePaymentRepository implements PaymentRepositoryPort {
       .order('created_at', { ascending: false });
 
     if (error) {
-      throw new PaymentRepositoryException(`Failed to search payments: ${error.message}`);
+      throw new PaymentRepositoryException(`Failed to search payments: ${error.message}`, error);
     }
 
     const payments = (data as DbPaymentRow[]).map(PaymentMapper.toDomain);

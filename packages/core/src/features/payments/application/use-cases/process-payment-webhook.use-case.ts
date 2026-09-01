@@ -4,6 +4,8 @@ import { EventBusPort } from '@/shared/application/ports/out/event-bus.port';
 import { ProcessWebhookDto } from '@/payments/application/dtos/process-webhook.dto';
 import { PaymentNotFoundException } from '@/payments/application/exceptions/payment-not-found.exception';
 import { PaymentStatus } from '@/payments/domain/enums/payment-status.enum';
+import { parsePaymentGateway } from '@/payments/domain/enums/payment-gateway.enum';
+import { createTenantId } from '@/shared/domain/types/tenant-id.type';
 
 export class ProcessPaymentWebhookUseCase {
   constructor(
@@ -13,12 +15,15 @@ export class ProcessPaymentWebhookUseCase {
   ) {}
 
   async execute(dto: ProcessWebhookDto): Promise<{ alreadyProcessed: boolean }> {
-    const gatewayPort = this.paymentGatewayFactory.getGateway(dto.gateway);
+    const gateway = parsePaymentGateway(dto.gateway);
+    const tenantId = createTenantId(dto.tenantId);
+
+    const gatewayPort = this.paymentGatewayFactory.getGateway(gateway);
 
     const webhookResult = await gatewayPort.processWebhook(dto.payload, dto.signature);
 
     const paymentId = webhookResult.paymentId;
-    const payment = await this.paymentRepository.findById(paymentId, dto.tenantId);
+    const payment = await this.paymentRepository.findById(paymentId, tenantId);
 
     if (!payment) {
       throw new PaymentNotFoundException(paymentId);

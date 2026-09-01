@@ -2,6 +2,8 @@ import { Money } from '@/shared/domain/value-objects/money.vo';
 import { ProductStatus } from '@/products/domain/enums/product-status.enum';
 import { Sku } from '@/products/domain/value-objects/sku.vo';
 import { ProductName } from '@/products/domain/value-objects/product-name.vo';
+import { InvalidProductAttributeException } from '@/products/domain/exceptions/invalid-product-attribute.exception';
+import { InvalidProductStateException } from '@/products/domain/exceptions/invalid-product-state.exception';
 
 export interface ProductVariantProps {
   id: string;
@@ -37,10 +39,10 @@ export class ProductVariant {
     status?: ProductStatus,
   ): ProductVariant {
     if (!id || !productId || !sku) {
-      throw new Error('Variant ID, Product ID, and SKU are required.');
+      throw new InvalidProductAttributeException('Variant ID, Product ID, and SKU are required.');
     }
     if (stock < 0) {
-      throw new Error('Variant stock cannot be negative.');
+      throw new InvalidProductAttributeException('Variant stock cannot be negative.');
     }
 
     let initialStatus = status;
@@ -74,7 +76,7 @@ export class ProductVariant {
   }
 
   public updateStock(newStock: number): void {
-    if (newStock < 0) throw new Error('Stock cannot be negative.');
+    if (newStock < 0) throw new InvalidProductAttributeException('Stock cannot be negative.');
     this.stock = newStock;
 
     if (this.stock === 0 && this.status === ProductStatus.ACTIVE) {
@@ -86,7 +88,7 @@ export class ProductVariant {
 
   public updatePriceOverride(newPrice: Money | null): void {
     if (newPrice && newPrice.getValue() <= 0) {
-      throw new Error('Price override must be positive.');
+      throw new InvalidProductAttributeException('Price override must be positive.');
     }
     this.priceOverride = newPrice;
   }
@@ -97,7 +99,7 @@ export class ProductVariant {
 
   public archive(): void {
     if (this.status === ProductStatus.ARCHIVED) {
-      throw new Error('Variant is already archived.');
+      throw new InvalidProductStateException('Variant is already archived.');
     }
     this.status = ProductStatus.ARCHIVED;
   }
