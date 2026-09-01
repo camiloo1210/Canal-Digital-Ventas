@@ -3,7 +3,8 @@ import { EventBusPort } from '@/shared/application/ports/out/event-bus.port';
 import { ChangeTenantStatusDto } from '@/tenants/application/dtos/change-tenant-status.dto';
 import { TenantNotFoundException } from '@/tenants/application/exceptions/tenant-not-found.exception';
 import { UnsupportedTenantStatusException } from '@/tenants/application/exceptions/unsupported-tenant-status.exception';
-import { TenantStatus } from '@/tenants/domain/enums/tenant-status.enum';
+import { TenantStatus, parseTenantStatus } from '@/tenants/domain/enums/tenant-status.enum';
+import { createTenantId } from '@/shared/domain/types/tenant-id.type';
 
 export class ChangeTenantStatusUseCase {
   constructor(
@@ -12,12 +13,15 @@ export class ChangeTenantStatusUseCase {
   ) {}
 
   async execute(dto: ChangeTenantStatusDto): Promise<void> {
-    const tenant = await this.tenantRepository.findById(dto.tenantId);
+    const tenantId = createTenantId(dto.tenantId);
+    const tenant = await this.tenantRepository.findById(tenantId);
     if (!tenant) {
       throw new TenantNotFoundException();
     }
 
-    switch (dto.status) {
+    const status = parseTenantStatus(dto.status);
+
+    switch (status) {
       case TenantStatus.ACTIVE:
         tenant.activate();
         break;
@@ -28,7 +32,7 @@ export class ChangeTenantStatusUseCase {
         tenant.archive();
         break;
       default:
-        throw new UnsupportedTenantStatusException(dto.status);
+        throw new UnsupportedTenantStatusException(status);
     }
 
     await this.tenantRepository.update(tenant);

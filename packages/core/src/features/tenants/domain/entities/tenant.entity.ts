@@ -1,4 +1,4 @@
-import { TenantId } from '@/tenants/domain/types/tenant-id.type';
+import { TenantId } from '@/shared/domain/types/tenant-id.type';
 import { TenantStatus } from '@/tenants/domain/enums/tenant-status.enum';
 import { TenantName } from '@/tenants/domain/value-objects/tenant-name.vo';
 import { TenantSlug } from '@/tenants/domain/value-objects/tenant-slug.vo';
@@ -7,7 +7,11 @@ import { Currency } from '@/shared/domain/enums/currency.enum';
 import { DomainEvent } from '@/shared/domain/events/domain-event.interface';
 import { InvalidTenantAttributeException } from '@/tenants/domain/exceptions/invalid-tenant-attribute.exception';
 import { InvalidTenantStateException } from '@/tenants/domain/exceptions/invalid-tenant-state.exception';
-
+import { TenantCreatedEvent } from '@/tenants/domain/events/tenant-created.event';
+import { TenantActivatedEvent } from '@/tenants/domain/events/tenant-activated.event';
+import { TenantSuspendedEvent } from '@/tenants/domain/events/tenant-suspended.event';
+import { TenantArchivedEvent } from '@/tenants/domain/events/tenant-archived.event';
+import { TenantProfileUpdatedEvent } from '@/tenants/domain/events/tenant-profile-updated.event';
 export interface TenantProps {
   id: TenantId;
   name: TenantName;
@@ -69,7 +73,7 @@ export class Tenant {
       0,
     );
 
-    tenant.addDomainEvent({ eventName: 'TenantCreatedEvent', tenantId: id });
+    tenant.addDomainEvent(new TenantCreatedEvent(id));
     return tenant;
   }
 
@@ -119,7 +123,7 @@ export class Tenant {
 
     this.status = TenantStatus.ACTIVE;
     this.updateUpdatedAt();
-    this.addDomainEvent({ eventName: 'TenantActivatedEvent', tenantId: this.id });
+    this.addDomainEvent(new TenantActivatedEvent(this.id));
   }
 
   public suspend(reason: string): void {
@@ -135,7 +139,7 @@ export class Tenant {
 
     this.status = TenantStatus.SUSPENDED;
     this.updateUpdatedAt();
-    this.addDomainEvent({ eventName: 'TenantSuspendedEvent', tenantId: this.id, reason });
+    this.addDomainEvent(new TenantSuspendedEvent(this.id, reason));
   }
 
   public archive(): void {
@@ -145,7 +149,7 @@ export class Tenant {
 
     this.status = TenantStatus.ARCHIVED;
     this.updateUpdatedAt();
-    this.addDomainEvent({ eventName: 'TenantArchivedEvent', tenantId: this.id });
+    this.addDomainEvent(new TenantArchivedEvent(this.id));
   }
 
   public updateProfile(
@@ -168,15 +172,12 @@ export class Tenant {
     this.logoUrl = logoUrl;
 
     this.updateUpdatedAt();
-    this.addDomainEvent({ eventName: 'TenantProfileUpdatedEvent', tenantId: this.id });
+    this.addDomainEvent(new TenantProfileUpdatedEvent(this.id));
   }
 
   // Domain Events
-  private addDomainEvent(event: Omit<DomainEvent, 'occurredOn'>): void {
-    this._domainEvents.push({
-      ...event,
-      occurredOn: new Date(),
-    } as DomainEvent);
+  private addDomainEvent(event: DomainEvent): void {
+    this._domainEvents.push(event);
   }
 
   public get domainEvents(): DomainEvent[] {
