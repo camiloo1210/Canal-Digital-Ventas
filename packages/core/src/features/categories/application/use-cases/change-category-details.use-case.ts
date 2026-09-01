@@ -1,15 +1,17 @@
-import { UpdateCategoryDto } from '@/categories/application/dtos/update-category.dto';
+import { ChangeCategoryDetailsDto } from '@/categories/application/dtos/change-category-details.dto';
 import { CategoryRepositoryPort } from '@/categories/application/ports/out/category-repository.port';
+import { EventBusPort } from '@/shared/application/ports/out/event-bus.port';
 import { CategoryNotFoundException } from '@/categories/application/exceptions/category-not-found.exception';
-import { parseCategoryStatus } from '@/categories/domain/enums/category-status.enum';
-
 import { createCategoryId } from '@/categories/domain/types/category-id.type';
 import { createTenantId } from '@/shared/domain/types/tenant-id.type';
 
-export class UpdateCategoryUseCase {
-  constructor(private readonly categoryRepository: CategoryRepositoryPort) {}
+export class ChangeCategoryDetailsUseCase {
+  constructor(
+    private readonly categoryRepository: CategoryRepositoryPort,
+    private readonly eventBus: EventBusPort,
+  ) {}
 
-  async execute(dto: UpdateCategoryDto): Promise<void> {
+  async execute(dto: ChangeCategoryDetailsDto): Promise<void> {
     const categoryId = createCategoryId(dto.id);
     const tenantId = createTenantId(dto.tenantId);
 
@@ -19,16 +21,14 @@ export class UpdateCategoryUseCase {
       throw new CategoryNotFoundException(dto.id);
     }
 
-    if (dto.name !== undefined) {
-      category.updateName(dto.name);
-    }
-    if (dto.description !== undefined) {
-      category.updateDescription(dto.description);
-    }
-    if (dto.status !== undefined) {
-      category.updateStatus(parseCategoryStatus(dto.status));
-    }
+    category.updateName(dto.name);
+    category.updateDescription(dto.description);
 
     await this.categoryRepository.save(category);
+
+    if (category.domainEvents.length > 0) {
+      await this.eventBus.publish(category.domainEvents);
+    }
+    category.clearDomainEvents();
   }
 }

@@ -7,6 +7,7 @@ import { DomainEvent } from '@/shared/domain/events/domain-event.interface';
 import { ProductId } from '@/products/domain/types/product-id.type';
 import { CategoryId } from '@/products/domain/types/category-id.type';
 import { TenantId } from '@/shared/domain/types/tenant-id.type';
+import { SeasonId } from '@/products/domain/types/season-id.type';
 import { InvalidProductAttributeException } from '@/products/domain/exceptions/invalid-product-attribute.exception';
 import { InvalidProductStateException } from '@/products/domain/exceptions/invalid-product-state.exception';
 import { ProductCreatedEvent } from '@/products/domain/events/product-created.event';
@@ -28,7 +29,7 @@ export interface ProductProps {
   status: ProductStatus;
   sku: Sku;
   tenantId: TenantId;
-  seasonIds: string[];
+  seasonIds: SeasonId[];
   imagePath: string | null;
   imageUrl: string | null;
   hasVariants: boolean;
@@ -54,7 +55,7 @@ export class Product {
     private status: ProductStatus,
     private sku: Sku,
     private readonly tenantId: TenantId,
-    private seasonIds: string[],
+    private seasonIds: SeasonId[],
     private imagePath: string | null,
     private imageUrl: string | null,
     private hasVariants: boolean,
@@ -76,7 +77,7 @@ export class Product {
     tenantId: TenantId,
     expirationDate: Date | null,
     status: ProductStatus | null,
-    seasonIds: string[],
+    seasonIds: SeasonId[],
     imagePath: string | null,
     variants: ProductVariant[],
     isVatExempt: boolean,
@@ -198,7 +199,7 @@ export class Product {
     description: string,
     categoryId: CategoryId,
     sku: Sku,
-    seasonIds: string[],
+    seasonIds: SeasonId[],
     isVatExempt: boolean,
   ): void {
     Product.validateDescription(description);
@@ -243,6 +244,23 @@ export class Product {
   }
 
   public changeStatus(newStatus: ProductStatus): void {
+    if (this.status === newStatus) return;
+
+    if (this.status === ProductStatus.ARCHIVED) {
+      throw new InvalidProductStateException('Cannot change status of an archived product.');
+    }
+    if (newStatus === ProductStatus.ARCHIVED) {
+      throw new InvalidProductStateException('Use the archive() method to archive a product.');
+    }
+    if (newStatus === ProductStatus.OUT_OF_STOCK && this.stock > 0) {
+      throw new InvalidProductStateException(
+        'Cannot set status to out_of_stock when stock is greater than 0.',
+      );
+    }
+    if (newStatus === ProductStatus.ACTIVE && this.stock === 0) {
+      throw new InvalidProductStateException('Cannot set status to active when stock is 0.');
+    }
+
     this.status = newStatus;
     this.updateUpdatedAt();
   }
@@ -307,7 +325,7 @@ export class Product {
   public getTenantId(): TenantId {
     return this.tenantId;
   }
-  public getSeasonIds(): string[] {
+  public getSeasonIds(): SeasonId[] {
     return [...this.seasonIds];
   }
   public getImagePath(): string | null {

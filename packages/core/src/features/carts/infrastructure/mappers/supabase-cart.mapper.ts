@@ -2,6 +2,7 @@ import { Cart } from '@/carts/domain/entities/cart.entity';
 import { CartItem } from '@/carts/domain/entities/cart-item.entity';
 import { DbCartRow, DbCartItemRow } from '@/carts/infrastructure/types/supabase-cart.types';
 import { Money } from '@/shared/domain/value-objects/money.vo';
+import { Currency } from '@/shared/domain/enums/currency.enum';
 import { parseCartStatus } from '@/carts/domain/enums/cart-status.enum';
 import { CartId } from '@/carts/domain/types/cart-id.type';
 import { CustomerId } from '@/carts/domain/types/customer-id.type';
@@ -19,9 +20,9 @@ export class SupabaseCartMapper {
         variantId: itemRow.variant_id ? (itemRow.variant_id as VariantId) : null,
         productName: itemRow.product_name,
         sku: itemRow.sku,
-        unitPrice: Money.from(itemRow.unit_price_cents, 'USD'),
+        unitPrice: Money.from(itemRow.unit_price_cents, Currency.USD),
         quantity: itemRow.quantity,
-        subtotal: Money.from(itemRow.subtotal_cents, 'USD'),
+        subtotal: Money.from(itemRow.subtotal_cents, Currency.USD),
       }),
     );
 
@@ -31,7 +32,7 @@ export class SupabaseCartMapper {
       customerId: row.customer_id ? (row.customer_id as CustomerId) : null,
       items,
       status: parseCartStatus(row.status),
-      subtotal: Money.from(row.subtotal_cents, 'USD'),
+      subtotal: Money.from(row.subtotal_cents, Currency.USD),
       expiresAt: new Date(row.expires_at),
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at),
