@@ -6,6 +6,8 @@ import { TenantRepositoryPort } from '@/tenants/application/ports/out/tenant-rep
 import { EventBusPort } from '@/shared/application/ports/out/event-bus.port';
 import { CreateTenantDto } from '@/tenants/application/dtos/create-tenant.dto';
 import { TenantSlugAlreadyInUseException } from '@/tenants/application/exceptions/tenant-slug-already-in-use.exception';
+import { createTenantId } from '@/shared/domain/types/tenant-id.type';
+import { parseCurrency } from '@/shared/domain/enums/currency.enum';
 
 export class CreateTenantUseCase {
   constructor(
@@ -14,9 +16,11 @@ export class CreateTenantUseCase {
   ) {}
 
   async execute(dto: CreateTenantDto): Promise<void> {
+    const tenantId = createTenantId(dto.id);
     const name = TenantName.create(dto.name);
     const slug = TenantSlug.create(dto.slug);
     const contactEmail = Email.create(dto.contactEmail);
+    const currency = parseCurrency(dto.baseCurrency);
 
     const existingTenant = await this.tenantRepository.findBySlug(slug);
     if (existingTenant) {
@@ -24,11 +28,11 @@ export class CreateTenantUseCase {
     }
 
     const tenant = Tenant.create(
-      dto.id,
+      tenantId,
       name,
       slug,
       contactEmail,
-      dto.baseCurrency,
+      currency,
       dto.taxId || null,
       dto.customDomain || null,
       dto.logoUrl || null,

@@ -1,6 +1,6 @@
 import { Tenant } from '@/tenants/domain/entities/tenant.entity';
 import { DbTenantRow } from '@/tenants/infrastructure/types/supabase-tenant.types';
-import { TenantId } from '@/tenants/domain/types/tenant-id.type';
+import { TenantId } from '@/shared/domain/types/tenant-id.type';
 import { TenantName } from '@/tenants/domain/value-objects/tenant-name.vo';
 import { TenantSlug } from '@/tenants/domain/value-objects/tenant-slug.vo';
 import { Email } from '@/shared/domain/value-objects/email.vo';

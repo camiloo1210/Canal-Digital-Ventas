@@ -1,6 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Tenant } from '@/tenants/domain/entities/tenant.entity';
-import { TenantId } from '@/tenants/domain/types/tenant-id.type';
+import { TenantId } from '@/shared/domain/types/tenant-id.type';
 import { TenantSlug } from '@/tenants/domain/value-objects/tenant-slug.vo';
 import {
   TenantRepositoryPort,
@@ -17,34 +17,36 @@ export class SupabaseTenantRepository implements TenantRepositoryPort {
   async save(tenant: Tenant): Promise<void> {
     const tenantRow = SupabaseTenantMapper.toPersistence(tenant);
 
-    const { error } = await this.supabase.from('tenants').insert(tenantRow);
+    const { error } = await this.supabase.rpc('upsert_tenant_transactional', {
+      tenant_data: tenantRow,
+    });
 
     if (error) {
-      throw new TenantRepositoryException(`Failed to save tenant: ${error.message}`);
+      if (error.code === 'P0001') {
+        throw new TenantRepositoryException(
+          'Optimistic locking failed: the tenant has been updated by another transaction or does not exist.',
+          error,
+        );
+      }
+      throw new TenantRepositoryException(`Failed to save tenant: ${error.message}`, error);
     }
   }
 
   async update(tenant: Tenant): Promise<void> {
     const tenantRow = SupabaseTenantMapper.toPersistence(tenant);
-    // Optimistic locking assuming version is incremented in the entity
-    const previousVersion = tenant.getVersion() - 1;
 
-    const { data, error } = await this.supabase
-      .from('tenants')
-      .update(tenantRow)
-      .eq('id', tenant.getId())
-      .eq('version', previousVersion)
-      .select('id')
-      .maybeSingle();
+    const { error } = await this.supabase.rpc('upsert_tenant_transactional', {
+      tenant_data: tenantRow,
+    });
 
     if (error) {
-      throw new TenantRepositoryException(`Failed to update tenant: ${error.message}`);
-    }
-
-    if (!data) {
-      throw new TenantRepositoryException(
-        `Optimistic locking failed: the tenant has been updated by another transaction or does not exist.`,
-      );
+      if (error.code === 'P0001') {
+        throw new TenantRepositoryException(
+          'Optimistic locking failed: the tenant has been updated by another transaction or does not exist.',
+          error,
+        );
+      }
+      throw new TenantRepositoryException(`Failed to update tenant: ${error.message}`, error);
     }
   }
 
@@ -53,7 +55,7 @@ export class SupabaseTenantRepository implements TenantRepositoryPort {
     const { error } = await this.supabase.from('tenants').delete().eq('id', tenantId);
 
     if (error) {
-      throw new TenantRepositoryException(`Failed to delete tenant: ${error.message}`);
+      throw new TenantRepositoryException(`Failed to delete tenant: ${error.message}`, error);
     }
   }
 
@@ -62,7 +64,10 @@ export class SupabaseTenantRepository implements TenantRepositoryPort {
 
     if (error || !data) {
       if (error && error.code !== 'PGRST116') {
-        throw new TenantRepositoryException(`Database error searching tenant: ${error.message}`);
+        throw new TenantRepositoryException(
+          `Database error searching tenant: ${error.message}`,
+          error,
+        );
       }
       return null;
     }
@@ -81,6 +86,7 @@ export class SupabaseTenantRepository implements TenantRepositoryPort {
       if (error && error.code !== 'PGRST116') {
         throw new TenantRepositoryException(
           `Database error searching tenant by slug: ${error.message}`,
+          error,
         );
       }
       return null;
@@ -130,7 +136,7 @@ export class SupabaseTenantRepository implements TenantRepositoryPort {
     const { data, error, count } = await query;
 
     if (error) {
-      throw new TenantRepositoryException(`Failed to search tenants: ${error.message}`);
+      throw new TenantRepositoryException(`Failed to search tenants: ${error.message}`, error);
     }
 
     const totalItems = count ?? 0;
