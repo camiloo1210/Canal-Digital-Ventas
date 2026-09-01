@@ -126,7 +126,10 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
 
     if (error || !data) {
       if (error && error.code !== 'PGRST116') {
-        console.error(error);
+        throw new ProductRepositoryException(
+          `Database error searching product: ${error.message}`,
+          error,
+        );
       }
       return null;
     }
@@ -145,9 +148,7 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
         sku: v.getSku(),
         name: v.getName(),
         attributes: v.getAttributes(),
-        price_override_cents: v.getPriceOverride()
-          ? Math.round(v.getPriceOverride()!.getValue() * 100)
-          : null,
+        price_override_cents: v.getPriceOverride() ? v.getPriceOverride()!.getValue() : null,
         stock: v.getStock(),
         status: v.getStatus(),
       }));

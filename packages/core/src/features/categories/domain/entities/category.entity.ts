@@ -15,9 +15,9 @@ import { CategoryDescriptionUpdatedEvent } from '@/categories/domain/events/cate
 
 export interface CategoryProps {
   id: CategoryId;
-  name: string;
+  name: CategoryName;
   tenantId: TenantId;
-  description: string;
+  description: CategoryDescription;
   status: CategoryStatus;
 }
 
@@ -57,17 +57,7 @@ export class Category {
 
   // Reconstitute
   public static reconstitute(props: CategoryProps): Category {
-    Category.validateId(props.id);
-    Category.validateTenantId(props.tenantId);
-    Category.validateStatus(props.status);
-
-    return new Category(
-      props.id,
-      CategoryName.from(props.name),
-      props.tenantId,
-      CategoryDescription.from(props.description),
-      props.status,
-    );
+    return new Category(props.id, props.name, props.tenantId, props.description, props.status);
   }
 
   // Validations

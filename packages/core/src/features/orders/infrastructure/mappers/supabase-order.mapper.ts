@@ -2,6 +2,7 @@ import { Order } from '@/orders/domain/entities/order.entity';
 import { OrderItem } from '@/orders/domain/entities/order-item.entity';
 import { DbOrderRow, DbOrderItemRow } from '@/orders/infrastructure/types/supabase-order.types';
 import { Money } from '@/shared/domain/value-objects/money.vo';
+import { Currency } from '@/shared/domain/enums/currency.enum';
 import { Address } from '@/shared/domain/value-objects/adress.vo';
 import { parseOrderStatus } from '@/orders/domain/enums/order-status.enum';
 import { OrderId } from '@/orders/domain/types/order-id.type';
@@ -21,9 +22,9 @@ export class SupabaseOrderMapper {
         variantId: itemRow.variant_id ? (itemRow.variant_id as VariantId) : null,
         productName: itemRow.product_name,
         sku: itemRow.sku,
-        unitPrice: Money.from(itemRow.unit_price_cents, 'USD'),
+        unitPrice: Money.from(itemRow.unit_price_cents, Currency.USD),
         quantity: itemRow.quantity,
-        subtotal: Money.from(itemRow.subtotal_cents, 'USD'),
+        subtotal: Money.from(itemRow.subtotal_cents, Currency.USD),
       }),
     );
 
@@ -46,11 +47,11 @@ export class SupabaseOrderMapper {
       tenantId: row.tenant_id as TenantId,
       items,
       status: parseOrderStatus(row.status),
-      subtotal: Money.from(row.subtotal_cents, 'USD'),
-      taxAmount: Money.from(row.tax_amount_cents, 'USD'),
-      discountAmount: Money.from(row.discount_amount_cents, 'USD'),
-      shippingCost: Money.from(row.shipping_cost_cents, 'USD'),
-      totalAmount: Money.from(row.total_amount_cents, 'USD'),
+      subtotal: Money.from(row.subtotal_cents, Currency.USD),
+      taxAmount: Money.from(row.tax_amount_cents, Currency.USD),
+      discountAmount: Money.from(row.discount_amount_cents, Currency.USD),
+      shippingCost: Money.from(row.shipping_cost_cents, Currency.USD),
+      totalAmount: Money.from(row.total_amount_cents, Currency.USD),
       shippingAddress: shippingAddress as Address,
       paymentGatewayId: row.payment_gateway_id
         ? (row.payment_gateway_id as PaymentGatewayId)

@@ -17,7 +17,8 @@ export class CreateCartUseCase {
     const tenantId = createTenantId(dto.tenantId);
     const customerId = dto.customerId ? createCustomerId(dto.customerId) : null;
 
-    const cart = Cart.create(cartId, tenantId, customerId, dto.expiresAt);
+    const expiresAtDate = new Date(dto.expiresAt);
+    const cart = Cart.create(cartId, tenantId, customerId, expiresAtDate);
 
     await this.cartRepository.save(cart);
     await this.eventBus.publish(cart.domainEvents);

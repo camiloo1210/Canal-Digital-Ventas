@@ -1,12 +1,13 @@
 import { InvalidMoneyException } from '@/shared/domain/exceptions/invalid-money.exception';
+import { Currency } from '@/shared/domain/enums/currency.enum';
 
 export class Money {
   private constructor(
-    private readonly amount: number, // Must be integer (cents)
-    private readonly currency: string,
+    private readonly amount: number,
+    private readonly currency: Currency,
   ) {}
 
-  public static from(amount: number, currency: string = 'USD'): Money {
+  public static from(amount: number, currency: Currency = Currency.USD): Money {
     if (amount === undefined || amount === null || isNaN(amount)) {
       throw new InvalidMoneyException('Invalid amount for Money. Must be a valid number.');
     }
@@ -16,7 +17,7 @@ export class Money {
     if (amount < 0) {
       throw new InvalidMoneyException('Amount cannot be negative.');
     }
-    return new Money(amount, currency.toUpperCase());
+    return new Money(amount, currency);
   }
 
   public equals(other: Money): boolean {
@@ -56,7 +57,7 @@ export class Money {
   public getValue(): number {
     return this.amount;
   }
-  public getCurrency(): string {
+  public getCurrency(): Currency {
     return this.currency;
   }
 }

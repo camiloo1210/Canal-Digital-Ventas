@@ -11,5 +11,6 @@ export interface CreateProductDto {
   tenantId: string;
   seasonIds: string[];
   isVatExempt: boolean;
-  image: unknown | null;
+  imagePath?: string | null;
+  imageUrl?: string | null;
 }

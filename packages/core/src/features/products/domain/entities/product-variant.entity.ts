@@ -2,12 +2,14 @@ import { Money } from '@/shared/domain/value-objects/money.vo';
 import { ProductStatus } from '@/products/domain/enums/product-status.enum';
 import { Sku } from '@/products/domain/value-objects/sku.vo';
 import { ProductName } from '@/products/domain/value-objects/product-name.vo';
+import { VariantId, createVariantId } from '@/products/domain/types/variant-id.type';
+import { ProductId, createProductId } from '@/products/domain/types/product-id.type';
 import { InvalidProductAttributeException } from '@/products/domain/exceptions/invalid-product-attribute.exception';
 import { InvalidProductStateException } from '@/products/domain/exceptions/invalid-product-state.exception';
 
 export interface ProductVariantProps {
-  id: string;
-  productId: string;
+  id: VariantId;
+  productId: ProductId;
   sku: Sku;
   name: ProductName;
   attributes: Record<string, string>;
@@ -18,8 +20,8 @@ export interface ProductVariantProps {
 
 export class ProductVariant {
   private constructor(
-    private readonly id: string,
-    private readonly productId: string,
+    private readonly id: VariantId,
+    private readonly productId: ProductId,
     private sku: Sku,
     private name: ProductName,
     private attributes: Record<string, string>,
@@ -29,8 +31,8 @@ export class ProductVariant {
   ) {}
 
   public static create(
-    id: string,
-    productId: string,
+    id: VariantId,
+    productId: ProductId,
     sku: Sku,
     name: ProductName,
     attributes: Record<string, string>,
@@ -104,10 +106,10 @@ export class ProductVariant {
     this.status = ProductStatus.ARCHIVED;
   }
 
-  public getId(): string {
+  public getId(): VariantId {
     return this.id;
   }
-  public getProductId(): string {
+  public getProductId(): ProductId {
     return this.productId;
   }
   public getSku(): string {
