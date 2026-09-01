@@ -1,10 +1,7 @@
-import { CategoryId } from '@/categories/domain/types/category-id.type';
-import { TenantId } from '@/categories/domain/types/tenant-id.type';
-
 export interface CreateCategoryDto {
-  id: CategoryId;
+  id: string;
   name: string;
-  tenantId: TenantId;
+  tenantId: string;
   description: string;
   status: string;
 }

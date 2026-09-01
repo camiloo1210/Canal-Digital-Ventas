@@ -2,7 +2,7 @@ import { Category } from '@/categories/domain/entities/category.entity';
 import { PaginationOptions, PaginatedResult } from '@/shared/domain/pagination/pagination';
 import { CategoryStatus } from '@/categories/domain/enums/category-status.enum';
 import { CategoryId } from '@/categories/domain/types/category-id.type';
-import { TenantId } from '@/categories/domain/types/tenant-id.type';
+import { TenantId } from '@/shared/domain/types/tenant-id.type';
 
 export interface CategoryFilters {
   id?: CategoryId;

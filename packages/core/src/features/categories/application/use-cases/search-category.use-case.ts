@@ -7,14 +7,17 @@ import {
   CategoryFilters,
 } from '@/categories/application/ports/out/category-repository.port';
 
+import { createCategoryId } from '@/categories/domain/types/category-id.type';
+import { createTenantId } from '@/shared/domain/types/tenant-id.type';
+
 export class SearchCategoryUseCase {
   constructor(private readonly categoryRepository: CategoryRepositoryPort) {}
 
   async execute(dto: SearchCategoriesDto): Promise<PaginatedResult<Category>> {
     const filters: CategoryFilters = {
-      id: dto.id,
+      id: dto.id ? createCategoryId(dto.id) : undefined,
       name: dto.name,
-      tenantId: dto.tenantId,
+      tenantId: createTenantId(dto.tenantId),
       status: dto.status ? parseCategoryStatus(dto.status) : undefined,
     };
     return await this.categoryRepository.searchByFilters(filters, dto.pagination);
