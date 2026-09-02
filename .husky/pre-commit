@@ -1,5 +1,6 @@
 # Formatear y verificar código solo en archivos listos para commit
 npx lint-staged
 
-# (Opcional) Verificación de tipos en TypeScript para todo el proyecto
-pnpm tsc --noEmit
+# (Opcional) Verificación de tipos en TypeScript para los workspaces
+pnpm --filter "./packages/core" exec tsc --noEmit
+pnpm --filter "./apps/web" exec tsc --noEmit

@@ -75,3 +75,7 @@ export type {
 export { DomainException } from './features/shared/domain/exceptions/domain.exception';
 export { InvalidTenantIdException } from './features/shared/domain/exceptions/invalid-tenant-id.exception';
 export { Money } from './features/shared/domain/value-objects/money.vo';
+export type { DomainEvent } from './features/shared/domain/events/domain-event.interface';
+
+// Application (Ports)
+export type { EventBusPort } from './features/shared/application/ports/out/event-bus.port';
