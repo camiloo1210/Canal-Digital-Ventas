@@ -28,7 +28,7 @@ CREATE TABLE core.tenants (
 CREATE INDEX idx_tenants_slug ON core.tenants(slug);
 
 ALTER TABLE core.tenants ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Enable read/write for authenticated users" ON core.tenants FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Enable read/write for authenticated users" ON core.tenants FOR ALL TO authenticated USING (id = (select auth.jwt()->>'app_tenant_id')::uuid) WITH CHECK (id = (select auth.jwt()->>'app_tenant_id')::uuid);
 
 -- ==========================================
 -- CATALOG SCHEMA
@@ -49,7 +49,7 @@ CREATE TABLE catalog.categories (
 CREATE INDEX idx_categories_tenant_id ON catalog.categories(tenant_id);
 
 ALTER TABLE catalog.categories ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Enable read/write for authenticated users" ON catalog.categories FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Enable read/write for authenticated users" ON catalog.categories FOR ALL TO authenticated USING (tenant_id = (select auth.jwt()->>'app_tenant_id')::uuid) WITH CHECK (tenant_id = (select auth.jwt()->>'app_tenant_id')::uuid);
 
 
 -- 3. Products Table (Aggregate Root)
@@ -80,7 +80,7 @@ CREATE INDEX idx_products_tenant_id ON catalog.products(tenant_id);
 CREATE INDEX idx_products_category_id ON catalog.products(category_id);
 
 ALTER TABLE catalog.products ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Enable read/write for authenticated users" ON catalog.products FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Enable read/write for authenticated users" ON catalog.products FOR ALL TO authenticated USING (tenant_id = (select auth.jwt()->>'app_tenant_id')::uuid) WITH CHECK (tenant_id = (select auth.jwt()->>'app_tenant_id')::uuid);
 
 
 -- 4. Product Variants Table (Child Entity)
@@ -100,7 +100,7 @@ CREATE TABLE catalog.product_variants (
 CREATE INDEX idx_product_variants_product_id ON catalog.product_variants(product_id);
 
 ALTER TABLE catalog.product_variants ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Enable read/write for authenticated users" ON catalog.product_variants FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Enable read/write for authenticated users" ON catalog.product_variants FOR ALL TO authenticated USING (product_id IN (SELECT id FROM catalog.products WHERE tenant_id = (select auth.jwt()->>'app_tenant_id')::uuid)) WITH CHECK (product_id IN (SELECT id FROM catalog.products WHERE tenant_id = (select auth.jwt()->>'app_tenant_id')::uuid));
 
 
 -- ==========================================
@@ -131,7 +131,7 @@ CREATE TABLE sales.customers (
 CREATE INDEX idx_customers_tenant_id ON sales.customers(tenant_id);
 
 ALTER TABLE sales.customers ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Enable read/write for authenticated users" ON sales.customers FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Enable read/write for authenticated users" ON sales.customers FOR ALL TO authenticated USING (tenant_id = (select auth.jwt()->>'app_tenant_id')::uuid) WITH CHECK (tenant_id = (select auth.jwt()->>'app_tenant_id')::uuid);
 
 
 -- 6. Carts Table (Aggregate Root)
@@ -150,7 +150,7 @@ CREATE TABLE sales.carts (
 CREATE INDEX idx_carts_tenant_id ON sales.carts(tenant_id);
 
 ALTER TABLE sales.carts ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Enable read/write for authenticated users" ON sales.carts FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Enable read/write for authenticated users" ON sales.carts FOR ALL TO authenticated USING (tenant_id = (select auth.jwt()->>'app_tenant_id')::uuid) WITH CHECK (tenant_id = (select auth.jwt()->>'app_tenant_id')::uuid);
 
 
 -- 7. Cart Items Table (Child Entity)
@@ -169,7 +169,7 @@ CREATE TABLE sales.cart_items (
 CREATE INDEX idx_cart_items_cart_id ON sales.cart_items(cart_id);
 
 ALTER TABLE sales.cart_items ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Enable read/write for authenticated users" ON sales.cart_items FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Enable read/write for authenticated users" ON sales.cart_items FOR ALL TO authenticated USING (cart_id IN (SELECT id FROM sales.carts WHERE tenant_id = (select auth.jwt()->>'app_tenant_id')::uuid)) WITH CHECK (cart_id IN (SELECT id FROM sales.carts WHERE tenant_id = (select auth.jwt()->>'app_tenant_id')::uuid));
 
 
 -- 8. Orders Table (Aggregate Root)
@@ -202,7 +202,7 @@ CREATE INDEX idx_orders_customer_id ON sales.orders(customer_id);
 CREATE INDEX idx_orders_order_number ON sales.orders(order_number);
 
 ALTER TABLE sales.orders ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Enable read/write for authenticated users" ON sales.orders FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Enable read/write for authenticated users" ON sales.orders FOR ALL TO authenticated USING (tenant_id = (select auth.jwt()->>'app_tenant_id')::uuid) WITH CHECK (tenant_id = (select auth.jwt()->>'app_tenant_id')::uuid);
 
 
 -- 9. Order Items Table (Child Entity)
@@ -221,7 +221,7 @@ CREATE TABLE sales.order_items (
 CREATE INDEX idx_order_items_order_id ON sales.order_items(order_id);
 
 ALTER TABLE sales.order_items ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Enable read/write for authenticated users" ON sales.order_items FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Enable read/write for authenticated users" ON sales.order_items FOR ALL TO authenticated USING (order_id IN (SELECT id FROM sales.orders WHERE tenant_id = (select auth.jwt()->>'app_tenant_id')::uuid)) WITH CHECK (order_id IN (SELECT id FROM sales.orders WHERE tenant_id = (select auth.jwt()->>'app_tenant_id')::uuid));
 
 
 -- 10. Payments Table (Aggregate Root)
@@ -244,4 +244,21 @@ CREATE INDEX idx_payments_order_id ON sales.payments(order_id);
 CREATE INDEX idx_payments_tenant_id ON sales.payments(tenant_id);
 
 ALTER TABLE sales.payments ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Enable read/write for authenticated users" ON sales.payments FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Enable read/write for authenticated users" ON sales.payments FOR ALL TO authenticated USING (tenant_id = (select auth.jwt()->>'app_tenant_id')::uuid) WITH CHECK (tenant_id = (select auth.jwt()->>'app_tenant_id')::uuid);
+
+
+-- ==========================================
+-- PERMISSIONS AND GRANTS
+-- ==========================================
+
+GRANT USAGE ON SCHEMA core TO anon, authenticated, service_role;
+GRANT USAGE ON SCHEMA catalog TO anon, authenticated, service_role;
+GRANT USAGE ON SCHEMA sales TO anon, authenticated, service_role;
+
+GRANT ALL ON ALL TABLES IN SCHEMA core TO anon, authenticated, service_role;
+GRANT ALL ON ALL TABLES IN SCHEMA catalog TO anon, authenticated, service_role;
+GRANT ALL ON ALL TABLES IN SCHEMA sales TO anon, authenticated, service_role;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA core GRANT ALL ON TABLES TO anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA catalog GRANT ALL ON TABLES TO anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA sales GRANT ALL ON TABLES TO anon, authenticated, service_role;
