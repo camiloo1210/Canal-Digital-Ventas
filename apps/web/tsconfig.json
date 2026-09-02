@@ -20,10 +20,10 @@
     ],
     "paths": {
       "@/*": ["./*"],
-      "@/shared/*": ["./packages/core/src/features/shared/*"],
-      "@/products/*": ["./packages/core/src/features/products/*"],
-      "@/categories/*": ["./packages/core/src/features/categories/*"],
-      "@/orders/*": ["./packages/core/src/features/orders/*"]
+      "@/shared/*": ["../../packages/core/src/features/shared/*"],
+      "@/products/*": ["../../packages/core/src/features/products/*"],
+      "@/categories/*": ["../../packages/core/src/features/categories/*"],
+      "@/orders/*": ["../../packages/core/src/features/orders/*"]
     }
   },
   "include": [
