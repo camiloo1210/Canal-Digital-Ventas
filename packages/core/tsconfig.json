@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/shared/*": ["src/features/shared/*"],
+      "@/products/*": ["src/features/products/*"],
+      "@/categories/*": ["src/features/categories/*"],
+      "@/orders/*": ["src/features/orders/*"],
+      "@/customers/*": ["src/features/customers/*"],
+      "@/carts/*": ["src/features/carts/*"],
+      "@/payments/*": ["src/features/payments/*"],
+      "@/tenants/*": ["src/features/tenants/*"]
+    }
+  }
+}
