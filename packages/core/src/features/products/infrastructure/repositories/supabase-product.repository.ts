@@ -19,6 +19,7 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
     pagination?: PaginationOptions,
   ): Promise<PaginatedResult<Product>> {
     let query = this.supabase
+      .schema('catalog')
       .from('products')
       .select('*, product_variants(*)', { count: 'exact' })
       .eq('tenant_id', filters.tenantId);
@@ -62,6 +63,7 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
     const to = from + limit - 1;
 
     const { data, error, count } = await this.supabase
+      .schema('catalog')
       .from('products')
       .select('*, product_variants(*)', { count: 'exact' })
       .eq('tenant_id', tenantId)
@@ -87,6 +89,7 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
 
   async searchProductsByName(query: string, tenantId: TenantId): Promise<Product[]> {
     const { data, error } = await this.supabase
+      .schema('catalog')
       .from('products')
       .select('*, product_variants(*)')
       .eq('tenant_id', tenantId)
@@ -101,6 +104,7 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
 
   async findByCategoryId(categoryId: CategoryId, tenantId: TenantId): Promise<Product[]> {
     const { data, error } = await this.supabase
+      .schema('catalog')
       .from('products')
       .select('*, product_variants(*)')
       .eq('tenant_id', tenantId)
@@ -118,6 +122,7 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
 
   async findById(id: ProductId, tenantId: TenantId): Promise<Product | null> {
     const { data, error } = await this.supabase
+      .schema('catalog')
       .from('products')
       .select('*, product_variants(*)')
       .eq('id', id)
@@ -175,6 +180,7 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
 
   async delete(id: ProductId, tenantId: TenantId): Promise<void> {
     const { error } = await this.supabase
+      .schema('catalog')
       .from('products')
       .delete()
       .eq('id', id)
