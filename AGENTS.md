@@ -32,12 +32,17 @@ All business logic MUST reside here, fully decoupled from any framework (React/N
 - **Infrastructure Layer (`infrastructure/`):**
   - **Adapters:** This is the ONLY place where implementations like Supabase, HTTP clients, or DB drivers are allowed (e.g., `SupabaseCategoryRepository`).
 
-## 3. Frontend Rules (Next.js App)
+## 3. Frontend Rules (Next.js App - State of the Art)
+
+The frontend acts purely as a Primary Adapter (Driving Adapter). Its only job is to paint HTML, receive clicks, parse data, and pass it to the core.
 
 - **Zero Business Logic in UI:** The frontend is just an I/O delivery mechanism. It MUST NOT contain core business logic.
-- **Integration:** The Next.js app must instantiate and consume the Use Cases from `@canaldigital/packages/core` (via Server Actions or Route Handlers).
-- **Boundary Validation:** Data coming from the client MUST be validated (e.g., using Zod) at the Next.js boundary (Server Actions/API) before being mapped to DTOs and passed to the `core` Use Cases.
-- **Dependency Injection:** Repositories must be instantiated at the server level and injected into Use Cases.
+- **UI Library (shadcn/ui + Tailwind CSS):** We use `shadcn/ui` and Tailwind CSS exclusively. DO NOT use runtime CSS-in-JS libraries (e.g., MUI, Chakra UI, Ant Design) as they degrade React Server Components (RSC) performance.
+- **React Server Components (RSC) for Reads:** Use RSCs (e.g., `page.tsx`) to read data directly from Repositories for maximum performance and SEO. Do not use Use Cases for pure reads.
+- **Server Actions for Mutations:** All data mutations must happen via Server Actions (`'use server'`).
+- **Parse, Don't Validate (Zod):** Data coming from the client MUST be parsed and validated using Zod at the Server Action boundary before passing primitive DTOs to the `core` Use Cases.
+- **Dependency Injection (DI):** Use a central DI container (e.g., `lib/di/`) with `'server-only'` to instantiate Repositories and Use Cases. Do not instantiate them directly inside components.
+- **React 19 Standards:** Use modern React 19 hooks like `useActionState` (instead of `useFormState`) and `useFormStatus` to handle forms and loading states in Client Components without blocking the UI.
 
 ## 4. General Coding Standards
 

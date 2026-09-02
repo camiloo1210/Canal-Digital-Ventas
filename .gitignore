@@ -43,3 +43,4 @@ next-env.d.ts
 # General 
 .env.local
 .quill.md/
+.next
