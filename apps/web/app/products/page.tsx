@@ -1,5 +1,6 @@
 import { getProductRepository } from '@/features/products/di/products.di';
 import { Product } from '@canaldigital/packages/core';
+import { createTenantId } from '@canaldigital/packages/core/src/features/shared/domain/types/tenant-id.type';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
 // import { createTenantId } from '@canaldigital/packages/core/src/features/shared/domain/types/tenant-id.type'; // Using hardcoded string since the core repository might expect a string or TenantId
@@ -14,7 +15,7 @@ export const dynamic = 'force-dynamic';
 export default async function ProductsPage() {
   const repository = await getProductRepository();
   // Mock tenantId for now (same as used in the action)
-  const tenantId = '11111111-1111-1111-1111-111111111111' as any; // Cast as any or use createTenantId if needed
+  const tenantId = createTenantId('11111111-1111-1111-1111-111111111111');
 
   // Usamos el repositorio directamente para lecturas rápidas (RSC).
   // Next.js App Router recomienda usar Server Components para reads directos.

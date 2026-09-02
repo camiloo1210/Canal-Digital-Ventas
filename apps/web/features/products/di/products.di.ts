@@ -2,6 +2,7 @@ import 'server-only';
 import { createClient } from '@/lib/supabase/server';
 import { InMemoryEventBus } from '@/lib/infrastructure/event-bus/in-memory-event.bus';
 import { SupabaseProductRepository, CreateProductUseCase } from '@canaldigital/packages/core';
+import { SupabaseStorageAdapter } from '@/lib/storage/supabase-storage.adapter';
 
 // Helper to get the repository (used for fast reads in Server Components)
 export async function getProductRepository() {
@@ -18,4 +19,9 @@ export async function getCreateProductUseCase() {
   const eventBus = new InMemoryEventBus();
 
   return new CreateProductUseCase(repository, eventBus);
+}
+
+// Helper to get the Storage Adapter (used in Server Actions)
+export function getStorageAdapter() {
+  return new SupabaseStorageAdapter();
 }

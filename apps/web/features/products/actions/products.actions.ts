@@ -1,10 +1,10 @@
 'use server';
 
 import { z } from 'zod';
-import { getCreateProductUseCase } from '@/features/products/di/products.di';
+import { getCreateProductUseCase, getStorageAdapter } from '@/features/products/di/products.di';
 import { revalidatePath } from 'next/cache';
 import { DomainException } from '@canaldigital/packages/core';
-import { SupabaseStorageAdapter } from '@/lib/storage/supabase-storage.adapter';
+// Removed inline storage adapter import
 
 // 1. Define the correct shape of the data using Zod
 const createProductSchema = z.object({
@@ -23,7 +23,15 @@ const createProductSchema = z.object({
   imageFile: z.instanceof(File).optional(),
 });
 
-export async function createProductAction(prevState: any, formData: FormData) {
+export interface ActionState {
+  success: boolean;
+  error: string | null;
+}
+
+export async function createProductAction(
+  prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   // Parse, Don't Validate
   const rawData = Object.fromEntries(formData.entries());
 
@@ -45,7 +53,7 @@ export async function createProductAction(prevState: any, formData: FormData) {
 
     // Upload image to Supabase Storage if it exists
     if (parsed.data.imageFile) {
-      const storageAdapter = new SupabaseStorageAdapter();
+      const storageAdapter = getStorageAdapter();
       // Generate a secure unique name to avoid collisions
       const fileName = `${crypto.randomUUID()}-${parsed.data.imageFile.name}`;
       publicUrl = await storageAdapter.uploadImage(parsed.data.imageFile, fileName);
@@ -78,7 +86,7 @@ export async function createProductAction(prevState: any, formData: FormData) {
     revalidatePath('/products');
 
     return { success: true, error: null };
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Catch native core architecture exceptions
     if (error instanceof DomainException) {
       return { error: error.message, success: false };
