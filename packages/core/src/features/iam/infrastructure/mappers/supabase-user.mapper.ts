@@ -10,13 +10,13 @@ import { UserPermission } from '@/iam/domain/enums/permission.enum';
 
 export class SupabaseUserMapper {
   static toDomain(row: DbUserRow): User {
-    const firstName = row.first_name ? PersonName.create(row.first_name) : null;
-    const lastName = row.last_name ? PersonName.create(row.last_name) : null;
+    const firstName = row.first_name ? PersonName.reconstitute(row.first_name) : null;
+    const lastName = row.last_name ? PersonName.reconstitute(row.last_name) : null;
 
     return User.reconstitute({
       id: row.id as UserId,
       tenantId: row.tenant_id as TenantId,
-      email: Email.create(row.email),
+      email: Email.reconstitute(row.email),
       role: row.role as UserRole,
       status: row.status as UserStatus,
       firstName,

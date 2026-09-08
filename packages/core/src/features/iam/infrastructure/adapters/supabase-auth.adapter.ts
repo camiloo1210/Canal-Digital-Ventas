@@ -60,4 +60,14 @@ export class SupabaseAuthAdapter implements AuthPort {
 
     return data.url;
   }
+  async exchangeOAuthCode(code: string): Promise<void> {
+    const { error } = await this.supabase.auth.exchangeCodeForSession(code);
+
+    if (error) {
+      throw new AuthGatewayException(
+        `Supabase OAuth code exchange failed: ${error.message}`,
+        error,
+      );
+    }
+  }
 }

@@ -27,6 +27,10 @@ export class PersonName {
     return new PersonName(trimmedValue);
   }
 
+  public static reconstitute(value: string): PersonName {
+    return new PersonName(value);
+  }
+
   public getValue(): string {
     return this.value;
   }
