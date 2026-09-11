@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { getSignInWithEmailUseCase, getGetOAuthSignInUrlUseCase } from '@/features/iam/di/iam.di';
 import { DomainException } from '@canaldigital/packages/core';
 import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 
 export type ActionState = {
   success: boolean;
@@ -71,7 +72,13 @@ export async function loginWithGoogleAction() {
   let url: string;
   try {
     const useCase = await getGetOAuthSignInUrlUseCase();
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
+    // Dynamically derive the base URL from request headers.
+    // This works automatically in localhost, Vercel preview, and production.
+    const headersList = await headers();
+    const host = headersList.get('host');
+    const protocol = headersList.get('x-forwarded-proto') || 'https';
+    const baseUrl = `${protocol}://${host}`;
     const redirectTo = `${baseUrl}/auth/callback`;
 
     url = await useCase.execute({
