@@ -79,3 +79,16 @@ export type { DomainEvent } from './features/shared/domain/events/domain-event.i
 
 // Application (Ports)
 export type { EventBusPort } from './features/shared/application/ports/out/event-bus.port';
+
+// ==========================================
+// IAM EXPORTS
+// ==========================================
+
+// Application (Use Cases)
+export { SignInWithEmailUseCase } from './features/iam/application/use-cases/sign-in-with-email.use-case';
+export { GetOAuthSignInUrlUseCase } from './features/iam/application/use-cases/get-oauth-sign-in-url.use-case';
+export { ExchangeOAuthCodeUseCase } from './features/iam/application/use-cases/exchange-oauth-code.use-case';
+
+// Infrastructure
+export { SupabaseAuthAdapter } from './features/iam/infrastructure/adapters/supabase-auth.adapter';
+

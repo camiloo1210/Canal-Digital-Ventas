@@ -19,6 +19,10 @@ export class Email {
     return new Email(trimmedValue);
   }
 
+  public static reconstitute(value: string): Email {
+    return new Email(value);
+  }
+
   public getValue(): string {
     return this.value;
   }
