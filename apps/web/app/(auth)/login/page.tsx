@@ -13,8 +13,8 @@ export default async function LoginPage(props: {
       <div className="flex flex-col gap-4 p-6 md:p-10">
         <div className="flex justify-center gap-2 md:justify-start">
           <a href="#" className="flex items-center gap-2 font-medium">
-            <Image src={Logo} alt="Fiado Logo" width={24} height={24} />
-            <span className="font-semibold text-lg">Fiado</span>
+            <Image src={Logo} alt="Papeleria costa azul Logo" width={24} height={24} />
+            <span className="font-semibold text-lg">Papeleria costa azul</span>
           </a>
         </div>
         <div className="flex flex-1 items-center justify-center">
@@ -24,7 +24,7 @@ export default async function LoginPage(props: {
         </div>
       </div>
       <div className="bg-muted relative hidden lg:flex items-center justify-center">
-        <Image src={Logo} alt="FIADO Logo" width={400} height={400} className="object-contain" />
+        <Image src={Logo} alt="Papeleria costa azul Logo" width={400} height={400} className="object-contain" />
       </div>
     </div>
   );

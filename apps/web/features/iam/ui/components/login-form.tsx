@@ -12,13 +12,9 @@ import {
   FieldSeparator,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import {
-  loginWithEmailAction,
-  loginWithGoogleAction,
-  LoginState,
-} from '../../actions/login-actions';
+import { loginWithGoogleAction, loginWithEmailAction, ActionState } from '@/features/iam/actions/login.actions';
 import { toast } from '@/components/ui/toast';
-import { useActionState } from 'react';
+import { useActionState, useEffect } from 'react';
 import { useFormStatus } from 'react-dom';
 
 function SubmitButton() {
@@ -35,7 +31,7 @@ export function LoginForm({
   message,
   ...props
 }: React.ComponentProps<'form'> & { message?: string }) {
-  const initialState: LoginState = { error: undefined, message: message };
+  const initialState: ActionState = { error: null, success: false };
   const [state, formAction] = useActionState(loginWithEmailAction, initialState);
 
   return (
@@ -68,9 +64,9 @@ export function LoginForm({
               {state.error}
             </div>
           )}
-          {state?.message && (
+          {(message || state?.success) && (
             <div className="p-3 text-sm text-blue-500 bg-blue-50 border border-blue-200 rounded-md">
-              {state.message}
+              {state?.success ? 'Sign in successful! Redirecting...' : message}
             </div>
           )}
           <Field>

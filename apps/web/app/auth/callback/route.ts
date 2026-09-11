@@ -1,25 +1,27 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { SupabaseAuthAdapter } from '@canaldigital/packages/core/src/features/iam/infrastructure/adapters/supabase-auth.adapter';
-import { ExchangeOAuthCodeUseCase } from '@canaldigital/packages/core/src/features/iam/application/use-cases/exchange-oauth-code.use-case';
+import { z } from 'zod';
+import { getExchangeOAuthCodeUseCase } from '@/features/iam/di/iam.di';
+
+const oauthQuerySchema = z.object({
+  code: z.string().min(1, 'Authorization code is missing')
+});
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
-  const code = requestUrl.searchParams.get('code');
+  const codeParam = requestUrl.searchParams.get('code');
 
-  if (code) {
-    const client = await createClient();
-    const adapter = new SupabaseAuthAdapter();
-    const useCase = new ExchangeOAuthCodeUseCase(adapter);
+  const validation = oauthQuerySchema.safeParse({ code: codeParam });
 
+  if (validation.success) {
     try {
-      await useCase.execute(code, client);
+      const useCase = await getExchangeOAuthCodeUseCase();
+      await useCase.execute(validation.data.code);
     } catch (error) {
       console.error('Error exchanging code:', error);
       return NextResponse.redirect(`${requestUrl.origin}/login?message=Authentication failed`);
     }
   }
 
-  // Si no hay código o el intercambio fue exitoso, redirigimos a home
-  return NextResponse.redirect(`${requestUrl.origin}/`);
+
+  return NextResponse.redirect(`${requestUrl.origin}/dashboard`);
 }
