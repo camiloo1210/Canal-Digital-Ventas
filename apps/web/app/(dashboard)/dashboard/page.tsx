@@ -1,3 +1,5 @@
+import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
 import { AppSidebar } from '@/components/app-sidebar';
 import { ChartAreaInteractive } from '@/components/chart-area-interactive';
 import { DataTable } from '@/components/data-table';
@@ -6,12 +8,29 @@ import { SiteHeader } from '@/components/site-header';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 
-import { getCategoryRepository, getProductRepository } from '@/features/dashboard/di/dashboard.di';
 import { CreateCategoryForm } from '@/features/dashboard/ui/components/create-category-form';
 
 import data from './data.json';
 
-export default async function DashboardPage() {
+export default async function DashboardPage(): Promise<React.JSX.Element> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    redirect('/login');
+  }
+
+  const userData = {
+    name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Administrator',
+    email: user.email || '',
+    role: user.user_metadata?.role || 'Admin',
+    tenantName: user.user_metadata?.tenant_name || 'Canal Digital',
+    avatar: user.user_metadata?.avatar_url || '',
+  };
+
   // CQRS-lite: Directly query the repositories for the dashboard view
   // const categoryRepo = await getCategoryRepository()
   // const productRepo = await getProductRepository()
@@ -29,7 +48,7 @@ export default async function DashboardPage() {
         } as React.CSSProperties
       }
     >
-      <AppSidebar variant="inset" />
+      <AppSidebar variant="inset" user={userData} />
       <SidebarInset>
         <SiteHeader />
         <div className="flex flex-1 flex-col">

@@ -23,6 +23,8 @@ import {
   BellIcon,
   LogOutIcon,
 } from 'lucide-react';
+import { logoutAction } from '@/features/iam/actions/logout.action';
+import { LocaleSwitcher } from '@/components/locale-switcher';
 
 export function NavUser({
   user,
@@ -32,7 +34,7 @@ export function NavUser({
     email: string;
     avatar: string;
   };
-}) {
+}): React.JSX.Element {
   const { isMobile } = useSidebar();
   return (
     <SidebarMenu>
@@ -86,11 +88,17 @@ export function NavUser({
                 Notifications
               </DropdownMenuItem>
             </DropdownMenuGroup>
+            <LocaleSwitcher />
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <LogOutIcon />
-              Log out
-            </DropdownMenuItem>
+            <form action={logoutAction} className="w-full">
+              <DropdownMenuItem
+                nativeButton
+                render={<button type="submit" className="flex w-full items-center gap-2" />}
+              >
+                <LogOutIcon />
+                Log out
+              </DropdownMenuItem>
+            </form>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
