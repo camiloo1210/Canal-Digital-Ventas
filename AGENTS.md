@@ -3,6 +3,11 @@
 # This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+
+**IMPORTANT KNOWN CHANGES:**
+
+- The `middleware.ts` file convention is deprecated. Use `proxy.ts` instead and export a function named `proxy`.
+
 <!-- END:nextjs-agent-rules -->
 
 # Canal Digital Ventas - Strict AI Coding Guidelines
