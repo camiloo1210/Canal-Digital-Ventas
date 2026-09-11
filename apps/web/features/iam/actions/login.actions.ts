@@ -17,7 +17,7 @@ const loginSchema = z.object({
 
 export async function loginWithEmailAction(
   prevState: ActionState,
-  formData: FormData
+  formData: FormData,
 ): Promise<ActionState> {
   // TODO: Add rate-limiting here (e.g., via upstash/ratelimit to prevent brute force attacks)
 
@@ -38,7 +38,7 @@ export async function loginWithEmailAction(
 
   try {
     const useCase = await getSignInWithEmailUseCase();
-    
+
     await useCase.execute({
       email: validatedFields.data.email,
       password: validatedFields.data.password,
@@ -50,13 +50,13 @@ export async function loginWithEmailAction(
     if (error instanceof DomainException) {
       return { success: false, error: error.message };
     }
-    
+
     // Log unexpected errors internally without leaking stack traces to the client
     console.error('Unexpected login error:', error);
-    
-    return { 
-      success: false, 
-      error: 'An unexpected error occurred during sign in. Please try again later.' 
+
+    return {
+      success: false,
+      error: 'An unexpected error occurred during sign in. Please try again later.',
     };
   }
 

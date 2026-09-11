@@ -91,4 +91,3 @@ export { ExchangeOAuthCodeUseCase } from './features/iam/application/use-cases/e
 
 // Infrastructure
 export { SupabaseAuthAdapter } from './features/iam/infrastructure/adapters/supabase-auth.adapter';
-

@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { getExchangeOAuthCodeUseCase } from '@/features/iam/di/iam.di';
 
 const oauthQuerySchema = z.object({
-  code: z.string().min(1, 'Authorization code is missing')
+  code: z.string().min(1, 'Authorization code is missing'),
 });
 
 export async function GET(request: Request) {
@@ -21,7 +21,6 @@ export async function GET(request: Request) {
       return NextResponse.redirect(`${requestUrl.origin}/login?message=Authentication failed`);
     }
   }
-
 
   return NextResponse.redirect(`${requestUrl.origin}/dashboard`);
 }

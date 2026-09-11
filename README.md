@@ -2,7 +2,7 @@
 
 <p align="center">
   <img 
-    src="/public/Logo.svg" 
+    src="/apps/web/public/Logo.svg" 
     alt="Logo" 
     width="200" 
   />
