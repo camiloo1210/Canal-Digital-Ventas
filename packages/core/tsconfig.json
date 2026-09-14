@@ -10,7 +10,8 @@
       "@/carts/*": ["src/features/carts/*"],
       "@/payments/*": ["src/features/payments/*"],
       "@/tenants/*": ["src/features/tenants/*"],
-      "@/iam/*": ["src/features/iam/*"]
+      "@/iam/*": ["src/features/iam/*"],
+      "@/sales/*": ["src/features/sales/*"]
     }
   }
 }

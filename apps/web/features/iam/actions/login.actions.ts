@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 import { getSignInWithEmailUseCase, getGetOAuthSignInUrlUseCase } from '@/features/iam/di/iam.di';
-import { DomainException } from '@canaldigital/packages/core';
+import { DomainException, ApplicationException } from '@canaldigital/packages/core';
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 
@@ -36,6 +36,7 @@ export async function loginWithEmailAction(
   }
 
   let success = false;
+  let needsOnboarding = false;
 
   try {
     const useCase = await getSignInWithEmailUseCase();
@@ -48,17 +49,25 @@ export async function loginWithEmailAction(
     success = true;
   } catch (error: unknown) {
     // Return domain specific exceptions with a safe message
-    if (error instanceof DomainException) {
-      return { success: false, error: error.message };
+    if (error instanceof DomainException || error instanceof ApplicationException) {
+      if (error.name === 'TenantNotConfiguredException') {
+        needsOnboarding = true;
+      } else {
+        return { success: false, error: (error as Error).message };
+      }
+    } else {
+      // Log unexpected errors internally without leaking stack traces to the client
+      console.error('Unexpected login error:', error);
+
+      return {
+        success: false,
+        error: 'An unexpected error occurred during sign in. Please try again later.',
+      };
     }
+  }
 
-    // Log unexpected errors internally without leaking stack traces to the client
-    console.error('Unexpected login error:', error);
-
-    return {
-      success: false,
-      error: 'An unexpected error occurred during sign in. Please try again later.',
-    };
+  if (needsOnboarding) {
+    redirect('/onboarding');
   }
 
   if (success) {

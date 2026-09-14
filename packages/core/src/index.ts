@@ -64,6 +64,13 @@ export { SetProductVariantsUseCase } from './features/products/application/use-c
 export { SupabaseProductRepository } from './features/products/infrastructure/repositories/supabase-product.repository';
 
 // ==========================================
+// TENANTS EXPORTS
+// ==========================================
+
+// Infrastructure
+export { SupabaseTenantRepository } from './features/tenants/infrastructure/repositories/supabase-tenant.repository';
+
+// ==========================================
 // SHARED EXPORTS
 // ==========================================
 
@@ -80,14 +87,36 @@ export type { DomainEvent } from './features/shared/domain/events/domain-event.i
 // Application (Ports)
 export type { EventBusPort } from './features/shared/application/ports/out/event-bus.port';
 
+// Application (Exceptions)
+export { ApplicationException } from './features/shared/application/exceptions/application.exception';
+
+// Infrastructure
+export { LocalEventBus } from './features/shared/infrastructure/event-bus/local-event-bus';
+
 // ==========================================
 // IAM EXPORTS
 // ==========================================
+
+// Domain
+export { InvalidProviderException } from './features/iam/domain/exceptions/invalid-provider.exception';
+export { InvalidPermissionException } from './features/iam/domain/exceptions/invalid-permission.exception';
+export type { OAuthProvider } from './features/iam/domain/types/oauth-provider.type';
 
 // Application (Use Cases)
 export { SignInWithEmailUseCase } from './features/iam/application/use-cases/sign-in-with-email.use-case';
 export { GetOAuthSignInUrlUseCase } from './features/iam/application/use-cases/get-oauth-sign-in-url.use-case';
 export { ExchangeOAuthCodeUseCase } from './features/iam/application/use-cases/exchange-oauth-code.use-case';
+export { OnboardTenantUseCase } from './features/iam/application/use-cases/onboard-tenant.use-case';
+export { RegisterGlobalIdentityUseCase } from './features/iam/application/use-cases/register-global-identity.use-case';
+export type { RegisterGlobalIdentityDto } from './features/iam/application/dtos/register-global-identity.dto';
+
+// Application (Exceptions)
+export { TenantNotConfiguredException } from './features/iam/application/exceptions/tenant-not-configured.exception';
+export { AuthGatewayException } from './features/iam/application/exceptions/auth-gateway.exception';
+export { AdminAuthException } from './features/iam/application/exceptions/admin-auth.exception';
+export { UserRepositoryException } from './features/iam/application/exceptions/user-repository.exception';
 
 // Infrastructure
 export { SupabaseAuthAdapter } from './features/iam/infrastructure/adapters/supabase-auth.adapter';
+export { SupabaseAdminAuthAdapter } from './features/iam/infrastructure/adapters/supabase-admin-auth.adapter';
+export { SupabaseUserRepository } from './features/iam/infrastructure/repositories/supabase-user.repository';

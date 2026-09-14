@@ -9,7 +9,7 @@ import {
 import { SupabaseTenantMapper } from '@/tenants/infrastructure/mappers/supabase-tenant.mapper';
 import { DbTenantRow } from '@/tenants/infrastructure/types/supabase-tenant.types';
 import { PaginationOptions, PaginatedResult } from '@/shared/domain/pagination/pagination';
-import { TenantRepositoryException } from '@/tenants/infrastructure/exceptions/tenant-repository.exception';
+import { TenantRepositoryException } from '@/tenants/application/exceptions/tenant-repository.exception';
 
 export class SupabaseTenantRepository implements TenantRepositoryPort {
   constructor(private readonly supabase: SupabaseClient) {}

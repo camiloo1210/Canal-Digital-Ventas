@@ -30,26 +30,66 @@ All business logic MUST reside here, fully decoupled from any framework (React/N
   - **Rich Entities:** Entities must encapsulate all state and logic. No anemic domain models (data bags with getters/setters). State mutation must happen via explicit business actions (e.g., `entity.archive()`, `entity.updateStatus()`).
   - **Invariants:** Entities MUST guarantee their validity upon creation. Use private constructors and static factory methods (e.g., `Category.create(...)`).
   - **Value Objects (VO):** Use VOs for domain primitives (e.g., `CategoryName`, `Money`). Validation of format/rules belongs inside the VO.
-  - **Exceptions:** Throw custom domain exceptions extending `DomainException` (e.g., `InvalidCategoryStatusException`). NEVER throw generic `Error` objects.
+  - **Exceptions (Domain vs Application):** NEVER throw generic `Error` objects.
+    - **Domain Exceptions (`domain/exceptions/`):** Use for pure business rule or invariant violations inside Entities/VOs (e.g., `InvalidCategoryStatusException`). Must extend `DomainException`.
+    - **Application Exceptions (`application/exceptions/`):** Use for errors arising from Use Case orchestration or interactions with external ports (e.g., `ProductRepositoryException`, `TenantNotConfiguredException`). Must extend `ApplicationException`.
+    - **Infrastructure Exception Hierarchy:** `InfrastructureException` extends `ApplicationException` and MUST be defined in `shared/application/exceptions/`, NOT in any `infrastructure/` folder. Repository and gateway exceptions extend `InfrastructureException` and are placed in `feature/application/exceptions/`. Adapters translate vendor-specific errors into these typed exceptions.
 - **Application Layer (`application/`):**
   - **Use Cases:** Expose application capabilities. Use Cases orchestrate domain entities and delegate to ports. They take DTOs as input.
   - **Ports (Out):** Define interfaces for any external I/O (e.g., `CategoryRepositoryPort`). Use Cases rely ONLY on these interfaces (Dependency Inversion).
 - **Infrastructure Layer (`infrastructure/`):**
   - **Adapters:** This is the ONLY place where implementations like Supabase, HTTP clients, or DB drivers are allowed (e.g., `SupabaseCategoryRepository`).
+  - **Exception Translation (Adapter Pattern):** Adapters MUST catch technology-specific errors (like `SupabaseError` or `PostgresError`) and translate them into `ApplicationException` (e.g. `ProductRepositoryException`) before throwing them back to the Use Case. Never leak infrastructure errors or use raw `Error` objects.
 
-## 3. Frontend Rules (Next.js App - State of the Art)
+## 🖥️ FRONTEND ARCHITECTURE RULES (NEXT.JS PRIMARY ADAPTER)
 
-The frontend acts purely as a Primary Adapter (Driving Adapter). Its only job is to paint HTML, receive clicks, parse data, and pass it to the core.
+The Next.js application (`apps/web`) acts EXCLUSIVELY as the **Primary/Driving Adapter** in our Hexagonal Architecture. It is essentially a "dumb" delivery mechanism. **ZERO business logic, domain rules, or state validations are allowed in the Next.js layer.**
 
-- **Zero Business Logic in UI:** The frontend is just an I/O delivery mechanism. It MUST NOT contain core business logic.
+If you are generating or modifying code in `apps/web`, you MUST strictly adhere to the following rules:
+
+### 1. Monorepo Boundaries & Dependency Injection (DI)
+
+- **Strict Imports:** Never use relative paths to access the core package (e.g., `../../../packages/core`). Always use the designated package import (e.g., `import { SignInUseCase } from '@canaldigital/core/iam';`).
+- **Centralized DI Container:** Server Actions and Server Components MUST NOT instantiate Use Cases or Infrastructure Adapters (like `SupabaseRepository`) inline. You must resolve all dependencies through a specific DI file (e.g., `features/[feature]/di/[feature].di.ts`).
+- **Server-Only DI:** DI files must always include `import 'server-only';` at the top.
+
+### 2. Thin Controllers (Server Actions)
+
+Server Actions (`.actions.ts`) are our mutation boundaries. They must act strictly as HTTP Controllers:
+
+- **Parse, Don't Validate:** You MUST use **Zod** to safely parse `FormData` into flat, primitive objects before interacting with the Core.
+- **Primitive DTOs Only:** Pass only primitive types (`string`, `number`, `boolean`) to the Core Use Cases. Do NOT pass Domain Entities, Branded Types, or Web API objects (like `File` or `FormData`) into the core.
+- **Security / Context Injection:** Never trust hidden form inputs for critical identifiers (like `userId`). Always extract the `userId` securely from the server session (e.g., `supabase.auth.getUser()`) inside the Server Action and pass it explicitly to the Use Case.
+- **Graceful Error Handling:** Wrap Use Case executions in a `try/catch (error: unknown)`. Catch `DomainException` to return safe, user-friendly UI errors. Mask generic/database errors to prevent leaking stack traces.
+- **Safe Redirects:** `redirect('/path')` throws a `NEXT_REDIRECT` error under the hood. It MUST ALWAYS be placed **OUTSIDE** the `try/catch` block.
+
+### 3. CQRS-Lite (React Server Components)
+
+- **No Read Use Cases:** For pages (`page.tsx`) that display data, DO NOT route the request through a Use Case.
+- **Direct Repository Reads:** Inject the Infrastructure Repository directly via the DI container and perform direct server-side reads. This is the official App Router CQRS-lite pattern for maximum performance and SEO.
+
+### 4. Client Components & UI (React 19+)
+
+- **Progressive Enhancement:** Forms must use `'use client'`, `useActionState` (or `useFormState`), and a separate submit button using `useFormStatus()`. Do not use `onSubmit` with `preventDefault()` unless strictly required by a complex client-side interaction.
+- **Dumb UI:** React components only render HTML/Tailwind and emit forms. State machines or business rules must not pollute the DOM layer.
 - **UI Library (shadcn/ui + Tailwind CSS):** We use `shadcn/ui` and Tailwind CSS exclusively. DO NOT use runtime CSS-in-JS libraries (e.g., MUI, Chakra UI, Ant Design) as they degrade React Server Components (RSC) performance.
-- **React Server Components (RSC) for Reads:** Use RSCs (e.g., `page.tsx`) to read data directly from Repositories for maximum performance and SEO. Do not use Use Cases for pure reads.
-- **Server Actions for Mutations:** All data mutations must happen via Server Actions (`'use server'`).
-- **Parse, Don't Validate (Zod):** Data coming from the client MUST be parsed and validated using Zod at the Server Action boundary before passing primitive DTOs to the `core` Use Cases.
-- **Dependency Injection (DI):** Use a central DI container (e.g., `lib/di/`) with `'server-only'` to instantiate Repositories and Use Cases. Do not instantiate them directly inside components.
-- **React 19 Standards:** Use modern React 19 hooks like `useActionState` (instead of `useFormState`) and `useFormStatus` to handle forms and loading states in Client Components without blocking the UI.
+- **File Uploads (Infrastructure):** If a file upload is required, the Server Action handles the upload to the Storage Bucket, receives the string URL/Path, and passes ONLY the primitive string to the Core Use Case.
 
-## 4. General Coding Standards
+### 5. Internationalization (i18n)
+
+- We use `next-intl` via **Cookies** (`NEXT_LOCALE`), NOT sub-routing (`/[locale]/...`).
+- In Server Components, fetch translations using `await getTranslations('Namespace')` from `next-intl/server`.
+- For Client Components, pass strictly needed translations via `NextIntlClientProvider` to avoid bundle bloat.
+
+## 4. Identity & Access Management (IAM)
+
+- **Unified Identity (AuthN):** A single user entity (`auth.users` in Supabase) must be used for authentication across the entire platform. Buyers and sellers/admins are the same physical person and must share the same credentials to reduce friction and centralize security (e.g., 2FA).
+- **Context Segregation (AuthZ):** Authorization must be strictly decoupled from authentication.
+  - **B2C Context (Buyers):** Rendered in the main application flow.
+  - **B2B/Admin Context (Sellers):** Must be handled in physically isolated UI routes (e.g., `/seller-dashboard` or a separate subdomain) with distinct navigation.
+- **Middleware Protection:** The entry point to any admin/seller context must be protected by middleware (or a centralized guard) that verifies the user possesses the appropriate Role/Tenant permissions before rendering the UI.
+
+## 5. General Coding Standards
 
 - **Strict TypeScript:** `any` is strictly forbidden. All variables, returns, and parameters must have strict types.
 - **Tooling:** You must respect ESLint, Prettier, and TypeScript compiler rules. Do not bypass them.

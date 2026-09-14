@@ -1,7 +1,8 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { AuthPort } from '@/iam/application/ports/out/auth.port';
 import { InvalidCredentialsException } from '@/iam/domain/exceptions/invalid-credentials.exception';
-import { AuthGatewayException } from '@/iam/domain/exceptions/auth-gateway.exception';
+import { AuthGatewayException } from '@/iam/application/exceptions/auth-gateway.exception';
+import { TenantNotConfiguredException } from '@/iam/application/exceptions/tenant-not-configured.exception';
 
 export class SupabaseAuthAdapter implements AuthPort {
   constructor(private readonly supabase: SupabaseClient) {}
@@ -30,15 +31,15 @@ export class SupabaseAuthAdapter implements AuthPort {
     }
 
     // Assuming tenantId is stored in user_metadata or app_metadata
-    const tenantId = data.user.app_metadata?.tenant_id || data.user.user_metadata?.tenant_id;
+    const tenantId = data.user.app_metadata?.app_tenant_id || null;
 
     if (!tenantId) {
-      throw new AuthGatewayException('User does not have a tenantId associated');
+      throw new TenantNotConfiguredException();
     }
 
     return {
       userId: data.user.id,
-      tenantId: tenantId as string,
+      tenantId: tenantId,
     };
   }
 
@@ -69,5 +70,12 @@ export class SupabaseAuthAdapter implements AuthPort {
         error,
       );
     }
+  }
+
+  async signUpWithEmail(email: string, password: string): Promise<string> {
+    const { data, error } = await this.supabase.auth.signUp({ email, password });
+    if (error) throw new AuthGatewayException(`Signup failed: ${error.message}`, error);
+    if (!data.user) throw new AuthGatewayException('Signup failed', 'No user returned');
+    return data.user.id;
   }
 }

@@ -6,7 +6,7 @@ import { DbUserRow } from '@/iam/infrastructure/types/supabase-user.types';
 import { UserId } from '@/iam/domain/types/user-id.type';
 import { TenantId } from '@/shared/domain/types/tenant-id.type';
 import { PaginatedResult, PaginationOptions } from '@/shared/domain/pagination/pagination';
-import { UserRepositoryException } from '@/iam/infrastructure/exceptions/user-repository.exception';
+import { UserRepositoryException } from '@/iam/application/exceptions/user-repository.exception';
 
 export class SupabaseUserRepository implements UserRepositoryPort {
   constructor(private readonly supabase: SupabaseClient) {}
@@ -29,7 +29,12 @@ export class SupabaseUserRepository implements UserRepositoryPort {
   }
 
   async findById(id: UserId): Promise<User | null> {
-    const { data, error } = await this.supabase.from('users').select('*').eq('id', id).single();
+    const { data, error } = await this.supabase
+      .schema('core')
+      .from('users')
+      .select('*')
+      .eq('id', id)
+      .single();
 
     if (error || !data) {
       if (error && error.code !== 'PGRST116') {
@@ -43,6 +48,7 @@ export class SupabaseUserRepository implements UserRepositoryPort {
 
   async findByTenantId(tenantId: TenantId): Promise<User[]> {
     const { data, error } = await this.supabase
+      .schema('core')
       .from('users')
       .select('*')
       .eq('tenant_id', tenantId)
@@ -67,6 +73,7 @@ export class SupabaseUserRepository implements UserRepositoryPort {
     const to = from + limit - 1;
 
     const { data, error, count } = await this.supabase
+      .schema('core')
       .from('users')
       .select('*', { count: 'exact' })
       .eq('tenant_id', tenantId)

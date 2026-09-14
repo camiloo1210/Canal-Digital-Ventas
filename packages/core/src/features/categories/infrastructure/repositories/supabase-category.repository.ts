@@ -9,7 +9,7 @@ import { DbCategoryRow } from '@/categories/infrastructure/types/supabase-catego
 import { PaginationOptions, PaginatedResult } from '@/shared/domain/pagination/pagination';
 import { TenantId } from '@/shared/domain/types/tenant-id.type';
 import { CategoryId } from '@/categories/domain/types/category-id.type';
-import { CategoryRepositoryException } from '@/categories/infrastructure/exceptions/category-repository.exception';
+import { CategoryRepositoryException } from '@/categories/application/exceptions/category-repository.exception';
 
 export class SupabaseCategoryRepository implements CategoryRepositoryPort {
   constructor(private readonly supabase: SupabaseClient) {}

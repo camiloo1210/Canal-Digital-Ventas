@@ -10,7 +10,7 @@ import { PaginationOptions, PaginatedResult } from '@/shared/domain/pagination/p
 import { OrderId } from '@/orders/domain/types/order-id.type';
 import { CustomerId } from '@/orders/domain/types/customer-id.type';
 import { TenantId } from '@/shared/domain/types/tenant-id.type';
-import { OrderRepositoryException } from '@/orders/infrastructure/exceptions/order-repository.exception';
+import { OrderRepositoryException } from '@/orders/application/exceptions/order-repository.exception';
 
 export class SupabaseOrderRepository implements OrderRepositoryPort {
   constructor(private readonly supabase: SupabaseClient) {}

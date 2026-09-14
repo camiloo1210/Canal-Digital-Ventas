@@ -120,7 +120,7 @@ export function LoginForm({
         <FieldDescription className="text-center flex flex-col gap-2">
           <span>
             Don&apos;t have an account?{' '}
-            <Link href="/onboarding" className="underline underline-offset-4 hover:opacity-80">
+            <Link href="/signup/business" className="underline underline-offset-4 hover:opacity-80">
               Sign up as Business
             </Link>
           </span>

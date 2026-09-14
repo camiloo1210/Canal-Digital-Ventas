@@ -3,7 +3,7 @@ import {
   WebhookResult,
 } from '@/payments/application/ports/out/payment-gateway.port';
 import { Payment } from '@/payments/domain/entities/payment.entity';
-import { PaymentGatewayException } from '@/payments/infrastructure/exceptions/payment-gateway.exception';
+import { PaymentGatewayException } from '@/payments/application/exceptions/payment-gateway.exception';
 
 export class ManualPaymentGatewayAdapter implements PaymentGatewayPort {
   constructor(private readonly appUrl: string) {}
