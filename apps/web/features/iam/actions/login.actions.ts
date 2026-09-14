@@ -77,13 +77,29 @@ export async function loginWithEmailAction(
   return { success: false, error: null };
 }
 
+import { cookies } from 'next/headers';
+
+const OAUTH_INTENT_COOKIE = 'auth_intent';
+
+async function setOAuthIntentCookie(intent: 'business' | 'customer') {
+  const cookieStore = await cookies();
+  cookieStore.set(OAUTH_INTENT_COOKIE, intent, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 10, // 10 minutes
+    path: '/',
+  });
+}
+
 export async function loginWithGoogleAction() {
+  await setOAuthIntentCookie('customer');
+
   let url: string;
   try {
     const useCase = await getGetOAuthSignInUrlUseCase();
 
     // Dynamically derive the base URL from request headers.
-    // This works automatically in localhost, Vercel preview, and production.
     const headersList = await headers();
     const host = headersList.get('host');
     const protocol = headersList.get('x-forwarded-proto') || 'https';
@@ -97,6 +113,32 @@ export async function loginWithGoogleAction() {
   } catch (error: unknown) {
     console.error('Google OAuth Error:', error);
     redirect('/login?message=Failed to initialize Google login');
+    return;
+  }
+
+  redirect(url);
+}
+
+export async function loginBusinessWithGoogleAction() {
+  await setOAuthIntentCookie('business');
+
+  let url: string;
+  try {
+    const useCase = await getGetOAuthSignInUrlUseCase();
+
+    const headersList = await headers();
+    const host = headersList.get('host');
+    const protocol = headersList.get('x-forwarded-proto') || 'https';
+    const baseUrl = `${protocol}://${host}`;
+    const redirectTo = `${baseUrl}/auth/callback`;
+
+    url = await useCase.execute({
+      provider: 'google',
+      redirectTo,
+    });
+  } catch (error: unknown) {
+    console.error('Google OAuth Error:', error);
+    redirect('/signup/business?message=Failed to initialize Google signup');
     return;
   }
 

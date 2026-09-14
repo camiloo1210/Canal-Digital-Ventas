@@ -2,7 +2,10 @@
 
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
-import { getRegisterGlobalIdentityUseCase } from '@/features/iam/di/iam.di';
+import {
+  getRegisterGlobalIdentityUseCase,
+  getOnboardTenantUseCase,
+} from '@/features/iam/di/iam.di';
 import { DomainException, ApplicationException } from '@canaldigital/packages/core';
 
 export type ActionState = {
@@ -11,18 +14,20 @@ export type ActionState = {
 };
 
 const signupSchema = z.object({
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
   email: z.string().email('Please enter a valid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
+  storeName: z.string().min(1, 'Store name is required'),
+  storeSlug: z.string().min(1, 'Store URL is required'),
 });
 
 export async function signupBusinessAction(
   prevState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const email = formData.get('email');
-  const password = formData.get('password');
-
-  const validatedFields = signupSchema.safeParse({ email, password });
+  const data = Object.fromEntries(formData.entries());
+  const validatedFields = signupSchema.safeParse(data);
 
   if (!validatedFields.success) {
     return {
@@ -31,32 +36,97 @@ export async function signupBusinessAction(
     };
   }
 
-  let success = false;
+  let currentUserId: string;
 
+  // 1. Create Global Identity (Supabase Auth User)
   try {
-    const useCase = await getRegisterGlobalIdentityUseCase();
-
-    await useCase.execute({
+    const registerUseCase = await getRegisterGlobalIdentityUseCase();
+    currentUserId = await registerUseCase.execute({
       email: validatedFields.data.email,
       password: validatedFields.data.password,
     });
-
-    success = true;
   } catch (error: unknown) {
     if (error instanceof DomainException || error instanceof ApplicationException) {
       return { success: false, error: (error as Error).message };
     }
-
-    console.error('Unexpected signup error:', error);
+    console.error('Unexpected auth error:', error);
     return {
       success: false,
-      error: 'An unexpected error occurred during signup. Please try again later.',
+      error: 'An unexpected error occurred during registration. Please try again.',
     };
   }
 
-  if (success) {
-    redirect('/onboarding');
+  // 2. Onboard Tenant (Create Business Store & Membership)
+  try {
+    const onboardUseCase = await getOnboardTenantUseCase();
+    const tenantId = crypto.randomUUID();
+
+    await onboardUseCase.execute(
+      {
+        tenantId,
+        name: validatedFields.data.storeName,
+        slug: validatedFields.data.storeSlug,
+        contactEmail: validatedFields.data.email,
+        userEmail: validatedFields.data.email,
+        firstName: validatedFields.data.firstName,
+        lastName: validatedFields.data.lastName,
+      },
+      currentUserId,
+    );
+  } catch (error: unknown) {
+    // Distributed Transaction Failure:
+    // The user was created, but tenant creation failed (e.g., Slug already in use).
+    // The user is effectively logged in but without a tenant context.
+    // We redirect them to the universal /onboarding page to fix the issue.
+    if (error instanceof DomainException || error instanceof ApplicationException) {
+      const errorMsg = encodeURIComponent((error as Error).message);
+      redirect(`/onboarding?error=${errorMsg}`);
+    }
+
+    console.error('Unexpected onboarding error:', error);
+    redirect(`/onboarding?error=Unexpected_Error_Setting_Up_Store`);
   }
 
-  return { success: false, error: null };
+  // Success! Send to Dashboard
+  redirect('/dashboard');
+}
+
+const customerSignupSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+});
+
+export async function signupCustomerAction(
+  prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const data = Object.fromEntries(formData.entries());
+  const validatedFields = customerSignupSchema.safeParse(data);
+
+  if (!validatedFields.success) {
+    return {
+      success: false,
+      error: validatedFields.error.issues[0]?.message || 'Invalid input provided.',
+    };
+  }
+
+  try {
+    const registerUseCase = await getRegisterGlobalIdentityUseCase();
+    await registerUseCase.execute({
+      email: validatedFields.data.email,
+      password: validatedFields.data.password,
+    });
+  } catch (error: unknown) {
+    if (error instanceof DomainException || error instanceof ApplicationException) {
+      return { success: false, error: (error as Error).message };
+    }
+    console.error('Unexpected auth error:', error);
+    return {
+      success: false,
+      error: 'An unexpected error occurred during registration. Please try again.',
+    };
+  }
+
+  // Success! Send to Storefront (Root)
+  redirect('/');
 }

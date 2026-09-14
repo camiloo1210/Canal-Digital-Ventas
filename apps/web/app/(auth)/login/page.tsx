@@ -23,7 +23,7 @@ export default async function LoginPage(props: {
           </div>
         </div>
       </div>
-      <div className="bg-muted relative hidden lg:flex items-center justify-center">
+      <div className="bg-muted relative hidden lg:flex items-center justify-center sticky top-0 h-svh">
         <Image
           src={Logo}
           alt="Papeleria costa azul Logo"

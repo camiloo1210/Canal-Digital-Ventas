@@ -1,8 +1,8 @@
 'use client';
 
 import { useActionState } from 'react';
-import { signupBusinessAction } from '@/features/iam/actions/signup.actions';
-import { loginBusinessWithGoogleAction } from '@/features/iam/actions/login.actions';
+import { signupCustomerAction } from '@/features/iam/actions/signup.actions';
+import { loginWithGoogleAction } from '@/features/iam/actions/login.actions';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,59 +20,30 @@ function SubmitButton() {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" className="w-full" disabled={pending}>
-      {pending ? 'Creating your store...' : 'Create Account & Store'}
+      {pending ? 'Creating account...' : 'Create Account'}
     </Button>
   );
 }
 
-export function SignupBusinessForm({ className, ...props }: React.ComponentProps<'form'>) {
-  const [state, formAction] = useActionState(signupBusinessAction, {
+export function SignupCustomerForm({ className, ...props }: React.ComponentProps<'form'>) {
+  const [state, formAction] = useActionState(signupCustomerAction, {
     success: false,
     error: null,
   });
-
-  // Auto-generate slug from store name
-  const handleStoreNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const name = e.target.value;
-    const slugInput = document.getElementById('storeSlug') as HTMLInputElement;
-    if (slugInput && !slugInput.dataset.manual) {
-      slugInput.value = name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)+/g, '');
-    }
-  };
-
-  const handleSlugInput = (e: React.FormEvent<HTMLInputElement>) => {
-    e.currentTarget.dataset.manual = 'true';
-  };
 
   return (
     <div className={cn('flex flex-col gap-6', className)}>
       <form action={formAction} className="flex flex-col gap-6" {...props}>
         <FieldGroup>
           <div className="flex flex-col items-center gap-1 text-center">
-            <h1 className="text-2xl font-bold">Start Your Business</h1>
-            <p className="text-muted-foreground text-sm text-balance">
-              Create an owner account and set up your B2B store
-            </p>
+            <h1 className="text-2xl font-bold">Create an Account</h1>
+            <p className="text-muted-foreground text-sm text-balance">Join to start shopping</p>
           </div>
           {state.error && (
             <div className="p-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded-md">
               {state.error}
             </div>
           )}
-
-          <div className="grid grid-cols-2 gap-4">
-            <Field>
-              <FieldLabel htmlFor="firstName">First Name</FieldLabel>
-              <Input id="firstName" name="firstName" type="text" required placeholder="John" />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="lastName">Last Name</FieldLabel>
-              <Input id="lastName" name="lastName" type="text" required placeholder="Doe" />
-            </Field>
-          </div>
 
           <Field>
             <FieldLabel htmlFor="email">Email</FieldLabel>
@@ -82,40 +53,12 @@ export function SignupBusinessForm({ className, ...props }: React.ComponentProps
               type="email"
               autoComplete="email"
               required
-              placeholder="owner@mybusiness.com"
+              placeholder="buyer@example.com"
             />
           </Field>
           <Field>
             <FieldLabel htmlFor="password">Password</FieldLabel>
             <Input id="password" name="password" type="password" required placeholder="********" />
-          </Field>
-
-          <FieldSeparator className="my-2" />
-
-          <Field>
-            <FieldLabel htmlFor="storeName">Store Name</FieldLabel>
-            <Input
-              id="storeName"
-              name="storeName"
-              type="text"
-              required
-              placeholder="Acme Corp"
-              onChange={handleStoreNameChange}
-            />
-          </Field>
-          <Field>
-            <FieldLabel htmlFor="storeSlug">Store URL (Slug)</FieldLabel>
-            <Input
-              id="storeSlug"
-              name="storeSlug"
-              type="text"
-              required
-              placeholder="acme-corp"
-              onInput={handleSlugInput}
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              Your store will be available at {`https://{slug}.canaldigital.com`}
-            </p>
           </Field>
 
           <Field>
@@ -126,7 +69,7 @@ export function SignupBusinessForm({ className, ...props }: React.ComponentProps
 
       <div className="flex flex-col gap-6 w-full">
         <FieldSeparator>Or sign up with Google</FieldSeparator>
-        <form action={loginBusinessWithGoogleAction} className="w-full">
+        <form action={loginWithGoogleAction} className="w-full">
           <Button variant="outline" className="w-full" type="submit">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="mr-2 h-4 w-4">
               <path
@@ -154,6 +97,12 @@ export function SignupBusinessForm({ className, ...props }: React.ComponentProps
             Already have an account?{' '}
             <Link href="/login" className="underline underline-offset-4 hover:opacity-80">
               Log in
+            </Link>
+          </span>
+          <span>
+            Are you a seller?{' '}
+            <Link href="/signup/business" className="underline underline-offset-4 hover:opacity-80">
+              Create a business account
             </Link>
           </span>
         </FieldDescription>

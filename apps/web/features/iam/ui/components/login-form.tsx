@@ -126,7 +126,7 @@ export function LoginForm({
           </span>
           <span>
             Are you a client?{' '}
-            <Link href="/client/signup" className="underline underline-offset-4 hover:opacity-80">
+            <Link href="/signup" className="underline underline-offset-4 hover:opacity-80">
               Register here
             </Link>
           </span>
