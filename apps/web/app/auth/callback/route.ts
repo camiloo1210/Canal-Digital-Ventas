@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getExchangeOAuthCodeUseCase } from '@/features/iam/di/iam.di';
+import { getExchangeOAuthCodeUseCase, getServiceRoleClient } from '@/features/iam/di/iam.di';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
-
-const OAUTH_INTENT_COOKIE = 'auth_intent';
+import { OAUTH_INTENT_COOKIE } from '@/features/iam/constants';
 
 const oauthQuerySchema = z.object({
   code: z.string().min(1, 'Authorization code is missing'),
@@ -40,7 +39,12 @@ export async function GET(request: Request) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const tenantId = user?.app_metadata?.tenantId;
+
+  if (!user) {
+    return NextResponse.redirect(`${requestUrl.origin}/login?error=auth_session_missing`);
+  }
+
+  const tenantId = user?.app_metadata?.app_tenant_id;
 
   if (intent === 'business') {
     if (!tenantId) {
@@ -58,6 +62,21 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${requestUrl.origin}/dashboard`);
   }
 
-  // Default to buyer storefront if no tenant and no explicit business intent
+  // If no intent and no tenantId in JWT, check the database for their true state
+  // We use the service role key to bypass RLS to check their true state.
+  const serviceClient = getServiceRoleClient();
+
+  const { data: dbUser } = await serviceClient
+    .schema('core')
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  if (dbUser && dbUser.role === 'OWNER') {
+    return NextResponse.redirect(`${requestUrl.origin}/onboarding`);
+  }
+
+  // Default to buyer storefront if no tenant, no intent, and no OWNER record
   return NextResponse.redirect(`${requestUrl.origin}/`);
 }

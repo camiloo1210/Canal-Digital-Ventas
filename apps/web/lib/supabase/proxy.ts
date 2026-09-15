@@ -35,7 +35,7 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname.startsWith('/login') ||
     request.nextUrl.pathname.startsWith('/auth') ||
     request.nextUrl.pathname.startsWith('/signup');
-  const isOnboardingRoute = request.nextUrl.pathname.startsWith('/onboarding');
+  const isOnboardingPath = request.nextUrl.pathname.startsWith('/onboarding');
   const isDashboardRoute = request.nextUrl.pathname.startsWith('/dashboard');
 
   // Any route that doesn't strictly require authentication
@@ -47,7 +47,7 @@ export async function updateSession(request: NextRequest) {
   const hasTenant = !!user?.app_metadata?.app_tenant_id;
 
   // 1. Authenticated?
-  if (!user && !isPublicRoute && !isOnboardingRoute) {
+  if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     return NextResponse.redirect(url);
@@ -63,7 +63,7 @@ export async function updateSession(request: NextRequest) {
     }
 
     // Onboarding Route -> Has Tenant -> Redirect to Dashboard
-    if (isOnboardingRoute && hasTenant) {
+    if (isOnboardingPath && hasTenant) {
       const url = request.nextUrl.clone();
       url.pathname = '/dashboard';
       return NextResponse.redirect(url);

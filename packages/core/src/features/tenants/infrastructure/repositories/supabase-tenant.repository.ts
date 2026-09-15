@@ -10,6 +10,7 @@ import { SupabaseTenantMapper } from '@/tenants/infrastructure/mappers/supabase-
 import { DbTenantRow } from '@/tenants/infrastructure/types/supabase-tenant.types';
 import { PaginationOptions, PaginatedResult } from '@/shared/domain/pagination/pagination';
 import { TenantRepositoryException } from '@/tenants/application/exceptions/tenant-repository.exception';
+import { SlugAlreadyTakenException } from '@/tenants/application/exceptions/slug-already-taken.exception';
 
 export class SupabaseTenantRepository implements TenantRepositoryPort {
   constructor(private readonly supabase: SupabaseClient) {}
@@ -22,6 +23,9 @@ export class SupabaseTenantRepository implements TenantRepositoryPort {
     });
 
     if (error) {
+      if (error.code === '23505') {
+        throw new SlugAlreadyTakenException(tenant.getSlug().getValue());
+      }
       if (error.code === 'P0001') {
         throw new TenantRepositoryException(
           'Optimistic locking failed: the tenant has been updated by another transaction or does not exist.',

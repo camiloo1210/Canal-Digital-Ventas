@@ -56,6 +56,8 @@ export async function signupBusinessAction(
     };
   }
 
+  let onboardingError: string | null = null;
+
   // 2. Onboard Tenant (Create Business Store & Membership)
   try {
     const onboardUseCase = await getOnboardTenantUseCase();
@@ -79,12 +81,15 @@ export async function signupBusinessAction(
     // The user is effectively logged in but without a tenant context.
     // We redirect them to the universal /onboarding page to fix the issue.
     if (error instanceof DomainException || error instanceof ApplicationException) {
-      const errorMsg = encodeURIComponent((error as Error).message);
-      redirect(`/onboarding?error=${errorMsg}`);
+      onboardingError = encodeURIComponent((error as Error).message);
+    } else {
+      console.error('Unexpected onboarding error:', error);
+      onboardingError = 'Unexpected_Error_Setting_Up_Store';
     }
+  }
 
-    console.error('Unexpected onboarding error:', error);
-    redirect(`/onboarding?error=Unexpected_Error_Setting_Up_Store`);
+  if (onboardingError) {
+    redirect(`/onboarding?error=${onboardingError}`);
   }
 
   // Success! Send to Dashboard

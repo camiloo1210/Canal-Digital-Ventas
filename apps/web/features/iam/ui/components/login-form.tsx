@@ -18,7 +18,7 @@ import {
   ActionState,
 } from '@/features/iam/actions/login.actions';
 import { toast } from '@/components/ui/toast';
-import { useActionState, useEffect } from 'react';
+import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 
 function SubmitButton() {

@@ -40,10 +40,7 @@ export async function getOnboardTenantUseCase() {
   const eventBus = new LocalEventBus();
 
   // 2. PRIVILEGED CLIENT: Bypasses RLS, used STRICTLY for Auth Admin actions
-  const adminClient = createBaseSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!, // Kept strictly on the server
-  );
+  const adminClient = getServiceRoleClient();
   const adminAuthAdapter = new SupabaseAdminAuthAdapter(adminClient);
 
   // 3. Assemble: The Use Case gets exactly the privileges it needs, where it needs them.
@@ -54,4 +51,24 @@ export async function getRegisterGlobalIdentityUseCase(): Promise<RegisterGlobal
   const supabaseClient = await createSupabaseServerClient();
   const adapter = new SupabaseAuthAdapter(supabaseClient);
   return new RegisterGlobalIdentityUseCase(adapter);
+}
+
+export function getServiceRoleClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url) {
+    throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL');
+  }
+
+  if (!serviceRoleKey) {
+    throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY');
+  }
+
+  return createBaseSupabaseClient(url, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
 }

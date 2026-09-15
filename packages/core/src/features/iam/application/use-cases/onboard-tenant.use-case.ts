@@ -22,6 +22,12 @@ export class OnboardTenantUseCase {
   ) {}
 
   async execute(dto: OnboardTenantDto, currentUserId: string): Promise<void> {
+    // Idempotency check: if the user already exists in core.users, they are already part of a tenant.
+    const existingUser = await this.userRepository.findById(createUserId(currentUserId));
+    if (existingUser && existingUser.getTenantId()) {
+      return; // Already onboarded, idempotency fulfilled.
+    }
+
     const tenantId = createTenantId(dto.tenantId);
 
     // 1. Create and save Tenant

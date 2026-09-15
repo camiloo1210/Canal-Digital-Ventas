@@ -78,8 +78,7 @@ export async function loginWithEmailAction(
 }
 
 import { cookies } from 'next/headers';
-
-const OAUTH_INTENT_COOKIE = 'auth_intent';
+import { OAUTH_INTENT_COOKIE } from '@/features/iam/constants';
 
 async function setOAuthIntentCookie(intent: 'business' | 'customer') {
   const cookieStore = await cookies();
@@ -95,7 +94,8 @@ async function setOAuthIntentCookie(intent: 'business' | 'customer') {
 export async function loginWithGoogleAction() {
   await setOAuthIntentCookie('customer');
 
-  let url: string;
+  let errorMessage: string | null = null;
+  let url: string | null = null;
   try {
     const useCase = await getGetOAuthSignInUrlUseCase();
 
@@ -112,8 +112,11 @@ export async function loginWithGoogleAction() {
     });
   } catch (error: unknown) {
     console.error('Google OAuth Error:', error);
-    redirect('/login?message=Failed to initialize Google login');
-    return;
+    errorMessage = 'google_oauth_init_failed';
+  }
+
+  if (errorMessage || !url) {
+    redirect(`/login?error=${errorMessage || 'unknown'}`);
   }
 
   redirect(url);
@@ -122,7 +125,8 @@ export async function loginWithGoogleAction() {
 export async function loginBusinessWithGoogleAction() {
   await setOAuthIntentCookie('business');
 
-  let url: string;
+  let errorMessage: string | null = null;
+  let url: string | null = null;
   try {
     const useCase = await getGetOAuthSignInUrlUseCase();
 
@@ -138,8 +142,11 @@ export async function loginBusinessWithGoogleAction() {
     });
   } catch (error: unknown) {
     console.error('Google OAuth Error:', error);
-    redirect('/signup/business?message=Failed to initialize Google signup');
-    return;
+    errorMessage = 'google_oauth_init_failed';
+  }
+
+  if (errorMessage || !url) {
+    redirect(`/signup/business?error=${errorMessage || 'unknown'}`);
   }
 
   redirect(url);
