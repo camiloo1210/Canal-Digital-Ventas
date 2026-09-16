@@ -52,6 +52,7 @@ export async function onboardBusinessAction(
 
     // We generate a tenant ID using crypto (or could use uuid library)
     const tenantId = crypto.randomUUID();
+    const idempotencyKey = crypto.randomUUID(); // Idempotency key for atomic onboarding
     const useCase = await getOnboardTenantUseCase();
 
     // 3. Pasamos el userId verificado por separado al Caso de Uso
@@ -66,6 +67,7 @@ export async function onboardBusinessAction(
         userEmail: user.email!,
       },
       user.id,
+      idempotencyKey,
     );
 
     success = true;

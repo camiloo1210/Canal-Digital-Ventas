@@ -7,6 +7,7 @@ import {
   getOnboardTenantUseCase,
 } from '@/features/iam/di/iam.di';
 import { DomainException, ApplicationException } from '@canaldigital/packages/core';
+import { createClient } from '@/lib/supabase/server';
 
 export type ActionState = {
   success: boolean;
@@ -62,6 +63,7 @@ export async function signupBusinessAction(
   try {
     const onboardUseCase = await getOnboardTenantUseCase();
     const tenantId = crypto.randomUUID();
+    const idempotencyKey = crypto.randomUUID(); // Idempotency key for atomic onboarding
 
     await onboardUseCase.execute(
       {
@@ -74,6 +76,7 @@ export async function signupBusinessAction(
         lastName: validatedFields.data.lastName,
       },
       currentUserId,
+      idempotencyKey,
     );
   } catch (error: unknown) {
     // Distributed Transaction Failure:

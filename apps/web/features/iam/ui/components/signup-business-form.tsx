@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
 import { signupBusinessAction } from '@/features/iam/actions/signup.actions';
 import { loginBusinessWithGoogleAction } from '@/features/iam/actions/login.actions';
 import { Input } from '@/components/ui/input';
@@ -31,20 +31,25 @@ export function SignupBusinessForm({ className, ...props }: React.ComponentProps
     error: null,
   });
 
+  const [storeSlug, setStoreSlug] = useState('');
+  const [manualSlug, setManualSlug] = useState(false);
+
   // Auto-generate slug from store name
   const handleStoreNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.value;
-    const slugInput = document.getElementById('storeSlug') as HTMLInputElement;
-    if (slugInput && !slugInput.dataset.manual) {
-      slugInput.value = name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)+/g, '');
+    if (!manualSlug) {
+      setStoreSlug(
+        name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)+/g, ''),
+      );
     }
   };
 
-  const handleSlugInput = (e: React.FormEvent<HTMLInputElement>) => {
-    e.currentTarget.dataset.manual = 'true';
+  const handleSlugInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setManualSlug(true);
+    setStoreSlug(e.target.value);
   };
 
   return (
@@ -111,7 +116,8 @@ export function SignupBusinessForm({ className, ...props }: React.ComponentProps
               type="text"
               required
               placeholder="acme-corp"
-              onInput={handleSlugInput}
+              value={storeSlug}
+              onChange={handleSlugInput}
             />
             <p className="text-xs text-muted-foreground mt-1">
               Your store will be available at {`https://{slug}.canaldigital.com`}

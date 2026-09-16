@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { onboardBusinessAction, ActionState } from '../../actions/onboarding.actions';
 import { Button } from '@/components/ui/button';
@@ -16,11 +16,7 @@ function SubmitButton() {
   const { pending } = useFormStatus();
 
   return (
-    <Button
-      type="submit"
-      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-6 text-lg transition-all shadow-[0_0_15px_rgba(79,70,229,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
-      disabled={pending}
-    >
+    <Button type="submit" className="w-full" disabled={pending}>
       {pending ? 'Setting up your business...' : 'Complete Setup'}
     </Button>
   );
@@ -29,95 +25,77 @@ function SubmitButton() {
 export function OnboardingForm() {
   const [state, formAction] = useActionState(onboardBusinessAction, initialState);
 
+  const [storeSlug, setStoreSlug] = useState('');
+  const [manualSlug, setManualSlug] = useState(false);
+
   // Auto-generate slug from store name
   const handleStoreNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.value;
-    const slugInput = document.getElementById('storeSlug') as HTMLInputElement;
-    if (slugInput && !slugInput.dataset.manual) {
-      slugInput.value = name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)+/g, '');
+    if (!manualSlug) {
+      setStoreSlug(
+        name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)+/g, ''),
+      );
     }
   };
 
-  const handleSlugInput = (e: React.FormEvent<HTMLInputElement>) => {
-    e.currentTarget.dataset.manual = 'true';
+  const handleSlugInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setManualSlug(true);
+    setStoreSlug(e.target.value);
   };
 
   return (
     <form action={formAction} className="space-y-6">
       {state.error && (
-        <div className="bg-red-500/10 border border-red-500/50 text-red-400 p-4 rounded-lg text-sm mb-6">
+        <div className="bg-destructive/15 text-destructive border border-destructive/50 p-3 rounded-md text-sm mb-6 font-medium">
           {state.error}
         </div>
       )}
 
       <div className="space-y-4">
         <div>
-          <h2 className="text-xl font-bold text-white mb-4">Your Profile</h2>
+          <h2 className="text-lg font-semibold mb-4">Tu Perfil</h2>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="firstName" className="text-gray-300">
-                First Name
-              </Label>
-              <Input
-                id="firstName"
-                name="firstName"
-                type="text"
-                required
-                placeholder="John"
-                className="bg-white/5 border-white/10 text-white focus-visible:ring-indigo-500"
-              />
+              <Label htmlFor="firstName">Nombre</Label>
+              <Input id="firstName" name="firstName" type="text" required placeholder="Juan" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="lastName" className="text-gray-300">
-                Last Name
-              </Label>
-              <Input
-                id="lastName"
-                name="lastName"
-                type="text"
-                required
-                placeholder="Doe"
-                className="bg-white/5 border-white/10 text-white focus-visible:ring-indigo-500"
-              />
+              <Label htmlFor="lastName">Apellido</Label>
+              <Input id="lastName" name="lastName" type="text" required placeholder="Pérez" />
             </div>
           </div>
         </div>
 
-        <div className="pt-6 border-t border-white/10">
-          <h2 className="text-xl font-bold text-white mb-4">Your Business</h2>
+        <div className="pt-6">
+          <h2 className="text-lg font-semibold mb-4">Tu Negocio</h2>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="storeName" className="text-gray-300">
-                Store Name
-              </Label>
+              <Label htmlFor="storeName">Nombre de la Tienda</Label>
               <Input
                 id="storeName"
                 name="storeName"
                 type="text"
                 required
-                placeholder="Acme Corp"
+                placeholder="Mi Super Tienda"
                 onChange={handleStoreNameChange}
-                className="bg-white/5 border-white/10 text-white focus-visible:ring-indigo-500"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="storeSlug" className="text-gray-300">
-                Store URL (Slug)
-              </Label>
+              <Label htmlFor="storeSlug">URL de la Tienda (Slug)</Label>
               <Input
                 id="storeSlug"
                 name="storeSlug"
                 type="text"
                 required
-                placeholder="acme-corp"
-                onInput={handleSlugInput}
-                className="bg-white/5 border-white/10 text-white focus-visible:ring-indigo-500"
+                placeholder="mi-super-tienda"
+                value={storeSlug}
+                onChange={handleSlugInput}
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Your store will be available at {`https://{slug}.canaldigital.com`}
+              <p className="text-xs text-muted-foreground mt-1">
+                Tu tienda estará disponible en {`https://{slug}.canaldigital.com`}
               </p>
             </div>
           </div>

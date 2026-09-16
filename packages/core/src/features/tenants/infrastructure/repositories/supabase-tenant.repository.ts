@@ -36,9 +36,33 @@ export class SupabaseTenantRepository implements TenantRepositoryPort {
     }
   }
 
+  async onboard(
+    tenant: Tenant,
+    ownerId: string,
+    ownerData: any,
+    idempotencyKey: string,
+  ): Promise<void> {
+    const tenantRow = SupabaseTenantMapper.toPersistence(tenant);
+    // Explicitly call the RPC in the 'core' schema
+    const { error } = await this.supabase.schema('core').rpc('onboard_tenant_transactional', {
+      p_idempotency_key: idempotencyKey,
+      p_user_id: ownerId,
+      p_tenant_data: tenantRow,
+      p_user_data: ownerData,
+    });
+
+    if (error) {
+      if (error.code === '23505') {
+        throw new SlugAlreadyTakenException(tenant.getSlug().getValue());
+      }
+      throw new TenantRepositoryException(`Failed to onboard tenant: ${error.message}`, error);
+    }
+  }
+
   async update(tenant: Tenant): Promise<void> {
     const tenantRow = SupabaseTenantMapper.toPersistence(tenant);
 
+    // Note: Assuming upsert_tenant_transactional is in public schema based on legacy
     const { error } = await this.supabase.rpc('upsert_tenant_transactional', {
       tenant_data: tenantRow,
     });

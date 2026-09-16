@@ -17,20 +17,16 @@ export class OnboardTenantUseCase {
   constructor(
     private readonly tenantRepository: TenantRepositoryPort,
     private readonly userRepository: UserRepositoryPort,
-    private readonly adminAuth: AdminAuthPort,
     private readonly eventBus: EventBusPort,
   ) {}
 
-  async execute(dto: OnboardTenantDto, currentUserId: string): Promise<void> {
-    // Idempotency check: if the user already exists in core.users, they are already part of a tenant.
-    const existingUser = await this.userRepository.findById(createUserId(currentUserId));
-    if (existingUser && existingUser.getTenantId()) {
-      return; // Already onboarded, idempotency fulfilled.
-    }
-
+  async execute(
+    dto: OnboardTenantDto,
+    currentUserId: string,
+    idempotencyKey: string,
+  ): Promise<void> {
+    // 1. Create and assemble Tenant
     const tenantId = createTenantId(dto.tenantId);
-
-    // 1. Create and save Tenant
     const tenant = Tenant.create(
       tenantId,
       TenantName.create(dto.name),
@@ -38,9 +34,8 @@ export class OnboardTenantUseCase {
       Email.create(dto.contactEmail),
       (dto.baseCurrency as Currency) || Currency.USD,
     );
-    await this.tenantRepository.save(tenant);
 
-    // 2. Create and save User (Owner)
+    // 2. Create Owner entity (for domain events and validation)
     const owner = User.createOwner(
       createUserId(currentUserId),
       tenantId,
@@ -48,10 +43,18 @@ export class OnboardTenantUseCase {
       PersonName.create(dto.firstName),
       PersonName.create(dto.lastName),
     );
-    await this.userRepository.save(owner);
 
-    // 3. Securely update the user's JWT claims via the Admin Port
-    await this.adminAuth.setTenantClaim(currentUserId, tenant.getId());
+    // 3. Execute Atomic RPC Onboarding
+    await this.tenantRepository.onboard(
+      tenant,
+      currentUserId,
+      {
+        email: dto.userEmail,
+        first_name: dto.firstName,
+        last_name: dto.lastName,
+      },
+      idempotencyKey,
+    );
 
     // 4. Publish Domain Events
     const events = [...tenant.domainEvents, ...owner.domainEvents];

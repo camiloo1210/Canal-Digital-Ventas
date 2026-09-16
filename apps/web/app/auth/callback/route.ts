@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getExchangeOAuthCodeUseCase, getServiceRoleClient } from '@/features/iam/di/iam.di';
+import { getExchangeOAuthCodeUseCase } from '@/features/iam/di/iam.di';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { OAUTH_INTENT_COOKIE } from '@/features/iam/constants';
@@ -44,39 +44,42 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${requestUrl.origin}/login?error=auth_session_missing`);
   }
 
-  const tenantId = user?.app_metadata?.app_tenant_id;
-
-  if (intent === 'business') {
-    if (!tenantId) {
-      return NextResponse.redirect(`${requestUrl.origin}/onboarding`);
-    }
-    return NextResponse.redirect(`${requestUrl.origin}/dashboard`);
-  }
-
-  if (intent === 'customer') {
-    return NextResponse.redirect(`${requestUrl.origin}/`);
-  }
-
-  // Fallback if no intent (maybe session already existed, or direct callback navigation)
-  if (tenantId) {
-    return NextResponse.redirect(`${requestUrl.origin}/dashboard`);
-  }
-
-  // If no intent and no tenantId in JWT, check the database for their true state
-  // We use the service role key to bypass RLS to check their true state.
-  const serviceClient = getServiceRoleClient();
-
-  const { data: dbUser } = await serviceClient
+  // V5: Query tenant_memberships (Single Source of Truth)
+  // RLS allows the authenticated user to read their own active memberships
+  const { data: memberships, error } = await supabase
     .schema('core')
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .single();
+    .from('tenant_memberships')
+    .select('tenant_id')
+    .eq('user_id', user.id)
+    .eq('status', 'active')
+    .limit(1);
 
-  if (dbUser && dbUser.role === 'OWNER') {
+  if (error) {
+    console.error('[auth/callback] Failed to check tenant membership:', error);
+  }
+
+  const hasTenant = (memberships?.length ?? 0) > 0;
+
+  // Routing according to intent + UX rules
+  if (intent === 'business') {
+    if (hasTenant) {
+      return NextResponse.redirect(`${requestUrl.origin}/dashboard`);
+    }
     return NextResponse.redirect(`${requestUrl.origin}/onboarding`);
   }
 
-  // Default to buyer storefront if no tenant, no intent, and no OWNER record
+  if (intent === 'customer') {
+    if (hasTenant) {
+      return NextResponse.redirect(`${requestUrl.origin}/dashboard`);
+    }
+    return NextResponse.redirect(`${requestUrl.origin}/`);
+  }
+
+  // Fallback if no intent (e.g. direct callback navigation)
+  if (hasTenant) {
+    return NextResponse.redirect(`${requestUrl.origin}/dashboard`);
+  }
+
+  // Default to buyer storefront if no tenant
   return NextResponse.redirect(`${requestUrl.origin}/`);
 }

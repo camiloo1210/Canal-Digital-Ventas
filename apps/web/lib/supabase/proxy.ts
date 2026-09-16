@@ -39,12 +39,24 @@ export async function updateSession(request: NextRequest) {
   const isDashboardRoute = request.nextUrl.pathname.startsWith('/dashboard');
 
   // Any route that doesn't strictly require authentication
-  // Note: /storefront or / is considered public, as buyers can browse without an account
-  const isPublicRoute =
-    isAuthRoute ||
-    request.nextUrl.pathname === '/' ||
-    request.nextUrl.pathname.startsWith('/storefront');
-  const hasTenant = !!user?.app_metadata?.app_tenant_id;
+  // Note: /storefront is considered public, as buyers can browse without an account
+  const isPublicRoute = isAuthRoute || request.nextUrl.pathname.startsWith('/storefront');
+  // Under V5, we query tenant_memberships instead of trusting JWT claims
+  let hasTenant = false;
+  if (user && (isDashboardRoute || isOnboardingPath || isAuthRoute)) {
+    const { data, error } = await supabase
+      .schema('core')
+      .from('tenant_memberships')
+      .select('tenant_id')
+      .eq('user_id', user.id)
+      .limit(1);
+
+    if (error) {
+      console.error('[proxy] Failed to check tenant membership:', error);
+    }
+
+    hasTenant = !!(data && data.length > 0);
+  }
 
   // 1. Authenticated?
   if (!user && !isPublicRoute) {
