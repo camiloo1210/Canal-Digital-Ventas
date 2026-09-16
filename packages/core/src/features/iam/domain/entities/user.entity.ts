@@ -14,6 +14,7 @@ import { UserRoleChangedEvent } from '@/iam/domain/events/user-role-changed.even
 import { UserSuspendedEvent } from '@/iam/domain/events/user-suspended.event';
 import { UserPermissionsUpdatedEvent } from '@/iam/domain/events/user-permissions-updated.event';
 import { UserProfileUpdatedEvent } from '@/iam/domain/events/user-profile-updated.event';
+import { UserRegisteredEvent } from '@/iam/domain/events/user-registered.event';
 
 export interface UserProps {
   id: UserId;
@@ -45,6 +46,37 @@ export class User {
     private updatedAt: Date,
     private version: number,
   ) {}
+
+  public static createOwner(
+    id: UserId,
+    tenantId: TenantId,
+    email: Email,
+    firstName: PersonName,
+    lastName: PersonName,
+  ): User {
+    User.validateId(id);
+    User.validateTenantId(tenantId);
+    User.validateEmail(email);
+
+    const user = new User(
+      id,
+      tenantId,
+      email,
+      UserRole.OWNER,
+      UserStatus.ACTIVE,
+      firstName,
+      lastName,
+      [],
+      new Date(),
+      new Date(),
+      0,
+    );
+
+    user.addDomainEvent(new UserRegisteredEvent(id, tenantId, email, UserRole.OWNER));
+
+    // Consider adding a UserCreatedEvent or UserRegisteredEvent if needed in the future
+    return user;
+  }
 
   public static invite(id: UserId, tenantId: TenantId, email: Email, role: UserRole): User {
     User.validateId(id);

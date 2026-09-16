@@ -12,9 +12,13 @@ import {
   FieldSeparator,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { loginWithGoogleAction, loginWithEmailAction, ActionState } from '@/features/iam/actions/login.actions';
+import {
+  loginWithGoogleAction,
+  loginWithEmailAction,
+  ActionState,
+} from '@/features/iam/actions/login.actions';
 import { toast } from '@/components/ui/toast';
-import { useActionState, useEffect } from 'react';
+import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 
 function SubmitButton() {
@@ -116,13 +120,13 @@ export function LoginForm({
         <FieldDescription className="text-center flex flex-col gap-2">
           <span>
             Don&apos;t have an account?{' '}
-            <Link href="/onboarding" className="underline underline-offset-4 hover:opacity-80">
+            <Link href="/signup/business" className="underline underline-offset-4 hover:opacity-80">
               Sign up as Business
             </Link>
           </span>
           <span>
             Are you a client?{' '}
-            <Link href="/client/signup" className="underline underline-offset-4 hover:opacity-80">
+            <Link href="/signup" className="underline underline-offset-4 hover:opacity-80">
               Register here
             </Link>
           </span>

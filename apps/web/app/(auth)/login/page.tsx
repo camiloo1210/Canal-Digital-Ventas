@@ -23,8 +23,14 @@ export default async function LoginPage(props: {
           </div>
         </div>
       </div>
-      <div className="bg-muted relative hidden lg:flex items-center justify-center">
-        <Image src={Logo} alt="Papeleria costa azul Logo" width={400} height={400} className="object-contain" />
+      <div className="bg-muted relative hidden lg:flex items-center justify-center sticky top-0 h-svh">
+        <Image
+          src={Logo}
+          alt="Papeleria costa azul Logo"
+          width={400}
+          height={400}
+          className="object-contain"
+        />
       </div>
     </div>
   );

@@ -1,8 +1,14 @@
-import { type NextRequest } from 'next/server';
-import { updateSession } from '@/lib/supabase/middleware';
+import { NextResponse, type NextRequest } from 'next/server';
+import { updateSession } from '@/lib/supabase/proxy';
 
-export async function proxy(request: NextRequest) {
-  return await updateSession(request);
+export async function proxy(request: NextRequest): Promise<NextResponse> {
+  const response = await updateSession(request);
+
+  if (!request.cookies.has('NEXT_LOCALE')) {
+    response.cookies.set('NEXT_LOCALE', 'es');
+  }
+
+  return response;
 }
 
 export const config = {

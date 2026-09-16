@@ -7,7 +7,7 @@ import { Payment } from '@/payments/domain/entities/payment.entity';
 import { PaymentId } from '@/payments/domain/types/payment-id.type';
 import { TenantId } from '@/shared/domain/types/tenant-id.type';
 import { PaginatedResult, PaginationOptions } from '@/shared/domain/pagination/pagination';
-import { PaymentRepositoryException } from '@/payments/infrastructure/exceptions/payment-repository.exception';
+import { PaymentRepositoryException } from '@/payments/application/exceptions/payment-repository.exception';
 import { DbPaymentRow } from '@/payments/infrastructure/types/supabase-payment.types';
 import { PaymentMapper } from '@/payments/infrastructure/mappers/payment.mapper';
 

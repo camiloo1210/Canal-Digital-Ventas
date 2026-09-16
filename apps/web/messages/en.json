@@ -1,0 +1,25 @@
+{
+  "Sidebar": {
+    "title": "Canal Digital",
+    "subtitle": "E-commerce SaaS",
+    "analytics_dashboard": "Analytics & Dashboard",
+    "dashboard": "Dashboard",
+    "top_products": "Top Products",
+    "catalog": "Master Catalog",
+    "products": "Products",
+    "categories": "Categories",
+    "inventory": "Inventory / Stock",
+    "sales": "Orders Management",
+    "orders": "Orders",
+    "payments": "Payments",
+    "crm": "Directory & CRM",
+    "users": "User Directory",
+    "roles": "Roles & Permissions",
+    "communications": "Communications",
+    "notifications": "Notifications",
+    "whatsapp": "WhatsApp Channel",
+    "settings": "Settings",
+    "help": "Get Help",
+    "search": "Search"
+  }
+}

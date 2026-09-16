@@ -9,7 +9,7 @@ import { DbCustomerRow } from '@/customers/infrastructure/types/supabase-custome
 import { PaginationOptions, PaginatedResult } from '@/shared/domain/pagination/pagination';
 import { CustomerId } from '@/customers/domain/types/customer-id.type';
 import { TenantId } from '@/shared/domain/types/tenant-id.type';
-import { CustomerRepositoryException } from '@/customers/infrastructure/exceptions/customer-repository.exception';
+import { CustomerRepositoryException } from '@/customers/application/exceptions/customer-repository.exception';
 
 export class SupabaseCustomerRepository implements CustomerRepositoryPort {
   constructor(private readonly supabase: SupabaseClient) {}
