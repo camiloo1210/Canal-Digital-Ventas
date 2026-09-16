@@ -6,7 +6,7 @@ import { Payment } from '@/payments/domain/entities/payment.entity';
 import { PaymentStatus } from '@/payments/domain/enums/payment-status.enum';
 import { PaymentId } from '@/payments/domain/types/payment-id.type';
 import { InvalidWebhookSignatureException } from '@/payments/application/exceptions/invalid-webhook-signature.exception';
-import { PaymentGatewayException } from '@/payments/infrastructure/exceptions/payment-gateway.exception';
+import { PaymentGatewayException } from '@/payments/application/exceptions/payment-gateway.exception';
 import * as crypto from 'crypto';
 
 export class LemonSqueezyAdapter implements PaymentGatewayPort {

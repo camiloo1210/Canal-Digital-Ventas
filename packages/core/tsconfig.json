@@ -1,5 +1,11 @@
 {
   "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
       "@/shared/*": ["src/features/shared/*"],
@@ -10,7 +16,8 @@
       "@/carts/*": ["src/features/carts/*"],
       "@/payments/*": ["src/features/payments/*"],
       "@/tenants/*": ["src/features/tenants/*"],
-      "@/iam/*": ["src/features/iam/*"]
+      "@/iam/*": ["src/features/iam/*"],
+      "@/sales/*": ["src/features/sales/*"]
     }
   }
 }

@@ -25,6 +25,7 @@ const eslintConfig = defineConfig([
       'boundaries/include': ['packages/core/src/features/**/*'],
     },
     rules: {
+      '@next/next/no-html-link-for-pages': ['error', 'apps/web/app'],
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/explicit-function-return-type': 'warn',
       'boundaries/dependencies': [

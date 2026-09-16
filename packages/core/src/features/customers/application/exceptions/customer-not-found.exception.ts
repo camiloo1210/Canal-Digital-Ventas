@@ -1,6 +1,6 @@
-import { DomainException } from '@/shared/domain/exceptions/domain.exception';
+import { ApplicationException } from '@/shared/application/exceptions/application.exception';
 
-export class CustomerNotFoundException extends DomainException {
+export class CustomerNotFoundException extends ApplicationException {
   constructor(message: string = 'Customer not found.') {
     super(message);
     this.name = 'CustomerNotFoundException';

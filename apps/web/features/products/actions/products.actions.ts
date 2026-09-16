@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { getCreateProductUseCase, getStorageAdapter } from '@/features/products/di/products.di';
 import { revalidatePath } from 'next/cache';
 import { DomainException } from '@canaldigital/packages/core';
+import { createClient } from '@/lib/supabase/server';
 // Removed inline storage adapter import
 
 // 1. Define the correct shape of the data using Zod
@@ -61,13 +62,25 @@ export async function createProductAction(
 
     const useCase = await getCreateProductUseCase();
 
-    // Tenant Mock (until Auth is added)
-    const mockTenantId = '11111111-1111-1111-1111-111111111111';
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { error: 'Unauthorized user', success: false };
+    }
+
+    const rawTenantId = user.app_metadata?.app_tenant_id;
+
+    if (!rawTenantId) {
+      return { error: 'User does not have an assigned tenant ID.', success: false };
+    }
 
     // Call the core Use Case passing primitive, clean DTOs
     await useCase.execute({
       id: crypto.randomUUID(),
-      tenantId: mockTenantId,
+      tenantId: rawTenantId,
       categoryId: parsed.data.categoryId,
       name: parsed.data.name,
       price: parsed.data.price,
@@ -83,7 +96,7 @@ export async function createProductAction(
     });
 
     // Clear the cache for this route so new data is read from the DB
-    revalidatePath('/products');
+    revalidatePath('/dashboard/catalog/products');
 
     return { success: true, error: null };
   } catch (error: unknown) {

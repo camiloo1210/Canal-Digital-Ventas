@@ -2,8 +2,9 @@
 
 import { z } from 'zod';
 import { getSignInWithEmailUseCase, getGetOAuthSignInUrlUseCase } from '@/features/iam/di/iam.di';
-import { DomainException } from '@canaldigital/packages/core';
+import { DomainException, ApplicationException } from '@canaldigital/packages/core';
 import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 
 export type ActionState = {
   success: boolean;
@@ -17,7 +18,7 @@ const loginSchema = z.object({
 
 export async function loginWithEmailAction(
   prevState: ActionState,
-  formData: FormData
+  formData: FormData,
 ): Promise<ActionState> {
   // TODO: Add rate-limiting here (e.g., via upstash/ratelimit to prevent brute force attacks)
 
@@ -35,10 +36,11 @@ export async function loginWithEmailAction(
   }
 
   let success = false;
+  let needsOnboarding = false;
 
   try {
     const useCase = await getSignInWithEmailUseCase();
-    
+
     await useCase.execute({
       email: validatedFields.data.email,
       password: validatedFields.data.password,
@@ -47,17 +49,25 @@ export async function loginWithEmailAction(
     success = true;
   } catch (error: unknown) {
     // Return domain specific exceptions with a safe message
-    if (error instanceof DomainException) {
-      return { success: false, error: error.message };
+    if (error instanceof DomainException || error instanceof ApplicationException) {
+      if (error.name === 'TenantNotConfiguredException') {
+        needsOnboarding = true;
+      } else {
+        return { success: false, error: (error as Error).message };
+      }
+    } else {
+      // Log unexpected errors internally without leaking stack traces to the client
+      console.error('Unexpected login error:', error);
+
+      return {
+        success: false,
+        error: 'An unexpected error occurred during sign in. Please try again later.',
+      };
     }
-    
-    // Log unexpected errors internally without leaking stack traces to the client
-    console.error('Unexpected login error:', error);
-    
-    return { 
-      success: false, 
-      error: 'An unexpected error occurred during sign in. Please try again later.' 
-    };
+  }
+
+  if (needsOnboarding) {
+    redirect('/onboarding');
   }
 
   if (success) {
@@ -67,11 +77,33 @@ export async function loginWithEmailAction(
   return { success: false, error: null };
 }
 
+import { cookies } from 'next/headers';
+import { OAUTH_INTENT_COOKIE } from '@/features/iam/constants';
+
+async function setOAuthIntentCookie(intent: 'business' | 'customer') {
+  const cookieStore = await cookies();
+  cookieStore.set(OAUTH_INTENT_COOKIE, intent, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 10, // 10 minutes
+    path: '/',
+  });
+}
+
 export async function loginWithGoogleAction() {
-  let url: string;
+  await setOAuthIntentCookie('customer');
+
+  let errorMessage: string | null = null;
+  let url: string | null = null;
   try {
     const useCase = await getGetOAuthSignInUrlUseCase();
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
+    // Dynamically derive the base URL from request headers.
+    const headersList = await headers();
+    const host = headersList.get('host');
+    const protocol = headersList.get('x-forwarded-proto') || 'https';
+    const baseUrl = `${protocol}://${host}`;
     const redirectTo = `${baseUrl}/auth/callback`;
 
     url = await useCase.execute({
@@ -80,8 +112,41 @@ export async function loginWithGoogleAction() {
     });
   } catch (error: unknown) {
     console.error('Google OAuth Error:', error);
-    redirect('/login?message=Failed to initialize Google login');
-    return;
+    errorMessage = 'google_oauth_init_failed';
+  }
+
+  if (errorMessage || !url) {
+    redirect(`/login?error=${errorMessage || 'unknown'}`);
+  }
+
+  redirect(url);
+}
+
+export async function loginBusinessWithGoogleAction() {
+  await setOAuthIntentCookie('business');
+
+  let errorMessage: string | null = null;
+  let url: string | null = null;
+  try {
+    const useCase = await getGetOAuthSignInUrlUseCase();
+
+    const headersList = await headers();
+    const host = headersList.get('host');
+    const protocol = headersList.get('x-forwarded-proto') || 'https';
+    const baseUrl = `${protocol}://${host}`;
+    const redirectTo = `${baseUrl}/auth/callback`;
+
+    url = await useCase.execute({
+      provider: 'google',
+      redirectTo,
+    });
+  } catch (error: unknown) {
+    console.error('Google OAuth Error:', error);
+    errorMessage = 'google_oauth_init_failed';
+  }
+
+  if (errorMessage || !url) {
+    redirect(`/signup/business?error=${errorMessage || 'unknown'}`);
   }
 
   redirect(url);
