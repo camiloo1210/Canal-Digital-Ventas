@@ -9,7 +9,8 @@ import {
 import { SupabaseTenantMapper } from '@/tenants/infrastructure/mappers/supabase-tenant.mapper';
 import { DbTenantRow } from '@/tenants/infrastructure/types/supabase-tenant.types';
 import { PaginationOptions, PaginatedResult } from '@/shared/domain/pagination/pagination';
-import { TenantRepositoryException } from '@/tenants/infrastructure/exceptions/tenant-repository.exception';
+import { TenantRepositoryException } from '@/tenants/application/exceptions/tenant-repository.exception';
+import { SlugAlreadyTakenException } from '@/tenants/application/exceptions/slug-already-taken.exception';
 
 export class SupabaseTenantRepository implements TenantRepositoryPort {
   constructor(private readonly supabase: SupabaseClient) {}
@@ -22,6 +23,9 @@ export class SupabaseTenantRepository implements TenantRepositoryPort {
     });
 
     if (error) {
+      if (error.code === '23505') {
+        throw new SlugAlreadyTakenException(tenant.getSlug().getValue());
+      }
       if (error.code === 'P0001') {
         throw new TenantRepositoryException(
           'Optimistic locking failed: the tenant has been updated by another transaction or does not exist.',
@@ -32,9 +36,33 @@ export class SupabaseTenantRepository implements TenantRepositoryPort {
     }
   }
 
+  async onboard(
+    tenant: Tenant,
+    ownerId: string,
+    ownerData: any,
+    idempotencyKey: string,
+  ): Promise<void> {
+    const tenantRow = SupabaseTenantMapper.toPersistence(tenant);
+    // Explicitly call the RPC in the 'core' schema
+    const { error } = await this.supabase.schema('core').rpc('onboard_tenant_transactional', {
+      p_idempotency_key: idempotencyKey,
+      p_user_id: ownerId,
+      p_tenant_data: tenantRow,
+      p_user_data: ownerData,
+    });
+
+    if (error) {
+      if (error.code === '23505') {
+        throw new SlugAlreadyTakenException(tenant.getSlug().getValue());
+      }
+      throw new TenantRepositoryException(`Failed to onboard tenant: ${error.message}`, error);
+    }
+  }
+
   async update(tenant: Tenant): Promise<void> {
     const tenantRow = SupabaseTenantMapper.toPersistence(tenant);
 
+    // Note: Assuming upsert_tenant_transactional is in public schema based on legacy
     const { error } = await this.supabase.rpc('upsert_tenant_transactional', {
       tenant_data: tenantRow,
     });

@@ -4,14 +4,7 @@ import { EventBusPort } from '@/shared/application/ports/out/event-bus.port';
 import { createUserId } from '@/iam/domain/types/user-id.type';
 import { UserPermission } from '@/iam/domain/enums/permission.enum';
 import { UserNotFoundException } from '@/iam/application/exceptions/user-not-found.exception';
-import { DomainException } from '@/shared/domain/exceptions/domain.exception';
-
-export class InvalidPermissionException extends DomainException {
-  constructor(permission: string) {
-    super(`Invalid permission: ${permission}`);
-    this.name = 'InvalidPermissionException';
-  }
-}
+import { InvalidPermissionException } from '@/iam/domain/exceptions/invalid-permission.exception';
 
 function parsePermissions(permissions: string[]): UserPermission[] {
   const validPermissions = Object.values(UserPermission);

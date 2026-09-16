@@ -6,7 +6,7 @@ import { DbCartRow } from '@/carts/infrastructure/types/supabase-cart.types';
 import { CartId } from '@/carts/domain/types/cart-id.type';
 import { CustomerId } from '@/carts/domain/types/customer-id.type';
 import { TenantId } from '@/shared/domain/types/tenant-id.type';
-import { CartRepositoryException } from '@/carts/infrastructure/exceptions/cart-repository.exception';
+import { CartRepositoryException } from '@/carts/application/exceptions/cart-repository.exception';
 
 export class SupabaseCartRepository implements CartRepositoryPort {
   constructor(private readonly supabase: SupabaseClient) {}

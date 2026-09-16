@@ -1,15 +1,7 @@
 import { GetOAuthSignInUrlDto } from '@/iam/application/dtos/get-oauth-sign-in-url.dto';
 import { AuthPort } from '@/iam/application/ports/out/auth.port';
-import { DomainException } from '@/shared/domain/exceptions/domain.exception';
-
-export class InvalidProviderException extends DomainException {
-  constructor(provider: string) {
-    super(`Invalid OAuth provider: ${provider}`);
-    this.name = 'InvalidProviderException';
-  }
-}
-
-export type OAuthProvider = 'google' | 'github' | 'azure';
+import { InvalidProviderException } from '@/iam/domain/exceptions/invalid-provider.exception';
+import { OAuthProvider } from '@/iam/domain/types/oauth-provider.type';
 
 function parseProvider(provider: string): OAuthProvider {
   const validProviders: OAuthProvider[] = ['google', 'github', 'azure'];

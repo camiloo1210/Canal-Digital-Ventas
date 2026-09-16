@@ -1,53 +1,70 @@
 import 'server-only';
-import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
+import { createClient as createBaseSupabaseClient } from '@supabase/supabase-js';
+import { createClient as createSupabaseServerClient } from '@/lib/supabase/server';
 import {
   SignInWithEmailUseCase,
   GetOAuthSignInUrlUseCase,
   ExchangeOAuthCodeUseCase,
   SupabaseAuthAdapter,
+  SupabaseTenantRepository,
+  SupabaseUserRepository,
+  SupabaseAdminAuthAdapter,
+  OnboardTenantUseCase,
+  LocalEventBus,
+  RegisterGlobalIdentityUseCase,
 } from '@canaldigital/packages/core';
 
-async function createSupabaseClient() {
-  const cookieStore = await cookies();
-
-  // Environment variables must be asserted as strings in a real-world production app
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-  return createServerClient(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      getAll() {
-        return cookieStore.getAll();
-      },
-      setAll(cookiesToSet) {
-        try {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options);
-          });
-        } catch {
-          // The `setAll` method was called from a Server Component.
-          // This can be ignored if you have middleware refreshing user sessions.
-        }
-      },
-    },
-  });
-}
-
 export async function getSignInWithEmailUseCase(): Promise<SignInWithEmailUseCase> {
-  const supabaseClient = await createSupabaseClient();
+  const supabaseClient = await createSupabaseServerClient();
   const adapter = new SupabaseAuthAdapter(supabaseClient);
   return new SignInWithEmailUseCase(adapter);
 }
 
 export async function getGetOAuthSignInUrlUseCase(): Promise<GetOAuthSignInUrlUseCase> {
-  const supabaseClient = await createSupabaseClient();
+  const supabaseClient = await createSupabaseServerClient();
   const adapter = new SupabaseAuthAdapter(supabaseClient);
   return new GetOAuthSignInUrlUseCase(adapter);
 }
 
 export async function getExchangeOAuthCodeUseCase(): Promise<ExchangeOAuthCodeUseCase> {
-  const supabaseClient = await createSupabaseClient();
+  const supabaseClient = await createSupabaseServerClient();
   const adapter = new SupabaseAuthAdapter(supabaseClient);
   return new ExchangeOAuthCodeUseCase(adapter);
+}
+
+export async function getOnboardTenantUseCase() {
+  // 1. SAFE CLIENT: Uses cookies, respects Row Level Security (RLS)
+  const userClient = await createSupabaseServerClient();
+  const tenantRepository = new SupabaseTenantRepository(userClient);
+  const userRepository = new SupabaseUserRepository(userClient);
+  const eventBus = new LocalEventBus();
+
+  // 2. Assemble: The Use Case gets exactly the privileges it needs.
+  return new OnboardTenantUseCase(tenantRepository, userRepository, eventBus);
+}
+
+export async function getRegisterGlobalIdentityUseCase(): Promise<RegisterGlobalIdentityUseCase> {
+  const supabaseClient = await createSupabaseServerClient();
+  const adapter = new SupabaseAuthAdapter(supabaseClient);
+  return new RegisterGlobalIdentityUseCase(adapter);
+}
+
+export function getServiceRoleClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url) {
+    throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL');
+  }
+
+  if (!serviceRoleKey) {
+    throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY');
+  }
+
+  return createBaseSupabaseClient(url, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
 }
