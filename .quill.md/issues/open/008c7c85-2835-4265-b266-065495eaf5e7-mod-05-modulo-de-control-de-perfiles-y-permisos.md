@@ -3,15 +3,15 @@ id: 008c7c85-2835-4265-b266-065495eaf5e7
 title: "MOD-05: Módulo de Control de Perfiles y Permisos"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-08-02"
+updated_date: "2026-09-16"
 issue_type: module
-status: open
+status: in_review
 labels:
   - ai-generated
 relations:
   - type: parent
     id: e651f3ed-4102-4e1b-9a94-9f5a179dd2b1
-integrity_hash: "sha256:4f8293ca00dac098e7cdec625bd107851a9f99ffe2cd3696385f3ff8719ba95e"
+integrity_hash: "sha256:0a37727490634cf37e00a95a8efcd37be62f921ebdbc1c4a35e8b4f1d788231c"
 ---
 
 ## Descripción del Módulo
