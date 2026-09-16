@@ -5,13 +5,13 @@ author: AI Agent (MCP)
 creation_date: "2026-07-29"
 updated_date: "2026-09-16"
 issue_type: epic
-status: in_review
+status: done
 labels:
   - ai-generated
 relations:
   - type: relates_to
     id: 008c7c85-2835-4265-b266-065495eaf5e7
-integrity_hash: "sha256:d91209b8a7a2661208f55a6e4e1c90177ff9f6c0c12b92b1b2266cf1e29bf6d7"
+integrity_hash: "sha256:c880102eca67aaf27ee55ec310911b325ecbca3f019c84a224016555d0f2cde4"
 ---
 
 ## Acceptance criteria
