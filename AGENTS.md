@@ -41,6 +41,14 @@ All business logic MUST reside here, fully decoupled from any framework (React/N
   - **Adapters:** This is the ONLY place where implementations like Supabase, HTTP clients, or DB drivers are allowed (e.g., `SupabaseCategoryRepository`).
   - **Exception Translation (Adapter Pattern):** Adapters MUST catch technology-specific errors (like `SupabaseError` or `PostgresError`) and translate them into `ApplicationException` (e.g. `ProductRepositoryException`) before throwing them back to the Use Case. Never leak infrastructure errors or use raw `Error` objects.
 
+## 2.1 Database Atomic Transaction Boundaries (STATE OF THE ART)
+
+We strictly dictate **"Option A" (TransactionManager controlled by Node.js Adapter)** over monolithic Postgres RPCs for complex aggregates.
+
+- All database mutation Use Cases MUST rely on a `TransactionManagerPort` to wrap multiple repository executions in a single physical `BEGIN/COMMIT` Postgres block.
+- **Do not** write massive "One-RPC-fixes-all" Postgres functions to wrap bounded contexts (e.g. `create_product_transaction`). This abstracts the Domain away from TypeScript into SQL, destroying Hexagonal cleanlyness.
+- Use explicit, narrow `SECURITY DEFINER` RPCs in DB exclusively for individual security/fencing steps (like acquiring idempotent leases or appending outbox logs), which are all fired synchronously using the scoped Node.js connection pool transactor (`sqlTx`).
+
 ## 🖥️ FRONTEND ARCHITECTURE RULES (NEXT.JS PRIMARY ADAPTER)
 
 The Next.js application (`apps/web`) acts EXCLUSIVELY as the **Primary/Driving Adapter** in our Hexagonal Architecture. It is essentially a "dumb" delivery mechanism. **ZERO business logic, domain rules, or state validations are allowed in the Next.js layer.**
