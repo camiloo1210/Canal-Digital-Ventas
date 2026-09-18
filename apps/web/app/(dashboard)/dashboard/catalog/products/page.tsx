@@ -1,12 +1,13 @@
 import { getProductRepository } from '@/features/products/di/products.di';
 import { Product } from '@canaldigital/packages/core';
-import { createTenantId } from '@canaldigital/packages/core/src/features/shared/domain/types/tenant-id.type';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
 import Image from 'next/image';
+import { formatMoney } from '@/lib/money';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-// import { createTenantId } from '@canaldigital/packages/core/src/features/shared/domain/types/tenant-id.type'; // Using hardcoded string since the core repository might expect a string or TenantId
+import { getActiveTenantQuery } from '@/features/iam/queries/active-tenant.query';
+import { getTranslations } from 'next-intl/server';
 
 export const metadata = {
   title: 'Products | Canal Digital',
@@ -21,97 +22,82 @@ export default async function ProductsPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Redirect is preserved here momentarily in case of direct deep linkage before layout renders
   if (!user) {
     redirect('/login');
   }
 
-  // Obtenemos el tenantId real del JWT/metadata del usuario para evitar que Row-Level Security (RLS) bloquee la consulta.
-  const rawTenantId = user.app_metadata?.app_tenant_id;
+  const tenantId = await getActiveTenantQuery(user.id);
 
-  if (!rawTenantId) {
-    return (
-      <div className="min-h-screen bg-black text-white p-8 flex items-center justify-center">
-        <div className="max-w-md text-center border border-red-500/20 bg-red-500/10 p-8 rounded-2xl">
-          <h2 className="text-2xl font-bold text-red-400 mb-4">No Tenant Configured</h2>
-          <p className="text-gray-300 text-sm mb-6">
-            Your user account doesn't have an assigned <code>app_tenant_id</code> in Supabase.
-            Because we removed the hardcoded test ID, the system strictly requires you to belong to
-            a Tenant to view products.
-          </p>
-          <p className="text-gray-400 text-xs">
-            To fix this, go to your Supabase Dashboard &rarr; Authentication &rarr; Users &rarr;
-            Edit User, and add{' '}
-            <code>{`{"app_tenant_id": "11111111-1111-1111-1111-111111111111"}`}</code> to the
-            `raw_app_meta_data` field.
-          </p>
-        </div>
-      </div>
-    );
+  if (!tenantId) {
+    redirect('/onboarding');
   }
 
-  const tenantId = createTenantId(rawTenantId);
+  const t = await getTranslations('Products');
 
   const repository = await getProductRepository();
+  // Todo(Performance): Evaluar EXPLAIN ANALYZE en el índice (tenant_id, status, created_at DESC)
+  // antes de migrar limit/offset a keyset cursor pagination para esta consulta.
   const result = await repository.findAll(tenantId, { limit: 50, page: 1 });
   const products = result.items;
 
   return (
-    <div className="min-h-screen bg-black text-white p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-500">
-            Products
-          </h1>
-          <Link
-            href="/dashboard/catalog/products/new"
-            className="bg-indigo-600 hover:bg-indigo-700 px-6 py-3 rounded-lg font-medium transition-all shadow-[0_0_15px_rgba(79,70,229,0.4)]"
-          >
-            + New Product
-          </Link>
-        </div>
+    <div className="flex flex-1 flex-col">
+      <div className="@container/main flex flex-1 flex-col gap-2">
+        <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 px-4 lg:px-6">
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-3xl font-bold tracking-tight">{t('list_title')}</h1>
+            <Link
+              href="/dashboard/catalog/products/new"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm"
+            >
+              {t('new_product_button')}
+            </Link>
+          </div>
 
-        {products.length === 0 ? (
-          <div className="text-center py-20 text-gray-500 border border-dashed border-gray-800 rounded-2xl">
-            <p className="text-xl">No products found in the catalog.</p>
-            <p className="text-sm mt-2">Click &quot;+ New Product&quot; to add your first item.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map((product: Product) => (
-              <Card
-                key={product.getId()}
-                className="bg-white/5 border-white/10 overflow-hidden hover:bg-white/10 transition-colors shadow-xl"
-              >
-                <div className="aspect-square relative bg-black/40 border-b border-white/5">
-                  {product.getImageUrl() ? (
-                    <Image
-                      src={product.getImageUrl()!}
-                      alt={product.getName()}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-600">
-                      No Image
-                    </div>
-                  )}
-                </div>
-                <CardHeader>
-                  <CardTitle className="text-lg text-white font-bold">
-                    {product.getName()}
-                  </CardTitle>
-                  <p className="text-sm text-gray-400 font-mono">{product.getSku()}</p>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold text-indigo-400">
-                    ${(product.getPrice().getValue() / 100).toFixed(2)}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+          {products.length === 0 ? (
+            <div className="text-center py-20 text-muted-foreground border border-dashed rounded-xl">
+              <p className="text-xl font-medium">{t('empty_state_title')}</p>
+              <p className="text-sm mt-2">{t('empty_state_desc')}</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {products.map((product: Product) => (
+                <Card
+                  key={product.getId()}
+                  className="overflow-hidden hover:bg-accent/50 transition-colors shadow-sm"
+                >
+                  <div className="aspect-square relative bg-muted border-b">
+                    {product.getImageUrl() ? (
+                      <Image
+                        src={product.getImageUrl()!}
+                        alt={product.getName()}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                        {t('no_image')}
+                      </div>
+                    )}
+                  </div>
+                  <CardHeader className="p-4 pb-2">
+                    <CardTitle className="text-lg font-bold line-clamp-1">
+                      {product.getName()}
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground font-mono">{product.getSku()}</p>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0">
+                    <p className="text-xl font-bold text-primary">
+                      {formatMoney(product.getPrice().getValue())}
+                    </p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -55,6 +55,12 @@ The Next.js application (`apps/web`) acts EXCLUSIVELY as the **Primary/Driving A
 
 If you are generating or modifying code in `apps/web`, you MUST strictly adhere to the following rules:
 
+### 0. Zero Tolerance Rules (STRICTLY MANDATORY)
+
+- **Zero `any` or implicit types.** Absolute typing is guaranteed.
+- **Zero relative imports (`./` or `../`).** Strictly use absolute aliases (`@/...`).
+- **Primary Adapter (Mechanical Delivery):** The frontend ONLY orchestrates FormData (primitives) -> Zod -> Pure DTOs into Use Cases.
+
 ### 1. Monorepo Boundaries & Dependency Injection (DI)
 
 - **Strict Imports:** Never use relative paths to access the core package (e.g., `../../../packages/core`). Always use the designated package import (e.g., `import { SignInUseCase } from '@canaldigital/core/iam';`).

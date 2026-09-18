@@ -120,3 +120,9 @@ export { UserRepositoryException } from './features/iam/application/exceptions/u
 export { SupabaseAuthAdapter } from './features/iam/infrastructure/adapters/supabase-auth.adapter';
 export { SupabaseAdminAuthAdapter } from './features/iam/infrastructure/adapters/supabase-admin-auth.adapter';
 export { SupabaseUserRepository } from './features/iam/infrastructure/repositories/supabase-user.repository';
+
+// ==========================================
+// SHARED EXPORTS (Outbox)
+// ==========================================
+export type { OutboxPort, OutboxEvent } from './features/shared/application/ports/out/outbox.port';
+export { SupabaseOutboxAdapter } from './features/shared/infrastructure/adapters/supabase-outbox.adapter';
