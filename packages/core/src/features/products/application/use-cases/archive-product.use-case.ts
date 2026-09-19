@@ -4,31 +4,43 @@ import { ProductNotFoundException } from '@/products/application/exceptions/prod
 import { EventBusPort } from '@/shared/application/ports/out/event-bus.port';
 import { createProductId } from '@/products/domain/types/product-id.type';
 import { createTenantId } from '@/shared/domain/types/tenant-id.type';
+import { TransactionManagerPort } from '@/shared/application/ports/out/transaction-manager.port';
+import { OptimisticConcurrencyException } from '@/shared/application/exceptions/optimistic-concurrency.exception';
 
 export class ArchiveProductUseCase {
   constructor(
     private readonly productRepository: ProductRepositoryPort,
     private readonly eventBus: EventBusPort,
+    private readonly transactionManager: TransactionManagerPort,
   ) {}
 
-  async execute(dto: ArchiveProductDto): Promise<string> {
-    const productId = createProductId(dto.id);
-    const tenantId = createTenantId(dto.tenantId);
+  async execute(dto: ArchiveProductDto & { expectedVersion?: number }): Promise<string> {
+    return this.transactionManager.runInTransaction(
+      async (tx) => {
+        const productId = createProductId(dto.id);
+        const tenantId = createTenantId(dto.tenantId);
 
-    const product = await this.productRepository.findById(productId, tenantId);
+        const product = await this.productRepository.findById(productId, tenantId, tx);
 
-    if (!product) {
-      throw new ProductNotFoundException(dto.id);
-    }
+        if (!product) {
+          throw new ProductNotFoundException(dto.id);
+        }
 
-    product.archive();
-    await this.productRepository.save(product);
+        if (dto.expectedVersion !== undefined && product.getVersion() !== dto.expectedVersion) {
+          throw new OptimisticConcurrencyException('Product', dto.id);
+        }
 
-    if (product.domainEvents.length > 0) {
-      await this.eventBus.publish(product.domainEvents);
-    }
-    product.clearDomainEvents();
+        product.archive();
+        await this.productRepository.save(product, tx);
 
-    return product.getId();
+        if (product.domainEvents.length > 0) {
+          await this.eventBus.publish(product.domainEvents);
+        }
+        product.clearDomainEvents();
+
+        return product.getId();
+      },
+      { userId: dto.tenantId },
+    );
   }
 }

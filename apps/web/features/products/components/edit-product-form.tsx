@@ -1,43 +1,35 @@
 'use client';
 
-// Note: A corresponding `updateProductAction` should be built in the future
-// if the architecture requires a full update mutation. Right now we scaffold the UI orchestrator.
 import { useActionState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Package } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { useFormStatus } from 'react-dom';
-import { ProductFormFields, CategoryOption } from './product-form-fields';
+import {
+  ProductFormFields,
+  CategoryOption,
+} from '@/features/products/components/product-form-fields';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
+import { updateProductAction } from '@/features/products/actions/products.actions';
 
 const initialState = {
   success: false,
   error: null as string | null,
 };
 
-// Placeholder action until Edit Product Use case is wired.
-async function updateProductActionPlaceholder(prevState: unknown, formData: FormData) {
-  return { success: true, error: null };
-}
-
-function SubmitButton() {
+function SubmitButton(): React.JSX.Element {
   const { pending } = useFormStatus();
+  const t = useTranslations('Products');
+
   return (
-    <Button
-      type="submit"
-      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_25px_rgba(79,70,229,0.5)] transition-all duration-300 rounded-xl h-12 text-lg font-medium"
-      disabled={pending}
-    >
+    <Button type="submit" className="w-full h-11" disabled={pending}>
       {pending ? (
         <span className="flex items-center gap-2">
-          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-          Updating Product...
+          <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+          {t('submit_updating', { fallback: 'Updating Product...' })}
         </span>
       ) : (
-        <span className="flex items-center gap-2">
-          <Package className="w-5 h-5" />
-          Update Product
-        </span>
+        <span>{t('submit_update', { fallback: 'Update Product' })}</span>
       )}
     </Button>
   );
@@ -45,25 +37,27 @@ function SubmitButton() {
 
 interface EditProductFormProps {
   categories: CategoryOption[];
-  productId: string;
-  defaultValues: {
-    name?: string;
-    sku?: string;
-    price?: number;
-    cost?: number;
-    wholesalePrice?: number | null;
-    categoryId?: string;
-    description?: string;
-    stock?: number;
-    isVatExempt?: boolean;
+  product: {
+    id: string;
+    version: number;
+    name: string;
+    sku: string;
+    price: number;
+    cost: number;
+    wholesalePrice: number | null;
+    categoryId: string;
+    description: string;
+    stock: number;
+    isVatExempt: boolean;
   };
 }
 
-export function EditProductForm({ categories, defaultValues, productId }: EditProductFormProps) {
-  const [state, formAction] = useActionState(updateProductActionPlaceholder, initialState);
+export function EditProductForm({ categories, product }: EditProductFormProps): React.JSX.Element {
+  const [state, formAction] = useActionState(updateProductAction, initialState);
   const formRef = useRef<HTMLFormElement>(null);
+  const t = useTranslations('Products');
 
-  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
     if (!navigator.onLine) {
       e.preventDefault();
       toast.error('You are offline. Please check your connection and try again.');
@@ -71,35 +65,24 @@ export function EditProductForm({ categories, defaultValues, productId }: EditPr
   };
 
   return (
-    <Card className="max-w-2xl mx-auto border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden relative">
-      <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl" />
-
-      <CardHeader className="space-y-2 relative z-10">
-        <CardTitle className="text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-br from-white to-gray-400">
-          Edit Product
-        </CardTitle>
-        <CardDescription className="text-gray-400 text-base">
-          Modify the details of your existing product.
-        </CardDescription>
-      </CardHeader>
-
-      <CardContent className="relative z-10">
+    <Card className="border shadow-sm rounded-xl overflow-hidden bg-card">
+      <CardContent className="pt-6">
         <form ref={formRef} action={formAction} onSubmit={handleFormSubmit} className="space-y-8">
-          {/* Secret hidden ID to identify the product to update */}
-          <input type="hidden" name="productId" value={productId} />
+          <input type="hidden" name="productId" value={product.id} />
+          <input type="hidden" name="expectedVersion" value={product.version} />
 
           {state?.error && (
-            <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium animate-in fade-in slide-in-from-top-2">
-              {state.error}
-            </div>
-          )}
-          {state?.success && (
-            <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-medium animate-in fade-in slide-in-from-top-2">
-              Product updated successfully!
+            <div className="p-4 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-sm font-medium">
+              {state.error === 'concurrency_error'
+                ? t('concurrency_error', {
+                    fallback:
+                      'Product was modified by another user. Please reload before saving your changes.',
+                  })
+                : state.error}
             </div>
           )}
 
-          <ProductFormFields categories={categories} defaultValues={defaultValues} />
+          <ProductFormFields categories={categories} defaultValues={product} />
 
           <div className="pt-2">
             <SubmitButton />

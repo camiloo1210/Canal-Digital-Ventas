@@ -1,4 +1,5 @@
 import { getProductRepository } from '@/features/products/di/products.di';
+import { ProductCardActions } from '@/features/products/components/product-card-actions';
 import { Product } from '@canaldigital/packages/core';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
@@ -16,7 +17,7 @@ export const metadata = {
 // Force dynamic rendering to ensure fresh data from DB on every request (useful since this is an MVP without complex caching)
 export const dynamic = 'force-dynamic';
 
-export default async function ProductsPage() {
+export default async function ProductsPage(): Promise<React.JSX.Element> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -82,11 +83,18 @@ export default async function ProductsPage() {
                       </div>
                     )}
                   </div>
-                  <CardHeader className="p-4 pb-2">
-                    <CardTitle className="text-lg font-bold line-clamp-1">
-                      {product.getName()}
-                    </CardTitle>
-                    <p className="text-xs text-muted-foreground font-mono">{product.getSku()}</p>
+                  <CardHeader className="p-4 pb-2 relative">
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="flex-1">
+                        <CardTitle className="text-lg font-bold line-clamp-1">
+                          {product.getName()}
+                        </CardTitle>
+                        <p className="text-xs text-muted-foreground font-mono">
+                          {product.getSku()}
+                        </p>
+                      </div>
+                      <ProductCardActions productId={product.getId()} />
+                    </div>
                   </CardHeader>
                   <CardContent className="p-4 pt-0">
                     <p className="text-xl font-bold text-primary">

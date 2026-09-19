@@ -1,11 +1,14 @@
 'use client';
 
-import { useActionState, useRef } from 'react';
+import { useActionState, useRef, useEffect } from 'react';
 import { createProductAction } from '@/features/products/actions/products.actions';
 import { Button } from '@/components/ui/button';
 import { Package, Loader2 } from 'lucide-react';
 import { useFormStatus } from 'react-dom';
-import { ProductFormFields, CategoryOption } from './product-form-fields';
+import {
+  ProductFormFields,
+  CategoryOption,
+} from '@/features/products/components/product-form-fields';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 
@@ -14,7 +17,7 @@ const initialState = {
   error: null as string | null,
 };
 
-function SubmitButton() {
+function SubmitButton(): React.JSX.Element {
   const { pending } = useFormStatus();
   const t = useTranslations('Products');
 
@@ -39,16 +42,18 @@ interface CreateProductFormProps {
   categories: CategoryOption[];
 }
 
-export function CreateProductForm({ categories }: CreateProductFormProps) {
+export function CreateProductForm({ categories }: CreateProductFormProps): React.JSX.Element {
   const [state, formAction] = useActionState(createProductAction, initialState);
   const formRef = useRef<HTMLFormElement>(null);
   const t = useTranslations('Products');
 
-  if (state?.success) {
-    formRef.current?.reset();
-  }
+  useEffect(() => {
+    if (state?.success) {
+      formRef.current?.reset();
+    }
+  }, [state?.success]);
 
-  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
     // Client-side connectivity guard (UX only)
     if (!navigator.onLine) {
       e.preventDefault();

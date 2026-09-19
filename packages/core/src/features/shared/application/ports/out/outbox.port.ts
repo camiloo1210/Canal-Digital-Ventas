@@ -2,7 +2,7 @@ export interface OutboxEvent {
   id: string;
   eventType: string;
   aggregateId: string;
-  payload: Record<string, any>;
+  payload: Record<string, unknown>;
   retries: number;
 }
 

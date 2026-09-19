@@ -1,5 +1,5 @@
 import { TenantRepositoryPort } from '@/tenants/application/ports/out/tenant-repository.port';
-import { AdminAuthPort } from '@/iam/application/ports/out/admin-auth.port';
+
 import { EventBusPort } from '@/shared/application/ports/out/event-bus.port';
 import { UserRepositoryPort } from '@/iam/application/ports/out/user-repository.port';
 import { Tenant } from '@/tenants/domain/entities/tenant.entity';

@@ -3,7 +3,7 @@ import { DataTable } from '@/components/data-table';
 import { SectionCards } from '@/components/section-cards';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { CreateCategoryForm } from '@/features/dashboard/ui/components/create-category-form';
-import data from './data.json';
+import data from '@/app/(dashboard)/dashboard/data.json';
 
 export default async function DashboardPage(): Promise<React.JSX.Element> {
   // CQRS-lite: Directly query the repositories for the dashboard view

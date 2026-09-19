@@ -1,27 +1,61 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
 import { InMemoryEventBus } from '@/lib/infrastructure/event-bus/in-memory-event.bus';
-import { SupabaseProductRepository, CreateProductUseCase } from '@canaldigital/packages/core';
+import {
+  SupabaseProductRepository,
+  SupabaseProductReadRepository,
+  PostgresProductRepository,
+  PostgresTransactionManagerAdapter,
+  CreateProductUseCase,
+  UpdateProductUseCase,
+  ArchiveProductUseCase,
+} from '@canaldigital/packages/core';
 import { SupabaseStorageAdapter } from '@/lib/storage/supabase-storage.adapter';
+import { sql } from '@/lib/postgres/server';
 
-// Helper to get the repository (used for fast reads in Server Components)
-export async function getProductRepository() {
+export async function getProductRepository(): Promise<SupabaseProductRepository> {
   const supabase = await createClient();
   return new SupabaseProductRepository(supabase);
 }
 
-// Helper to get the Use Case (used in Server Actions)
-export async function getCreateProductUseCase() {
-  const repository = await getProductRepository();
-
-  // Instantiate the Synchronous Event Bus
-  // Here is where you would add subscriptions in the future (e.g. eventBus.subscribe(...))
-  const eventBus = new InMemoryEventBus();
-
-  return new CreateProductUseCase(repository, eventBus);
+export async function getProductReadRepository(): Promise<SupabaseProductReadRepository> {
+  const supabase = await createClient();
+  return new SupabaseProductReadRepository(supabase);
 }
 
-// Helper to get the Storage Adapter (used in Server Actions)
-export function getStorageAdapter() {
+export function getPostgresProductRepository(): PostgresProductRepository {
+  return new PostgresProductRepository(sql);
+}
+
+function getEventBus(): InMemoryEventBus {
+  return new InMemoryEventBus();
+}
+
+export function getTransactionManager(): PostgresTransactionManagerAdapter {
+  return new PostgresTransactionManagerAdapter(sql);
+}
+
+export async function getCreateProductUseCase(): Promise<CreateProductUseCase> {
+  const repository = await getProductRepository();
+  return new CreateProductUseCase(repository, getEventBus());
+}
+
+export async function getUpdateProductUseCase(): Promise<UpdateProductUseCase> {
+  return new UpdateProductUseCase(
+    getPostgresProductRepository(),
+    getEventBus(),
+    getTransactionManager(),
+  );
+}
+
+export async function getArchiveProductUseCase(): Promise<ArchiveProductUseCase> {
+  return new ArchiveProductUseCase(
+    getPostgresProductRepository(),
+    getEventBus(),
+    getTransactionManager(),
+  );
+}
+
+export function getStorageAdapter(): SupabaseStorageAdapter {
   return new SupabaseStorageAdapter();
 }

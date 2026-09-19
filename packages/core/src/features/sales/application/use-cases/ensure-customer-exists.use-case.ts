@@ -4,7 +4,7 @@ import { createStoreCustomerId } from '@/sales/domain/types/customer-id.type';
 import { GlobalAuthId } from '@/sales/domain/types/global-auth-id.type';
 import { TenantId } from '@/shared/domain/types/tenant-id.type';
 
-export class StoreCustomerDomainService {
+export class EnsureCustomerExistsUseCase {
   constructor(private readonly customerRepository: StoreCustomerRepositoryPort) {}
 
   /**

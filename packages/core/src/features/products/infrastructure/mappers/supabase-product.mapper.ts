@@ -4,7 +4,10 @@ import { ProductStatus } from '@/products/domain/enums/product-status.enum';
 import { Money } from '@/shared/domain/value-objects/money.vo';
 import { ProductName } from '@/products/domain/value-objects/product-name.vo';
 import { Sku } from '@/products/domain/value-objects/sku.vo';
-import { DbProductRow, DbProductVariantRow } from '../types/supabase-product.types';
+import {
+  DbProductRow,
+  DbProductVariantRow,
+} from '@/products/infrastructure/types/supabase-product.types';
 import { ProductId, createProductId } from '@/products/domain/types/product-id.type';
 import { CategoryId } from '@/products/domain/types/category-id.type';
 import { TenantId } from '@/shared/domain/types/tenant-id.type';
