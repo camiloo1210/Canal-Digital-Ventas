@@ -3,9 +3,9 @@ id: 4e827f18-62cf-4a56-913a-fcda56ac82e0
 title: "CU-MOD6-01: Crear, Editar y Eliminar Productos"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-29"
+updated_date: "2026-09-19"
 issue_type: use-case
-status: open
+status: in_progress
 labels:
   - ai-generated
 relations:
@@ -14,7 +14,7 @@ relations:
 frecuencia: Alta
 importancia: Vital
 urgencia: Alta
-integrity_hash: "sha256:9506de06d9b75279159288e70b1f105de30fc4bf6ce4e81325bc8b33504bc897"
+integrity_hash: "sha256:cd1910b695fd5e945674e523117f2e9580918aa018fcc84bf4822dd11631e9f2"
 ---
 
 ## Actores
