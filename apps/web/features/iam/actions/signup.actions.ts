@@ -7,7 +7,6 @@ import {
   getOnboardTenantUseCase,
 } from '@/features/iam/di/iam.di';
 import { DomainException, ApplicationException } from '@canaldigital/packages/core';
-import { createClient } from '@/lib/supabase/server';
 
 export type ActionState = {
   success: boolean;

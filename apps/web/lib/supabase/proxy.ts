@@ -40,7 +40,10 @@ export async function updateSession(request: NextRequest) {
 
   // Any route that doesn't strictly require authentication
   // Note: /storefront is considered public, as buyers can browse without an account
-  const isPublicRoute = isAuthRoute || request.nextUrl.pathname.startsWith('/storefront');
+  const isPublicRoute =
+    isAuthRoute ||
+    request.nextUrl.pathname.startsWith('/storefront') ||
+    request.nextUrl.pathname.startsWith('/api');
   // Under V5, we query tenant_memberships instead of trusting JWT claims
   let hasTenant = false;
   if (user && (isDashboardRoute || isOnboardingPath || isAuthRoute)) {

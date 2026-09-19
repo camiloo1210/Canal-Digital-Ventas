@@ -2,8 +2,8 @@ import { Money } from '@/shared/domain/value-objects/money.vo';
 import { ProductStatus } from '@/products/domain/enums/product-status.enum';
 import { Sku } from '@/products/domain/value-objects/sku.vo';
 import { ProductName } from '@/products/domain/value-objects/product-name.vo';
-import { VariantId, createVariantId } from '@/products/domain/types/variant-id.type';
-import { ProductId, createProductId } from '@/products/domain/types/product-id.type';
+import { VariantId } from '@/products/domain/types/variant-id.type';
+import { ProductId } from '@/products/domain/types/product-id.type';
 import { InvalidProductAttributeException } from '@/products/domain/exceptions/invalid-product-attribute.exception';
 import { InvalidProductStateException } from '@/products/domain/exceptions/invalid-product-state.exception';
 

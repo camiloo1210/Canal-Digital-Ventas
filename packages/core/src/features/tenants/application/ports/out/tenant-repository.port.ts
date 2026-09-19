@@ -13,7 +13,12 @@ export interface TenantFilters {
 
 export interface TenantRepositoryPort {
   save(tenant: Tenant): Promise<void>;
-  onboard(tenant: Tenant, ownerId: string, ownerData: any, idempotencyKey: string): Promise<void>;
+  onboard(
+    tenant: Tenant,
+    ownerId: string,
+    ownerData: Record<string, unknown>,
+    idempotencyKey: string,
+  ): Promise<void>;
   update(tenant: Tenant): Promise<void>;
   delete(tenantId: TenantId): Promise<void>;
   findById(id: TenantId): Promise<Tenant | null>;

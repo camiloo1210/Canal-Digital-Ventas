@@ -3,120 +3,142 @@
 // ==========================================
 
 // Domain
-export { Category } from './features/categories/domain/entities/category.entity';
-export { CategoryStatus } from './features/categories/domain/enums/category-status.enum';
-export { CategoryName } from './features/categories/domain/value-objects/category-name.vo';
-export { CategoryDescription } from './features/categories/domain/value-objects/category-description.vo';
-export { InvalidCategoryStatusException } from './features/categories/domain/exceptions/invalid-category-status.exception';
+export { Category } from '@/categories/domain/entities/category.entity';
+export { CategoryStatus } from '@/categories/domain/enums/category-status.enum';
+export { CategoryName } from '@/categories/domain/value-objects/category-name.vo';
+export { CategoryDescription } from '@/categories/domain/value-objects/category-description.vo';
+export { InvalidCategoryStatusException } from '@/categories/domain/exceptions/invalid-category-status.exception';
 
 // Application (Ports)
 export type {
   CategoryRepositoryPort,
   CategoryFilters,
-} from './features/categories/application/ports/out/category-repository.port';
+} from '@/categories/application/ports/out/category-repository.port';
 
 // Application (Use Cases)
-export { ArchiveCategoryUseCase } from './features/categories/application/use-cases/archive-category.use-case';
-export { CreateCategoryUseCase } from './features/categories/application/use-cases/create-category.use-case';
-export { DeleteCategoryUseCase } from './features/categories/application/use-cases/delete-category.use-case';
-export { ListCategoriesUseCase } from './features/categories/application/use-cases/list-categories.use-case';
-export { SearchCategoryUseCase } from './features/categories/application/use-cases/search-category.use-case';
-export { ChangeCategoryDetailsUseCase } from './features/categories/application/use-cases/change-category-details.use-case';
-export { ChangeCategoryStatusUseCase } from './features/categories/application/use-cases/change-category-status.use-case';
+export { ArchiveCategoryUseCase } from '@/categories/application/use-cases/archive-category.use-case';
+export { CreateCategoryUseCase } from '@/categories/application/use-cases/create-category.use-case';
+export { DeleteCategoryUseCase } from '@/categories/application/use-cases/delete-category.use-case';
+export { ListCategoriesUseCase } from '@/categories/application/use-cases/list-categories.use-case';
+export { SearchCategoryUseCase } from '@/categories/application/use-cases/search-category.use-case';
+export { ChangeCategoryDetailsUseCase } from '@/categories/application/use-cases/change-category-details.use-case';
+export { ChangeCategoryStatusUseCase } from '@/categories/application/use-cases/change-category-status.use-case';
 
 // Infrastructure
-export { SupabaseCategoryRepository } from './features/categories/infrastructure/repositories/supabase-category.repository';
+export { SupabaseCategoryRepository } from '@/categories/infrastructure/repositories/supabase-category.repository';
 
 // ==========================================
 // PRODUCTS EXPORTS
 // ==========================================
 
 // Domain
-export { Product } from './features/products/domain/entities/product.entity';
-export { ProductVariant } from './features/products/domain/entities/product-variant.entity';
-export { ProductStatus } from './features/products/domain/enums/product-status.enum';
-export type { ProductId } from './features/products/domain/types/product-id.type';
-export type { CategoryId } from './features/products/domain/types/category-id.type';
-export { InvalidProductAttributeException } from './features/products/domain/exceptions/invalid-product-attribute.exception';
-export { InvalidProductStateException } from './features/products/domain/exceptions/invalid-product-state.exception';
-export { ProductRepositoryException } from './features/products/application/exceptions/product-repository.exception';
+export { Product } from '@/products/domain/entities/product.entity';
+export { ProductVariant } from '@/products/domain/entities/product-variant.entity';
+export { ProductStatus } from '@/products/domain/enums/product-status.enum';
+export type { ProductId } from '@/products/domain/types/product-id.type';
+export type { CategoryId } from '@/products/domain/types/category-id.type';
+export { InvalidProductAttributeException } from '@/products/domain/exceptions/invalid-product-attribute.exception';
+export { InvalidProductStateException } from '@/products/domain/exceptions/invalid-product-state.exception';
+export { ProductRepositoryException } from '@/products/application/exceptions/product-repository.exception';
+export { InvalidSeasonIdException } from '@/products/domain/exceptions/invalid-season-id.exception';
 
 // Application (Ports)
 export type {
   ProductRepositoryPort,
   ProductFilters,
-} from './features/products/application/ports/out/product-repository.port';
+} from '@/products/application/ports/out/product-repository.port';
 
 // Application (Use Cases)
-export { ArchiveProductUseCase } from './features/products/application/use-cases/archive-product.use-case';
-export { CreateProductUseCase } from './features/products/application/use-cases/create-product.use-case';
-export { DeleteProductUseCase } from './features/products/application/use-cases/delete-product.use-case';
-export { ListProductsUseCase } from './features/products/application/use-cases/list-products.use-case';
-export { SearchProductsUseCase } from './features/products/application/use-cases/search-products.use-case';
-export { ChangeProductPricingUseCase } from './features/products/application/use-cases/change-product-pricing.use-case';
-export { ChangeProductDetailsUseCase } from './features/products/application/use-cases/change-product-details.use-case';
-export { AdjustProductStockUseCase } from './features/products/application/use-cases/adjust-product-stock.use-case';
-export { ChangeProductStatusUseCase } from './features/products/application/use-cases/change-product-status.use-case';
-export { UpdateProductImagesUseCase } from './features/products/application/use-cases/update-product-images.use-case';
-export { SetProductVariantsUseCase } from './features/products/application/use-cases/set-product-variants.use-case';
+export { ArchiveProductUseCase } from '@/products/application/use-cases/archive-product.use-case';
+export { CreateProductUseCase } from '@/products/application/use-cases/create-product.use-case';
+export { DeleteProductUseCase } from '@/products/application/use-cases/delete-product.use-case';
+export { ListProductsUseCase } from '@/products/application/use-cases/list-products.use-case';
+export { SearchProductsUseCase } from '@/products/application/use-cases/search-products.use-case';
+export { ChangeProductPricingUseCase } from '@/products/application/use-cases/change-product-pricing.use-case';
+export { ChangeProductDetailsUseCase } from '@/products/application/use-cases/change-product-details.use-case';
+export { AdjustProductStockUseCase } from '@/products/application/use-cases/adjust-product-stock.use-case';
+export { ChangeProductStatusUseCase } from '@/products/application/use-cases/change-product-status.use-case';
+export { UpdateProductImagesUseCase } from '@/products/application/use-cases/update-product-images.use-case';
+export { SetProductVariantsUseCase } from '@/products/application/use-cases/set-product-variants.use-case';
+export { UpdateProductUseCase } from '@/products/application/use-cases/update-product.use-case';
+
+// Application (DTOs)
+export type { CreateProductDto } from '@/products/application/dtos/create-product.dto';
+export type { UpdateProductDto } from '@/products/application/dtos/update-product.dto';
+export type { ArchiveProductDto } from '@/products/application/dtos/archive-product.dto';
+export type { ChangeProductStatusDto } from '@/products/application/dtos/change-product-status.dto';
+export type { ChangeProductDetailsDto } from '@/products/application/dtos/change-product-details.dto';
+export type { ChangeProductPricingDto } from '@/products/application/dtos/change-product-pricing.dto';
+export type { AdjustProductStockDto } from '@/products/application/dtos/adjust-product-stock.dto';
+export type { UpdateProductImagesDto } from '@/products/application/dtos/update-product-images.dto';
+export type { SetProductVariantsDto } from '@/products/application/dtos/set-product-variants.dto';
 
 // Infrastructure
-export { SupabaseProductRepository } from './features/products/infrastructure/repositories/supabase-product.repository';
+export { SupabaseProductRepository } from '@/products/infrastructure/repositories/supabase-product.repository';
 
 // ==========================================
 // TENANTS EXPORTS
 // ==========================================
 
 // Infrastructure
-export { SupabaseTenantRepository } from './features/tenants/infrastructure/repositories/supabase-tenant.repository';
+export { SupabaseTenantRepository } from '@/tenants/infrastructure/repositories/supabase-tenant.repository';
 
 // ==========================================
 // SHARED EXPORTS
 // ==========================================
 
 // Domain
-export type {
-  PaginatedResult,
-  PaginationOptions,
-} from './features/shared/domain/pagination/pagination';
-export { DomainException } from './features/shared/domain/exceptions/domain.exception';
-export { InvalidTenantIdException } from './features/shared/domain/exceptions/invalid-tenant-id.exception';
-export { Money } from './features/shared/domain/value-objects/money.vo';
-export type { DomainEvent } from './features/shared/domain/events/domain-event.interface';
+export type { PaginatedResult, PaginationOptions } from '@/shared/domain/pagination/pagination';
+export { DomainException } from '@/shared/domain/exceptions/domain.exception';
+export { InvalidTenantIdException } from '@/shared/domain/exceptions/invalid-tenant-id.exception';
+export { Money } from '@/shared/domain/value-objects/money.vo';
+export type { DomainEvent } from '@/shared/domain/events/domain-event.interface';
 
 // Application (Ports)
-export type { EventBusPort } from './features/shared/application/ports/out/event-bus.port';
+export type { EventBusPort } from '@/shared/application/ports/out/event-bus.port';
 
 // Application (Exceptions)
-export { ApplicationException } from './features/shared/application/exceptions/application.exception';
+export { ApplicationException } from '@/shared/application/exceptions/application.exception';
 
 // Infrastructure
-export { LocalEventBus } from './features/shared/infrastructure/event-bus/local-event-bus';
+export { LocalEventBus } from '@/shared/infrastructure/event-bus/local-event-bus';
 
 // ==========================================
 // IAM EXPORTS
 // ==========================================
 
 // Domain
-export { InvalidProviderException } from './features/iam/domain/exceptions/invalid-provider.exception';
-export { InvalidPermissionException } from './features/iam/domain/exceptions/invalid-permission.exception';
-export type { OAuthProvider } from './features/iam/domain/types/oauth-provider.type';
+export { InvalidProviderException } from '@/iam/domain/exceptions/invalid-provider.exception';
+export { InvalidPermissionException } from '@/iam/domain/exceptions/invalid-permission.exception';
+export type { OAuthProvider } from '@/iam/domain/types/oauth-provider.type';
 
 // Application (Use Cases)
-export { SignInWithEmailUseCase } from './features/iam/application/use-cases/sign-in-with-email.use-case';
-export { GetOAuthSignInUrlUseCase } from './features/iam/application/use-cases/get-oauth-sign-in-url.use-case';
-export { ExchangeOAuthCodeUseCase } from './features/iam/application/use-cases/exchange-oauth-code.use-case';
-export { OnboardTenantUseCase } from './features/iam/application/use-cases/onboard-tenant.use-case';
-export { RegisterGlobalIdentityUseCase } from './features/iam/application/use-cases/register-global-identity.use-case';
-export type { RegisterGlobalIdentityDto } from './features/iam/application/dtos/register-global-identity.dto';
+export { SignInWithEmailUseCase } from '@/iam/application/use-cases/sign-in-with-email.use-case';
+export { GetOAuthSignInUrlUseCase } from '@/iam/application/use-cases/get-oauth-sign-in-url.use-case';
+export { ExchangeOAuthCodeUseCase } from '@/iam/application/use-cases/exchange-oauth-code.use-case';
+export { OnboardTenantUseCase } from '@/iam/application/use-cases/onboard-tenant.use-case';
+export { RegisterGlobalIdentityUseCase } from '@/iam/application/use-cases/register-global-identity.use-case';
+export type { RegisterGlobalIdentityDto } from '@/iam/application/dtos/register-global-identity.dto';
 
 // Application (Exceptions)
-export { TenantNotConfiguredException } from './features/iam/application/exceptions/tenant-not-configured.exception';
-export { AuthGatewayException } from './features/iam/application/exceptions/auth-gateway.exception';
-export { AdminAuthException } from './features/iam/application/exceptions/admin-auth.exception';
-export { UserRepositoryException } from './features/iam/application/exceptions/user-repository.exception';
+export { TenantNotConfiguredException } from '@/iam/application/exceptions/tenant-not-configured.exception';
+export { AuthGatewayException } from '@/iam/application/exceptions/auth-gateway.exception';
+export { AdminAuthException } from '@/iam/application/exceptions/admin-auth.exception';
+export { UserRepositoryException } from '@/iam/application/exceptions/user-repository.exception';
 
 // Infrastructure
-export { SupabaseAuthAdapter } from './features/iam/infrastructure/adapters/supabase-auth.adapter';
-export { SupabaseAdminAuthAdapter } from './features/iam/infrastructure/adapters/supabase-admin-auth.adapter';
-export { SupabaseUserRepository } from './features/iam/infrastructure/repositories/supabase-user.repository';
+export { SupabaseAuthAdapter } from '@/iam/infrastructure/adapters/supabase-auth.adapter';
+export { SupabaseAdminAuthAdapter } from '@/iam/infrastructure/adapters/supabase-admin-auth.adapter';
+export { SupabaseUserRepository } from '@/iam/infrastructure/repositories/supabase-user.repository';
+
+// ==========================================
+// SHARED EXPORTS (Outbox)
+// ==========================================
+export type { OutboxPort, OutboxEvent } from '@/shared/application/ports/out/outbox.port';
+export { SupabaseOutboxAdapter } from '@/shared/infrastructure/adapters/supabase-outbox.adapter';
+export { OptimisticConcurrencyException } from '@/shared/application/exceptions/optimistic-concurrency.exception';
+export type { TransactionManagerPort } from '@/shared/application/ports/out/transaction-manager.port';
+export { SupabaseProductReadRepository } from '@/products/infrastructure/repositories/supabase-product-read.repository';
+export type { ProductReadModel } from '@/products/infrastructure/repositories/supabase-product-read.repository';
+export { PostgresProductRepository } from '@/products/infrastructure/repositories/postgres-product.repository';
+export { PostgresTransactionManagerAdapter } from '@/shared/infrastructure/adapters/postgres-transaction-manager.adapter';
