@@ -142,52 +142,15 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
     return SupabaseProductMapper.toDomain(data as DbProductRow);
   }
 
-  async save(product: Product): Promise<void> {
-    const productData = SupabaseProductMapper.toPersistence(product);
-    let variantsData: Record<string, unknown>[] = [];
-
-    if (product.getHasVariants()) {
-      variantsData = product.getVariants().map((v) => ({
-        id: v.getId(),
-        product_id: v.getProductId(),
-        sku: v.getSku(),
-        name: v.getName(),
-        attributes: v.getAttributes(),
-        price_override_cents: v.getPriceOverride() ? v.getPriceOverride()!.getValue() : null,
-        stock: v.getStock(),
-        status: v.getStatus(),
-      }));
-    }
-
-    const { error } = await this.supabase.rpc('upsert_product_transactional', {
-      product_data: productData,
-      variants_data: variantsData,
-    });
-
-    if (error) {
-      if (error.code === 'P0001') {
-        throw new ProductRepositoryException(
-          `Optimistic locking failed: the product has been updated by another transaction.`,
-          error,
-        );
-      }
-      throw new ProductRepositoryException(
-        `Failed to save product transactionally: ${error.message}`,
-        error,
-      );
-    }
+  async save(): Promise<void> {
+    throw new ProductRepositoryException(
+      'SupabaseProductRepository is read-only. Use PostgresProductRepository for writes.',
+    );
   }
 
-  async delete(id: ProductId, tenantId: TenantId): Promise<void> {
-    const { error } = await this.supabase
-      .schema('catalog')
-      .from('products')
-      .delete()
-      .eq('id', id)
-      .eq('tenant_id', tenantId);
-
-    if (error) {
-      throw new ProductRepositoryException(`Failed to delete product: ${error.message}`, error);
-    }
+  async delete(): Promise<void> {
+    throw new ProductRepositoryException(
+      'SupabaseProductRepository is read-only. Use PostgresProductRepository for writes.',
+    );
   }
 }

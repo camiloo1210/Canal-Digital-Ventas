@@ -18,6 +18,7 @@
       "@/tenants/*": ["src/features/tenants/*"],
       "@/iam/*": ["src/features/iam/*"],
       "@/sales/*": ["src/features/sales/*"]
-    }
+    },
+    "types": ["node"]
   }
 }
