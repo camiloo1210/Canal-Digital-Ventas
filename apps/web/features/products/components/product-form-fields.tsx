@@ -31,7 +31,10 @@ interface ProductFormFieldsProps {
   };
 }
 
-export function ProductFormFields({ categories, defaultValues }: ProductFormFieldsProps) {
+export function ProductFormFields({
+  categories,
+  defaultValues,
+}: ProductFormFieldsProps): React.JSX.Element {
   const t = useTranslations('Products');
 
   return (

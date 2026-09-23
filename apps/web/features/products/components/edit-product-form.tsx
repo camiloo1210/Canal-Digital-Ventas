@@ -60,7 +60,7 @@ export function EditProductForm({ categories, product }: EditProductFormProps): 
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
     if (!navigator.onLine) {
       e.preventDefault();
-      toast.error('You are offline. Please check your connection and try again.');
+      toast.error(t('offline_error'));
     }
   };
 

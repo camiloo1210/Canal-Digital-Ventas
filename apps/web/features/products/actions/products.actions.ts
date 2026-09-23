@@ -1,7 +1,8 @@
 'use server';
 
 import { z } from 'zod';
-import { getCreateProductUseCase, getStorageAdapter } from '@/features/products/di/products.di';
+import { getCreateProductUseCase, getUpdateProductUseCase, getArchiveProductUseCase,
+  getUnarchiveProductUseCase, getStorageAdapter } from '@/features/products/di/products.di';
 import { revalidatePath } from 'next/cache';
 import { DomainException, ApplicationException } from '@canaldigital/packages/core';
 import { createClient } from '@/lib/supabase/server';
@@ -81,7 +82,7 @@ export async function createProductAction(
       publicUrl = await storageAdapter.uploadImage(parsed.data.imageFile, fileName);
     }
 
-    const useCase = await getCreateProductUseCase();
+    const useCase = getCreateProductUseCase();
 
     await useCase.execute({
       id: crypto.randomUUID(),
@@ -175,8 +176,7 @@ export async function updateProductAction(
       return { error: 'User does not have an assigned tenant ID.', success: false };
     }
 
-    const { getUpdateProductUseCase } = await import('@/features/products/di/products.di');
-    const useCase = await getUpdateProductUseCase();
+    const useCase = getUpdateProductUseCase();
 
     await useCase.execute({
       productId: parsed.data.productId,
@@ -235,8 +235,52 @@ export async function archiveProductAction(id: string): Promise<ActionState> {
       return { error: 'User does not have an assigned tenant ID.', success: false };
     }
 
-    const { getArchiveProductUseCase } = await import('@/features/products/di/products.di');
-    const useCase = await getArchiveProductUseCase();
+    const useCase = getArchiveProductUseCase();
+
+    await useCase.execute({
+      id,
+      tenantId,
+    });
+
+    isSuccess = true;
+  } catch (error: unknown) {
+    if (error instanceof DomainException) {
+      return { error: error.message, success: false };
+    }
+    if (error instanceof ApplicationException) {
+      return { error: error.message, success: false };
+    }
+    console.error('Critical Server Exception:', error);
+    return { error: 'An unexpected server error occurred.', success: false };
+  }
+
+  if (isSuccess) {
+    revalidatePath('/dashboard/catalog/products');
+    return { success: true, error: null };
+  }
+
+  return { success: false, error: 'Failed to process request.' };
+}
+
+export async function unarchiveProductAction(id: string): Promise<ActionState> {
+  let isSuccess = false;
+
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { error: 'Unauthorized session.', success: false };
+    }
+
+    const tenantId = await getActiveTenantQuery(user.id);
+    if (!tenantId) {
+      return { error: 'User does not have an assigned tenant ID.', success: false };
+    }
+
+    const useCase = getUnarchiveProductUseCase();
 
     await useCase.execute({
       id,

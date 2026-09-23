@@ -106,6 +106,10 @@ Server Actions (`.actions.ts`) are our mutation boundaries. They must act strict
 ## 5. General Coding Standards
 
 - **Strict TypeScript:** `any` is strictly forbidden. All variables, returns, and parameters must have strict types.
+  - **Explicit Return Types:** Every function, React Component, Server Action, and DI factory MUST have an explicit return type (e.g., `React.JSX.Element`, `Promise<ActionState>`, `void`). Do not let TypeScript infer return types.
+  - **No Empty Objects:** Never use `{}` for generic types (e.g., `postgres.Sql<{}>`). Always use `Record<string, unknown>` to comply with `@typescript-eslint/no-empty-object-type`.
+  - **Interface Implementations:** If a class implements an interface (like a Repository Port) but does not use all parameters (e.g., a Read-Only adapter), you MUST omit the unused parameters completely from the function signature rather than prefixing them with `_`.
+- **React Side Effects:** Never mutate refs or trigger side effects (e.g., `formRef.current?.reset()`) during the React render phase. Always use `useEffect` or event handlers for DOM mutations.
 - **Tooling:** You must respect ESLint, Prettier, and TypeScript compiler rules. Do not bypass them.
 - **Commits:** Follow Conventional Commits format exactly (configured via Commitlint/Husky).
 

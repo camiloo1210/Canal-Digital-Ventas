@@ -41,6 +41,13 @@ test('Frontend Primary Adapter Architectural Constraint', () => {
       );
     }
 
+    // Rule: DI files must be strictly server-only
+    if (file.includes('.di.ts') && !content.includes("import 'server-only'")) {
+      expect.fail(
+        `DI container ${file} must include "import 'server-only';" to prevent leakage to client components.`,
+      );
+    }
+
     // Rule: UI cannot import internal transaction managers
     if (content.match(/import.*TransactionManager/)) {
       expect.fail(

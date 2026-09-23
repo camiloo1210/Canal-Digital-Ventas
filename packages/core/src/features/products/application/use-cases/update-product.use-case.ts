@@ -1,3 +1,4 @@
+import { PRODUCT_AGGREGATE_TYPE } from '@/products/application/outbox/product-aggregate.constants';
 import { ProductRepositoryPort } from '@/products/application/ports/out/product-repository.port';
 import { ProductNotFoundException } from '@/products/application/exceptions/product-not-found.exception';
 import { UpdateProductDto } from '@/products/application/dtos/update-product.dto';
@@ -60,10 +61,17 @@ export class UpdateProductUseCase {
         await this.productRepository.save(product, tx);
 
         if (product.domainEvents.length > 0) {
-          await this.eventBus.publish(product.domainEvents);
+          const envelopes = product.domainEvents.map((event) => ({
+            event,
+            context: {
+              tenantId: dto.tenantId,
+              aggregateType: PRODUCT_AGGREGATE_TYPE,
+              aggregateId: product.getId(),
+            },
+          }));
+          await this.eventBus.publish(envelopes, tx);
+          product.clearDomainEvents();
         }
-
-        product.clearDomainEvents();
       },
       { userId: dto.tenantId },
     );
