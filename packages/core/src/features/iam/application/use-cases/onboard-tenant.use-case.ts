@@ -35,6 +35,9 @@ export class OnboardTenantUseCase {
       (dto.baseCurrency as Currency) || Currency.USD,
     );
 
+    // Since onboarding is a single step right now, we activate the tenant immediately
+    tenant.activate();
+
     // 2. Create Owner entity (for domain events and validation)
     const owner = User.createOwner(
       createUserId(currentUserId),

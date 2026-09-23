@@ -100,5 +100,18 @@
     "unarchiving": "Unarchiving...",
     "unarchive_confirm_title": "Unarchive Category",
     "unarchive_confirm_desc": "Are you sure you want to unarchive this category? It will become active again."
+  },
+  "Storefront": {
+    "login": "Login",
+    "createAccount": "Create Account",
+    "logout": "Logout",
+    "dashboard": "Dashboard",
+    "settings": "Settings",
+    "browseProducts": "Browse our latest products.",
+    "categories": "Categories",
+    "allProducts": "All Products",
+    "noCategories": "No categories available.",
+    "searchProducts": "Search products...",
+    "pageInfo": "Page {current} of {total}"
   }
 }

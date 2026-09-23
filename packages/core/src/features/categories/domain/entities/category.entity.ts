@@ -1,6 +1,7 @@
 import { CategoryStatus } from '@/categories/domain/enums/category-status.enum';
 import { InvalidTenantIdException } from '@/shared/domain/exceptions/invalid-tenant-id.exception';
 import { CategoryName } from '@/categories/domain/value-objects/category-name.vo';
+import { CategorySlug } from '@/categories/domain/value-objects/category-slug.vo';
 import { CategoryDescription } from '@/categories/domain/value-objects/category-description.vo';
 import { InvalidCategoryStatusException } from '@/categories/domain/exceptions/invalid-category-status.exception';
 import { InvalidCategoryAttributeException } from '@/categories/domain/exceptions/invalid-category-attribute.exception';
@@ -16,6 +17,7 @@ import { CategoryDescriptionUpdatedEvent } from '@/categories/domain/events/cate
 export interface CategoryProps {
   id: CategoryId;
   name: CategoryName;
+  slug: CategorySlug;
   tenantId: TenantId;
   description: CategoryDescription;
   status: CategoryStatus;
@@ -28,6 +30,7 @@ export class Category {
   private constructor(
     private readonly id: CategoryId,
     private name: CategoryName,
+    private readonly slug: CategorySlug,
     private readonly tenantId: TenantId,
     private description: CategoryDescription,
     private status: CategoryStatus,
@@ -37,6 +40,7 @@ export class Category {
   public static create(
     id: CategoryId,
     name: string,
+    slug: CategorySlug,
     tenantId: TenantId,
     description: string,
     status: CategoryStatus,
@@ -48,6 +52,7 @@ export class Category {
     const category = new Category(
       id,
       CategoryName.from(name),
+      slug,
       tenantId,
       CategoryDescription.from(description),
       status,
@@ -60,7 +65,7 @@ export class Category {
 
   // Reconstitute
   public static reconstitute(props: CategoryProps): Category {
-    return new Category(props.id, props.name, props.tenantId, props.description, props.status, props.version);
+    return new Category(props.id, props.name, props.slug, props.tenantId, props.description, props.status, props.version);
   }
 
   // Validations
@@ -151,6 +156,10 @@ export class Category {
 
   public getName(): string {
     return this.name.getValue();
+  }
+
+  public getSlug(): string {
+    return this.slug.getValue();
   }
 
   public getTenantId(): TenantId {
