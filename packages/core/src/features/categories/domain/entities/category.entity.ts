@@ -19,6 +19,7 @@ export interface CategoryProps {
   tenantId: TenantId;
   description: CategoryDescription;
   status: CategoryStatus;
+  version: number;
 }
 
 export class Category {
@@ -30,6 +31,7 @@ export class Category {
     private readonly tenantId: TenantId,
     private description: CategoryDescription,
     private status: CategoryStatus,
+    private version: number,
   ) {}
 
   public static create(
@@ -49,6 +51,7 @@ export class Category {
       tenantId,
       CategoryDescription.from(description),
       status,
+      1, // Initial version
     );
 
     category.addDomainEvent(new CategoryCreatedEvent(id));
@@ -57,7 +60,7 @@ export class Category {
 
   // Reconstitute
   public static reconstitute(props: CategoryProps): Category {
-    return new Category(props.id, props.name, props.tenantId, props.description, props.status);
+    return new Category(props.id, props.name, props.tenantId, props.description, props.status, props.version);
   }
 
   // Validations
@@ -82,11 +85,20 @@ export class Category {
   }
 
   // Actions
+  public unarchive(): void {
+    if (this.status !== CategoryStatus.ARCHIVED) {
+      throw new InvalidCategoryStatusException('Only archived categories can be unarchived.');
+    }
+    this.status = CategoryStatus.ACTIVE;
+    this.incrementVersion();
+  }
+
   public archive(): void {
     if (this.status === CategoryStatus.ARCHIVED) {
       throw new InvalidCategoryStatusException('Category is already archived.');
     }
     this.status = CategoryStatus.ARCHIVED;
+    this.incrementVersion();
     this.addDomainEvent(new CategoryArchivedEvent(this.id));
   }
 
@@ -97,17 +109,24 @@ export class Category {
     }
     Category.validateStatus(newStatus);
     this.status = newStatus;
+    this.incrementVersion();
     this.addDomainEvent(new CategoryStatusUpdatedEvent(this.id, newStatus));
   }
 
   public updateName(newName: string): void {
     this.name = CategoryName.from(newName);
+    this.incrementVersion();
     this.addDomainEvent(new CategoryNameUpdatedEvent(this.id, newName));
   }
 
   public updateDescription(newDescription: string): void {
     this.description = CategoryDescription.from(newDescription);
+    this.incrementVersion();
     this.addDomainEvent(new CategoryDescriptionUpdatedEvent(this.id, newDescription));
+  }
+
+  public incrementVersion(): void {
+    this.version += 1;
   }
 
   private addDomainEvent(event: Omit<DomainEvent, 'occurredOn'>): void {
@@ -144,5 +163,9 @@ export class Category {
 
   public getStatus(): CategoryStatus {
     return this.status;
+  }
+
+  public getVersion(): number {
+    return this.version;
   }
 }

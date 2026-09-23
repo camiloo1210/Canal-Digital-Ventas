@@ -5,6 +5,8 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { CreateCategoryForm } from '@/features/dashboard/ui/components/create-category-form';
 import data from '@/app/(dashboard)/dashboard/data.json';
 
+import { PageHeader } from '@/components/page-header';
+
 export default async function DashboardPage(): Promise<React.JSX.Element> {
   // CQRS-lite: Directly query the repositories for the dashboard view
   // const categoryRepo = await getCategoryRepository()
@@ -13,6 +15,7 @@ export default async function DashboardPage(): Promise<React.JSX.Element> {
   return (
     <div className="flex flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-2">
+        <PageHeader breadcrumbs={[{ label: 'Dashboard', href: null }]} />
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
           <SectionCards />
 

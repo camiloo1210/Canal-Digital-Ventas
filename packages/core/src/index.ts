@@ -17,6 +17,7 @@ export type {
 
 // Application (Use Cases)
 export { ArchiveCategoryUseCase } from '@/categories/application/use-cases/archive-category.use-case';
+export { UnarchiveCategoryUseCase } from '@/categories/application/use-cases/unarchive-category.use-case';
 export { CreateCategoryUseCase } from '@/categories/application/use-cases/create-category.use-case';
 export { DeleteCategoryUseCase } from '@/categories/application/use-cases/delete-category.use-case';
 export { ListCategoriesUseCase } from '@/categories/application/use-cases/list-categories.use-case';
@@ -26,6 +27,9 @@ export { ChangeCategoryStatusUseCase } from '@/categories/application/use-cases/
 
 // Infrastructure
 export { SupabaseCategoryRepository } from '@/categories/infrastructure/repositories/supabase-category.repository';
+export { SupabaseCategoryReadRepository } from '@/categories/infrastructure/repositories/supabase-category-read.repository';
+export type { CategoryReadModel } from '@/categories/infrastructure/repositories/supabase-category-read.repository';
+export { PostgresCategoryRepository } from '@/categories/infrastructure/repositories/postgres-category.repository';
 
 // ==========================================
 // PRODUCTS EXPORTS
@@ -50,6 +54,7 @@ export type {
 
 // Application (Use Cases)
 export { ArchiveProductUseCase } from '@/products/application/use-cases/archive-product.use-case';
+export { UnarchiveProductUseCase } from '@/products/application/use-cases/unarchive-product.use-case';
 export { CreateProductUseCase } from '@/products/application/use-cases/create-product.use-case';
 export { DeleteProductUseCase } from '@/products/application/use-cases/delete-product.use-case';
 export { ListProductsUseCase } from '@/products/application/use-cases/list-products.use-case';
@@ -137,8 +142,10 @@ export { SupabaseUserRepository } from '@/iam/infrastructure/repositories/supaba
 export type { OutboxPort, OutboxEvent } from '@/shared/application/ports/out/outbox.port';
 export { SupabaseOutboxAdapter } from '@/shared/infrastructure/adapters/supabase-outbox.adapter';
 export { OptimisticConcurrencyException } from '@/shared/application/exceptions/optimistic-concurrency.exception';
-export type { TransactionManagerPort } from '@/shared/application/ports/out/transaction-manager.port';
+export type { TransactionManagerPort, TransactionContext } from '@/shared/application/ports/out/transaction-manager.port';
+export type { DomainEventEnvelope } from '@/shared/application/ports/out/event-bus.port';
 export { SupabaseProductReadRepository } from '@/products/infrastructure/repositories/supabase-product-read.repository';
 export type { ProductReadModel } from '@/products/infrastructure/repositories/supabase-product-read.repository';
 export { PostgresProductRepository } from '@/products/infrastructure/repositories/postgres-product.repository';
 export { PostgresTransactionManagerAdapter } from '@/shared/infrastructure/adapters/postgres-transaction-manager.adapter';
+export * from '@/shared/infrastructure/adapters/postgres-event-bus.adapter';
