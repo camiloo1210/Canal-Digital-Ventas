@@ -14,6 +14,7 @@ export class SupabaseCategoryMapper {
       description: CategoryDescription.from(row.description),
       status: row.status as CategoryStatus,
       tenantId: row.tenant_id as TenantId,
+      version: row.version,
     });
   }
 
@@ -24,6 +25,7 @@ export class SupabaseCategoryMapper {
       description: category.getDescription(),
       status: category.getStatus(),
       tenant_id: category.getTenantId(),
+      version: category.getVersion(),
     };
   }
 }

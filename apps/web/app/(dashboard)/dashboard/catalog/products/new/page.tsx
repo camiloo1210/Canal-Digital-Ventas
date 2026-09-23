@@ -10,6 +10,8 @@ export const metadata = {
   title: 'New Product | Canal Digital',
 };
 
+import { PageHeader } from '@/components/page-header';
+
 export default async function NewProductPage() {
   const supabase = await createClient();
   const {
@@ -45,6 +47,7 @@ export default async function NewProductPage() {
   return (
     <div className="flex flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-2">
+        <PageHeader breadcrumbs={[{ label: t('list_title'), href: '/dashboard/catalog/products' }, { label: t('new_title'), href: null }]} />
         <div className="flex flex-1 flex-col items-center py-6 md:py-10 px-4 lg:px-6">
           <div className="w-full max-w-2xl">
             <h1 className="text-3xl font-bold tracking-tight mb-8">{t('new_title')}</h1>

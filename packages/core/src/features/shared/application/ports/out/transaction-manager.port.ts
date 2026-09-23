@@ -1,4 +1,11 @@
-export type TransactionContext = unknown;
+export interface TransactionContext {
+  /**
+   * Executes a callback providing the native connection object (e.g., postgres.TransactionSql).
+   * This abstracts the physical connection from the application layer while
+   * allowing infrastructure adapters to use it securely without type casting.
+   */
+  executeNative<TConnection, TResult>(callback: (conn: TConnection) => Promise<TResult>): Promise<TResult>;
+}
 
 export interface TransactionManagerPort {
   /**

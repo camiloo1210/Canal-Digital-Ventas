@@ -11,18 +11,21 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useTranslations } from 'next-intl';
-import { archiveProductAction } from '@/features/products/actions/products.actions';
+import { archiveProductAction, unarchiveProductAction } from '@/features/products/actions/products.actions';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { ArchiveRestore } from 'lucide-react';
 
 interface ProductCardActionsProps {
   productId: string;
+  status: string;
 }
 
-export function ProductCardActions({ productId }: ProductCardActionsProps): React.JSX.Element {
+export function ProductCardActions({ productId, status }: ProductCardActionsProps): React.JSX.Element {
   const t = useTranslations('Products');
   const router = useRouter();
   const [isArchiving, setIsArchiving] = useState(false);
+  const [isUnarchiving, setIsUnarchiving] = useState(false);
 
   const handleArchive = async (): Promise<void> => {
     if (
@@ -46,6 +49,28 @@ export function ProductCardActions({ productId }: ProductCardActionsProps): Reac
     }
   };
 
+  const handleUnarchive = async (): Promise<void> => {
+    if (
+      confirm(
+        t('unarchive_confirm_title', { fallback: 'Unarchive Product?' }) +
+          '\n' +
+          t('unarchive_confirm_desc', {
+            fallback: 'This product will become active again.',
+          }),
+      )
+    ) {
+      setIsUnarchiving(true);
+      const result = await unarchiveProductAction(productId);
+      setIsUnarchiving(false);
+
+      if (!result.success && result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success(t('unarchive_success', { fallback: 'Product unarchived successfully' }));
+      }
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -62,19 +87,40 @@ export function ProductCardActions({ productId }: ProductCardActionsProps): Reac
           <Edit className="mr-2 h-4 w-4" />
           <span>{t('action_edit', { fallback: 'Edit' })}</span>
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={handleArchive}
-          disabled={isArchiving}
-          className="text-destructive focus:text-destructive cursor-pointer"
-        >
-          <Archive className="mr-2 h-4 w-4" />
-          <span>
-            {isArchiving
-              ? t('archiving', { fallback: 'Archiving...' })
-              : t('action_archive', { fallback: 'Archive' })}
-          </span>
-        </DropdownMenuItem>
+        
+        {status !== 'archived' ? (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={handleArchive}
+              disabled={isArchiving}
+              className="text-destructive focus:text-destructive cursor-pointer"
+            >
+              <Archive className="mr-2 h-4 w-4" />
+              <span>
+                {isArchiving
+                  ? t('archiving', { fallback: 'Archiving...' })
+                  : t('action_archive', { fallback: 'Archive' })}
+              </span>
+            </DropdownMenuItem>
+          </>
+        ) : (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={handleUnarchive}
+              disabled={isUnarchiving}
+              className="text-emerald-600 focus:text-emerald-600 cursor-pointer"
+            >
+              <ArchiveRestore className="mr-2 h-4 w-4" />
+              <span>
+                {isUnarchiving
+                  ? t('unarchiving', { fallback: 'Unarchiving...' })
+                  : t('action_unarchive', { fallback: 'Unarchive' })}
+              </span>
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import postgres from 'postgres';
 import { PostgresTransactionManagerAdapter } from '@/shared/infrastructure/adapters/postgres-transaction-manager.adapter';
+import { PostgresEventBusAdapter } from '@/shared/infrastructure/adapters/postgres-event-bus.adapter';
 import { PostgresProductRepository } from '@/products/infrastructure/repositories/postgres-product.repository';
 import { Product } from '@/products/domain/entities/product.entity';
 import { ProductName } from '@/products/domain/value-objects/product-name.vo';
@@ -17,6 +18,7 @@ describe('PostgresTransactionManagerAdapter Integration', () => {
   let sql: postgres.Sql<Record<string, unknown>>;
   let transactionManager: PostgresTransactionManagerAdapter;
   let productRepository: PostgresProductRepository;
+  let eventBus: PostgresEventBusAdapter;
 
   beforeAll(async () => {
     if (!DATABASE_URL) {
@@ -26,6 +28,7 @@ describe('PostgresTransactionManagerAdapter Integration', () => {
     sql = postgres(DATABASE_URL);
     transactionManager = new PostgresTransactionManagerAdapter(sql);
     productRepository = new PostgresProductRepository(sql);
+    eventBus = new PostgresEventBusAdapter();
   });
 
   afterAll(async () => {
@@ -80,6 +83,17 @@ describe('PostgresTransactionManagerAdapter Integration', () => {
           );
 
           await productRepository.save(productToUpdate, tx);
+          if (productToUpdate.domainEvents.length > 0) {
+            const envelopes = productToUpdate.domainEvents.map((event) => ({
+              event,
+              context: {
+                tenantId: TEST_TENANT_ID,
+                aggregateType: 'Product',
+                aggregateId: productToUpdate.getId(),
+              },
+            }));
+            await eventBus.publish(envelopes, tx);
+          }
 
           throw new TransactionException('Forced failure to trigger ROLLBACK');
         },
@@ -95,6 +109,10 @@ describe('PostgresTransactionManagerAdapter Integration', () => {
     const productAfterRollback = await productRepository.findById(testProductId, TEST_TENANT_ID);
     expect(productAfterRollback).not.toBeNull();
     expect(productAfterRollback!.getName()).toBe(originalName);
+
+    // Verify outbox was rolled back
+    const outboxRows = await sql`SELECT * FROM core.outbox_events WHERE aggregate_id = ${testProductId}`;
+    expect(outboxRows.length).toBe(0);
 
     await productRepository.delete(testProductId, TEST_TENANT_ID);
   });

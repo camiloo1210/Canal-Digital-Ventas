@@ -6,6 +6,8 @@ import { EditProductForm } from '@/features/products/components/edit-product-for
 import { getCategoryRepository } from '@/features/categories/di/categories.di';
 import { CategoryStatus, Category } from '@canaldigital/packages/core';
 
+import { PageHeader } from '@/components/page-header';
+
 export default async function EditProductPage(props: {
   params: Promise<{ id: string }>;
 }): Promise<React.JSX.Element> {
@@ -33,9 +35,9 @@ export default async function EditProductPage(props: {
   const viewModel = {
     id: productData.id,
     name: productData.name,
-    price: productData.price / 100, // Convert to major units
-    cost: productData.cost / 100, // Convert to major units
-    wholesalePrice: productData.wholesale_price ? productData.wholesale_price / 100 : null,
+    price: productData.price_cents / 100, // Convert to major units
+    cost: productData.cost_cents / 100, // Convert to major units
+    wholesalePrice: productData.wholesale_price_cents ? productData.wholesale_price_cents / 100 : null,
     description: productData.description || '',
     stock: productData.stock,
     categoryId: productData.category_id,
@@ -56,7 +58,9 @@ export default async function EditProductPage(props: {
   }));
 
   return (
-    <div className="w-full flex justify-center pb-12">
+    <>
+    <PageHeader breadcrumbs={[{ label: t('list_title'), href: '/dashboard/catalog/products' }, { label: viewModel.name, href: null }, { label: t('action_edit'), href: null }]} />
+    <div className="w-full flex justify-center pb-12 pt-6">
       <div className="max-w-2xl w-full flex flex-col gap-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
@@ -72,5 +76,6 @@ export default async function EditProductPage(props: {
         </div>
       </div>
     </div>
+    </>
   );
 }

@@ -4,4 +4,5 @@ export interface DbCategoryRow {
   description: string;
   status: string;
   tenant_id: string;
+  version: number;
 }

@@ -1,6 +1,7 @@
-import { getProductRepository } from '@/features/products/di/products.di';
+import { getProductReadRepository } from '@/features/products/di/products.di';
 import { ProductCardActions } from '@/features/products/components/product-card-actions';
-import { Product } from '@canaldigital/packages/core';
+import { ProductReadModel } from '@canaldigital/packages/core';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -16,6 +17,8 @@ export const metadata = {
 
 // Force dynamic rendering to ensure fresh data from DB on every request (useful since this is an MVP without complex caching)
 export const dynamic = 'force-dynamic';
+
+import { PageHeader } from '@/components/page-header';
 
 export default async function ProductsPage(): Promise<React.JSX.Element> {
   const supabase = await createClient();
@@ -36,7 +39,7 @@ export default async function ProductsPage(): Promise<React.JSX.Element> {
 
   const t = await getTranslations('Products');
 
-  const repository = await getProductRepository();
+  const repository = await getProductReadRepository();
   // Todo(Performance): Evaluar EXPLAIN ANALYZE en el índice (tenant_id, status, created_at DESC)
   // antes de migrar limit/offset a keyset cursor pagination para esta consulta.
   const result = await repository.findAll(tenantId, { limit: 50, page: 1 });
@@ -45,6 +48,7 @@ export default async function ProductsPage(): Promise<React.JSX.Element> {
   return (
     <div className="flex flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-2">
+        <PageHeader breadcrumbs={[{ label: t('list_title'), href: null }]} />
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 px-4 lg:px-6">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-3xl font-bold tracking-tight">{t('list_title')}</h1>
@@ -63,16 +67,27 @@ export default async function ProductsPage(): Promise<React.JSX.Element> {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {products.map((product: Product) => (
+              {products.map((product: ProductReadModel) => (
                 <Card
-                  key={product.getId()}
-                  className="overflow-hidden hover:bg-accent/50 transition-colors shadow-sm"
+                  key={product.id}
+                  className={`overflow-hidden transition-colors shadow-sm relative ${
+                    product.status === 'archived' 
+                      ? 'opacity-75 grayscale-[0.5] hover:bg-transparent' 
+                      : 'hover:bg-accent/50'
+                  }`}
                 >
                   <div className="aspect-square relative bg-muted border-b">
-                    {product.getImageUrl() ? (
+                    {product.status === 'archived' && (
+                      <div className="absolute top-2 left-2 z-10">
+                        <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm border-destructive/20 text-destructive">
+                          {t('status_archived')}
+                        </Badge>
+                      </div>
+                    )}
+                    {product.image_url ? (
                       <Image
-                        src={product.getImageUrl()!}
-                        alt={product.getName()}
+                        src={product.image_url}
+                        alt={product.name}
                         fill
                         className="object-cover"
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -87,18 +102,18 @@ export default async function ProductsPage(): Promise<React.JSX.Element> {
                     <div className="flex justify-between items-start gap-2">
                       <div className="flex-1">
                         <CardTitle className="text-lg font-bold line-clamp-1">
-                          {product.getName()}
+                          {product.name}
                         </CardTitle>
                         <p className="text-xs text-muted-foreground font-mono">
-                          {product.getSku()}
+                          {product.sku}
                         </p>
                       </div>
-                      <ProductCardActions productId={product.getId()} />
+                      <ProductCardActions productId={product.id} status={product.status} />
                     </div>
                   </CardHeader>
                   <CardContent className="p-4 pt-0">
                     <p className="text-xl font-bold text-primary">
-                      {formatMoney(product.getPrice().getValue())}
+                      {formatMoney(product.price_cents)}
                     </p>
                   </CardContent>
                 </Card>

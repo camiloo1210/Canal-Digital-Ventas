@@ -22,7 +22,15 @@ export class PostgresTransactionManagerAdapter implements TransactionManagerPort
           );
         `;
 
-        return await operation(sqlTx as TransactionContext);
+        const context: TransactionContext = {
+          executeNative: async <TConnection, TResult>(
+            callback: (conn: TConnection) => Promise<TResult>,
+          ): Promise<TResult> => {
+            return callback(sqlTx as unknown as TConnection);
+          },
+        };
+
+        return await operation(context);
       })) as T;
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unknown error';

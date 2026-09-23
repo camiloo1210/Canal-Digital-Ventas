@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { AppSidebar } from '@/components/app-sidebar';
-import { SiteHeader } from '@/components/site-header';
+
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -34,7 +34,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     >
       <AppSidebar variant="inset" user={userData} />
       <SidebarInset>
-        <SiteHeader />
+        
         {children}
       </SidebarInset>
     </SidebarProvider>

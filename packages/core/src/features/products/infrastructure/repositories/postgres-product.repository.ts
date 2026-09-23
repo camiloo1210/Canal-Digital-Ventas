@@ -12,10 +12,14 @@ import { PaginatedResult } from '@/shared/domain/pagination/pagination';
 export class PostgresProductRepository implements ProductRepositoryPort {
   constructor(private readonly sql: postgres.Sql<Record<string, unknown>>) {}
 
-  private getConn(
-    tx?: TransactionContext,
-  ): postgres.Sql<Record<string, unknown>> | postgres.TransactionSql<Record<string, unknown>> {
-    return (tx as postgres.TransactionSql<Record<string, unknown>>) || this.sql;
+  private async executeSql<T>(
+    tx: TransactionContext | undefined,
+    operation: (conn: postgres.Sql<Record<string, unknown>> | postgres.TransactionSql<Record<string, unknown>>) => Promise<T>
+  ): Promise<T> {
+    if (tx) {
+      return tx.executeNative<postgres.TransactionSql<Record<string, unknown>>, T>(operation);
+    }
+    return operation(this.sql);
   }
 
   async findById(
@@ -23,19 +27,20 @@ export class PostgresProductRepository implements ProductRepositoryPort {
     tenantId: TenantId,
     tx?: TransactionContext,
   ): Promise<Product | null> {
-    const conn = this.getConn(tx);
     try {
-      const rows = await conn`
-        SELECT * FROM catalog.products
-        WHERE id = ${id} AND tenant_id = ${tenantId}
-      `;
+      return await this.executeSql(tx, async (conn) => {
+        const rows = await conn`
+          SELECT * FROM catalog.products
+          WHERE id = ${id} AND tenant_id = ${tenantId}
+        `;
 
-      if (rows.length === 0) return null;
+        if (rows.length === 0) return null;
 
-      const productRow = rows[0] as unknown as DbProductRow;
-      productRow.product_variants = [];
+        const productRow = rows[0] as unknown as DbProductRow;
+        productRow.product_variants = [];
 
-      return SupabaseProductMapper.toDomain(productRow);
+        return SupabaseProductMapper.toDomain(productRow);
+      });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unknown error';
       throw new ProductRepositoryException(`Failed to find product: ${message}`, error);
@@ -43,35 +48,36 @@ export class PostgresProductRepository implements ProductRepositoryPort {
   }
 
   async save(product: Product, tx?: TransactionContext): Promise<void> {
-    const conn = this.getConn(tx);
     const productData = SupabaseProductMapper.toPersistence(product);
 
     try {
-      await conn`
-        INSERT INTO catalog.products (
-          id, tenant_id, category_id, name, description, sku, price_cents, cost_cents,
-          wholesale_price_cents, stock, is_vat_exempt, status, version, updated_at
-        ) VALUES (
-          ${productData.id}, ${productData.tenant_id}, ${productData.category_id}, ${productData.name},
-          ${productData.description}, ${productData.sku}, ${productData.price_cents}, ${productData.cost_cents},
-          ${productData.wholesale_price_cents}, ${productData.stock}, ${productData.is_vat_exempt},
-          ${productData.status}, ${productData.version}, ${productData.updated_at}
-        )
-        ON CONFLICT (id) DO UPDATE SET
-          category_id = EXCLUDED.category_id,
-          name = EXCLUDED.name,
-          description = EXCLUDED.description,
-          sku = EXCLUDED.sku,
-          price_cents = EXCLUDED.price_cents,
-          cost_cents = EXCLUDED.cost_cents,
-          wholesale_price_cents = EXCLUDED.wholesale_price_cents,
-          stock = EXCLUDED.stock,
-          is_vat_exempt = EXCLUDED.is_vat_exempt,
-          status = EXCLUDED.status,
-          version = EXCLUDED.version,
-          updated_at = EXCLUDED.updated_at
-        WHERE catalog.products.tenant_id = EXCLUDED.tenant_id;
-      `;
+      await this.executeSql(tx, async (conn) => {
+        await conn`
+          INSERT INTO catalog.products (
+            id, tenant_id, category_id, name, description, sku, price_cents, cost_cents,
+            wholesale_price_cents, stock, is_vat_exempt, status, version, updated_at
+          ) VALUES (
+            ${productData.id}, ${productData.tenant_id}, ${productData.category_id}, ${productData.name},
+            ${productData.description}, ${productData.sku}, ${productData.price_cents}, ${productData.cost_cents},
+            ${productData.wholesale_price_cents}, ${productData.stock}, ${productData.is_vat_exempt},
+            ${productData.status}, ${productData.version}, ${productData.updated_at}
+          )
+          ON CONFLICT (id) DO UPDATE SET
+            category_id = EXCLUDED.category_id,
+            name = EXCLUDED.name,
+            description = EXCLUDED.description,
+            sku = EXCLUDED.sku,
+            price_cents = EXCLUDED.price_cents,
+            cost_cents = EXCLUDED.cost_cents,
+            wholesale_price_cents = EXCLUDED.wholesale_price_cents,
+            stock = EXCLUDED.stock,
+            is_vat_exempt = EXCLUDED.is_vat_exempt,
+            status = EXCLUDED.status,
+            version = EXCLUDED.version,
+            updated_at = EXCLUDED.updated_at
+          WHERE catalog.products.tenant_id = EXCLUDED.tenant_id;
+        `;
+      });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unknown error';
       throw new ProductRepositoryException(`Failed to save product: ${message}`, error);
@@ -79,12 +85,13 @@ export class PostgresProductRepository implements ProductRepositoryPort {
   }
 
   async delete(id: ProductId, tenantId: TenantId, tx?: TransactionContext): Promise<void> {
-    const conn = this.getConn(tx);
     try {
-      await conn`
-        DELETE FROM catalog.products
-        WHERE id = ${id} AND tenant_id = ${tenantId}
-      `;
+      await this.executeSql(tx, async (conn) => {
+        await conn`
+          DELETE FROM catalog.products
+          WHERE id = ${id} AND tenant_id = ${tenantId}
+        `;
+      });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unknown error';
       throw new ProductRepositoryException(`Failed to delete product: ${message}`, error);

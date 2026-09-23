@@ -1,3 +1,4 @@
+import { PRODUCT_AGGREGATE_TYPE } from '@/products/application/outbox/product-aggregate.constants';
 import { CreateProductDto } from '@/products/application/dtos/create-product.dto';
 import { Product } from '@/products/domain/entities/product.entity';
 import { ProductName } from '@/products/domain/value-objects/product-name.vo';
@@ -9,57 +10,76 @@ import { createProductId } from '@/products/domain/types/product-id.type';
 import { createCategoryId } from '@/products/domain/types/category-id.type';
 import { createTenantId } from '@/shared/domain/types/tenant-id.type';
 import { createSeasonId } from '@/products/domain/types/season-id.type';
+import { TransactionManagerPort } from '@/shared/application/ports/out/transaction-manager.port';
 
 export class CreateProductUseCase {
   constructor(
     private readonly productRepository: ProductRepositoryPort,
     private readonly eventBus: EventBusPort,
+    private readonly transactionManager: TransactionManagerPort,
   ) {}
 
   async execute(dto: CreateProductDto): Promise<string> {
-    const name = ProductName.from(dto.name);
-    const sku = Sku.from(dto.sku);
-    const price = Money.from(dto.price);
-    const cost = Money.from(dto.cost);
-    const wholesalePrice = dto.wholesalePrice ? Money.from(dto.wholesalePrice) : null;
+    let productIdToReturn = '';
 
-    const imagePath = dto.imagePath || null;
-    const imageUrl = dto.imageUrl || null;
+    await this.transactionManager.runInTransaction(
+      async (tx) => {
+        const name = ProductName.from(dto.name);
+        const sku = Sku.from(dto.sku);
+        const price = Money.from(dto.price);
+        const cost = Money.from(dto.cost);
+        const wholesalePrice = dto.wholesalePrice ? Money.from(dto.wholesalePrice) : null;
 
-    const productId = createProductId(dto.id);
-    const categoryId = createCategoryId(dto.categoryId);
-    const tenantId = createTenantId(dto.tenantId);
+        const imagePath = dto.imagePath || null;
+        const imageUrl = dto.imageUrl || null;
 
-    const newProduct = Product.create(
-      productId,
-      name,
-      price,
-      cost,
-      dto.description,
-      dto.stock,
-      categoryId,
-      sku,
-      tenantId,
-      null, // expirationDate
-      null, // status
-      dto.seasonIds.map((id) => createSeasonId(id)),
-      imagePath,
-      [], // variants
-      dto.isVatExempt,
-      wholesalePrice,
+        const productId = createProductId(dto.id);
+        const categoryId = createCategoryId(dto.categoryId);
+        const tenantId = createTenantId(dto.tenantId);
+
+        const newProduct = Product.create(
+          productId,
+          name,
+          price,
+          cost,
+          dto.description,
+          dto.stock,
+          categoryId,
+          sku,
+          tenantId,
+          null, // expirationDate
+          null, // status
+          dto.seasonIds.map((id) => createSeasonId(id)),
+          imagePath,
+          [], // variants
+          dto.isVatExempt,
+          wholesalePrice,
+        );
+
+        if (imageUrl) {
+          newProduct.updateImages(imagePath, imageUrl);
+        }
+
+        await this.productRepository.save(newProduct, tx);
+
+        if (newProduct.domainEvents.length > 0) {
+          const envelopes = newProduct.domainEvents.map((event) => ({
+            event,
+            context: {
+              tenantId: dto.tenantId,
+              aggregateType: PRODUCT_AGGREGATE_TYPE,
+              aggregateId: newProduct.getId(),
+            },
+          }));
+          await this.eventBus.publish(envelopes, tx);
+          newProduct.clearDomainEvents();
+        }
+
+        productIdToReturn = newProduct.getId();
+      },
+      { userId: dto.tenantId },
     );
 
-    if (imageUrl) {
-      newProduct.updateImages(imagePath, imageUrl);
-    }
-
-    await this.productRepository.save(newProduct);
-
-    if (newProduct.domainEvents.length > 0) {
-      await this.eventBus.publish(newProduct.domainEvents);
-    }
-    newProduct.clearDomainEvents();
-
-    return newProduct.getId();
+    return productIdToReturn;
   }
 }

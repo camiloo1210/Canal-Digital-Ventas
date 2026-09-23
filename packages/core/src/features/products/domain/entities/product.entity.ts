@@ -180,6 +180,14 @@ export class Product {
   }
 
   // Business Actions
+  public unarchive(): void {
+    if (this.status !== ProductStatus.ARCHIVED) {
+      throw new InvalidProductStateException('Only archived products can be unarchived.');
+    }
+    this.status = this.stock > 0 ? ProductStatus.ACTIVE : ProductStatus.OUT_OF_STOCK;
+    this.version++;
+  }
+
   public archive(): void {
     if (this.status === ProductStatus.ARCHIVED) {
       throw new InvalidProductStateException('Product is already archived.');
