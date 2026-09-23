@@ -3,9 +3,9 @@ id: 3402b937-36ec-4dd3-ac6f-36a903e542f6
 title: "CU-MOD6-02: Configurar Precios al Por Mayor"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-29"
+updated_date: "2026-09-23"
 issue_type: use-case
-status: open
+status: in_progress
 labels:
   - ai-generated
 relations:
@@ -14,7 +14,7 @@ relations:
 frecuencia: Alta
 importancia: Vital
 urgencia: Media
-integrity_hash: "sha256:0b1f4ed0305cd0a1b6c3842c44f1bfeb14e5b9488588f258e61f340089cfb9cb"
+integrity_hash: "sha256:a55725d2413d5d06b47f881c1e9ecc57c38f7e17e2bd0aa9f518d3d0e25c5fa6"
 ---
 
 ## Actores
