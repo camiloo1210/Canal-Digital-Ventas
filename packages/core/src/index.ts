@@ -159,3 +159,8 @@ export type { PublicProductFilters, PublicProductReadRepositoryPort } from '@/pr
 export { SupabasePublicCategoryReadRepository } from '@/categories/infrastructure/repositories/supabase-public-category-read.repository';
 export { SupabasePublicProductReadRepository } from '@/products/infrastructure/repositories/supabase-public-product-read.repository';
 export * from './features/categories/domain/value-objects/category-slug.vo';
+
+// Public Tenant
+export type { PublicTenantReadModel } from '@/tenants/application/read-models/public-tenant-read.model';
+export type { PublicTenantReadRepositoryPort } from '@/tenants/application/ports/out/public-tenant-read-repository.port';
+export { SupabasePublicTenantReadAdapter } from '@/tenants/infrastructure/repositories/supabase-public-tenant-read.adapter';

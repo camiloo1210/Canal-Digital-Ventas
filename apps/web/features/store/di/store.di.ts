@@ -3,9 +3,16 @@ import { createClient } from '@/lib/supabase/server';
 import {
   SupabasePublicCategoryReadRepository,
   SupabasePublicProductReadRepository,
+  SupabasePublicTenantReadAdapter,
   PublicCategoryReadRepositoryPort,
-  PublicProductReadRepositoryPort
+  PublicProductReadRepositoryPort,
+  PublicTenantReadRepositoryPort
 } from '@canaldigital/packages/core';
+
+export async function getStoreTenantReadRepository(): Promise<PublicTenantReadRepositoryPort> {
+  const supabase = await createClient();
+  return new SupabasePublicTenantReadAdapter(supabase);
+}
 
 export async function getStoreCategoryReadRepository(): Promise<PublicCategoryReadRepositoryPort> {
   const supabase = await createClient();

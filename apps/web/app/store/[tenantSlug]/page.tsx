@@ -5,6 +5,7 @@ import { getStoreCategoryReadRepository, getStoreProductReadRepository } from '@
 import { StoreCategorySidebar } from '@/features/store/components/store-category-sidebar';
 import { StoreProductGrid } from '@/features/store/components/store-product-grid';
 import { StoreSearchBar } from '@/features/store/components/store-search-bar';
+import { StoreProfileHeader } from '@/features/store/components/store-profile-header';
 import { ProductStatus, CategoryStatus, createTenantId, createCategoryId } from '@canaldigital/packages/core';
 import { getTranslations } from 'next-intl/server';
 
@@ -23,8 +24,6 @@ export default async function StorePage(props: {
     notFound();
   }
 
-  const tenantId = createTenantId(tenantContext.tenantId);
-
   const filters = parseStoreFilters(searchParams);
 
   const categoryRepo = await getStoreCategoryReadRepository();
@@ -42,16 +41,20 @@ export default async function StorePage(props: {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col min-h-screen">
-      <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground mb-2 capitalize">{params.tenantSlug} Store</h1>
-          <p className="text-lg text-muted-foreground">{t('browseProducts')}</p>
+    <div className="flex flex-col min-h-screen">
+      <StoreProfileHeader 
+        name={tenantContext.name}
+        description={tenantContext.description}
+        logoUrl={tenantContext.logoUrl}
+        bannerUrl={tenantContext.bannerUrl}
+      />
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 w-full flex flex-col">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+          <StoreSearchBar placeholder={t('searchProducts')} />
         </div>
-        <StoreSearchBar placeholder={t('searchProducts')} />
-      </div>
 
-      <div className="flex flex-col md:flex-row gap-8 items-start">
+        <div className="flex flex-col md:flex-row gap-8 items-start">
         <StoreCategorySidebar
           categories={categoriesResult}
           currentCategorySlug={filters.category}
@@ -71,6 +74,7 @@ export default async function StorePage(props: {
           />
         </div>
       </div>
+    </div>
     </div>
   );
 }
