@@ -5,6 +5,7 @@ import { PublicCategoryReadModel } from '@canaldigital/packages/core';
 interface StoreCategorySidebarProps {
   categories: PublicCategoryReadModel[];
   currentCategorySlug?: string;
+  currentQuery?: string;
   labels: {
     categories: string;
     allProducts: string;
@@ -12,7 +13,18 @@ interface StoreCategorySidebarProps {
   };
 }
 
-export function StoreCategorySidebar({ categories, currentCategorySlug, labels }: StoreCategorySidebarProps): React.JSX.Element {
+export function StoreCategorySidebar({ categories, currentCategorySlug, currentQuery, labels }: StoreCategorySidebarProps): React.JSX.Element {
+  
+  const buildHref = (categorySlug?: string) => {
+    const params = new URLSearchParams();
+    if (currentQuery) params.set('q', currentQuery);
+    if (categorySlug) params.set('category', categorySlug);
+    // Note: page is intentionally omitted (reset to 1)
+    
+    const qs = params.toString();
+    return qs ? `?${qs}` : '?';
+  };
+
   return (
     <nav className="w-full sm:w-64 flex-shrink-0" aria-label={labels.categories}>
       <h2 className="text-lg font-semibold text-foreground mb-4">{labels.categories}</h2>
@@ -23,7 +35,8 @@ export function StoreCategorySidebar({ categories, currentCategorySlug, labels }
         <ul className="space-y-1">
           <li>
             <Link
-              href="?"
+              href={buildHref()}
+              scroll={false}
               aria-current={!currentCategorySlug ? 'page' : undefined}
               className={`block px-3 py-2 rounded-md text-sm transition-colors ${
                 !currentCategorySlug
@@ -41,7 +54,8 @@ export function StoreCategorySidebar({ categories, currentCategorySlug, labels }
             return (
               <li key={category.slug}>
                 <Link
-                  href={`?category=${category.slug}`}
+                  href={buildHref(category.slug)}
+                  scroll={false}
                   aria-current={isActive ? 'page' : undefined}
                   className={`block px-3 py-2 rounded-md text-sm transition-colors ${
                     isActive

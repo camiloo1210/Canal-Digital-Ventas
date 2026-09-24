@@ -1,12 +1,12 @@
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
 import { resolveTenantQuery } from '@/features/iam/queries/resolve-tenant.query';
 import { parseStoreFilters, PAGE_SIZE } from '@/features/store/utils/store-filters.parser';
-import { getStoreCategoryReadRepository, getStoreProductReadRepository } from '@/features/store/di/store.di';
+import { getStoreCategoryReadRepository } from '@/features/store/di/store.di';
 import { StoreCategorySidebar } from '@/features/store/components/store-category-sidebar';
-import { StoreProductGrid } from '@/features/store/components/store-product-grid';
 import { StoreSearchBar } from '@/features/store/components/store-search-bar';
 import { StoreProfileHeader } from '@/features/store/components/store-profile-header';
-import { ProductStatus, CategoryStatus, createTenantId, createCategoryId } from '@canaldigital/packages/core';
+import { StoreResultsBoundary, StoreResultsSkeleton } from '@/features/store/components/store-results-boundary';
 import { getTranslations } from 'next-intl/server';
 
 export default async function StorePage(props: {
@@ -27,18 +27,7 @@ export default async function StorePage(props: {
   const filters = parseStoreFilters(searchParams);
 
   const categoryRepo = await getStoreCategoryReadRepository();
-  const productRepo = await getStoreProductReadRepository();
-
   const categoriesResult = await categoryRepo.searchActiveByTenantSlug(params.tenantSlug);
-
-  const productsResult = await productRepo.searchActiveByTenantSlug(
-    params.tenantSlug,
-    {
-      categorySlug: filters.category,
-      name: filters.q,
-    },
-    { page: filters.page, limit: PAGE_SIZE }
-  );
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -55,26 +44,30 @@ export default async function StorePage(props: {
         </div>
 
         <div className="flex flex-col md:flex-row gap-8 items-start">
-        <StoreCategorySidebar
-          categories={categoriesResult}
-          currentCategorySlug={filters.category}
-          labels={{
-            categories: t('categories'),
-            allProducts: t('allProducts'),
-            noCategories: t('noCategories')
-          }}
-        />
-        
-        <div className="flex-1 w-full">
-          <StoreProductGrid
-            products={productsResult.items}
-            currentPage={productsResult.currentPage}
-            totalPages={productsResult.totalPages}
-            pageInfoTemplate={t('pageInfo', { current: '{current}', total: '{total}' })}
+          <StoreCategorySidebar
+            categories={categoriesResult}
+            currentCategorySlug={filters.category}
+            currentQuery={filters.q}
+            labels={{
+              categories: t('categories'),
+              allProducts: t('allProducts'),
+              noCategories: t('noCategories')
+            }}
           />
+          
+          <div className="flex-1 w-full">
+            <Suspense fallback={<StoreResultsSkeleton />} key={`${filters.q}-${filters.category}-${filters.page}`}>
+              <StoreResultsBoundary
+                tenantSlug={params.tenantSlug}
+                categorySlug={filters.category}
+                q={filters.q}
+                page={filters.page}
+                pageInfoTemplate={t('pageInfo', { current: '{current}', total: '{total}' })}
+              />
+            </Suspense>
+          </div>
         </div>
       </div>
-    </div>
     </div>
   );
 }

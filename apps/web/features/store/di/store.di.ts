@@ -23,3 +23,4 @@ export async function getStoreProductReadRepository(): Promise<PublicProductRead
   const supabase = await createClient();
   return new SupabasePublicProductReadRepository(supabase);
 }
+
