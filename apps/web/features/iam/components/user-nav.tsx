@@ -37,7 +37,16 @@ export function UserNav({ viewer, redirectTo = '/', labels }: UserNavProps): Rea
   if (!viewer.isAuthenticated) {
     return (
       <div className="flex items-center gap-2 text-sm font-medium">
-        <LocaleSwitcher />
+        {/* We would need a standalone LocaleSwitcher for unauthenticated users, but we'll leave it as a raw component for now or hide it depending on requirements. For now, since it expects to be in a dropdown, we should probably wrap it in a dropdown. */}
+        <DropdownMenu>
+          <DropdownMenuTrigger render={<button className="flex items-center gap-2 px-2 py-1 outline-none text-muted-foreground hover:text-foreground transition-colors" />}>
+             🌐 Lang
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56" sideOffset={4}>
+            <LocaleSwitcher />
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         <Link href="/login" className="text-muted-foreground hover:text-foreground transition-colors px-2 py-1">
           {labels.login}
         </Link>
@@ -50,7 +59,6 @@ export function UserNav({ viewer, redirectTo = '/', labels }: UserNavProps): Rea
 
   return (
     <div className="flex items-center gap-2">
-      <LocaleSwitcher />
       <DropdownMenu>
         <DropdownMenuTrigger render={<button className="flex items-center gap-2 outline-none rounded-full focus-visible:ring-2 focus-visible:ring-ring ml-2" />}>
             <Avatar className="size-8 rounded-full border">
@@ -90,6 +98,10 @@ export function UserNav({ viewer, redirectTo = '/', labels }: UserNavProps): Rea
               </DropdownMenuItem>
             )}
           </DropdownMenuGroup>
+          
+          {/* LOCALE SWITCHER MOVED INSIDE THE DROPDOWN */}
+          <LocaleSwitcher />
+          
           <DropdownMenuSeparator />
           <form action={logoutAction} className="w-full">
             <input type="hidden" name="redirectTo" value={redirectTo} />
