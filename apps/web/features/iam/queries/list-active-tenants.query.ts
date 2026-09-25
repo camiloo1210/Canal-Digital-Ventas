@@ -1,22 +1,8 @@
 import 'server-only';
-import { createClient } from '@/lib/supabase/server';
+import { getStoreDirectoryReadRepository } from '@/features/store-directory/di/directory.di';
+import { PublicTenantDirectoryResult } from '@canaldigital/packages/core';
 
-export interface ActiveTenantListModel {
-  id: string;
-  name: string;
-  slug: string;
-}
-
-export async function listActiveTenantsQuery(): Promise<ActiveTenantListModel[]> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .rpc('list_public_active_tenants');
-
-  if (error) {
-    console.error('Failed to list active tenants:', error);
-    return [];
-  }
-
-  return data as ActiveTenantListModel[];
+export async function listActiveTenantsQuery(page: number = 1, limit: number = 24): Promise<PublicTenantDirectoryResult> {
+  const repository = await getStoreDirectoryReadRepository();
+  return repository.listActive(page, limit);
 }

@@ -165,3 +165,8 @@ export type { PublicTenantReadModel } from '@/tenants/application/read-models/pu
 export type { PublicTenantReadRepositoryPort } from '@/tenants/application/ports/out/public-tenant-read-repository.port';
 export { SupabasePublicTenantReadAdapter } from '@/tenants/infrastructure/repositories/supabase-public-tenant-read.adapter';
 
+
+// Tenant Directory
+export * from './features/tenants/application/read-models/public-tenant-directory-item.model';
+export * from './features/tenants/application/ports/out/public-tenant-directory-read-repository.port';
+export * from './features/tenants/infrastructure/repositories/supabase-public-tenant-directory-read.adapter';
