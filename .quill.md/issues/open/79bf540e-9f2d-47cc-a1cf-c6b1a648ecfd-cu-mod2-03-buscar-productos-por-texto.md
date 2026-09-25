@@ -3,9 +3,9 @@ id: 79bf540e-9f2d-47cc-a1cf-c6b1a648ecfd
 title: "CU-MOD2-03: Buscar Productos por Texto"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-29"
+updated_date: "2026-09-25"
 issue_type: use-case
-status: open
+status: in_review
 labels:
   - ai-generated
 relations:
@@ -14,7 +14,7 @@ relations:
 frecuencia: Alta
 importancia: Alta
 urgencia: Media
-integrity_hash: "sha256:f0c91e6e8155dde2d00f6fe7a8cc566bc612c0a403d0df40ce499d191f72b6db"
+integrity_hash: "sha256:56fb17eea57109dd79baae2e02052219a1df5b5013bc6f036ae02cac605e1517"
 ---
 
 ## Actores
