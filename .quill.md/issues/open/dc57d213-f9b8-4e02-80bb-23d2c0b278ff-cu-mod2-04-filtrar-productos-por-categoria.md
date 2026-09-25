@@ -3,9 +3,9 @@ id: dc57d213-f9b8-4e02-80bb-23d2c0b278ff
 title: "CU-MOD2-04: Filtrar Productos por Categoría"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-29"
+updated_date: "2026-09-25"
 issue_type: use-case
-status: open
+status: in_review
 labels:
   - ai-generated
 relations:
@@ -14,7 +14,7 @@ relations:
 frecuencia: Media
 importancia: Media
 urgencia: Media
-integrity_hash: "sha256:83836bfc668bf88ea6344e52914a5a3d77a8639d6ecbe72aac1c44a252a90cd6"
+integrity_hash: "sha256:194bd129ae16977b91f72357807673326ab628a398241e2359b8026590b74831"
 ---
 
 ## Actores
