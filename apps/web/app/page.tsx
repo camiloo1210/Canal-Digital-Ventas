@@ -1,10 +1,11 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { logoutAction } from '@/features/iam/actions/logout.action';
-import { LogOut } from 'lucide-react';
 import { listActiveTenantsQuery } from '@/features/iam/queries/list-active-tenants.query';
 import { StoreDirectory } from '@/features/store-directory/components/store-directory';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { getStoreViewerQuery } from '@/features/store/queries/store-viewer.query';
+import { UserNav } from '@/features/iam/components/user-nav';
+import { getTranslations } from 'next-intl/server';
 
 export const metadata = {
   title: 'My Purchases | Canal Digital',
@@ -26,6 +27,16 @@ export default async function BuyerDashboardPage(props: {
   }
 
   const activeTenantsResult = await listActiveTenantsQuery(page, 24);
+  const viewer = await getStoreViewerQuery();
+  const t = await getTranslations('Storefront');
+
+  const labels = {
+    login: t('login'),
+    createAccount: t('createAccount'),
+    logout: t('logout'),
+    dashboard: t('dashboard'),
+    settings: t('settings'),
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -33,18 +44,7 @@ export default async function BuyerDashboardPage(props: {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <h1 className="text-xl font-bold text-foreground">Buyer Dashboard</h1>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground hidden sm:inline-block">{user.email}</span>
-              <form action={logoutAction}>
-                <button
-                  type="submit"
-                  className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md p-1"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span>Sign Out</span>
-                </button>
-              </form>
-            </div>
+            <UserNav viewer={viewer} redirectTo="/" labels={labels} />
           </div>
         </div>
       </header>
