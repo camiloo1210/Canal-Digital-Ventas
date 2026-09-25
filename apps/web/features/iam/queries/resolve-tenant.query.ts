@@ -1,4 +1,5 @@
 import 'server-only';
+import { cache } from 'react';
 import { getStoreTenantReadRepository } from '@/features/store/di/store.di';
 
 export interface PublicTenantContext {
@@ -9,7 +10,7 @@ export interface PublicTenantContext {
   bannerUrl: string | null;
 }
 
-export async function resolveTenantQuery(slug: string): Promise<PublicTenantContext | null> {
+export const resolveTenantQuery = cache(async (slug: string): Promise<PublicTenantContext | null> => {
   const repository = await getStoreTenantReadRepository();
   const data = await repository.findBySlug(slug);
 
@@ -22,4 +23,4 @@ export async function resolveTenantQuery(slug: string): Promise<PublicTenantCont
     logoUrl: data.logoUrl,
     bannerUrl: data.bannerUrl,
   };
-}
+});
