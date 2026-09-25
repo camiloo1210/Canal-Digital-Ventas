@@ -114,4 +114,14 @@
     "searchProducts": "Search products...",
     "pageInfo": "Page {current} of {total}"
   }
+  ,
+  "BuyerDashboard": {
+    "title": "Buyer Dashboard",
+    "available_stores": "Available Stores",
+    "empty_stores": "No stores are available at the moment.",
+    "visit_store": "Visit Storefront",
+    "recent_purchases": "Recent Purchases",
+    "recent_purchases_desc": "Here you can see all orders placed across any tenant store.",
+    "empty_purchases": "You haven't made any purchases yet."
+  }
 }

@@ -29,6 +29,7 @@ export default async function BuyerDashboardPage(props: {
   const activeTenantsResult = await listActiveTenantsQuery(page, 24);
   const viewer = await getStoreViewerQuery();
   const t = await getTranslations('Storefront');
+  const tb = await getTranslations('BuyerDashboard');
 
   const labels = {
     login: t('login'),
@@ -43,7 +44,7 @@ export default async function BuyerDashboardPage(props: {
       <header className="bg-card border-b border-border sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
-            <h1 className="text-xl font-bold text-foreground">Buyer Dashboard</h1>
+            <h1 className="text-xl font-bold text-foreground">{tb('title')}</h1>
             <UserNav viewer={viewer} redirectTo="/" labels={labels} />
           </div>
         </div>
@@ -54,9 +55,9 @@ export default async function BuyerDashboardPage(props: {
         <StoreDirectory 
           result={activeTenantsResult} 
           labels={{
-            title: "Available Stores",
-            empty: "No stores are available at the moment.",
-            visit: "Visit Storefront"
+            title: tb('available_stores'),
+            empty: tb('empty_stores'),
+            visit: tb('visit_store')
           }} 
         />
 
@@ -64,13 +65,13 @@ export default async function BuyerDashboardPage(props: {
         <section>
           <Card className="shadow-sm border-border">
             <CardHeader className="border-b border-border bg-muted/20">
-              <CardTitle className="text-lg text-foreground">Recent Purchases</CardTitle>
+              <CardTitle className="text-lg text-foreground">{tb('recent_purchases')}</CardTitle>
               <CardDescription>
-                Here you can see all orders placed across any tenant store.
+                {tb('recent_purchases_desc')}
               </CardDescription>
             </CardHeader>
             <CardContent className="p-12 text-center text-muted-foreground">
-              You haven't made any purchases yet.
+              {tb('empty_purchases')}
             </CardContent>
           </Card>
         </section>
