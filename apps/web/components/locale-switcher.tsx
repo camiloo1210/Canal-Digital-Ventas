@@ -43,9 +43,14 @@ export function LocaleSwitcher(): React.JSX.Element {
         </DropdownMenuLabel>
 
         <div className="flex items-center justify-between px-3 py-2 text-sm">
-          <span className={!isEn ? 'font-bold text-foreground' : 'text-muted-foreground'}>
-            🇪🇸 ES
-          </span>
+          <button 
+            type="button" 
+            onClick={() => handleLocaleChange(false)}
+            className={cn("cursor-pointer transition-colors outline-none", !isEn ? 'font-bold text-foreground' : 'text-muted-foreground hover:text-foreground')}
+          >
+            ES
+          </button>
+          
           <Switch.Root
             checked={isEn}
             onCheckedChange={handleLocaleChange}
@@ -62,9 +67,14 @@ export function LocaleSwitcher(): React.JSX.Element {
               )}
             />
           </Switch.Root>
-          <span className={isEn ? 'font-bold text-foreground' : 'text-muted-foreground'}>
-            🇺🇸 EN
-          </span>
+          
+          <button 
+            type="button" 
+            onClick={() => handleLocaleChange(true)}
+            className={cn("cursor-pointer transition-colors outline-none", isEn ? 'font-bold text-foreground' : 'text-muted-foreground hover:text-foreground')}
+          >
+            EN
+          </button>
         </div>
       </DropdownMenuGroup>
     </>
