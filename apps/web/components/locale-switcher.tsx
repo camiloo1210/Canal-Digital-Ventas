@@ -43,28 +43,38 @@ export function LocaleSwitcher(): React.JSX.Element {
         </DropdownMenuLabel>
 
         <div className="flex items-center justify-between px-3 py-2 text-sm">
-          <span className={!isEn ? 'font-bold text-foreground' : 'text-muted-foreground'}>
-            🇪🇸 ES
-          </span>
+          <button 
+            type="button" 
+            onClick={() => handleLocaleChange(false)}
+            className={cn("cursor-pointer transition-colors outline-none", !isEn ? 'font-bold text-foreground' : 'text-muted-foreground hover:text-foreground')}
+          >
+            ES
+          </button>
+          
           <Switch.Root
             checked={isEn}
             onCheckedChange={handleLocaleChange}
             disabled={isPending}
             className={cn(
-              'relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50',
-              isEn ? 'bg-primary' : 'bg-input',
+              'relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50',
+              'bg-primary'
             )}
           >
             <Switch.Thumb
               className={cn(
                 'pointer-events-none block h-4 w-4 rounded-full bg-background shadow-lg ring-0 transition-transform',
-                isEn ? 'translate-x-4' : '-translate-x-0',
+                isEn ? 'translate-x-4' : 'translate-x-0',
               )}
             />
           </Switch.Root>
-          <span className={isEn ? 'font-bold text-foreground' : 'text-muted-foreground'}>
-            🇺🇸 EN
-          </span>
+          
+          <button 
+            type="button" 
+            onClick={() => handleLocaleChange(true)}
+            className={cn("cursor-pointer transition-colors outline-none", isEn ? 'font-bold text-foreground' : 'text-muted-foreground hover:text-foreground')}
+          >
+            EN
+          </button>
         </div>
       </DropdownMenuGroup>
     </>

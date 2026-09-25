@@ -14,7 +14,14 @@ export interface CategoryReadModel {
 }
 
 export class SupabaseCategoryReadRepository {
-  constructor(private readonly supabase: SupabaseClient) {}
+  constructor(
+    private readonly supabase: SupabaseClient,
+    private readonly isPublicContext: boolean = false
+  ) {}
+
+  private getTableName(): string {
+    return this.isPublicContext ? 'public_active_categories' : 'categories';
+  }
 
   private escapeLike(value: string): string {
     return value.replace(/[%_\\]/g, '\\$&');
@@ -23,7 +30,7 @@ export class SupabaseCategoryReadRepository {
   async findById(id: string, tenantId: string): Promise<CategoryReadModel | null> {
     const { data, error } = await this.supabase
       .schema('catalog')
-      .from('categories')
+      .from(this.getTableName())
       .select('*')
       .eq('id', id)
       .eq('tenant_id', tenantId)
@@ -50,7 +57,7 @@ export class SupabaseCategoryReadRepository {
 
     const { data, error, count } = await this.supabase
       .schema('catalog')
-      .from('categories')
+      .from(this.getTableName())
       .select('*', { count: 'exact' })
       .eq('tenant_id', tenantId)
       .range(from, to);
@@ -77,7 +84,7 @@ export class SupabaseCategoryReadRepository {
   ): Promise<PaginatedResult<CategoryReadModel>> {
     let query = this.supabase
       .schema('catalog')
-      .from('categories')
+      .from(this.getTableName())
       .select('*', { count: 'exact' })
       .eq('tenant_id', filters.tenantId);
 

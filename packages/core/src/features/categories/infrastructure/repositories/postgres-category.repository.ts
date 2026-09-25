@@ -53,9 +53,9 @@ export class PostgresCategoryRepository implements CategoryRepositoryPort {
       await this.executeSql(tx, async (conn) => {
         await conn`
           INSERT INTO catalog.categories (
-            id, tenant_id, name, description, status, version
+            id, tenant_id, name, slug, description, status, version
           ) VALUES (
-            ${categoryData.id}, ${categoryData.tenant_id}, ${categoryData.name},
+            ${categoryData.id}, ${categoryData.tenant_id}, ${categoryData.name}, ${categoryData.slug},
             ${categoryData.description}, ${categoryData.status}, ${categoryData.version}
           )
           ON CONFLICT (id) DO UPDATE SET
@@ -67,6 +67,17 @@ export class PostgresCategoryRepository implements CategoryRepositoryPort {
         `;
       });
     } catch (error: unknown) {
+      if (
+        typeof error === 'object' && 
+        error !== null && 
+        'code' in error && 
+        (error as Record<string, unknown>).code === '23505' && 
+        'constraint_name' in error &&
+        (error as Record<string, unknown>).constraint_name === 'categories_tenant_id_slug_key'
+      ) {
+        const { CategorySlugAlreadyExistsException } = await import('@/categories/application/exceptions/category-slug-already-exists.exception');
+        throw new CategorySlugAlreadyExistsException(categoryData.tenant_id, categoryData.slug);
+      }
       const message = error instanceof Error ? error.message : 'Unknown error';
       throw new CategoryRepositoryException(`Failed to save category: ${message}`, error);
     }

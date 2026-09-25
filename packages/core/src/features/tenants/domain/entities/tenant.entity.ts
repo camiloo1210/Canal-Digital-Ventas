@@ -16,12 +16,14 @@ export interface TenantProps {
   id: TenantId;
   name: TenantName;
   slug: TenantSlug;
+  description: string | null;
   contactEmail: Email;
   baseCurrency: Currency;
   status: TenantStatus;
   taxId: string | null;
   customDomain: string | null;
   logoUrl: string | null;
+  bannerUrl: string | null;
   createdAt: Date;
   updatedAt: Date;
   version: number;
@@ -34,12 +36,14 @@ export class Tenant {
     private readonly id: TenantId,
     private name: TenantName,
     private slug: TenantSlug,
+    private description: string | null,
     private contactEmail: Email,
     private readonly baseCurrency: Currency,
     private status: TenantStatus,
     private taxId: string | null,
     private customDomain: string | null,
     private logoUrl: string | null,
+    private bannerUrl: string | null,
     private readonly createdAt: Date,
     private updatedAt: Date,
     private version: number,
@@ -54,20 +58,28 @@ export class Tenant {
     taxId: string | null = null,
     customDomain: string | null = null,
     logoUrl: string | null = null,
+    description: string | null = null,
+    bannerUrl: string | null = null,
   ): Tenant {
     Tenant.validateId(id);
     Tenant.validateCurrency(baseCurrency);
+    
+    const cleanDescription = Tenant.sanitizeDescription(description);
+    Tenant.validateDescriptionLength(cleanDescription);
+    Tenant.validateBannerUrlLength(bannerUrl);
 
     const tenant = new Tenant(
       id,
       name,
       slug,
+      cleanDescription,
       contactEmail,
       baseCurrency,
       TenantStatus.PENDING_SETUP,
       taxId,
       customDomain,
       logoUrl,
+      bannerUrl,
       new Date(),
       new Date(),
       0,
@@ -82,12 +94,14 @@ export class Tenant {
       props.id,
       props.name,
       props.slug,
+      props.description,
       props.contactEmail,
       props.baseCurrency,
       props.status,
       props.taxId,
       props.customDomain,
       props.logoUrl,
+      props.bannerUrl,
       props.createdAt,
       props.updatedAt,
       props.version,
@@ -104,6 +118,25 @@ export class Tenant {
   private static validateCurrency(currency: Currency): void {
     if (!currency || !Object.values(Currency).includes(currency)) {
       throw new InvalidTenantAttributeException('Valid base currency is required.');
+    }
+  }
+
+  private static sanitizeDescription(description: string | null): string | null {
+    if (description === null) return null;
+    const trimmed = description.trim();
+    if (trimmed.length === 0) return null;
+    return trimmed;
+  }
+
+  private static validateDescriptionLength(description: string | null): void {
+    if (description !== null && description.length > 255) {
+      throw new InvalidTenantAttributeException('Tenant description cannot exceed 255 characters.');
+    }
+  }
+
+  private static validateBannerUrlLength(bannerUrl: string | null): void {
+    if (bannerUrl !== null && bannerUrl.length > 1024) {
+      throw new InvalidTenantAttributeException('Tenant banner URL cannot exceed 1024 characters.');
     }
   }
 
@@ -159,17 +192,25 @@ export class Tenant {
     taxId: string | null = null,
     customDomain: string | null = null,
     logoUrl: string | null = null,
+    description: string | null = null,
+    bannerUrl: string | null = null,
   ): void {
     if (this.status === TenantStatus.ARCHIVED) {
       throw new InvalidTenantStateException('Cannot update an archived tenant.');
     }
 
+    const cleanDescription = Tenant.sanitizeDescription(description);
+    Tenant.validateDescriptionLength(cleanDescription);
+    Tenant.validateBannerUrlLength(bannerUrl);
+
     this.name = name;
     this.slug = slug;
+    this.description = cleanDescription;
     this.contactEmail = contactEmail;
     this.taxId = taxId;
     this.customDomain = customDomain;
     this.logoUrl = logoUrl;
+    this.bannerUrl = bannerUrl;
 
     this.updateUpdatedAt();
     this.addDomainEvent(new TenantProfileUpdatedEvent(this.id));
@@ -215,6 +256,12 @@ export class Tenant {
   }
   public getLogoUrl(): string | null {
     return this.logoUrl;
+  }
+  public getBannerUrl(): string | null {
+    return this.bannerUrl;
+  }
+  public getDescription(): string | null {
+    return this.description;
   }
   public getCreatedAt(): Date {
     return this.createdAt;

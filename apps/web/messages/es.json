@@ -103,5 +103,28 @@
     "unarchiving": "Desarchivando...",
     "unarchive_confirm_title": "Desarchivar Categoría",
     "unarchive_confirm_desc": "¿Estás seguro de que deseas desarchivar esta categoría? Volverá a estar activa."
+  },
+  "Storefront": {
+    "login": "Iniciar sesión",
+    "createAccount": "Crear cuenta",
+    "logout": "Cerrar sesión",
+    "dashboard": "Panel de control",
+    "settings": "Configuración",
+    "browseProducts": "Explora nuestros últimos productos.",
+    "categories": "Categorías",
+    "allProducts": "Todos los productos",
+    "noCategories": "No hay categorías disponibles.",
+    "searchProducts": "Buscar productos...",
+    "pageInfo": "Página {current} de {total}"
+  }
+  ,
+  "BuyerDashboard": {
+    "title": "Panel de Comprador",
+    "available_stores": "Tiendas Disponibles",
+    "empty_stores": "No hay tiendas disponibles en este momento.",
+    "visit_store": "Visitar Tienda",
+    "recent_purchases": "Compras Recientes",
+    "recent_purchases_desc": "Aquí puedes ver todos los pedidos realizados en cualquier tienda.",
+    "empty_purchases": "Aún no has realizado ninguna compra."
   }
 }

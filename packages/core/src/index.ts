@@ -104,6 +104,7 @@ export type { EventBusPort } from '@/shared/application/ports/out/event-bus.port
 
 // Application (Exceptions)
 export { ApplicationException } from '@/shared/application/exceptions/application.exception';
+export { TransactionException } from '@/shared/application/exceptions/transaction.exception';
 
 // Infrastructure
 export { LocalEventBus } from '@/shared/infrastructure/event-bus/local-event-bus';
@@ -149,3 +150,23 @@ export type { ProductReadModel } from '@/products/infrastructure/repositories/su
 export { PostgresProductRepository } from '@/products/infrastructure/repositories/postgres-product.repository';
 export { PostgresTransactionManagerAdapter } from '@/shared/infrastructure/adapters/postgres-transaction-manager.adapter';
 export * from '@/shared/infrastructure/adapters/postgres-event-bus.adapter';
+export { createTenantId } from '@/shared/domain/types/tenant-id.type';
+export { createCategoryId } from '@/products/domain/types/category-id.type';
+export type { PublicCategoryReadModel } from '@/categories/application/read-models/public-category-read.model';
+export type { PublicCategoryReadRepositoryPort } from '@/categories/application/ports/out/public-category-read-repository.port';
+export type { PublicProductReadModel } from '@/products/application/read-models/public-product-read.model';
+export type { PublicProductFilters, PublicProductReadRepositoryPort } from '@/products/application/ports/out/public-product-read-repository.port';
+export { SupabasePublicCategoryReadRepository } from '@/categories/infrastructure/repositories/supabase-public-category-read.repository';
+export { SupabasePublicProductReadRepository } from '@/products/infrastructure/repositories/supabase-public-product-read.repository';
+export * from './features/categories/domain/value-objects/category-slug.vo';
+
+// Public Tenant
+export type { PublicTenantReadModel } from '@/tenants/application/read-models/public-tenant-read.model';
+export type { PublicTenantReadRepositoryPort } from '@/tenants/application/ports/out/public-tenant-read-repository.port';
+export { SupabasePublicTenantReadAdapter } from '@/tenants/infrastructure/repositories/supabase-public-tenant-read.adapter';
+
+
+// Tenant Directory
+export * from '@/tenants/application/read-models/public-tenant-directory-item.model';
+export * from '@/tenants/application/ports/out/public-tenant-directory-read-repository.port';
+export * from '@/tenants/infrastructure/repositories/supabase-public-tenant-directory-read.adapter';

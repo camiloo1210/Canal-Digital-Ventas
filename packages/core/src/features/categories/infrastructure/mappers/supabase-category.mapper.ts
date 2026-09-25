@@ -4,6 +4,7 @@ import { DbCategoryRow } from '@/categories/infrastructure/types/supabase-catego
 import { CategoryId } from '@/categories/domain/types/category-id.type';
 import { TenantId } from '@/shared/domain/types/tenant-id.type';
 import { CategoryName } from '@/categories/domain/value-objects/category-name.vo';
+import { CategorySlug } from '@/categories/domain/value-objects/category-slug.vo';
 import { CategoryDescription } from '@/categories/domain/value-objects/category-description.vo';
 
 export class SupabaseCategoryMapper {
@@ -11,6 +12,7 @@ export class SupabaseCategoryMapper {
     return Category.reconstitute({
       id: row.id as CategoryId,
       name: CategoryName.from(row.name),
+      slug: CategorySlug.create(row.slug),
       description: CategoryDescription.from(row.description),
       status: row.status as CategoryStatus,
       tenantId: row.tenant_id as TenantId,
@@ -22,6 +24,7 @@ export class SupabaseCategoryMapper {
     return {
       id: category.getId(),
       name: category.getName(),
+      slug: category.getSlug(),
       description: category.getDescription(),
       status: category.getStatus(),
       tenant_id: category.getTenantId(),

@@ -3,6 +3,7 @@ import { CreateCategoryDto } from '@/categories/application/dtos/create-category
 import { CategoryRepositoryPort } from '@/categories/application/ports/out/category-repository.port';
 import { EventBusPort } from '@/shared/application/ports/out/event-bus.port';
 import { Category } from '@/categories/domain/entities/category.entity';
+import { CategorySlug } from '@/categories/domain/value-objects/category-slug.vo';
 import { parseCategoryStatus } from '@/categories/domain/enums/category-status.enum';
 import { createCategoryId } from '@/categories/domain/types/category-id.type';
 import { createTenantId } from '@/shared/domain/types/tenant-id.type';
@@ -20,10 +21,12 @@ export class CreateCategoryUseCase {
       async (tx) => {
         const categoryId = createCategoryId(dto.id);
         const tenantId = createTenantId(dto.tenantId);
+        const slug = CategorySlug.fromName(dto.name);
 
         const category = Category.create(
           categoryId,
           dto.name,
+          slug,
           tenantId,
           dto.description,
           parseCategoryStatus(dto.status),

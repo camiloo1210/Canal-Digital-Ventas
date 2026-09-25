@@ -1,26 +1,72 @@
-export default async function StorePage(props: { params: Promise<{ tenantSlug: string }> }) {
+import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
+import { resolveTenantQuery } from '@/features/iam/queries/resolve-tenant.query';
+import { parseStoreFilters, PAGE_SIZE } from '@/features/store/utils/store-filters.parser';
+import { getStoreCategoryReadRepository } from '@/features/store/di/store.di';
+import { StoreCategorySidebar } from '@/features/store/components/store-category-sidebar';
+import { StoreSearchBar } from '@/features/store/components/store-search-bar';
+import { StoreProfileHeader } from '@/features/store/components/store-profile-header';
+import { StoreResultsBoundary, StoreResultsSkeleton } from '@/features/store/components/store-results-boundary';
+import { getTranslations } from 'next-intl/server';
+
+export default async function StorePage(props: {
+  params: Promise<{ tenantSlug: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   const params = await props.params;
+  const searchParams = await props.searchParams;
+
+  const t = await getTranslations('Storefront');
+
+  const tenantContext = await resolveTenantQuery(params.tenantSlug);
+  
+  if (!tenantContext) {
+    notFound();
+  }
+
+  const filters = parseStoreFilters(searchParams);
+
+  const categoryRepo = await getStoreCategoryReadRepository();
+  const categoriesResult = await categoryRepo.searchActiveByTenantSlug(params.tenantSlug);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-4xl font-extrabold text-gray-900 mb-6">Welcome to {params.tenantSlug}</h1>
-      <p className="text-lg text-gray-600 mb-8">
-        This is a B2B2C tenant store. As a global buyer, you can browse products here. When you
-        check out, the JIT provisioning will link your global account to this specific store.
-      </p>
+    <div className="flex flex-col min-h-screen">
+      <StoreProfileHeader 
+        name={tenantContext.name}
+        description={tenantContext.description}
+        logoUrl={tenantContext.logoUrl}
+        bannerUrl={tenantContext.bannerUrl}
+      />
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 w-full flex flex-col">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+          <StoreSearchBar placeholder={t('searchProducts')} />
+        </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Dummy Products */}
-        {[1, 2, 3].map((item) => (
-          <div key={item} className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
-            <div className="w-full h-48 bg-gray-200 rounded-md mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900">Premium Product {item}</h3>
-            <p className="text-gray-500 mt-1">$99.99</p>
-            <button className="mt-4 w-full bg-black text-white py-2 rounded-md font-medium hover:bg-gray-800 transition-colors">
-              Add to Cart
-            </button>
+        <div className="flex flex-col md:flex-row gap-8 items-start">
+          <StoreCategorySidebar
+            categories={categoriesResult}
+            currentCategorySlug={filters.category}
+            currentQuery={filters.q}
+            labels={{
+              categories: t('categories'),
+              allProducts: t('allProducts'),
+              noCategories: t('noCategories')
+            }}
+          />
+          
+          <div className="flex-1 w-full">
+            <Suspense fallback={<StoreResultsSkeleton />} key={`${filters.q}-${filters.category}-${filters.page}`}>
+              <StoreResultsBoundary
+                tenantSlug={params.tenantSlug}
+                categorySlug={filters.category}
+                q={filters.q}
+                page={filters.page}
+                pageInfoTemplate={t('pageInfo', { current: '{current}', total: '{total}' })}
+              />
+            </Suspense>
           </div>
-        ))}
+        </div>
       </div>
     </div>
   );
