@@ -3,9 +3,9 @@ id: 522238b4-2ae2-4651-af4e-d7483b816725
 title: "CU-MOD2-01: Visualizar Catálogo y Precios Mayoristas"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-29"
+updated_date: "2026-09-25"
 issue_type: use-case
-status: open
+status: in_review
 labels:
   - ai-generated
 relations:
@@ -14,7 +14,7 @@ relations:
 frecuencia: Muy alta
 importancia: Vital
 urgencia: Inmediata
-integrity_hash: "sha256:54ba0dc1a26e748e66ae0a1ebdeec7d2f1be856575bf4c88a42801620418cdcf"
+integrity_hash: "sha256:6f420eeca4623a32ce4a6090142007d97498569ade1e98502fa1cd855cfa8084"
 ---
 
 ## Actores
