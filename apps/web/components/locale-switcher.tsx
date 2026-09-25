@@ -56,8 +56,8 @@ export function LocaleSwitcher(): React.JSX.Element {
             onCheckedChange={handleLocaleChange}
             disabled={isPending}
             className={cn(
-              'relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50',
-              'bg-primary' // Always primary so it doesn't look "disabled" when in Spanish
+              'relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50',
+              'bg-primary'
             )}
           >
             <Switch.Thumb
