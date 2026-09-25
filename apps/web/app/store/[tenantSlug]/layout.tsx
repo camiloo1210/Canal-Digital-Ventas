@@ -26,7 +26,7 @@ export default async function StoreLayout({
 }: {
   children: React.ReactNode;
   params: Promise<{ tenantSlug: string }>;
-}) {
+}): Promise<React.JSX.Element> {
   const { tenantSlug } = await params;
   
   const tenantContext = await resolveTenantQuery(tenantSlug);

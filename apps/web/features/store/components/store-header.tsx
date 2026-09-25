@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { ChevronLeftIcon } from 'lucide-react';
-import { StoreViewer } from '../queries/store-viewer.query';
+import { StoreViewer } from '@/features/store/queries/store-viewer.query';
 import { UserNav } from '@/features/iam/components/user-nav';
 
 interface StoreHeaderProps {

@@ -3,6 +3,15 @@ import { PublicTenantDirectoryReadRepositoryPort } from '../../application/ports
 import { PublicTenantDirectoryResult } from '../../application/read-models/public-tenant-directory-item.model';
 import { TenantRepositoryException } from '../../application/exceptions/tenant-repository.exception';
 
+interface DbTenantDirectoryResult {
+  name: string;
+  slug: string;
+  description: string | null;
+  logo_url: string | null;
+  banner_url: string | null;
+  total_count: number;
+}
+
 export class SupabasePublicTenantDirectoryReadAdapter implements PublicTenantDirectoryReadRepositoryPort {
   constructor(private readonly supabase: SupabaseClient) {}
 
@@ -18,10 +27,11 @@ export class SupabasePublicTenantDirectoryReadAdapter implements PublicTenantDir
       return { items: [], total: 0, currentPage: page, totalPages: 0 };
     }
 
-    const totalCount = data[0].total_count;
+    const rows = data as DbTenantDirectoryResult[];
+    const totalCount = rows[0].total_count;
 
     return {
-      items: data.map((t: any) => ({
+      items: rows.map((t) => ({
         name: t.name,
         slug: t.slug,
         description: t.description,

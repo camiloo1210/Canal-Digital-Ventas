@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { listActiveTenantsQuery } from '@/features/iam/queries/list-active-tenants.query';
@@ -13,7 +14,7 @@ export const metadata = {
 
 export default async function BuyerDashboardPage(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
+}): Promise<React.JSX.Element> {
   const searchParams = await props.searchParams;
   const page = searchParams.page ? parseInt(searchParams.page as string, 10) : 1;
 
@@ -51,7 +52,6 @@ export default async function BuyerDashboardPage(props: {
       </header>
 
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12 w-full">
-        {/* Active Businesses Directory */}
         <StoreDirectory 
           result={activeTenantsResult} 
           labels={{
@@ -61,7 +61,6 @@ export default async function BuyerDashboardPage(props: {
           }} 
         />
 
-        {/* Recent Purchases */}
         <section>
           <Card className="shadow-sm border-border">
             <CardHeader className="border-b border-border bg-muted/20">
