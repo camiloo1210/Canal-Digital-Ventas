@@ -44,13 +44,13 @@ const optionalMoneySchema = z
   );
 
 const createProductSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters long'),
-  sku: z.string().min(1, 'SKU is required'),
+  name: z.string().trim().min(2, 'Name must be at least 2 characters long').max(50, 'Name must not exceed 50 characters'),
+  sku: z.string().regex(/^[A-Z0-9-]{5,20}$/, 'SKU must be 5-20 characters long and contain only uppercase letters, numbers, and dashes'),
   price: moneyFieldSchema,
   cost: moneyFieldSchema,
   wholesalePrice: optionalMoneySchema,
   categoryId: z.string().uuid('Please select a valid category'),
-  description: z.string().optional().default(''),
+  description: z.string().max(200, 'Description must not exceed 200 characters').optional().default(''),
   stock: z.coerce.number().int().nonnegative('Stock must be non-negative').default(0),
   isVatExempt: z.preprocess((val) => val === 'true' || val === 'on', z.boolean()),
   imageFile: z.instanceof(File)
@@ -236,13 +236,13 @@ export async function createProductAction(
 const updateProductSchema = z.object({
   productId: z.string().uuid(),
   expectedVersion: z.coerce.number().int().nonnegative(),
-  name: z.string().min(2, 'Name must be at least 2 characters long'),
-  sku: z.string().min(1, 'SKU is required'),
+  name: z.string().trim().min(2, 'Name must be at least 2 characters long').max(50, 'Name must not exceed 50 characters'),
+  sku: z.string().regex(/^[A-Z0-9-]{5,20}$/, 'SKU must be 5-20 characters long and contain only uppercase letters, numbers, and dashes'),
   price: moneyFieldSchema,
   cost: moneyFieldSchema,
   wholesalePrice: optionalMoneySchema,
   categoryId: z.string().uuid('Please select a valid category'),
-  description: z.string().optional().default(''),
+  description: z.string().max(200, 'Description must not exceed 200 characters').optional().default(''),
   stock: z.coerce.number().int().nonnegative('Stock must be non-negative').default(0),
   isVatExempt: z.preprocess((val) => val === 'true' || val === 'on', z.boolean()),
 });
