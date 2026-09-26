@@ -36,7 +36,7 @@ function extractCategoryFormValues(formData: FormData): CategoryFormValues {
   };
 }
 
-const getCreateCategorySchema = (t: any) =>
+const getCreateCategorySchema = (t: Awaited<ReturnType<typeof getTranslations>>): z.ZodSchema =>
   z.object({
     name: z.string()
       .max(100, t('validation_name_maxLength'))
@@ -112,7 +112,7 @@ export async function createCategoryAction(
   return { success: false, error: t('errors_unexpected'), values: extractedValues, revision };
 }
 
-const getUpdateCategorySchema = (t: any) =>
+const getUpdateCategorySchema = (t: Awaited<ReturnType<typeof getTranslations>>): z.ZodSchema =>
   z.object({
     categoryId: z.string().uuid(),
     expectedVersion: z.coerce.number().int().nonnegative(),

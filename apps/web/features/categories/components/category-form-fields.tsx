@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -18,16 +18,18 @@ interface CategoryFormFieldsProps {
   defaultValues?: Partial<CategoryFormValues>;
 }
 
-export function CategoryFormFields({ revision, fieldErrors, defaultValues }: CategoryFormFieldsProps) {
+export function CategoryFormFields({ revision, fieldErrors, defaultValues }: CategoryFormFieldsProps): React.JSX.Element {
   const t = useTranslations('Categories');
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
   const [clearedFields, setClearedFields] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
+  const [prevErrors, setPrevErrors] = useState(fieldErrors);
+  if (fieldErrors !== prevErrors) {
+    setPrevErrors(fieldErrors);
     setClearedFields(new Set());
-  }, [fieldErrors]);
+  }
   
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
     const { name, value } = e.target;
     
     if (!clearedFields.has(name)) {
@@ -49,7 +51,7 @@ export function CategoryFormFields({ revision, fieldErrors, defaultValues }: Cat
     }
   };
 
-  const getError = (name: keyof CategoryFormValues) => {
+  const getError = (name: keyof CategoryFormValues): string | undefined => {
     if (localErrors[name]) return localErrors[name];
     if (!clearedFields.has(name)) return fieldErrors?.[name]?.[0];
     return undefined;

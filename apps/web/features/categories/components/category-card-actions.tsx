@@ -12,7 +12,6 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import { useTranslations } from 'next-intl';
@@ -24,14 +23,14 @@ interface CategoryCardActionsProps {
   };
 }
 
-export function CategoryCardActions({ category }: CategoryCardActionsProps) {
+export function CategoryCardActions({ category }: CategoryCardActionsProps): React.JSX.Element {
   const [isArchiving, setIsArchiving] = useState(false);
   const [isUnarchiving, setIsUnarchiving] = useState(false);
   const router = useRouter();
   const t = useTranslations('Categories');
   const tShared = useTranslations('Products');
 
-  const handleArchive = async () => {
+  const handleArchive = async (): Promise<void> => {
     if (!navigator.onLine) {
       toast.error(tShared('offline_error', { fallback: 'You are currently offline.' }));
       return;
@@ -51,7 +50,7 @@ export function CategoryCardActions({ category }: CategoryCardActionsProps) {
         toast.success(t('archive_success'));
         router.refresh();
       }
-    } catch (error) {
+    } catch {
       toast.error(t('unexpected_error'));
     } finally {
       setIsArchiving(false);
@@ -59,7 +58,7 @@ export function CategoryCardActions({ category }: CategoryCardActionsProps) {
   };
 
 
-  const handleUnarchive = async () => {
+  const handleUnarchive = async (): Promise<void> => {
     if (!navigator.onLine) {
       toast.error(tShared('offline_error', { fallback: 'You are currently offline.' }));
       return;
@@ -79,7 +78,7 @@ export function CategoryCardActions({ category }: CategoryCardActionsProps) {
         toast.success(t('unarchive_success'));
         router.refresh();
       }
-    } catch (error) {
+    } catch {
       toast.error(t('unexpected_error'));
     } finally {
       setIsUnarchiving(false);
