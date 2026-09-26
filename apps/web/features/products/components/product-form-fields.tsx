@@ -152,7 +152,6 @@ export function ProductFormFields({
                 key={`name-${revision}`}
                 id="name"
                 name="name"
-                maxLength={50}
                 defaultValue={defaultValues?.name}
                 required
                 placeholder={t('form_name_placeholder')}
@@ -172,7 +171,6 @@ export function ProductFormFields({
                 key={`sku-${revision}`}
                 id="sku"
                 name="sku"
-                maxLength={20}
                 defaultValue={defaultValues?.sku}
                 required
                 placeholder={t('form_sku_placeholder')}
@@ -222,7 +220,6 @@ export function ProductFormFields({
               key={`description-${revision}`}
               id="description"
               name="description"
-              maxLength={200}
               defaultValue={defaultValues?.description}
               placeholder={t('form_description_placeholder')}
               className="min-h-[100px]"

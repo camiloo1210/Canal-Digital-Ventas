@@ -29,7 +29,6 @@ export function CategoryFormFields({ revision, fieldErrors, defaultValues }: Cat
           id="name"
           name="name"
           defaultValue={defaultValues?.name}
-          maxLength={100}
           required
           placeholder={t('form_name_placeholder')}
         />
@@ -48,7 +47,6 @@ export function CategoryFormFields({ revision, fieldErrors, defaultValues }: Cat
           id="description"
           name="description"
           defaultValue={defaultValues?.description}
-          maxLength={200}
           placeholder={t('form_description_placeholder')}
           className="min-h-[100px]"
         />
