@@ -103,7 +103,14 @@
     "action_unarchive": "Unarchive",
     "unarchiving": "Unarchiving...",
     "unarchive_confirm_title": "Unarchive Category",
-    "unarchive_confirm_desc": "Are you sure you want to unarchive this category? It will become active again."
+    "unarchive_confirm_desc": "Are you sure you want to unarchive this category? It will become active again.",
+    "validation_name_required": "Name is required",
+    "validation_name_maxLength": "Name must not exceed 100 characters",
+    "validation_description_maxLength": "Description must not exceed 200 characters",
+    "errors_slugAlreadyExists": "A category with this name already exists.",
+    "errors_concurrency": "The category was modified by another user. Please refresh and try again.",
+    "errors_unexpected": "An unexpected server error occurred.",
+    "offline_error": "You are offline. Please check your connection."
   },
   "Storefront": {
     "login": "Login",

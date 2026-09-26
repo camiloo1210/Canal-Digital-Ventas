@@ -38,7 +38,6 @@
     "edit_desc": "Modifica los detalles del producto a continuación.",
     "submit_updating": "Actualizando Producto...",
     "submit_update": "Actualizar Producto",
-    "submit_updating": "Actualizando Producto...",
     "concurrency_error": "El producto fue modificado por otro usuario. Por favor recarga antes de guardar tus cambios.",
     "new_title": "Nuevo Producto",
     "new_desc": "Completa los detalles para listar un nuevo producto en el catálogo.",
@@ -106,7 +105,14 @@
     "action_unarchive": "Desarchivar",
     "unarchiving": "Desarchivando...",
     "unarchive_confirm_title": "Desarchivar Categoría",
-    "unarchive_confirm_desc": "¿Estás seguro de que deseas desarchivar esta categoría? Volverá a estar activa."
+    "unarchive_confirm_desc": "¿Estás seguro de que deseas desarchivar esta categoría? Volverá a estar activa.",
+    "validation_name_required": "El nombre es obligatorio",
+    "validation_name_maxLength": "El nombre no debe superar los 100 caracteres",
+    "validation_description_maxLength": "La descripción no debe superar los 200 caracteres",
+    "errors_slugAlreadyExists": "Ya existe una categoría con este nombre.",
+    "errors_concurrency": "La categoría fue modificada por otro usuario. Actualiza la página e inténtalo nuevamente.",
+    "errors_unexpected": "Ocurrió un error inesperado en el servidor.",
+    "offline_error": "Estás sin conexión. Por favor, revisa tu red."
   },
   "Storefront": {
     "login": "Iniciar sesión",

@@ -1,18 +1,17 @@
 'use client';
 
 import { useActionState, useRef, useEffect } from 'react';
-import { createCategoryAction } from '@/features/categories/actions/categories.actions';
+import { createCategoryAction, CategoryActionState } from '@/features/categories/actions/categories.actions';
 import { Button } from '@/components/ui/button';
-import { Layers, Loader2 } from 'lucide-react';
+import { FolderPlus, Loader2 } from 'lucide-react';
 import { useFormStatus } from 'react-dom';
 import { CategoryFormFields } from '@/features/categories/components/category-form-fields';
 import { toast } from 'sonner';
-
 import { useTranslations } from 'next-intl';
 
-const initialState = {
+const initialState: CategoryActionState = {
   success: false,
-  error: null as string | null,
+  error: null,
 };
 
 function SubmitButton(): React.JSX.Element {
@@ -28,7 +27,7 @@ function SubmitButton(): React.JSX.Element {
         </span>
       ) : (
         <span className="flex items-center gap-2">
-          <Layers className="w-4 h-4" />
+          <FolderPlus className="w-4 h-4" />
           {t('submit_save')}
         </span>
       )}
@@ -40,7 +39,6 @@ export function CreateCategoryForm(): React.JSX.Element {
   const [state, formAction] = useActionState(createCategoryAction, initialState);
   const formRef = useRef<HTMLFormElement>(null);
   const t = useTranslations('Categories');
-  const tShared = useTranslations('Products'); // Reuse offline error
 
   useEffect(() => {
     if (state?.success) {
@@ -51,7 +49,7 @@ export function CreateCategoryForm(): React.JSX.Element {
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
     if (!navigator.onLine) {
       e.preventDefault();
-      toast.error(tShared('offline_error', { fallback: 'You are currently offline.' }));
+      toast.error(t('offline_error'));
     }
   };
 
@@ -71,7 +69,11 @@ export function CreateCategoryForm(): React.JSX.Element {
           </div>
         )}
 
-        <CategoryFormFields />
+        <CategoryFormFields 
+          revision={state.revision} 
+          defaultValues={state.values} 
+          fieldErrors={state.fieldErrors} 
+        />
 
         <div className="pt-2">
           <SubmitButton />

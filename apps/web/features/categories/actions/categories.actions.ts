@@ -12,35 +12,57 @@ import {
   getArchiveCategoryUseCase,
   getUnarchiveCategoryUseCase,
 } from '@/features/categories/di/categories.di';
+import { getTranslations } from 'next-intl/server';
 
-const createCategorySchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters long'),
-  description: z.string().optional().default(''),
-});
-
-export interface ActionState {
-  success: boolean;
-  error: string | null;
+export interface CategoryFormValues {
+  name: string;
+  description: string;
 }
 
-export async function createCategoryAction(
-  prevState: ActionState,
-  formData: FormData,
-): Promise<ActionState> {
-  const rawData = Object.fromEntries(formData.entries());
+export type CategoryFieldErrors = Partial<Record<keyof CategoryFormValues, string[]>>;
 
-  let parsed;
-  try {
-    parsed = createCategorySchema.safeParse(rawData);
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      return { error: err.message, success: false };
-    }
-    return { error: 'Invalid data format', success: false };
-  }
+export interface CategoryActionState {
+  success: boolean;
+  error: string | null;
+  fieldErrors?: CategoryFieldErrors;
+  values?: CategoryFormValues;
+  revision?: number;
+}
+
+function extractCategoryFormValues(formData: FormData): CategoryFormValues {
+  return {
+    name: formData.get('name')?.toString() || '',
+    description: formData.get('description')?.toString() || '',
+  };
+}
+
+const getCreateCategorySchema = (t: any) =>
+  z.object({
+    name: z.string()
+      .max(100, t('validation_name_maxLength'))
+      .refine((val) => val.trim().length > 0, t('validation_name_required'))
+      .transform((val) => val.trim()),
+    description: z.string().max(200, t('validation_description_maxLength')).optional().default(''),
+  });
+
+export async function createCategoryAction(
+  prevState: CategoryActionState,
+  formData: FormData,
+): Promise<CategoryActionState> {
+  const t = await getTranslations('Categories');
+  const extractedValues = extractCategoryFormValues(formData);
+  const revision = (prevState.revision ?? 0) + 1;
+
+  const parsed = getCreateCategorySchema(t).safeParse(extractedValues);
 
   if (!parsed.success) {
-    return { error: parsed.error.issues[0].message, success: false };
+    return {
+      error: t('errors_unexpected'), 
+      success: false,
+      fieldErrors: parsed.error.flatten().fieldErrors,
+      values: extractedValues,
+      revision,
+    };
   }
 
   let isSuccess = false;
@@ -52,12 +74,12 @@ export async function createCategoryAction(
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return { error: 'Unauthorized session.', success: false };
+      return { error: t('errors_unexpected'), success: false, values: extractedValues, revision };
     }
 
     const tenantId = await getActiveTenantQuery(user.id);
     if (!tenantId) {
-      return { error: 'User does not have an assigned tenant ID.', success: false };
+      return { error: t('errors_unexpected'), success: false, values: extractedValues, revision };
     }
 
     const useCase = getCreateCategoryUseCase();
@@ -72,14 +94,14 @@ export async function createCategoryAction(
 
     isSuccess = true;
   } catch (error: unknown) {
-    if (error instanceof DomainException) {
-      return { error: error.message, success: false };
-    }
-    if (error instanceof ApplicationException) {
-      return { error: error.message, success: false };
+    if (error instanceof DomainException || error instanceof ApplicationException) {
+      if (error.name === 'InvalidCategorySlugException' || error.message.includes('slug')) {
+        return { error: t('errors_slugAlreadyExists'), success: false, values: extractedValues, revision };
+      }
+      return { error: t('errors_unexpected'), success: false, values: extractedValues, revision };
     }
     console.error('Critical Server Exception:', error);
-    return { error: 'An unexpected server error occurred.', success: false };
+    return { error: t('errors_unexpected'), success: false, values: extractedValues, revision };
   }
 
   if (isSuccess) {
@@ -87,34 +109,50 @@ export async function createCategoryAction(
     redirect('/dashboard/catalog/categories');
   }
 
-  return { success: false, error: 'Failed to process request.' };
+  return { success: false, error: t('errors_unexpected'), values: extractedValues, revision };
 }
 
-const updateCategorySchema = z.object({
-  categoryId: z.string().uuid(),
-  expectedVersion: z.coerce.number().int().nonnegative(),
-  name: z.string().min(2, 'Name must be at least 2 characters long'),
-  description: z.string().optional().default(''),
-});
+const getUpdateCategorySchema = (t: any) =>
+  z.object({
+    categoryId: z.string().uuid(),
+    expectedVersion: z.coerce.number().int().nonnegative(),
+    name: z.string()
+      .max(100, t('validation_name_maxLength'))
+      .refine((val) => val.trim().length > 0, t('validation_name_required'))
+      .transform((val) => val.trim()),
+    description: z.string().max(200, t('validation_description_maxLength')).optional().default(''),
+  });
 
 export async function updateCategoryAction(
-  prevState: ActionState,
+  prevState: CategoryActionState,
   formData: FormData,
-): Promise<ActionState> {
-  const rawData = Object.fromEntries(formData.entries());
+): Promise<CategoryActionState> {
+  const t = await getTranslations('Categories');
+  const extractedValues = extractCategoryFormValues(formData);
+  const revision = (prevState.revision ?? 0) + 1;
 
-  let parsed;
-  try {
-    parsed = updateCategorySchema.safeParse(rawData);
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      return { error: err.message, success: false };
-    }
-    return { error: 'Invalid data format', success: false };
-  }
+  // Extract non-user-editable fields
+  const categoryId = formData.get('categoryId')?.toString();
+  const expectedVersion = formData.get('expectedVersion')?.toString();
+
+  const parsed = getUpdateCategorySchema(t).safeParse({
+    ...extractedValues,
+    categoryId,
+    expectedVersion,
+  });
 
   if (!parsed.success) {
-    return { error: parsed.error.issues[0].message, success: false };
+    // If categoryId or expectedVersion fails, it's a critical error
+    if (parsed.error.flatten().fieldErrors.categoryId || parsed.error.flatten().fieldErrors.expectedVersion) {
+      return { error: t('errors_unexpected'), success: false, values: extractedValues, revision };
+    }
+    return {
+      error: t('errors_unexpected'), 
+      success: false,
+      fieldErrors: parsed.error.flatten().fieldErrors,
+      values: extractedValues,
+      revision,
+    };
   }
 
   let isSuccess = false;
@@ -126,12 +164,12 @@ export async function updateCategoryAction(
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return { error: 'Unauthorized session.', success: false };
+      return { error: t('errors_unexpected'), success: false, values: extractedValues, revision };
     }
 
     const tenantId = await getActiveTenantQuery(user.id);
     if (!tenantId) {
-      return { error: 'User does not have an assigned tenant ID.', success: false };
+      return { error: t('errors_unexpected'), success: false, values: extractedValues, revision };
     }
 
     const useCase = getChangeCategoryDetailsUseCase();
@@ -146,17 +184,14 @@ export async function updateCategoryAction(
 
     isSuccess = true;
   } catch (error: unknown) {
-    if (error instanceof DomainException) {
-      return { error: error.message, success: false };
-    }
-    if (error instanceof ApplicationException) {
+    if (error instanceof DomainException || error instanceof ApplicationException) {
       if (error.name === 'OptimisticConcurrencyException') {
-        return { error: 'concurrency_error', success: false };
+        return { error: t('errors_concurrency'), success: false, values: extractedValues, revision };
       }
-      return { error: error.message, success: false };
+      return { error: t('errors_unexpected'), success: false, values: extractedValues, revision };
     }
     console.error('Critical Server Exception:', error);
-    return { error: 'An unexpected server error occurred.', success: false };
+    return { error: t('errors_unexpected'), success: false, values: extractedValues, revision };
   }
 
   if (isSuccess) {
@@ -164,10 +199,11 @@ export async function updateCategoryAction(
     redirect('/dashboard/catalog/categories');
   }
 
-  return { success: false, error: 'Failed to process request.' };
+  return { success: false, error: t('errors_unexpected'), values: extractedValues, revision };
 }
 
-export async function archiveCategoryAction(id: string): Promise<ActionState> {
+export async function archiveCategoryAction(id: string): Promise<{ success: boolean; error: string | null }> {
+  const t = await getTranslations('Categories');
   let isSuccess = false;
 
   try {
@@ -177,12 +213,12 @@ export async function archiveCategoryAction(id: string): Promise<ActionState> {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return { error: 'Unauthorized session.', success: false };
+      return { error: t('errors_unexpected'), success: false };
     }
 
     const tenantId = await getActiveTenantQuery(user.id);
     if (!tenantId) {
-      return { error: 'User does not have an assigned tenant ID.', success: false };
+      return { error: t('errors_unexpected'), success: false };
     }
 
     const useCase = getArchiveCategoryUseCase();
@@ -194,14 +230,8 @@ export async function archiveCategoryAction(id: string): Promise<ActionState> {
 
     isSuccess = true;
   } catch (error: unknown) {
-    if (error instanceof DomainException) {
-      return { error: error.message, success: false };
-    }
-    if (error instanceof ApplicationException) {
-      return { error: error.message, success: false };
-    }
     console.error('Critical Server Exception:', error);
-    return { error: 'An unexpected server error occurred.', success: false };
+    return { error: t('errors_unexpected'), success: false };
   }
 
   if (isSuccess) {
@@ -209,10 +239,11 @@ export async function archiveCategoryAction(id: string): Promise<ActionState> {
     return { success: true, error: null };
   }
 
-  return { success: false, error: 'Failed to process request.' };
+  return { success: false, error: t('errors_unexpected') };
 }
 
-export async function unarchiveCategoryAction(id: string): Promise<ActionState> {
+export async function unarchiveCategoryAction(id: string): Promise<{ success: boolean; error: string | null }> {
+  const t = await getTranslations('Categories');
   let isSuccess = false;
 
   try {
@@ -222,12 +253,12 @@ export async function unarchiveCategoryAction(id: string): Promise<ActionState> 
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return { error: 'Unauthorized session.', success: false };
+      return { error: t('errors_unexpected'), success: false };
     }
 
     const tenantId = await getActiveTenantQuery(user.id);
     if (!tenantId) {
-      return { error: 'User does not have an assigned tenant ID.', success: false };
+      return { error: t('errors_unexpected'), success: false };
     }
 
     const useCase = getUnarchiveCategoryUseCase();
@@ -239,14 +270,8 @@ export async function unarchiveCategoryAction(id: string): Promise<ActionState> 
 
     isSuccess = true;
   } catch (error: unknown) {
-    if (error instanceof DomainException) {
-      return { error: error.message, success: false };
-    }
-    if (error instanceof ApplicationException) {
-      return { error: error.message, success: false };
-    }
     console.error('Critical Server Exception:', error);
-    return { error: 'An unexpected server error occurred.', success: false };
+    return { error: t('errors_unexpected'), success: false };
   }
 
   if (isSuccess) {
@@ -254,5 +279,5 @@ export async function unarchiveCategoryAction(id: string): Promise<ActionState> 
     return { success: true, error: null };
   }
 
-  return { success: false, error: 'Failed to process request.' };
+  return { success: false, error: t('errors_unexpected') };
 }
