@@ -1,5 +1,5 @@
 -- 1. Add slug column
-ALTER TABLE catalog.categories ADD COLUMN slug VARCHAR(100);
+ALTER TABLE catalog.categories ADD COLUMN IF NOT EXISTS slug VARCHAR(100);
 
 -- 2. Create unaccent extension if not exists
 CREATE EXTENSION IF NOT EXISTS unaccent;
@@ -46,7 +46,16 @@ WHERE slug IS NULL OR slug = '';
 
 -- 4. Make slug NOT NULL and UNIQUE per tenant
 ALTER TABLE catalog.categories ALTER COLUMN slug SET NOT NULL;
-ALTER TABLE catalog.categories ADD CONSTRAINT categories_tenant_id_slug_key UNIQUE (tenant_id, slug);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM pg_constraint 
+        WHERE conname = 'categories_tenant_id_slug_key'
+    ) THEN
+        ALTER TABLE catalog.categories ADD CONSTRAINT categories_tenant_id_slug_key UNIQUE (tenant_id, slug);
+    END IF;
+END $$;
 
 -- 5. Update RPCs
 DROP FUNCTION IF EXISTS public.get_public_categories_by_slug(VARCHAR);
