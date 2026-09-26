@@ -192,7 +192,7 @@ export function ProductFormFields({
             <Field>
               <FieldLabel htmlFor="categoryId">{t('form_category')}</FieldLabel>
               <select
-                id="categoryId"
+                key={`categoryId-${revision}`} id="categoryId"
                 name="categoryId"
                 defaultValue={defaultValues?.categoryId ?? ''}
                 required
@@ -333,7 +333,7 @@ export function ProductFormFields({
               <FieldContent className="items-center flex-row gap-3">
                 <input
                   type="checkbox"
-                  id="isVatExempt"
+                  key={`isVatExempt-${revision}`} id="isVatExempt"
                   name="isVatExempt"
                   defaultChecked={defaultValues?.isVatExempt === true || defaultValues?.isVatExempt === 'on' || defaultValues?.isVatExempt === 'true'}
                   className="w-4 h-4 cursor-pointer accent-primary"
