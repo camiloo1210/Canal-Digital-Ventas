@@ -38,6 +38,7 @@
     "edit_desc": "Modifica los detalles del producto a continuación.",
     "submit_updating": "Actualizando Producto...",
     "submit_update": "Actualizar Producto",
+    "submit_updating": "Actualizando Producto...",
     "concurrency_error": "El producto fue modificado por otro usuario. Por favor recarga antes de guardar tus cambios.",
     "new_title": "Nuevo Producto",
     "new_desc": "Completa los detalles para listar un nuevo producto en el catálogo.",
@@ -67,7 +68,10 @@
     "action_unarchive": "Desarchivar",
     "unarchiving": "Desarchivando...",
     "unarchive_confirm_title": "Desarchivar Producto",
-    "unarchive_confirm_desc": "¿Estás seguro de que deseas desarchivar este producto? Volverá a estar activo."
+    "unarchive_confirm_desc": "¿Estás seguro de que deseas desarchivar este producto? Volverá a estar activo.",
+    "form_invalid_format": "Formato inválido",
+    "error_money_format": "Por favor ingresa un monto válido (ej. 10.99).",
+    "error_stock_format": "El stock debe ser un número entero positivo."
   },
   "Categories": {
     "list_title": "Categorías",
@@ -116,8 +120,7 @@
     "noCategories": "No hay categorías disponibles.",
     "searchProducts": "Buscar productos...",
     "pageInfo": "Página {current} de {total}"
-  }
-  ,
+  },
   "BuyerDashboard": {
     "title": "Panel de Comprador",
     "available_stores": "Tiendas Disponibles",

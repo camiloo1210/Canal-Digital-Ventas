@@ -58,13 +58,17 @@
     "archive_confirm_title": "Archive Product",
     "archive_confirm_desc": "Are you sure you want to archive this product? It will no longer be visible in the active catalog.",
     "submit_update": "Update Product",
+    "submit_updating": "Updating Product...",
     "status_archived": "Archived",
     "unarchive_success": "Product unarchived successfully",
     "unarchive_error": "Failed to unarchive product",
     "action_unarchive": "Unarchive",
     "unarchiving": "Unarchiving...",
     "unarchive_confirm_title": "Unarchive Product",
-    "unarchive_confirm_desc": "Are you sure you want to unarchive this product? It will become active again."
+    "unarchive_confirm_desc": "Are you sure you want to unarchive this product? It will become active again.",
+    "form_invalid_format": "Invalid format",
+    "error_money_format": "Please enter a valid amount (e.g. 10.99).",
+    "error_stock_format": "Stock must be a positive whole number."
   },
   "Categories": {
     "list_title": "Categories",
@@ -113,8 +117,7 @@
     "noCategories": "No categories available.",
     "searchProducts": "Search products...",
     "pageInfo": "Page {current} of {total}"
-  }
-  ,
+  },
   "BuyerDashboard": {
     "title": "Buyer Dashboard",
     "available_stores": "Available Stores",
