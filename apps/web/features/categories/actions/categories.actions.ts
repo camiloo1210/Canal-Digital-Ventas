@@ -57,7 +57,7 @@ export async function createCategoryAction(
 
   if (!parsed.success) {
     return {
-      error: t('errors_unexpected'), 
+      error: null, 
       success: false,
       fieldErrors: parsed.error.flatten().fieldErrors,
       values: extractedValues,
@@ -147,7 +147,7 @@ export async function updateCategoryAction(
       return { error: t('errors_unexpected'), success: false, values: extractedValues, revision };
     }
     return {
-      error: t('errors_unexpected'), 
+      error: null, 
       success: false,
       fieldErrors: parsed.error.flatten().fieldErrors,
       values: extractedValues,
