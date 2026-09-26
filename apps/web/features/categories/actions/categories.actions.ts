@@ -36,7 +36,8 @@ function extractCategoryFormValues(formData: FormData): CategoryFormValues {
   };
 }
 
-const getCreateCategorySchema = (t: Awaited<ReturnType<typeof getTranslations>>): z.ZodSchema =>
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+const getCreateCategorySchema = (t: Awaited<ReturnType<typeof getTranslations>>) =>
   z.object({
     name: z.string()
       .max(100, t('validation_name_maxLength'))
@@ -112,7 +113,8 @@ export async function createCategoryAction(
   return { success: false, error: t('errors_unexpected'), values: extractedValues, revision };
 }
 
-const getUpdateCategorySchema = (t: Awaited<ReturnType<typeof getTranslations>>): z.ZodSchema =>
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+const getUpdateCategorySchema = (t: Awaited<ReturnType<typeof getTranslations>>) =>
   z.object({
     categoryId: z.string().uuid(),
     expectedVersion: z.coerce.number().int().nonnegative(),
