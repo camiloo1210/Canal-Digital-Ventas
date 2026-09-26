@@ -55,12 +55,13 @@ export class PostgresProductRepository implements ProductRepositoryPort {
         await conn`
           INSERT INTO catalog.products (
             id, tenant_id, category_id, name, description, sku, price_cents, cost_cents,
-            wholesale_price_cents, stock, is_vat_exempt, status, version, updated_at
+            wholesale_price_cents, stock, is_vat_exempt, status, version, updated_at,
+            image_path, image_url
           ) VALUES (
             ${productData.id}, ${productData.tenant_id}, ${productData.category_id}, ${productData.name},
             ${productData.description}, ${productData.sku}, ${productData.price_cents}, ${productData.cost_cents},
             ${productData.wholesale_price_cents}, ${productData.stock}, ${productData.is_vat_exempt},
-            ${productData.status}, ${productData.version}, ${productData.updated_at}
+            ${productData.status}, ${productData.version}, ${productData.updated_at}, ${productData.image_path}, ${productData.image_url}
           )
           ON CONFLICT (id) DO UPDATE SET
             category_id = EXCLUDED.category_id,
@@ -74,7 +75,9 @@ export class PostgresProductRepository implements ProductRepositoryPort {
             is_vat_exempt = EXCLUDED.is_vat_exempt,
             status = EXCLUDED.status,
             version = EXCLUDED.version,
-            updated_at = EXCLUDED.updated_at
+            updated_at = EXCLUDED.updated_at,
+            image_path = EXCLUDED.image_path,
+            image_url = EXCLUDED.image_url
           WHERE catalog.products.tenant_id = EXCLUDED.tenant_id;
         `;
       });
