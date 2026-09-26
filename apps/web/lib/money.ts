@@ -29,23 +29,60 @@ export function formatMoney(minorUnits: number | null | undefined, currency = 'U
  * @returns integer denoting minor units
  * @throws Error if value is unparseable or outside safe bounds
  */
-export function parseToMinorUnits(value: number | string | null | undefined): number {
-  if (value === null || value === undefined || value === '') {
-    return 0;
+export function parseToMinorUnits(value: number | string): number {
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value) || value < 0) {
+      throw new Error('Invalid monetary value');
+    }
+    const minorUnits = Math.round(value * 100);
+    if (minorUnits > Number.MAX_SAFE_INTEGER || minorUnits < 0) {
+      throw new Error('Value exceeds safe money bounds');
+    }
+    return minorUnits;
   }
 
-  const parsed = typeof value === 'string' ? parseFloat(value) : value;
+  // Precondition: String must be syntactically validated (e.g., by Zod regex /^\d+(\.\d{1,2})?$/)
+  const sanitized = value.trim();
+  if (sanitized === '') {
+    throw new Error('Invalid monetary value: empty string');
+  }
 
-  if (Number.isNaN(parsed) || !Number.isFinite(parsed) || parsed < 0) {
+  const parts = sanitized.split('.');
+  const wholeStr = parts[0] || '0';
+  const fractionStr = parts[1] || '00';
+  
+  const paddedFraction = fractionStr.padEnd(2, '0').substring(0, 2);
+
+  try {
+    const minorUnitsBig = BigInt(wholeStr) * BigInt(100) + BigInt(paddedFraction);
+    
+    if (minorUnitsBig > BigInt(Number.MAX_SAFE_INTEGER)) {
+      throw new Error('Value exceeds safe money bounds');
+    }
+    
+    return Number(minorUnitsBig);
+  } catch (err) {
+    if (err instanceof Error && err.message === 'Value exceeds safe money bounds') {
+      throw err;
+    }
     throw new Error('Invalid monetary value');
   }
+}
 
-  // Prevent floating point inaccuracies (e.g. 12.55 * 100 = 1254.999...)
-  const minorUnits = Math.round(parsed * 100);
-
-  if (minorUnits > Number.MAX_SAFE_INTEGER || minorUnits < 0) {
-    throw new Error('Value exceeds safe money bounds');
+/**
+ * Formats minor units into an input-ready string (e.g. "30.00" without currency symbols)
+ * Strict integer arithmetic to avoid floating point issues.
+ */
+export function formatMinorUnitsForInput(minorUnits: number | null | undefined): string {
+  if (minorUnits === null || minorUnits === undefined) {
+    return '';
   }
-
-  return minorUnits;
+  if (!Number.isInteger(minorUnits) || minorUnits < 0) {
+    return '';
+  }
+  
+  const wholeStr = Math.floor(minorUnits / 100).toString();
+  const fractionStr = (minorUnits % 100).toString().padStart(2, '0');
+  
+  return `${wholeStr}.${fractionStr}`;
 }
