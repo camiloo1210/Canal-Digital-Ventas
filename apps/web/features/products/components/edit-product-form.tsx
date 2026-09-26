@@ -10,9 +10,9 @@ import {
 } from '@/features/products/components/product-form-fields';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import { updateProductAction } from '@/features/products/actions/products.actions';
+import { updateProductAction, ProductActionState } from '@/features/products/actions/products.actions';
 
-const initialState = {
+const initialState: ProductActionState = {
   success: false,
   error: null as string | null,
 };
@@ -42,13 +42,14 @@ interface EditProductFormProps {
     version: number;
     name: string;
     sku: string;
-    price: number;
-    cost: number;
-    wholesalePrice: number | null;
+    price: string;
+    cost: string;
+    wholesalePrice: string;
     categoryId: string;
     description: string;
     stock: number;
     isVatExempt: boolean;
+    imageUrl: string | null;
   };
 }
 
@@ -82,7 +83,7 @@ export function EditProductForm({ categories, product }: EditProductFormProps): 
             </div>
           )}
 
-          <ProductFormFields categories={categories} defaultValues={product} />
+          <ProductFormFields categories={categories} defaultValues={state.values ?? product} fieldErrors={state.fieldErrors} revision={state.revision} />
 
           <div className="pt-2">
             <SubmitButton />

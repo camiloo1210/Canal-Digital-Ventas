@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useRef, useEffect } from 'react';
-import { createProductAction } from '@/features/products/actions/products.actions';
+import { createProductAction, ProductActionState } from '@/features/products/actions/products.actions';
 import { Button } from '@/components/ui/button';
 import { Package, Loader2 } from 'lucide-react';
 import { useFormStatus } from 'react-dom';
@@ -12,9 +12,9 @@ import {
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 
-const initialState = {
+const initialState: ProductActionState = {
   success: false,
-  error: null as string | null,
+  error: null,
 };
 
 function SubmitButton(): React.JSX.Element {
@@ -77,7 +77,7 @@ export function CreateProductForm({ categories }: CreateProductFormProps): React
           </div>
         )}
 
-        <ProductFormFields categories={categories} />
+        <ProductFormFields categories={categories} defaultValues={state.values} fieldErrors={state.fieldErrors} revision={state.revision} />
 
         <div className="pt-2">
           <SubmitButton />
