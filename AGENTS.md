@@ -89,6 +89,25 @@ Server Actions (`.actions.ts`) are our mutation boundaries. They must act strict
 - **UI Library (shadcn/ui + Tailwind CSS):** We use `shadcn/ui` and Tailwind CSS exclusively. DO NOT use runtime CSS-in-JS libraries (e.g., MUI, Chakra UI, Ant Design) as they degrade React Server Components (RSC) performance.
 - **File Uploads (Infrastructure):** If a file upload is required, the Server Action handles the upload to the Storage Bucket, receives the string URL/Path, and passes ONLY the primitive string to the Core Use Case.
 
+
+### 4.1 V5 Forms & UX Patterns
+Our applications use a highly robust "V5" pattern for forms, prioritizing uncompromised backend security (Zod) with immediate frontend UX feedback.
+- **Strict `ActionState`:** Form state returned by Server Actions must be strongly typed (e.g., `ProductActionState`) without relying on `Record<string, any>`. The state must define explicitly the primitives it restores (e.g. `values?: ProductFormValues`).
+- **Primitive Extraction:** Never pass `FormData` directly or use `Object.fromEntries(formData)` for restoration. Extract only known text primitives safely to rebuild the values object. `File` objects are strictly forbidden in form state or the Core.
+- **Form Persistence (Data Retention):** Forms must never lose user data upon server rejection or infrastructure failure. We enforce the precedence `state.values ?? initialValues` in React components to retain progress.
+- **Real-Time UX without Mutating Payloads:** 
+  - Do NOT use aggressive `onKeyDown` blockers or silent data mutations (e.g., secretly transforming `"12abc"` to `"12"`).
+  - Use `onBlur` for visual conveniences like decimal auto-formatting (e.g. `"40"` -> `"40.00"`).
+  - Use `onChange` to clear stale local/server errors instantly.
+  - Zod in the Server Action remains the absolute security boundary. If formatting is invalid, UI paints a local error and Zod blocks it on submit.
+
+### 4.2 V5 Storage & File Uploads
+Files (e.g., Images) have an entirely separate lifecycle from standard form data.
+- **Storage Infrastructure:** We use Supabase Storage. The bucket (e.g., `products`) is fully secured via declarative RLS policies on `storage.objects` bound to our `tenant_memberships` table, ensuring isolated multi-tenant writes.
+- **No Client-Side Uploading:** Files are uploaded strictly Server-Side inside the Server Action (or via a secure UploadSession flow) using `crypto.randomUUID()` and prefixed by `tenantId` (e.g. `${tenantId}/${uuid}.jpg`).
+- **Object Keys & Security:** Never trust client-provided filenames. Map validated MIME types to known extensions. Limit file size and extensions directly on the DB Bucket configuration.
+- **Separation of Concerns:** `File` objects never enter the Core Domain. The Server Action uploads the file, retrieves the string URL/Path, and passes strictly primitive strings to the Domain Use Case. If a form fails after an image upload, do not attempt to restore the `File` object to the UI via `ActionState`.
+
 ### 5. Internationalization (i18n)
 
 - We use `next-intl` via **Cookies** (`NEXT_LOCALE`), NOT sub-routing (`/[locale]/...`).
