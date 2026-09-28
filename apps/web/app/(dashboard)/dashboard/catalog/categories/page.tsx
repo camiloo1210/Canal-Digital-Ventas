@@ -66,9 +66,9 @@ export default async function CategoriesPage(): Promise<React.JSX.Element> {
               {categories.map((category: CategoryReadModel) => (
                 <Card
                   key={category.id}
-                  className={`overflow-hidden transition-colors shadow-sm relative ${
-                    category.status === 'archived' 
-                      ? 'opacity-75 grayscale-[0.5] hover:bg-transparent' 
+                  className={`group overflow-hidden transition-colors shadow-sm relative ${
+                    category.status === 'archived'
+                      ? 'opacity-75 grayscale-[0.5] hover:bg-transparent'
                       : 'hover:bg-accent/50'
                   }`}
                 >
@@ -76,15 +76,26 @@ export default async function CategoriesPage(): Promise<React.JSX.Element> {
                     <div className="flex justify-between items-start gap-2">
                       <div className="flex-1">
                         <CardTitle className="text-lg font-bold line-clamp-1">
-                          {category.name}
+                          <Link
+                            href={`/dashboard/catalog/categories/${category.id}/edit`}
+                            className="after:absolute after:inset-0"
+                          >
+                            {category.name}
+                          </Link>
                         </CardTitle>
                         <div className="mt-2">
                           {category.status === 'archived' ? (
-                            <Badge variant="secondary" className="border-destructive/20 text-destructive text-[10px]">
+                            <Badge
+                              variant="secondary"
+                              className="border-destructive/20 text-destructive text-[10px]"
+                            >
                               {t('status_archived')}
                             </Badge>
                           ) : (
-                            <Badge variant="outline" className="text-emerald-600 border-emerald-500/20 bg-emerald-500/10 text-[10px]">
+                            <Badge
+                              variant="outline"
+                              className="text-emerald-600 border-emerald-500/20 bg-emerald-500/10 text-[10px]"
+                            >
                               {t('status_active')}
                             </Badge>
                           )}

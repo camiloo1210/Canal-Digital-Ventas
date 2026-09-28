@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { getStoreProductReadRepository } from '@/features/store/di/store.di';
-import { StoreProductGrid } from './store-product-grid';
+import { StoreProductGrid } from '@/features/store/components/store-product-grid';
 import { PAGE_SIZE } from '@/features/store/utils/store-filters.parser';
 
 interface StoreResultsBoundaryProps {
@@ -16,7 +16,7 @@ export async function StoreResultsBoundary({
   categorySlug,
   q,
   page,
-  pageInfoTemplate
+  pageInfoTemplate,
 }: StoreResultsBoundaryProps): Promise<React.JSX.Element> {
   const productRepo = await getStoreProductReadRepository();
 
@@ -26,7 +26,7 @@ export async function StoreResultsBoundary({
       categorySlug,
       name: q,
     },
-    { page, limit: PAGE_SIZE }
+    { page, limit: PAGE_SIZE },
   );
 
   return (
@@ -35,6 +35,7 @@ export async function StoreResultsBoundary({
       currentPage={productsResult.currentPage}
       totalPages={productsResult.totalPages}
       pageInfoTemplate={pageInfoTemplate}
+      tenantSlug={tenantSlug}
     />
   );
 }
@@ -44,7 +45,10 @@ export function StoreResultsSkeleton(): React.JSX.Element {
     <div className="w-full flex flex-col opacity-50 pointer-events-none transition-opacity duration-200">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {[...Array(8)].map((_, i) => (
-          <div key={i} className="flex flex-col border rounded-xl overflow-hidden shadow-sm bg-card">
+          <div
+            key={i}
+            className="flex flex-col border rounded-xl overflow-hidden shadow-sm bg-card"
+          >
             <div className="aspect-[4/3] bg-muted animate-pulse" />
             <div className="p-4 flex flex-col gap-3">
               <div className="h-4 bg-muted animate-pulse rounded w-3/4" />
