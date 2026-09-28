@@ -111,7 +111,8 @@ describe('PostgresTransactionManagerAdapter Integration', () => {
     expect(productAfterRollback!.getName()).toBe(originalName);
 
     // Verify outbox was rolled back
-    const outboxRows = await sql`SELECT * FROM core.outbox_events WHERE aggregate_id = ${testProductId}`;
+    const outboxRows =
+      await sql`SELECT * FROM core.outbox_events WHERE aggregate_id = ${testProductId}`;
     expect(outboxRows.length).toBe(0);
 
     await productRepository.delete(testProductId, TEST_TENANT_ID);

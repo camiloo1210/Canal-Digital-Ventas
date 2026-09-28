@@ -10,7 +10,9 @@ const globalForPostgres = globalThis as unknown as {
 const connectionString = process.env.DATABASE_URL;
 
 if (!connectionString) {
-  throw new TransactionException('DATABASE_URL environment variable is missing. Please configure it in your Vercel settings and REDEPLOY.');
+  throw new TransactionException(
+    'DATABASE_URL environment variable is missing. Please configure it in your Vercel settings and REDEPLOY.',
+  );
 }
 
 export const sql =

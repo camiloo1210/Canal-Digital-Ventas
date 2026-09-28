@@ -52,22 +52,20 @@ export default async function BuyerDashboardPage(props: {
       </header>
 
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12 w-full">
-        <StoreDirectory 
-          result={activeTenantsResult} 
+        <StoreDirectory
+          result={activeTenantsResult}
           labels={{
             title: tb('available_stores'),
             empty: tb('empty_stores'),
-            visit: tb('visit_store')
-          }} 
+            visit: tb('visit_store'),
+          }}
         />
 
         <section>
           <Card className="shadow-sm border-border">
             <CardHeader className="border-b border-border bg-muted/20">
               <CardTitle className="text-lg text-foreground">{tb('recent_purchases')}</CardTitle>
-              <CardDescription>
-                {tb('recent_purchases_desc')}
-              </CardDescription>
+              <CardDescription>{tb('recent_purchases_desc')}</CardDescription>
             </CardHeader>
             <CardContent className="p-12 text-center text-muted-foreground">
               {tb('empty_purchases')}

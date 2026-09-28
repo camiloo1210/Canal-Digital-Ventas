@@ -11,7 +11,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useTranslations } from 'next-intl';
-import { archiveProductAction, unarchiveProductAction } from '@/features/products/actions/products.actions';
+import {
+  archiveProductAction,
+  unarchiveProductAction,
+} from '@/features/products/actions/products.actions';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { ArchiveRestore } from 'lucide-react';
@@ -21,7 +24,10 @@ interface ProductCardActionsProps {
   status: string;
 }
 
-export function ProductCardActions({ productId, status }: ProductCardActionsProps): React.JSX.Element {
+export function ProductCardActions({
+  productId,
+  status,
+}: ProductCardActionsProps): React.JSX.Element {
   const t = useTranslations('Products');
   const router = useRouter();
   const [isArchiving, setIsArchiving] = useState(false);
@@ -87,7 +93,7 @@ export function ProductCardActions({ productId, status }: ProductCardActionsProp
           <Edit className="mr-2 h-4 w-4" />
           <span>{t('action_edit', { fallback: 'Edit' })}</span>
         </DropdownMenuItem>
-        
+
         {status !== 'archived' ? (
           <>
             <DropdownMenuSeparator />

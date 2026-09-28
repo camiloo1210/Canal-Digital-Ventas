@@ -13,20 +13,20 @@ export interface SearchInputProps {
   className?: string;
 }
 
-export function SearchInput({ 
-  placeholder = "Search...", 
-  paramName = "q",
+export function SearchInput({
+  placeholder = 'Search...',
+  paramName = 'q',
   debounceMs = 300,
   resetPage = true,
-  className = "flex w-full max-w-md items-center space-x-2"
+  className = 'flex w-full max-w-md items-center space-x-2',
 }: SearchInputProps): React.JSX.Element {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  
+
   const initialValue = searchParams.get(paramName) || '';
   const [draftValue, setDraftValue] = useState(initialValue);
-  
+
   const canonicalValue = useRef(initialValue);
 
   useEffect(() => {
@@ -40,27 +40,27 @@ export function SearchInput({
   useEffect(() => {
     const trimmed = draftValue.trim();
     const currentCanonical = canonicalValue.current;
-    
+
     if (trimmed === currentCanonical || (trimmed === '' && currentCanonical === '')) {
       return;
     }
 
     const timer = setTimeout(() => {
       const params = new URLSearchParams(searchParams.toString());
-      
+
       if (trimmed) {
         params.set(paramName, trimmed);
       } else {
         params.delete(paramName);
       }
-      
+
       if (resetPage) {
         params.delete('page');
       }
-      
+
       const newQueryString = params.toString();
       const currentQueryString = searchParams.toString();
-      
+
       if (newQueryString !== currentQueryString) {
         canonicalValue.current = trimmed;
         router.replace(`${pathname}?${newQueryString}`, { scroll: false });

@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from 'react';
 import Link from 'next/link';
 import { PublicCategoryReadModel } from '@canaldigital/packages/core';
 
@@ -13,14 +13,18 @@ interface StoreCategorySidebarProps {
   };
 }
 
-export function StoreCategorySidebar({ categories, currentCategorySlug, currentQuery, labels }: StoreCategorySidebarProps): React.JSX.Element {
-  
+export function StoreCategorySidebar({
+  categories,
+  currentCategorySlug,
+  currentQuery,
+  labels,
+}: StoreCategorySidebarProps): React.JSX.Element {
   const buildHref = (categorySlug?: string) => {
     const params = new URLSearchParams();
     if (currentQuery) params.set('q', currentQuery);
     if (categorySlug) params.set('category', categorySlug);
     // Note: page is intentionally omitted (reset to 1)
-    
+
     const qs = params.toString();
     return qs ? `?${qs}` : '?';
   };
@@ -28,7 +32,7 @@ export function StoreCategorySidebar({ categories, currentCategorySlug, currentQ
   return (
     <nav className="w-full sm:w-64 flex-shrink-0" aria-label={labels.categories}>
       <h2 className="text-lg font-semibold text-foreground mb-4">{labels.categories}</h2>
-      
+
       {categories.length === 0 ? (
         <p className="text-muted-foreground text-sm">{labels.noCategories}</p>
       ) : (
@@ -47,10 +51,10 @@ export function StoreCategorySidebar({ categories, currentCategorySlug, currentQ
               {labels.allProducts}
             </Link>
           </li>
-          
+
           {categories.map((category) => {
             const isActive = category.slug === currentCategorySlug;
-            
+
             return (
               <li key={category.slug}>
                 <Link

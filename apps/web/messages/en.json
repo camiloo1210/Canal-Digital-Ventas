@@ -58,13 +58,17 @@
     "archive_confirm_title": "Archive Product",
     "archive_confirm_desc": "Are you sure you want to archive this product? It will no longer be visible in the active catalog.",
     "submit_update": "Update Product",
+    "submit_updating": "Updating Product...",
     "status_archived": "Archived",
     "unarchive_success": "Product unarchived successfully",
     "unarchive_error": "Failed to unarchive product",
     "action_unarchive": "Unarchive",
     "unarchiving": "Unarchiving...",
     "unarchive_confirm_title": "Unarchive Product",
-    "unarchive_confirm_desc": "Are you sure you want to unarchive this product? It will become active again."
+    "unarchive_confirm_desc": "Are you sure you want to unarchive this product? It will become active again.",
+    "form_invalid_format": "Invalid format",
+    "error_money_format": "Please enter a valid amount (e.g. 10.99).",
+    "error_stock_format": "Stock must be a positive whole number."
   },
   "Categories": {
     "list_title": "Categories",
@@ -99,7 +103,14 @@
     "action_unarchive": "Unarchive",
     "unarchiving": "Unarchiving...",
     "unarchive_confirm_title": "Unarchive Category",
-    "unarchive_confirm_desc": "Are you sure you want to unarchive this category? It will become active again."
+    "unarchive_confirm_desc": "Are you sure you want to unarchive this category? It will become active again.",
+    "validation_name_required": "Name is required",
+    "validation_name_maxLength": "Name must not exceed 100 characters",
+    "validation_description_maxLength": "Description must not exceed 200 characters",
+    "errors_slugAlreadyExists": "A category with this name already exists.",
+    "errors_concurrency": "The category was modified by another user. Please refresh and try again.",
+    "errors_unexpected": "An unexpected server error occurred.",
+    "offline_error": "You are offline. Please check your connection."
   },
   "Storefront": {
     "login": "Login",
@@ -112,9 +123,17 @@
     "allProducts": "All Products",
     "noCategories": "No categories available.",
     "searchProducts": "Search products...",
-    "pageInfo": "Page {current} of {total}"
-  }
-  ,
+    "pageInfo": "Page {current} of {total}",
+    "backToStore": "Back to store",
+    "noImage": "No image",
+    "sku": "SKU",
+    "noDescription": "No description available.",
+    "inStock": "In Stock",
+    "outOfStock": "Out of Stock",
+    "aboutThisProduct": "About this product",
+    "availability": "Availability",
+    "back": "Back"
+  },
   "BuyerDashboard": {
     "title": "Buyer Dashboard",
     "available_stores": "Available Stores",

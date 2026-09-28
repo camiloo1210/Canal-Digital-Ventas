@@ -5,6 +5,8 @@ interface StoreSearchBarProps {
   placeholder?: string;
 }
 
-export function StoreSearchBar({ placeholder = "Search products..." }: StoreSearchBarProps): React.JSX.Element {
+export function StoreSearchBar({
+  placeholder = 'Search products...',
+}: StoreSearchBarProps): React.JSX.Element {
   return <SearchInput placeholder={placeholder} paramName="q" resetPage={true} />;
 }

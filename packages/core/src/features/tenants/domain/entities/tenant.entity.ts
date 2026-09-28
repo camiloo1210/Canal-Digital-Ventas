@@ -63,7 +63,7 @@ export class Tenant {
   ): Tenant {
     Tenant.validateId(id);
     Tenant.validateCurrency(baseCurrency);
-    
+
     const cleanDescription = Tenant.sanitizeDescription(description);
     Tenant.validateDescriptionLength(cleanDescription);
     Tenant.validateBannerUrlLength(bannerUrl);

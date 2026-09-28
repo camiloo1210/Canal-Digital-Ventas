@@ -5,23 +5,17 @@ DROP FUNCTION IF EXISTS core.list_public_active_tenants();
 DROP FUNCTION IF EXISTS catalog.get_public_categories_by_slug(VARCHAR);
 DROP FUNCTION IF EXISTS catalog.get_public_products_by_slug(VARCHAR, UUID, VARCHAR, INT, INT);
 
--- 1. list_public_active_tenants
-CREATE OR REPLACE FUNCTION public.list_public_active_tenants()
-RETURNS TABLE (id UUID, name VARCHAR, slug VARCHAR)
-SECURITY DEFINER
-SET search_path = ''
-LANGUAGE plpgsql
-AS $$
-BEGIN
-    RETURN QUERY
-    SELECT t.id, t.name, t.slug
-    FROM core.tenants t
-    WHERE t.status = 'active'
-    ORDER BY t.name ASC;
-END;
-$$;
-REVOKE ALL ON FUNCTION public.list_public_active_tenants() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.list_public_active_tenants() TO anon, authenticated;
+-- Drop exacto porque el RETURNS TABLE contract cambió:
+DROP FUNCTION IF EXISTS public.get_public_categories_by_slug(VARCHAR);
+
+-- Remove explícitamente el contrato legacy basado en UUID para evitar dualidad de APIs:
+DROP FUNCTION IF EXISTS public.get_public_products_by_slug(VARCHAR, UUID, VARCHAR, INT, INT);
+
+-- Remove el RPC legacy global no-paginado (violación de seguridad V5):
+DROP FUNCTION IF EXISTS public.list_public_active_tenants();
+
+
+-- 1. list_public_active_tenants (REMOVED: Violates V5 Boundary)
 
 
 -- 2. get_public_tenant_by_slug

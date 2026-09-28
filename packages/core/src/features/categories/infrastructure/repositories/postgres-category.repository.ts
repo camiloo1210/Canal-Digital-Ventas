@@ -14,7 +14,10 @@ export class PostgresCategoryRepository implements CategoryRepositoryPort {
 
   private async executeSql<T>(
     tx: TransactionContext | undefined,
-    operation: (conn: postgres.Sql<Record<string, unknown>> | postgres.TransactionSql<Record<string, unknown>>) => Promise<T>
+    operation: (
+      conn:
+        postgres.Sql<Record<string, unknown>> | postgres.TransactionSql<Record<string, unknown>>,
+    ) => Promise<T>,
   ): Promise<T> {
     if (tx) {
       return tx.executeNative<postgres.TransactionSql<Record<string, unknown>>, T>(operation);
@@ -68,14 +71,15 @@ export class PostgresCategoryRepository implements CategoryRepositoryPort {
       });
     } catch (error: unknown) {
       if (
-        typeof error === 'object' && 
-        error !== null && 
-        'code' in error && 
-        (error as Record<string, unknown>).code === '23505' && 
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        (error as Record<string, unknown>).code === '23505' &&
         'constraint_name' in error &&
         (error as Record<string, unknown>).constraint_name === 'categories_tenant_id_slug_key'
       ) {
-        const { CategorySlugAlreadyExistsException } = await import('@/categories/application/exceptions/category-slug-already-exists.exception');
+        const { CategorySlugAlreadyExistsException } =
+          await import('@/categories/application/exceptions/category-slug-already-exists.exception');
         throw new CategorySlugAlreadyExistsException(categoryData.tenant_id, categoryData.slug);
       }
       const message = error instanceof Error ? error.message : 'Unknown error';

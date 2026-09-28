@@ -28,12 +28,16 @@ export function PageHeader({ breadcrumbs }: { breadcrumbs: BreadcrumbItemProps[]
               <React.Fragment key={index}>
                 <BreadcrumbItem className="hidden md:block">
                   {crumb.href ? (
-                    <BreadcrumbLink render={<Link href={crumb.href} />}>{crumb.label}</BreadcrumbLink>
+                    <BreadcrumbLink render={<Link href={crumb.href} />}>
+                      {crumb.label}
+                    </BreadcrumbLink>
                   ) : (
                     <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
                   )}
                 </BreadcrumbItem>
-                {index < breadcrumbs.length - 1 && <BreadcrumbSeparator className="hidden md:block" />}
+                {index < breadcrumbs.length - 1 && (
+                  <BreadcrumbSeparator className="hidden md:block" />
+                )}
               </React.Fragment>
             ))}
           </BreadcrumbList>

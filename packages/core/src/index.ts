@@ -143,7 +143,10 @@ export { SupabaseUserRepository } from '@/iam/infrastructure/repositories/supaba
 export type { OutboxPort, OutboxEvent } from '@/shared/application/ports/out/outbox.port';
 export { SupabaseOutboxAdapter } from '@/shared/infrastructure/adapters/supabase-outbox.adapter';
 export { OptimisticConcurrencyException } from '@/shared/application/exceptions/optimistic-concurrency.exception';
-export type { TransactionManagerPort, TransactionContext } from '@/shared/application/ports/out/transaction-manager.port';
+export type {
+  TransactionManagerPort,
+  TransactionContext,
+} from '@/shared/application/ports/out/transaction-manager.port';
 export type { DomainEventEnvelope } from '@/shared/application/ports/out/event-bus.port';
 export { SupabaseProductReadRepository } from '@/products/infrastructure/repositories/supabase-product-read.repository';
 export type { ProductReadModel } from '@/products/infrastructure/repositories/supabase-product-read.repository';
@@ -155,16 +158,18 @@ export { createCategoryId } from '@/products/domain/types/category-id.type';
 export type { PublicCategoryReadModel } from '@/categories/application/read-models/public-category-read.model';
 export type { PublicCategoryReadRepositoryPort } from '@/categories/application/ports/out/public-category-read-repository.port';
 export type { PublicProductReadModel } from '@/products/application/read-models/public-product-read.model';
-export type { PublicProductFilters, PublicProductReadRepositoryPort } from '@/products/application/ports/out/public-product-read-repository.port';
+export type {
+  PublicProductFilters,
+  PublicProductReadRepositoryPort,
+} from '@/products/application/ports/out/public-product-read-repository.port';
 export { SupabasePublicCategoryReadRepository } from '@/categories/infrastructure/repositories/supabase-public-category-read.repository';
 export { SupabasePublicProductReadRepository } from '@/products/infrastructure/repositories/supabase-public-product-read.repository';
-export * from './features/categories/domain/value-objects/category-slug.vo';
+export * from '@/categories/domain/value-objects/category-slug.vo';
 
 // Public Tenant
 export type { PublicTenantReadModel } from '@/tenants/application/read-models/public-tenant-read.model';
 export type { PublicTenantReadRepositoryPort } from '@/tenants/application/ports/out/public-tenant-read-repository.port';
 export { SupabasePublicTenantReadAdapter } from '@/tenants/infrastructure/repositories/supabase-public-tenant-read.adapter';
-
 
 // Tenant Directory
 export * from '@/tenants/application/read-models/public-tenant-directory-item.model';

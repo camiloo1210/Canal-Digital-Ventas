@@ -68,9 +68,12 @@ describe('CreateProductUseCase Integration (Transaction & Rollback)', () => {
       expect((error as Error).message).toContain('Forced failure to trigger ROLLBACK');
     }
 
-    const productAfterRollback = await productRepository.findById(createProductId(testProductId), TEST_TENANT_ID);
+    const productAfterRollback = await productRepository.findById(
+      createProductId(testProductId),
+      TEST_TENANT_ID,
+    );
     expect(productAfterRollback).toBeNull();
-    
+
     publishSpy.mockRestore();
   });
 
@@ -96,7 +99,10 @@ describe('CreateProductUseCase Integration (Transaction & Rollback)', () => {
     const returnedId = await useCase.execute(dto);
     expect(returnedId).toBe(testProductId);
 
-    const productAfterCommit = await productRepository.findById(createProductId(testProductId), TEST_TENANT_ID);
+    const productAfterCommit = await productRepository.findById(
+      createProductId(testProductId),
+      TEST_TENANT_ID,
+    );
     expect(productAfterCommit).not.toBeNull();
     expect(productAfterCommit!.getName()).toBe('Commit Test Product');
 

@@ -6,7 +6,7 @@ import {
   SupabasePublicTenantReadAdapter,
   PublicCategoryReadRepositoryPort,
   PublicProductReadRepositoryPort,
-  PublicTenantReadRepositoryPort
+  PublicTenantReadRepositoryPort,
 } from '@canaldigital/packages/core';
 
 export async function getStoreTenantReadRepository(): Promise<PublicTenantReadRepositoryPort> {
@@ -23,4 +23,3 @@ export async function getStoreProductReadRepository(): Promise<PublicProductRead
   const supabase = await createClient();
   return new SupabasePublicProductReadRepository(supabase);
 }
-
