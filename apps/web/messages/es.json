@@ -125,7 +125,16 @@
     "allProducts": "Todos los productos",
     "noCategories": "No hay categorías disponibles.",
     "searchProducts": "Buscar productos...",
-    "pageInfo": "Página {current} de {total}"
+    "pageInfo": "Página {current} de {total}",
+    "backToStore": "Volver a la tienda",
+    "noImage": "Sin imagen",
+    "sku": "SKU",
+    "noDescription": "No hay descripción disponible.",
+    "inStock": "En stock",
+    "outOfStock": "Agotado",
+    "aboutThisProduct": "Acerca de este producto",
+    "availability": "Disponibilidad",
+    "back": "Volver atrás"
   },
   "BuyerDashboard": {
     "title": "Panel de Comprador",

@@ -123,7 +123,16 @@
     "allProducts": "All Products",
     "noCategories": "No categories available.",
     "searchProducts": "Search products...",
-    "pageInfo": "Page {current} of {total}"
+    "pageInfo": "Page {current} of {total}",
+    "backToStore": "Back to store",
+    "noImage": "No image",
+    "sku": "SKU",
+    "noDescription": "No description available.",
+    "inStock": "In Stock",
+    "outOfStock": "Out of Stock",
+    "aboutThisProduct": "About this product",
+    "availability": "Availability",
+    "back": "Back"
   },
   "BuyerDashboard": {
     "title": "Buyer Dashboard",

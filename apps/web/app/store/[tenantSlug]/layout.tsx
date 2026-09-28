@@ -6,10 +6,14 @@ import { resolveTenantQuery } from '@/features/iam/queries/resolve-tenant.query'
 import { StoreHeader } from '@/features/store/components/store-header';
 import { getTranslations } from 'next-intl/server';
 
-export async function generateMetadata({ params }: { params: Promise<{ tenantSlug: string }> }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ tenantSlug: string }>;
+}): Promise<Metadata> {
   const { tenantSlug } = await params;
   const tenantContext = await resolveTenantQuery(tenantSlug);
-  
+
   if (!tenantContext) {
     return { title: 'Store Not Found' };
   }
@@ -28,7 +32,7 @@ export default async function StoreLayout({
   params: Promise<{ tenantSlug: string }>;
 }): Promise<React.JSX.Element> {
   const { tenantSlug } = await params;
-  
+
   const tenantContext = await resolveTenantQuery(tenantSlug);
   if (!tenantContext) {
     notFound();
@@ -43,19 +47,18 @@ export default async function StoreLayout({
     logout: t('logout'),
     dashboard: t('dashboard'),
     settings: t('settings'),
+    back: t('back', { fallback: 'Back' }),
   };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <StoreHeader 
-        viewer={viewer} 
+      <StoreHeader
+        viewer={viewer}
         tenantSlug={tenantSlug}
-        tenantName={tenantContext.name} 
-        labels={labels} 
+        tenantName={tenantContext.name}
+        labels={labels}
       />
-      <main className="flex-1">
-        {children}
-      </main>
+      <main className="flex-1">{children}</main>
     </div>
   );
 }
