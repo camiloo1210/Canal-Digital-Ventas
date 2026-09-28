@@ -1,4 +1,4 @@
-import { InvalidCategorySlugException } from '../exceptions/invalid-category-slug.exception';
+import { InvalidCategorySlugException } from '@/categories/domain/exceptions/invalid-category-slug.exception';
 
 export class CategorySlug {
   public static readonly MAX_LENGTH = 100;
@@ -10,10 +10,14 @@ export class CategorySlug {
       throw new InvalidCategorySlugException('Category slug cannot be empty.');
     }
     if (value.length > CategorySlug.MAX_LENGTH) {
-      throw new InvalidCategorySlugException(`Category slug cannot exceed ${CategorySlug.MAX_LENGTH} characters.`);
+      throw new InvalidCategorySlugException(
+        `Category slug cannot exceed ${CategorySlug.MAX_LENGTH} characters.`,
+      );
     }
     if (!/^[a-z0-9](-?[a-z0-9])*$/.test(value)) {
-      throw new InvalidCategorySlugException('Category slug must contain only lowercase letters, numbers, and hyphens, and cannot start or end with a hyphen.');
+      throw new InvalidCategorySlugException(
+        'Category slug must contain only lowercase letters, numbers, and hyphens, and cannot start or end with a hyphen.',
+      );
     }
     return new CategorySlug(value);
   }

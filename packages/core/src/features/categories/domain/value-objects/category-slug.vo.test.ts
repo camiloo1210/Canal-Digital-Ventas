@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { CategorySlug } from './category-slug.vo';
-import { InvalidCategorySlugException } from '../exceptions/invalid-category-slug.exception';
+import { CategorySlug } from '@/categories/domain/value-objects/category-slug.vo';
+import { InvalidCategorySlugException } from '@/categories/domain/exceptions/invalid-category-slug.exception';
 
 describe('CategorySlug', () => {
   it('should format normal names correctly', () => {

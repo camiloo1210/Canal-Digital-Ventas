@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { PublicTenantDirectoryReadRepositoryPort } from '../../application/ports/out/public-tenant-directory-read-repository.port';
-import { PublicTenantDirectoryResult } from '../../application/read-models/public-tenant-directory-item.model';
-import { TenantRepositoryException } from '../../application/exceptions/tenant-repository.exception';
+import { PublicTenantDirectoryReadRepositoryPort } from '@/tenants/application/ports/out/public-tenant-directory-read-repository.port';
+import { PublicTenantDirectoryResult } from '@/tenants/application/read-models/public-tenant-directory-item.model';
+import { TenantRepositoryException } from '@/tenants/application/exceptions/tenant-repository.exception';
 
 interface DbTenantDirectoryResult {
   name: string;
@@ -16,8 +16,10 @@ export class SupabasePublicTenantDirectoryReadAdapter implements PublicTenantDir
   constructor(private readonly supabase: SupabaseClient) {}
 
   async listActive(page: number, limit: number): Promise<PublicTenantDirectoryResult> {
-    const { data, error } = await this.supabase
-      .rpc('list_public_active_tenants_v2', { p_page: page, p_limit: limit });
+    const { data, error } = await this.supabase.rpc('list_public_active_tenants_v2', {
+      p_page: page,
+      p_limit: limit,
+    });
 
     if (error) {
       throw new TenantRepositoryException(`Failed to list active tenants: ${error.message}`, error);

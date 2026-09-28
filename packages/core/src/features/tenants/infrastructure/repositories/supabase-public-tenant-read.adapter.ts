@@ -1,6 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
-import { PublicTenantReadRepositoryPort } from '../../application/ports/out/public-tenant-read-repository.port';
-import { PublicTenantReadModel } from '../../application/read-models/public-tenant-read.model';
+import { PublicTenantReadRepositoryPort } from '@/tenants/application/ports/out/public-tenant-read-repository.port';
+import { PublicTenantReadModel } from '@/tenants/application/read-models/public-tenant-read.model';
 
 export class SupabasePublicTenantReadAdapter implements PublicTenantReadRepositoryPort {
   constructor(private readonly supabase: SupabaseClient) {}
@@ -24,7 +24,7 @@ export class SupabasePublicTenantReadAdapter implements PublicTenantReadReposito
       logo_url: string | null;
       banner_url: string | null;
     };
-    
+
     const row = data as RpcReturnType;
 
     return {

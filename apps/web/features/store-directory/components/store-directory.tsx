@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Store } from 'lucide-react';
 import { PublicTenantDirectoryResult } from '@canaldigital/packages/core';
-import { StoreDirectoryCard } from './store-directory-card';
+import { StoreDirectoryCard } from '@/features/store-directory/components/store-directory-card';
 
 interface StoreDirectoryProps {
   result: PublicTenantDirectoryResult;
@@ -19,7 +19,7 @@ export function StoreDirectory({ result, labels }: StoreDirectoryProps): React.J
         <Store className="w-6 h-6 text-primary" />
         <h2 className="text-2xl font-bold text-foreground">{labels.title}</h2>
       </div>
-      
+
       {result.items.length === 0 ? (
         <div className="bg-card rounded-lg shadow-sm border border-border p-12 text-center text-muted-foreground">
           {labels.empty}
@@ -27,15 +27,11 @@ export function StoreDirectory({ result, labels }: StoreDirectoryProps): React.J
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {result.items.map((tenant) => (
-            <StoreDirectoryCard 
-              key={tenant.slug} 
-              tenant={tenant} 
-              visitLabel={labels.visit} 
-            />
+            <StoreDirectoryCard key={tenant.slug} tenant={tenant} visitLabel={labels.visit} />
           ))}
         </div>
       )}
-      
+
       {/* Pagination goes here when implemented */}
     </section>
   );
