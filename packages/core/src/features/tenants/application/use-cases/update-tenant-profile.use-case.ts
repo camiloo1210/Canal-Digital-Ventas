@@ -39,6 +39,8 @@ export class UpdateTenantProfileUseCase {
       dto.taxId || null,
       dto.customDomain || null,
       dto.logoUrl || null,
+      dto.description || null,
+      dto.bannerUrl || null,
     );
 
     await this.tenantRepository.update(tenant);

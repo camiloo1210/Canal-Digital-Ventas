@@ -6,4 +6,6 @@ export interface UpdateTenantProfileDto {
   taxId?: string | null;
   customDomain?: string | null;
   logoUrl?: string | null;
+  bannerUrl?: string | null;
+  description?: string | null;
 }

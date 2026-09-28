@@ -70,16 +70,19 @@ export default async function ProductsPage(): Promise<React.JSX.Element> {
               {products.map((product: ProductReadModel) => (
                 <Card
                   key={product.id}
-                  className={`overflow-hidden transition-colors shadow-sm relative ${
-                    product.status === 'archived' 
-                      ? 'opacity-75 grayscale-[0.5] hover:bg-transparent' 
+                  className={`group overflow-hidden transition-colors shadow-sm relative ${
+                    product.status === 'archived'
+                      ? 'opacity-75 grayscale-[0.5] hover:bg-transparent'
                       : 'hover:bg-accent/50'
                   }`}
                 >
                   <div className="aspect-square relative bg-muted border-b">
                     {product.status === 'archived' && (
                       <div className="absolute top-2 left-2 z-10">
-                        <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm border-destructive/20 text-destructive">
+                        <Badge
+                          variant="secondary"
+                          className="bg-background/80 backdrop-blur-sm border-destructive/20 text-destructive"
+                        >
                           {t('status_archived')}
                         </Badge>
                       </div>
@@ -102,11 +105,14 @@ export default async function ProductsPage(): Promise<React.JSX.Element> {
                     <div className="flex justify-between items-start gap-2">
                       <div className="flex-1">
                         <CardTitle className="text-lg font-bold line-clamp-1">
-                          {product.name}
+                          <Link
+                            href={`/dashboard/catalog/products/${product.id}/edit`}
+                            className="after:absolute after:inset-0"
+                          >
+                            {product.name}
+                          </Link>
                         </CardTitle>
-                        <p className="text-xs text-muted-foreground font-mono">
-                          {product.sku}
-                        </p>
+                        <p className="text-xs text-muted-foreground font-mono">{product.sku}</p>
                       </div>
                       <ProductCardActions productId={product.id} status={product.status} />
                     </div>

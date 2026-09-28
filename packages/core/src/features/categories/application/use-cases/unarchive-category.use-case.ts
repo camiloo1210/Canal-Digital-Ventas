@@ -30,7 +30,7 @@ export class UnarchiveCategoryUseCase {
 
         category.unarchive();
         await this.categoryRepository.save(category, tx);
-        
+
         if (category.domainEvents.length > 0) {
           const envelopes = category.domainEvents.map((event) => ({
             event,

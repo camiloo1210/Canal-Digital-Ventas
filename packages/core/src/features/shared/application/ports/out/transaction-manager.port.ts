@@ -4,7 +4,9 @@ export interface TransactionContext {
    * This abstracts the physical connection from the application layer while
    * allowing infrastructure adapters to use it securely without type casting.
    */
-  executeNative<TConnection, TResult>(callback: (conn: TConnection) => Promise<TResult>): Promise<TResult>;
+  executeNative<TConnection, TResult>(
+    callback: (conn: TConnection) => Promise<TResult>,
+  ): Promise<TResult>;
 }
 
 export interface TransactionManagerPort {

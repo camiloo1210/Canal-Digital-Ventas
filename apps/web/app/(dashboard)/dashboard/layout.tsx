@@ -33,10 +33,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       }
     >
       <AppSidebar variant="inset" user={userData} />
-      <SidebarInset>
-        
-        {children}
-      </SidebarInset>
+      <SidebarInset>{children}</SidebarInset>
     </SidebarProvider>
   );
 }

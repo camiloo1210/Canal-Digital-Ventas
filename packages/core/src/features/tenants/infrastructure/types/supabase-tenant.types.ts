@@ -8,6 +8,8 @@ export interface DbTenantRow {
   tax_id: string | null;
   custom_domain: string | null;
   logo_url: string | null;
+  banner_url: string | null;
+  description: string | null;
   created_at: string;
   updated_at: string;
   version: number;

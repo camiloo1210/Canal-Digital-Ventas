@@ -1,18 +1,31 @@
 import { test, expect, vi, describe, beforeEach } from 'vitest';
-import { createCategoryAction, updateCategoryAction } from '@/features/categories/actions/categories.actions';
-import { ApplicationException, CreateCategoryUseCase, ChangeCategoryDetailsUseCase } from '@canaldigital/packages/core';
+import {
+  createCategoryAction,
+  updateCategoryAction,
+} from '@/features/categories/actions/categories.actions';
+import {
+  ApplicationException,
+  CreateCategoryUseCase,
+  ChangeCategoryDetailsUseCase,
+} from '@canaldigital/packages/core';
 import * as activeTenantQuery from '@/features/iam/queries/active-tenant.query';
 import * as categoriesDi from '@/features/categories/di/categories.di';
 
 vi.mock('@canaldigital/packages/core', () => {
   class ApplicationException extends Error {
-    constructor(message: string) { super(message); }
+    constructor(message: string) {
+      super(message);
+    }
   }
   class DomainException extends Error {
-    constructor(message: string) { super(message); }
+    constructor(message: string) {
+      super(message);
+    }
   }
   class OptimisticConcurrencyException extends ApplicationException {
-    constructor() { super('OptimisticConcurrencyException'); }
+    constructor() {
+      super('OptimisticConcurrencyException');
+    }
   }
   return { ApplicationException, DomainException, OptimisticConcurrencyException };
 });
@@ -75,7 +88,6 @@ describe('Categories Actions Tenant Isolation', () => {
   });
 
   test('should pass resolved tenant ID to use case, ignoring any fake tenant ID in formData', async () => {
-    
     const realTenantId = '550e8400-e29b-41d4-a716-446655440000' as never;
     vi.mocked(activeTenantQuery.getActiveTenantQuery).mockResolvedValue(realTenantId);
 
@@ -106,7 +118,6 @@ describe('Categories Actions Tenant Isolation', () => {
   });
 
   test('should return concurrency_error when optimistic locking fails during update', async () => {
-    
     const realTenantId = '550e8400-e29b-41d4-a716-446655440000' as never;
     vi.mocked(activeTenantQuery.getActiveTenantQuery).mockResolvedValue(realTenantId);
 
