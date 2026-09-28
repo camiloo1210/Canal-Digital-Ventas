@@ -1,7 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { archiveCategoryAction, unarchiveCategoryAction } from '@/features/categories/actions/categories.actions';
+import {
+  archiveCategoryAction,
+  unarchiveCategoryAction,
+} from '@/features/categories/actions/categories.actions';
 import { Button } from '@/components/ui/button';
 import { MoreHorizontal, Edit, Archive, ArchiveRestore, Loader2 } from 'lucide-react';
 import {
@@ -43,7 +46,7 @@ export function CategoryCardActions({ category }: CategoryCardActionsProps): Rea
     try {
       setIsArchiving(true);
       const result = await archiveCategoryAction(category.id);
-      
+
       if (!result.success) {
         toast.error(result.error || t('archive_error'));
       } else {
@@ -56,7 +59,6 @@ export function CategoryCardActions({ category }: CategoryCardActionsProps): Rea
       setIsArchiving(false);
     }
   };
-
 
   const handleUnarchive = async (): Promise<void> => {
     if (!navigator.onLine) {
@@ -71,7 +73,7 @@ export function CategoryCardActions({ category }: CategoryCardActionsProps): Rea
     try {
       setIsUnarchiving(true);
       const result = await unarchiveCategoryAction(category.id);
-      
+
       if (!result.success) {
         toast.error(result.error || t('unarchive_error'));
       } else {
@@ -87,9 +89,7 @@ export function CategoryCardActions({ category }: CategoryCardActionsProps): Rea
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger
-        render={<Button variant="ghost" className="h-8 w-8 p-0" />}
-      >
+      <DropdownMenuTrigger render={<Button variant="ghost" className="h-8 w-8 p-0" />}>
         <span className="sr-only">Open menu</span>
         {isArchiving || isUnarchiving ? (
           <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
@@ -105,12 +105,12 @@ export function CategoryCardActions({ category }: CategoryCardActionsProps): Rea
           <Edit className="mr-2 h-4 w-4" />
           <span>{t('action_edit')}</span>
         </DropdownMenuItem>
-        
+
         {category.status !== 'archived' ? (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem 
-              onClick={handleArchive} 
+            <DropdownMenuItem
+              onClick={handleArchive}
               disabled={isArchiving}
               className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer flex items-center"
             >
@@ -121,8 +121,8 @@ export function CategoryCardActions({ category }: CategoryCardActionsProps): Rea
         ) : (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem 
-              onClick={handleUnarchive} 
+            <DropdownMenuItem
+              onClick={handleUnarchive}
               disabled={isUnarchiving}
               className="text-emerald-600 focus:bg-emerald-500/10 focus:text-emerald-600 cursor-pointer flex items-center"
             >

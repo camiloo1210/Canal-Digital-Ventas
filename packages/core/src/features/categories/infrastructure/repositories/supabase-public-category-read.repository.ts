@@ -7,13 +7,14 @@ export class SupabasePublicCategoryReadRepository implements PublicCategoryReadR
   constructor(private readonly supabase: SupabaseClient) {}
 
   async searchActiveByTenantSlug(tenantSlug: string): Promise<PublicCategoryReadModel[]> {
-    const { data, error } = await this.supabase
-      .rpc('get_public_categories_by_slug', { p_tenant_slug: tenantSlug });
+    const { data, error } = await this.supabase.rpc('get_public_categories_by_slug', {
+      p_tenant_slug: tenantSlug,
+    });
 
     if (error) {
       throw new CategoryRepositoryException(
         `Failed to get public categories: ${error.message}`,
-        error
+        error,
       );
     }
 

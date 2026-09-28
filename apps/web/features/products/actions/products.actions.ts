@@ -1,9 +1,13 @@
-
 'use server';
 
 import { z } from 'zod';
-import { getCreateProductUseCase, getUpdateProductUseCase, getArchiveProductUseCase,
-  getUnarchiveProductUseCase, getStorageAdapter } from '@/features/products/di/products.di';
+import {
+  getCreateProductUseCase,
+  getUpdateProductUseCase,
+  getArchiveProductUseCase,
+  getUnarchiveProductUseCase,
+  getStorageAdapter,
+} from '@/features/products/di/products.di';
 import { revalidatePath } from 'next/cache';
 import { DomainException, ApplicationException } from '@canaldigital/packages/core';
 import { createClient } from '@/lib/supabase/server';
@@ -27,7 +31,7 @@ const moneyFieldSchema = z
       if (typeof val === 'number') return val >= 0;
       return moneyRegex.test(val);
     },
-    { message: 'Invalid format (e.g. 10.99)' }
+    { message: 'Invalid format (e.g. 10.99)' },
   )
   .transform(parseToMinorUnits);
 
@@ -36,24 +40,33 @@ const optionalMoneySchema = z
   .nullable()
   .optional()
   .transform((val) => (val === '' || val === null || val === undefined ? null : val))
-  .pipe(
-    z.union([
-      z.null(),
-      moneyFieldSchema
-    ])
-  );
+  .pipe(z.union([z.null(), moneyFieldSchema]));
 
 const createProductSchema = z.object({
-  name: z.string().trim().min(2, 'Name must be at least 2 characters long').max(50, 'Name must not exceed 50 characters'),
-  sku: z.string().regex(/^[A-Z0-9-]{5,20}$/, 'SKU must be 5-20 characters long and contain only uppercase letters, numbers, and dashes'),
+  name: z
+    .string()
+    .trim()
+    .min(2, 'Name must be at least 2 characters long')
+    .max(50, 'Name must not exceed 50 characters'),
+  sku: z
+    .string()
+    .regex(
+      /^[A-Z0-9-]{5,20}$/,
+      'SKU must be 5-20 characters long and contain only uppercase letters, numbers, and dashes',
+    ),
   price: moneyFieldSchema,
   cost: moneyFieldSchema,
   wholesalePrice: optionalMoneySchema,
   categoryId: z.string().uuid('Please select a valid category'),
-  description: z.string().max(200, 'Description must not exceed 200 characters').optional().default(''),
+  description: z
+    .string()
+    .max(200, 'Description must not exceed 200 characters')
+    .optional()
+    .default(''),
   stock: z.coerce.number().int().nonnegative('Stock must be non-negative').default(0),
   isVatExempt: z.preprocess((val) => val === 'true' || val === 'on', z.boolean()),
-  imageFile: z.instanceof(File)
+  imageFile: z
+    .instanceof(File)
     .refine((file) => Object.keys(IMAGE_EXTENSION_BY_MIME).includes(file.type), {
       message: 'Invalid image format. Allowed: JPEG, PNG, WebP',
     })
@@ -117,18 +130,19 @@ export async function createProductAction(
   const extractedValues = extractProductFormValues(formData);
   const imageField = formData.get('image');
 
-    let imageFile: File | undefined = undefined;
-  
+  let imageFile: File | undefined = undefined;
+
   if (imageField !== null) {
     if (imageField instanceof File) {
       if (imageField.size > 0) {
-        imageFile = imageField;       }
-          } else {
-            return { 
+        imageFile = imageField;
+      }
+    } else {
+      return {
         error: 'System error: The image field payload is invalid. Expected a binary file.',
-        success: false, 
-        values: extractedValues, 
-        revision: (prevState.revision || 0) + 1 
+        success: false,
+        values: extractedValues,
+        revision: (prevState.revision || 0) + 1,
       };
     }
   }
@@ -141,15 +155,25 @@ export async function createProductAction(
     });
   } catch (err: unknown) {
     if (err instanceof Error) {
-      return { error: err.message, success: false, values: extractedValues, revision: (prevState.revision || 0) + 1 };
+      return {
+        error: err.message,
+        success: false,
+        values: extractedValues,
+        revision: (prevState.revision || 0) + 1,
+      };
     }
-    return { error: 'Invalid data format', success: false, values: extractedValues, revision: (prevState.revision || 0) + 1 };
+    return {
+      error: 'Invalid data format',
+      success: false,
+      values: extractedValues,
+      revision: (prevState.revision || 0) + 1,
+    };
   }
 
   if (!parsed.success) {
-    return { 
-      error: 'Please fix the highlighted errors.', 
-      success: false, 
+    return {
+      error: 'Please fix the highlighted errors.',
+      success: false,
       fieldErrors: parsed.error.flatten().fieldErrors,
       values: extractedValues,
       revision: (prevState.revision || 0) + 1,
@@ -165,16 +189,22 @@ export async function createProductAction(
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return { error: 'Unauthorized session.', success: false, values: extractedValues,
-      revision: (prevState.revision || 0) + 1,
-    };
+      return {
+        error: 'Unauthorized session.',
+        success: false,
+        values: extractedValues,
+        revision: (prevState.revision || 0) + 1,
+      };
     }
 
     const tenantId = await getActiveTenantQuery(user.id);
     if (!tenantId) {
-      return { error: 'User does not have an assigned tenant ID.', success: false, values: extractedValues,
-      revision: (prevState.revision || 0) + 1,
-    };
+      return {
+        error: 'User does not have an assigned tenant ID.',
+        success: false,
+        values: extractedValues,
+        revision: (prevState.revision || 0) + 1,
+      };
     }
 
     let publicUrl = undefined;
@@ -208,17 +238,26 @@ export async function createProductAction(
     isSuccess = true;
   } catch (error: unknown) {
     if (error instanceof DomainException) {
-      return { error: error.message, success: false, values: extractedValues,
-      revision: (prevState.revision || 0) + 1,
-    };
+      return {
+        error: error.message,
+        success: false,
+        values: extractedValues,
+        revision: (prevState.revision || 0) + 1,
+      };
     }
     if (error instanceof ApplicationException) {
-      return { error: error.message, success: false, values: extractedValues,
-      revision: (prevState.revision || 0) + 1,
-    };
+      return {
+        error: error.message,
+        success: false,
+        values: extractedValues,
+        revision: (prevState.revision || 0) + 1,
+      };
     }
     console.error('Critical Server Exception:', error);
-    return { error: 'An unexpected server error occurred.', success: false, values: extractedValues,
+    return {
+      error: 'An unexpected server error occurred.',
+      success: false,
+      values: extractedValues,
       revision: (prevState.revision || 0) + 1,
     };
   }
@@ -228,21 +267,37 @@ export async function createProductAction(
     redirect('/dashboard/catalog/products');
   }
 
-  return { success: false, error: 'Failed to process request.', values: extractedValues,
-      revision: (prevState.revision || 0) + 1,
-    };
+  return {
+    success: false,
+    error: 'Failed to process request.',
+    values: extractedValues,
+    revision: (prevState.revision || 0) + 1,
+  };
 }
 
 const updateProductSchema = z.object({
   productId: z.string().uuid(),
   expectedVersion: z.coerce.number().int().nonnegative(),
-  name: z.string().trim().min(2, 'Name must be at least 2 characters long').max(50, 'Name must not exceed 50 characters'),
-  sku: z.string().regex(/^[A-Z0-9-]{5,20}$/, 'SKU must be 5-20 characters long and contain only uppercase letters, numbers, and dashes'),
+  name: z
+    .string()
+    .trim()
+    .min(2, 'Name must be at least 2 characters long')
+    .max(50, 'Name must not exceed 50 characters'),
+  sku: z
+    .string()
+    .regex(
+      /^[A-Z0-9-]{5,20}$/,
+      'SKU must be 5-20 characters long and contain only uppercase letters, numbers, and dashes',
+    ),
   price: moneyFieldSchema,
   cost: moneyFieldSchema,
   wholesalePrice: optionalMoneySchema,
   categoryId: z.string().uuid('Please select a valid category'),
-  description: z.string().max(200, 'Description must not exceed 200 characters').optional().default(''),
+  description: z
+    .string()
+    .max(200, 'Description must not exceed 200 characters')
+    .optional()
+    .default(''),
   stock: z.coerce.number().int().nonnegative('Stock must be non-negative').default(0),
   isVatExempt: z.preprocess((val) => val === 'true' || val === 'on', z.boolean()),
 });
@@ -262,14 +317,24 @@ export async function updateProductAction(
     parsed = updateProductSchema.safeParse(rawData);
   } catch (err: unknown) {
     if (err instanceof Error) {
-      return { error: err.message, success: false, values: extractedValues, revision: (prevState.revision || 0) + 1 };
+      return {
+        error: err.message,
+        success: false,
+        values: extractedValues,
+        revision: (prevState.revision || 0) + 1,
+      };
     }
-    return { error: 'Invalid data format', success: false, values: extractedValues, revision: (prevState.revision || 0) + 1 };
+    return {
+      error: 'Invalid data format',
+      success: false,
+      values: extractedValues,
+      revision: (prevState.revision || 0) + 1,
+    };
   }
 
   if (!parsed.success) {
-    return { 
-      error: 'Please fix the highlighted errors.', 
+    return {
+      error: 'Please fix the highlighted errors.',
       success: false,
       fieldErrors: parsed.error.flatten().fieldErrors,
       values: extractedValues,
@@ -286,16 +351,22 @@ export async function updateProductAction(
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return { error: 'Unauthorized session.', success: false, values: extractedValues,
-      revision: (prevState.revision || 0) + 1,
-    };
+      return {
+        error: 'Unauthorized session.',
+        success: false,
+        values: extractedValues,
+        revision: (prevState.revision || 0) + 1,
+      };
     }
 
     const tenantId = await getActiveTenantQuery(user.id);
     if (!tenantId) {
-      return { error: 'User does not have an assigned tenant ID.', success: false, values: extractedValues,
-      revision: (prevState.revision || 0) + 1,
-    };
+      return {
+        error: 'User does not have an assigned tenant ID.',
+        success: false,
+        values: extractedValues,
+        revision: (prevState.revision || 0) + 1,
+      };
     }
 
     const useCase = getUpdateProductUseCase();
@@ -319,22 +390,34 @@ export async function updateProductAction(
     isSuccess = true;
   } catch (error: unknown) {
     if (error instanceof DomainException) {
-      return { error: error.message, success: false, values: extractedValues,
-      revision: (prevState.revision || 0) + 1,
-    };
+      return {
+        error: error.message,
+        success: false,
+        values: extractedValues,
+        revision: (prevState.revision || 0) + 1,
+      };
     }
     if (error instanceof ApplicationException) {
       if (error.name === 'OptimisticConcurrencyException') {
-        return { error: 'concurrency_error', success: false, values: extractedValues,
-      revision: (prevState.revision || 0) + 1,
-    };
+        return {
+          error: 'concurrency_error',
+          success: false,
+          values: extractedValues,
+          revision: (prevState.revision || 0) + 1,
+        };
       }
-      return { error: error.message, success: false, values: extractedValues,
-      revision: (prevState.revision || 0) + 1,
-    };
+      return {
+        error: error.message,
+        success: false,
+        values: extractedValues,
+        revision: (prevState.revision || 0) + 1,
+      };
     }
     console.error('Critical Server Exception:', error);
-    return { error: 'An unexpected server error occurred.', success: false, values: extractedValues,
+    return {
+      error: 'An unexpected server error occurred.',
+      success: false,
+      values: extractedValues,
       revision: (prevState.revision || 0) + 1,
     };
   }
@@ -344,9 +427,12 @@ export async function updateProductAction(
     redirect('/dashboard/catalog/products');
   }
 
-  return { success: false, error: 'Failed to process request.', values: extractedValues,
-      revision: (prevState.revision || 0) + 1,
-    };
+  return {
+    success: false,
+    error: 'Failed to process request.',
+    values: extractedValues,
+    revision: (prevState.revision || 0) + 1,
+  };
 }
 
 export async function archiveProductAction(id: string): Promise<ActionState> {

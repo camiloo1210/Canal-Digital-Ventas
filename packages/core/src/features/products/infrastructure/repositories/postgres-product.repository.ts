@@ -14,7 +14,10 @@ export class PostgresProductRepository implements ProductRepositoryPort {
 
   private async executeSql<T>(
     tx: TransactionContext | undefined,
-    operation: (conn: postgres.Sql<Record<string, unknown>> | postgres.TransactionSql<Record<string, unknown>>) => Promise<T>
+    operation: (
+      conn:
+        postgres.Sql<Record<string, unknown>> | postgres.TransactionSql<Record<string, unknown>>,
+    ) => Promise<T>,
   ): Promise<T> {
     if (tx) {
       return tx.executeNative<postgres.TransactionSql<Record<string, unknown>>, T>(operation);

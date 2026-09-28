@@ -39,7 +39,8 @@ function extractCategoryFormValues(formData: FormData): CategoryFormValues {
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const getCreateCategorySchema = (t: Awaited<ReturnType<typeof getTranslations>>) =>
   z.object({
-    name: z.string()
+    name: z
+      .string()
       .max(100, t('validation_name_maxLength'))
       .refine((val) => val.trim().length > 0, t('validation_name_required'))
       .transform((val) => val.trim()),
@@ -58,7 +59,7 @@ export async function createCategoryAction(
 
   if (!parsed.success) {
     return {
-      error: null, 
+      error: null,
       success: false,
       fieldErrors: parsed.error.flatten().fieldErrors,
       values: extractedValues,
@@ -97,7 +98,12 @@ export async function createCategoryAction(
   } catch (error: unknown) {
     if (error instanceof DomainException || error instanceof ApplicationException) {
       if (error.name === 'InvalidCategorySlugException' || error.message.includes('slug')) {
-        return { error: t('errors_slugAlreadyExists'), success: false, values: extractedValues, revision };
+        return {
+          error: t('errors_slugAlreadyExists'),
+          success: false,
+          values: extractedValues,
+          revision,
+        };
       }
       return { error: t('errors_unexpected'), success: false, values: extractedValues, revision };
     }
@@ -118,7 +124,8 @@ const getUpdateCategorySchema = (t: Awaited<ReturnType<typeof getTranslations>>)
   z.object({
     categoryId: z.string().uuid(),
     expectedVersion: z.coerce.number().int().nonnegative(),
-    name: z.string()
+    name: z
+      .string()
       .max(100, t('validation_name_maxLength'))
       .refine((val) => val.trim().length > 0, t('validation_name_required'))
       .transform((val) => val.trim()),
@@ -145,11 +152,14 @@ export async function updateCategoryAction(
 
   if (!parsed.success) {
     // If categoryId or expectedVersion fails, it's a critical error
-    if (parsed.error.flatten().fieldErrors.categoryId || parsed.error.flatten().fieldErrors.expectedVersion) {
+    if (
+      parsed.error.flatten().fieldErrors.categoryId ||
+      parsed.error.flatten().fieldErrors.expectedVersion
+    ) {
       return { error: t('errors_unexpected'), success: false, values: extractedValues, revision };
     }
     return {
-      error: null, 
+      error: null,
       success: false,
       fieldErrors: parsed.error.flatten().fieldErrors,
       values: extractedValues,
@@ -188,7 +198,12 @@ export async function updateCategoryAction(
   } catch (error: unknown) {
     if (error instanceof DomainException || error instanceof ApplicationException) {
       if (error.name === 'OptimisticConcurrencyException') {
-        return { error: t('errors_concurrency'), success: false, values: extractedValues, revision };
+        return {
+          error: t('errors_concurrency'),
+          success: false,
+          values: extractedValues,
+          revision,
+        };
       }
       return { error: t('errors_unexpected'), success: false, values: extractedValues, revision };
     }
@@ -204,7 +219,9 @@ export async function updateCategoryAction(
   return { success: false, error: t('errors_unexpected'), values: extractedValues, revision };
 }
 
-export async function archiveCategoryAction(id: string): Promise<{ success: boolean; error: string | null }> {
+export async function archiveCategoryAction(
+  id: string,
+): Promise<{ success: boolean; error: string | null }> {
   const t = await getTranslations('Categories');
   let isSuccess = false;
 
@@ -244,7 +261,9 @@ export async function archiveCategoryAction(id: string): Promise<{ success: bool
   return { success: false, error: t('errors_unexpected') };
 }
 
-export async function unarchiveCategoryAction(id: string): Promise<{ success: boolean; error: string | null }> {
+export async function unarchiveCategoryAction(
+  id: string,
+): Promise<{ success: boolean; error: string | null }> {
   const t = await getTranslations('Categories');
   let isSuccess = false;
 

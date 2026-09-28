@@ -11,12 +11,7 @@ import {
   FieldDescription,
   FieldContent,
 } from '@/components/ui/field';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { useTranslations } from 'next-intl';
 
 export type CategoryOption = {
@@ -56,7 +51,9 @@ export function ProductFormFields({
     setClearedFields(new Set());
   }, [fieldErrors]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+  ) => {
     const { name } = e.target;
     if (localErrors[name]) {
       setLocalErrors((prev) => ({ ...prev, [name]: '' }));
@@ -66,7 +63,7 @@ export function ProductFormFields({
     }
   };
 
-    const handleSkuBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+  const handleSkuBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const { value, name } = e.target;
     if (!value.trim()) return;
 
@@ -74,7 +71,6 @@ export function ProductFormFields({
     if (stripped) {
       e.target.value = `SKU-${stripped.toUpperCase()}`;
     }
-    
 
     if (localErrors[name]) {
       setLocalErrors((prev) => {
@@ -101,7 +97,10 @@ export function ProductFormFields({
       const fraction = (parts[1] || '00').padEnd(2, '0').substring(0, 2);
       e.target.value = `${whole}.${fraction}`;
     } else {
-      setLocalErrors((prev) => ({ ...prev, [name]: t('error_money_format', { fallback: 'Please enter a valid amount (e.g. 10.99).' }) }));
+      setLocalErrors((prev) => ({
+        ...prev,
+        [name]: t('error_money_format', { fallback: 'Please enter a valid amount (e.g. 10.99).' }),
+      }));
     }
   };
 
@@ -114,7 +113,10 @@ export function ProductFormFields({
     if (/^\d+$/.test(value)) {
       setLocalErrors((prev) => ({ ...prev, [name]: '' }));
     } else {
-      setLocalErrors((prev) => ({ ...prev, [name]: t('error_stock_format', { fallback: 'Stock must be a positive whole number.' }) }));
+      setLocalErrors((prev) => ({
+        ...prev,
+        [name]: t('error_stock_format', { fallback: 'Stock must be a positive whole number.' }),
+      }));
     }
   };
 
@@ -190,7 +192,8 @@ export function ProductFormFields({
             <Field>
               <FieldLabel htmlFor="categoryId">{t('form_category')}</FieldLabel>
               <select
-                key={`categoryId-${revision}`} id="categoryId"
+                key={`categoryId-${revision}`}
+                id="categoryId"
                 name="categoryId"
                 defaultValue={defaultValues?.categoryId ?? ''}
                 required
@@ -208,7 +211,9 @@ export function ProductFormFields({
               {getError('categoryId') && (
                 <div className="mt-1.5 flex items-start gap-1.5 bg-destructive/10 text-destructive text-[0.8rem] px-2.5 py-1.5 rounded-md font-medium border border-destructive/20 animate-in fade-in slide-in-from-top-1">
                   <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                  <span className="leading-snug break-words mt-[1px]">{getError('categoryId')}</span>
+                  <span className="leading-snug break-words mt-[1px]">
+                    {getError('categoryId')}
+                  </span>
                 </div>
               )}
             </Field>
@@ -226,11 +231,11 @@ export function ProductFormFields({
               onChange={handleChange}
             />
             {getError('description') && (
-                <div className="mt-1.5 flex items-start gap-1.5 bg-destructive/10 text-destructive text-[0.8rem] px-2.5 py-1.5 rounded-md font-medium border border-destructive/20 animate-in fade-in slide-in-from-top-1">
-                  <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                  <span className="leading-snug break-words mt-[1px]">{getError('description')}</span>
-                </div>
-              )}
+              <div className="mt-1.5 flex items-start gap-1.5 bg-destructive/10 text-destructive text-[0.8rem] px-2.5 py-1.5 rounded-md font-medium border border-destructive/20 animate-in fade-in slide-in-from-top-1">
+                <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                <span className="leading-snug break-words mt-[1px]">{getError('description')}</span>
+              </div>
+            )}
           </Field>
         </CardContent>
       </Card>
@@ -247,7 +252,10 @@ export function ProductFormFields({
                 key={`price-${revision}`}
                 id="price"
                 name="price"
-                type="text" inputMode="decimal" pattern="^\d*(\.\d{0,2})?$" title="Enter a valid price (e.g. 10.99)"
+                type="text"
+                inputMode="decimal"
+                pattern="^\d*(\.\d{0,2})?$"
+                title="Enter a valid price (e.g. 10.99)"
                 defaultValue={defaultValues?.price ?? ''}
                 required
                 placeholder="99.99"
@@ -268,7 +276,10 @@ export function ProductFormFields({
                 key={`cost-${revision}`}
                 id="cost"
                 name="cost"
-                type="text" inputMode="decimal" pattern="^\d*(\.\d{0,2})?$" title="Enter a valid cost (e.g. 50.00)"
+                type="text"
+                inputMode="decimal"
+                pattern="^\d*(\.\d{0,2})?$"
+                title="Enter a valid cost (e.g. 50.00)"
                 defaultValue={defaultValues?.cost ?? ''}
                 required
                 placeholder="50.00"
@@ -291,7 +302,10 @@ export function ProductFormFields({
                 key={`wholesalePrice-${revision}`}
                 id="wholesalePrice"
                 name="wholesalePrice"
-                type="text" inputMode="decimal" pattern="^\d*(\.\d{0,2})?$" title="Enter a valid wholesale price (e.g. 75.00)"
+                type="text"
+                inputMode="decimal"
+                pattern="^\d*(\.\d{0,2})?$"
+                title="Enter a valid wholesale price (e.g. 75.00)"
                 defaultValue={defaultValues?.wholesalePrice ?? ''}
                 placeholder="75.00"
                 onBlur={handleMoneyBlur}
@@ -299,7 +313,9 @@ export function ProductFormFields({
               {getError('wholesalePrice') && (
                 <div className="mt-1.5 flex items-start gap-1.5 bg-destructive/10 text-destructive text-[0.8rem] px-2.5 py-1.5 rounded-md font-medium border border-destructive/20 animate-in fade-in slide-in-from-top-1">
                   <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                  <span className="leading-snug break-words mt-[1px]">{getError('wholesalePrice')}</span>
+                  <span className="leading-snug break-words mt-[1px]">
+                    {getError('wholesalePrice')}
+                  </span>
                 </div>
               )}
             </Field>
@@ -312,7 +328,10 @@ export function ProductFormFields({
                 key={`stock-${revision}`}
                 id="stock"
                 name="stock"
-                type="text" inputMode="numeric" pattern="^\d*$" title="Enter a valid whole number for stock"
+                type="text"
+                inputMode="numeric"
+                pattern="^\d*$"
+                title="Enter a valid whole number for stock"
                 defaultValue={defaultValues?.stock ?? 0}
                 required
                 onBlur={handleStockBlur}
@@ -325,14 +344,19 @@ export function ProductFormFields({
                 </div>
               )}
             </Field>
-            
+
             <Field orientation="horizontal" className="pt-8">
               <FieldContent className="items-center flex-row gap-3">
                 <input
                   type="checkbox"
-                  key={`isVatExempt-${revision}`} id="isVatExempt"
+                  key={`isVatExempt-${revision}`}
+                  id="isVatExempt"
                   name="isVatExempt"
-                  defaultChecked={defaultValues?.isVatExempt === true || defaultValues?.isVatExempt === 'on' || defaultValues?.isVatExempt === 'true'}
+                  defaultChecked={
+                    defaultValues?.isVatExempt === true ||
+                    defaultValues?.isVatExempt === 'on' ||
+                    defaultValues?.isVatExempt === 'true'
+                  }
                   className="w-4 h-4 cursor-pointer accent-primary"
                 />
                 <FieldLabel htmlFor="isVatExempt" className="cursor-pointer">
@@ -361,11 +385,11 @@ export function ProductFormFields({
                 </div>
               )}
               <div className="flex-1">
-                <Input 
-                  id="image" 
-                  name="image" 
-                  type="file" 
-                  accept="image/*" 
+                <Input
+                  id="image"
+                  name="image"
+                  type="file"
+                  accept="image/*"
                   className="cursor-pointer"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
@@ -375,7 +399,7 @@ export function ProductFormFields({
                       setSelectedImage(null);
                       setPreviewUrl(defaultValues?.imageUrl ?? null);
                     }
-                  }} 
+                  }}
                 />
                 <FieldDescription className="mt-2">{t('form_image_desc')}</FieldDescription>
               </div>

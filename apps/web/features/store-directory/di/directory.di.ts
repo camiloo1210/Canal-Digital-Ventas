@@ -2,7 +2,7 @@ import 'server-only';
 import { createClient } from '@/lib/supabase/server';
 import {
   PublicTenantDirectoryReadRepositoryPort,
-  SupabasePublicTenantDirectoryReadAdapter
+  SupabasePublicTenantDirectoryReadAdapter,
 } from '@canaldigital/packages/core';
 
 export async function getStoreDirectoryReadRepository(): Promise<PublicTenantDirectoryReadRepositoryPort> {

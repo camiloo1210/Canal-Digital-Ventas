@@ -27,7 +27,8 @@ async function run() {
       await sql.unsafe(`SET ROLE anon; SELECT * FROM catalog.get_public_products_by_slug();`);
       console.error('❌ FAILED: Omitted param worked!');
     } catch (e) {
-      if (e.code === '42883') console.log('✅ PASSED: Postgres rejected call without slug parameter');
+      if (e.code === '42883')
+        console.log('✅ PASSED: Postgres rejected call without slug parameter');
       else throw e;
     }
 
@@ -37,8 +38,9 @@ async function run() {
       SET ROLE anon;
       SELECT * FROM catalog.get_public_products_by_slug('demo-store', NULL, NULL, 1, 1000000);
     `);
-    console.log(`✅ PASSED: Retrieved ${extremeLimit[1].length} products (clamped to 24 by the RPC)`);
-
+    console.log(
+      `✅ PASSED: Retrieved ${extremeLimit[1].length} products (clamped to 24 by the RPC)`,
+    );
   } finally {
     await sql.end();
   }

@@ -10,17 +10,19 @@ export interface PublicTenantContext {
   bannerUrl: string | null;
 }
 
-export const resolveTenantQuery = cache(async (slug: string): Promise<PublicTenantContext | null> => {
-  const repository = await getStoreTenantReadRepository();
-  const data = await repository.findBySlug(slug);
+export const resolveTenantQuery = cache(
+  async (slug: string): Promise<PublicTenantContext | null> => {
+    const repository = await getStoreTenantReadRepository();
+    const data = await repository.findBySlug(slug);
 
-  if (!data) return null;
+    if (!data) return null;
 
-  return {
-    name: data.name,
-    slug: data.slug,
-    description: data.description,
-    logoUrl: data.logoUrl,
-    bannerUrl: data.bannerUrl,
-  };
-});
+    return {
+      name: data.name,
+      slug: data.slug,
+      description: data.description,
+      logoUrl: data.logoUrl,
+      bannerUrl: data.bannerUrl,
+    };
+  },
+);

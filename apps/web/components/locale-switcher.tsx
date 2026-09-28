@@ -43,21 +43,24 @@ export function LocaleSwitcher(): React.JSX.Element {
         </DropdownMenuLabel>
 
         <div className="flex items-center justify-between px-3 py-2 text-sm">
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={() => handleLocaleChange(false)}
-            className={cn("cursor-pointer transition-colors outline-none", !isEn ? 'font-bold text-foreground' : 'text-muted-foreground hover:text-foreground')}
+            className={cn(
+              'cursor-pointer transition-colors outline-none',
+              !isEn ? 'font-bold text-foreground' : 'text-muted-foreground hover:text-foreground',
+            )}
           >
             ES
           </button>
-          
+
           <Switch.Root
             checked={isEn}
             onCheckedChange={handleLocaleChange}
             disabled={isPending}
             className={cn(
               'relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50',
-              'bg-primary'
+              'bg-primary',
             )}
           >
             <Switch.Thumb
@@ -67,11 +70,14 @@ export function LocaleSwitcher(): React.JSX.Element {
               )}
             />
           </Switch.Root>
-          
-          <button 
-            type="button" 
+
+          <button
+            type="button"
             onClick={() => handleLocaleChange(true)}
-            className={cn("cursor-pointer transition-colors outline-none", isEn ? 'font-bold text-foreground' : 'text-muted-foreground hover:text-foreground')}
+            className={cn(
+              'cursor-pointer transition-colors outline-none',
+              isEn ? 'font-bold text-foreground' : 'text-muted-foreground hover:text-foreground',
+            )}
           >
             EN
           </button>

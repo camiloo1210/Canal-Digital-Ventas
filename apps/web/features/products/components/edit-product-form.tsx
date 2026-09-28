@@ -10,7 +10,10 @@ import {
 } from '@/features/products/components/product-form-fields';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import { updateProductAction, ProductActionState } from '@/features/products/actions/products.actions';
+import {
+  updateProductAction,
+  ProductActionState,
+} from '@/features/products/actions/products.actions';
 
 const initialState: ProductActionState = {
   success: false,
@@ -83,7 +86,12 @@ export function EditProductForm({ categories, product }: EditProductFormProps): 
             </div>
           )}
 
-          <ProductFormFields categories={categories} defaultValues={state.values ?? product} fieldErrors={state.fieldErrors} revision={state.revision} />
+          <ProductFormFields
+            categories={categories}
+            defaultValues={state.values ?? product}
+            fieldErrors={state.fieldErrors}
+            revision={state.revision}
+          />
 
           <div className="pt-2">
             <SubmitButton />

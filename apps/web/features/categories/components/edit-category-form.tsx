@@ -1,7 +1,10 @@
 'use client';
 
 import { useActionState, useRef } from 'react';
-import { updateCategoryAction, CategoryActionState } from '@/features/categories/actions/categories.actions';
+import {
+  updateCategoryAction,
+  CategoryActionState,
+} from '@/features/categories/actions/categories.actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useFormStatus } from 'react-dom';
@@ -66,9 +69,9 @@ export function EditCategoryForm({ initialData }: EditCategoryFormProps): React.
             </div>
           )}
 
-          <CategoryFormFields 
+          <CategoryFormFields
             revision={state.revision}
-            defaultValues={state.values ?? initialData} 
+            defaultValues={state.values ?? initialData}
             fieldErrors={state.fieldErrors}
           />
 

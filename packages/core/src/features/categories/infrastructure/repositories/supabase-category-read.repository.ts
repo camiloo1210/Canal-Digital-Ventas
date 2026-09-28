@@ -16,7 +16,7 @@ export interface CategoryReadModel {
 export class SupabaseCategoryReadRepository {
   constructor(
     private readonly supabase: SupabaseClient,
-    private readonly isPublicContext: boolean = false
+    private readonly isPublicContext: boolean = false,
   ) {}
 
   private getTableName(): string {
@@ -69,7 +69,7 @@ export class SupabaseCategoryReadRepository {
       );
 
     const totalItems = count ?? 0;
-    
+
     return {
       items: data as CategoryReadModel[],
       totalItems,

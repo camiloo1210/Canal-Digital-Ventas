@@ -6,7 +6,10 @@ import { getStoreCategoryReadRepository } from '@/features/store/di/store.di';
 import { StoreCategorySidebar } from '@/features/store/components/store-category-sidebar';
 import { StoreSearchBar } from '@/features/store/components/store-search-bar';
 import { StoreProfileHeader } from '@/features/store/components/store-profile-header';
-import { StoreResultsBoundary, StoreResultsSkeleton } from '@/features/store/components/store-results-boundary';
+import {
+  StoreResultsBoundary,
+  StoreResultsSkeleton,
+} from '@/features/store/components/store-results-boundary';
 import { getTranslations } from 'next-intl/server';
 
 export default async function StorePage(props: {
@@ -19,7 +22,7 @@ export default async function StorePage(props: {
   const t = await getTranslations('Storefront');
 
   const tenantContext = await resolveTenantQuery(params.tenantSlug);
-  
+
   if (!tenantContext) {
     notFound();
   }
@@ -31,13 +34,13 @@ export default async function StorePage(props: {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <StoreProfileHeader 
+      <StoreProfileHeader
         name={tenantContext.name}
         description={tenantContext.description}
         logoUrl={tenantContext.logoUrl}
         bannerUrl={tenantContext.bannerUrl}
       />
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 w-full flex flex-col">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
           <StoreSearchBar placeholder={t('searchProducts')} />
@@ -51,12 +54,15 @@ export default async function StorePage(props: {
             labels={{
               categories: t('categories'),
               allProducts: t('allProducts'),
-              noCategories: t('noCategories')
+              noCategories: t('noCategories'),
             }}
           />
-          
+
           <div className="flex-1 w-full">
-            <Suspense fallback={<StoreResultsSkeleton />} key={`${filters.q}-${filters.category}-${filters.page}`}>
+            <Suspense
+              fallback={<StoreResultsSkeleton />}
+              key={`${filters.q}-${filters.category}-${filters.page}`}
+            >
               <StoreResultsBoundary
                 tenantSlug={params.tenantSlug}
                 categorySlug={filters.category}

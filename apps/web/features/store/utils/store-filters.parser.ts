@@ -21,16 +21,12 @@ const storeFiltersSchema = z.object({
     .max(100, 'Category slug is too long')
     .regex(/^[a-z0-9](-?[a-z0-9])*$/, 'Invalid category slug format')
     .optional(),
-  page: z.coerce
-    .number()
-    .int()
-    .min(1)
-    .max(MAX_PAGE)
-    .default(1)
-    .catch(1), // If page parsing fails (e.g. string), fallback to 1
+  page: z.coerce.number().int().min(1).max(MAX_PAGE).default(1).catch(1), // If page parsing fails (e.g. string), fallback to 1
 });
 
-export function parseStoreFilters(searchParams: { [key: string]: string | string[] | undefined }): StoreFilters {
+export function parseStoreFilters(searchParams: {
+  [key: string]: string | string[] | undefined;
+}): StoreFilters {
   // Normalize params
   const rawData = {
     q: Array.isArray(searchParams.q) ? searchParams.q[0] : searchParams.q,

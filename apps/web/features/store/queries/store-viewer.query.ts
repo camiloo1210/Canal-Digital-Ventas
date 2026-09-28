@@ -12,7 +12,9 @@ export type StoreViewer = {
 
 export async function getStoreViewerQuery(): Promise<StoreViewer> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
     return {

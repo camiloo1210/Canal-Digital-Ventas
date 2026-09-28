@@ -3,11 +3,7 @@
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-} from '@/components/ui/field';
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { AlertCircle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { CategoryFormValues } from '@/features/categories/actions/categories.actions';
@@ -18,7 +14,11 @@ interface CategoryFormFieldsProps {
   defaultValues?: Partial<CategoryFormValues>;
 }
 
-export function CategoryFormFields({ revision, fieldErrors, defaultValues }: CategoryFormFieldsProps): React.JSX.Element {
+export function CategoryFormFields({
+  revision,
+  fieldErrors,
+  defaultValues,
+}: CategoryFormFieldsProps): React.JSX.Element {
   const t = useTranslations('Categories');
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
   const [clearedFields, setClearedFields] = useState<Set<string>>(new Set());
@@ -28,21 +28,21 @@ export function CategoryFormFields({ revision, fieldErrors, defaultValues }: Cat
     setPrevErrors(fieldErrors);
     setClearedFields(new Set());
   }
-  
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
     const { name, value } = e.target;
-    
+
     if (!clearedFields.has(name)) {
       setClearedFields((prev) => new Set(prev).add(name));
     }
 
     if (name === 'name' && value.length > 100) {
-      setLocalErrors(prev => ({ ...prev, [name]: t('validation_name_maxLength') }));
+      setLocalErrors((prev) => ({ ...prev, [name]: t('validation_name_maxLength') }));
     } else if (name === 'description' && value.length > 200) {
-      setLocalErrors(prev => ({ ...prev, [name]: t('validation_description_maxLength') }));
+      setLocalErrors((prev) => ({ ...prev, [name]: t('validation_description_maxLength') }));
     } else {
       if (localErrors[name]) {
-        setLocalErrors(prev => {
+        setLocalErrors((prev) => {
           const newErrors = { ...prev };
           delete newErrors[name];
           return newErrors;

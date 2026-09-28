@@ -1,7 +1,10 @@
 'use client';
 
 import { useActionState, useRef, useEffect } from 'react';
-import { createCategoryAction, CategoryActionState } from '@/features/categories/actions/categories.actions';
+import {
+  createCategoryAction,
+  CategoryActionState,
+} from '@/features/categories/actions/categories.actions';
 import { Button } from '@/components/ui/button';
 import { FolderPlus, Loader2 } from 'lucide-react';
 import { useFormStatus } from 'react-dom';
@@ -69,10 +72,10 @@ export function CreateCategoryForm(): React.JSX.Element {
           </div>
         )}
 
-        <CategoryFormFields 
-          revision={state.revision} 
-          defaultValues={state.values} 
-          fieldErrors={state.fieldErrors} 
+        <CategoryFormFields
+          revision={state.revision}
+          defaultValues={state.values}
+          fieldErrors={state.fieldErrors}
         />
 
         <div className="pt-2">

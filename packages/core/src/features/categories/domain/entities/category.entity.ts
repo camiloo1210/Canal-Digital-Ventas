@@ -65,7 +65,15 @@ export class Category {
 
   // Reconstitute
   public static reconstitute(props: CategoryProps): Category {
-    return new Category(props.id, props.name, props.slug, props.tenantId, props.description, props.status, props.version);
+    return new Category(
+      props.id,
+      props.name,
+      props.slug,
+      props.tenantId,
+      props.description,
+      props.status,
+      props.version,
+    );
   }
 
   // Validations

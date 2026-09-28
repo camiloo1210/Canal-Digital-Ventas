@@ -50,16 +50,16 @@ export function parseToMinorUnits(value: number | string): number {
   const parts = sanitized.split('.');
   const wholeStr = parts[0] || '0';
   const fractionStr = parts[1] || '00';
-  
+
   const paddedFraction = fractionStr.padEnd(2, '0').substring(0, 2);
 
   try {
     const minorUnitsBig = BigInt(wholeStr) * BigInt(100) + BigInt(paddedFraction);
-    
+
     if (minorUnitsBig > BigInt(Number.MAX_SAFE_INTEGER)) {
       throw new Error('Value exceeds safe money bounds');
     }
-    
+
     return Number(minorUnitsBig);
   } catch (err) {
     if (err instanceof Error && err.message === 'Value exceeds safe money bounds') {
@@ -80,9 +80,9 @@ export function formatMinorUnitsForInput(minorUnits: number | null | undefined):
   if (!Number.isInteger(minorUnits) || minorUnits < 0) {
     return '';
   }
-  
+
   const wholeStr = Math.floor(minorUnits / 100).toString();
   const fractionStr = (minorUnits % 100).toString().padStart(2, '0');
-  
+
   return `${wholeStr}.${fractionStr}`;
 }

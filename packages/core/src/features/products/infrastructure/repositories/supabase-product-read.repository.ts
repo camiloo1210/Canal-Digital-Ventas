@@ -23,7 +23,7 @@ export interface ProductReadModel {
 export class SupabaseProductReadRepository {
   constructor(
     private readonly supabase: SupabaseClient,
-    private readonly isPublicContext: boolean = false
+    private readonly isPublicContext: boolean = false,
   ) {}
 
   private getTableName(): string {
@@ -49,7 +49,15 @@ export class SupabaseProductReadRepository {
     return data as ProductReadModel;
   }
 
-  async findAll(tenantId: string, pagination?: { page?: number; limit?: number }): Promise<{ items: ProductReadModel[]; totalItems: number; totalPages: number; currentPage: number }> {
+  async findAll(
+    tenantId: string,
+    pagination?: { page?: number; limit?: number },
+  ): Promise<{
+    items: ProductReadModel[];
+    totalItems: number;
+    totalPages: number;
+    currentPage: number;
+  }> {
     const page = pagination?.page ?? 1;
     const limit = pagination?.limit ?? 20;
     const from = (page - 1) * limit;
@@ -93,11 +101,11 @@ export class SupabaseProductReadRepository {
     if (filters.status) {
       query = query.eq('status', filters.status);
     }
-    
+
     if (filters.categoryId) {
       query = query.eq('category_id', filters.categoryId);
     }
-    
+
     if (filters.name) {
       query = query.ilike('name', `%${this.escapeLike(filters.name)}%`);
     }

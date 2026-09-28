@@ -1,7 +1,10 @@
 'use client';
 
 import { useActionState, useRef, useEffect } from 'react';
-import { createProductAction, ProductActionState } from '@/features/products/actions/products.actions';
+import {
+  createProductAction,
+  ProductActionState,
+} from '@/features/products/actions/products.actions';
 import { Button } from '@/components/ui/button';
 import { Package, Loader2 } from 'lucide-react';
 import { useFormStatus } from 'react-dom';
@@ -77,7 +80,12 @@ export function CreateProductForm({ categories }: CreateProductFormProps): React
           </div>
         )}
 
-        <ProductFormFields categories={categories} defaultValues={state.values} fieldErrors={state.fieldErrors} revision={state.revision} />
+        <ProductFormFields
+          categories={categories}
+          defaultValues={state.values}
+          fieldErrors={state.fieldErrors}
+          revision={state.revision}
+        />
 
         <div className="pt-2">
           <SubmitButton />
