@@ -3,9 +3,9 @@ id: 7578823e-3d83-4583-9d92-f1746f3b08db
 title: "CU-MOD2-02: Ver Disponibilidad de Stock"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-29"
+updated_date: "2026-09-29"
 issue_type: use-case
-status: open
+status: done
 labels:
   - ai-generated
 relations:
@@ -14,7 +14,7 @@ relations:
 frecuencia: Muy alta
 importancia: Alta
 urgencia: Alta
-integrity_hash: "sha256:0444dafa147362e019063bf66c7f5156288debca80b029c691134763092fb0ff"
+integrity_hash: "sha256:9546b472a005945e1ffcd343f1461359315689bce02d31f1a6b648e5bc6b8b33"
 ---
 
 ## Actores
