@@ -1,3 +1,5 @@
+import { PublicStockAvailability } from './public-product-read.model';
+
 export interface PublicProductDetailReadModel {
   id: string;
   name: string;
@@ -8,4 +10,5 @@ export interface PublicProductDetailReadModel {
   imageUrl: string | null;
   hasVariants: boolean;
   inStock: boolean;
+  stockAvailability: PublicStockAvailability;
 }

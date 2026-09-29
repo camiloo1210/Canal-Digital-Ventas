@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { formatMoney } from '@/lib/money';
 import { ArrowLeft } from 'lucide-react';
+import { StoreProductStockBadge } from '@/features/store/components/store-product-stock-badge';
 
 export default async function ProductDetailPage(props: {
   params: Promise<{ tenantSlug: string; productId: string }>;
@@ -74,21 +75,11 @@ export default async function ProductDetailPage(props: {
               </div>
             </div>
 
-            <div className="border border-border rounded-xl p-6 bg-card shadow-sm flex flex-col gap-4">
+            <div className="border border-border rounded-xl p-6 bg-card shadow-sm flex flex-col items-start gap-4">
               <h3 className="font-medium text-foreground">
                 {t('availability', { fallback: 'Availability' })}
               </h3>
-              {product.inStock ? (
-                <div className="flex items-center text-emerald-600 dark:text-emerald-500 font-medium">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>
-                  {t('inStock')}
-                </div>
-              ) : (
-                <div className="flex items-center text-destructive font-medium">
-                  <span className="w-2 h-2 rounded-full bg-destructive mr-2"></span>
-                  {t('outOfStock')}
-                </div>
-              )}
+              <StoreProductStockBadge availability={product.stockAvailability} />
             </div>
           </div>
         </div>

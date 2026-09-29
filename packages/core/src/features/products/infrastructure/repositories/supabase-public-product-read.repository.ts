@@ -4,9 +4,26 @@ import {
   PublicProductFilters,
 } from '@/products/application/ports/out/public-product-read-repository.port';
 import { PublicProductDetailReadModel } from '@/products/application/read-models/public-product-detail-read.model';
-import { PublicProductReadModel } from '@/products/application/read-models/public-product-read.model';
+import {
+  PublicProductReadModel,
+  PublicStockAvailability,
+} from '@/products/application/read-models/public-product-read.model';
 import { ProductRepositoryException } from '@/products/application/exceptions/product-repository.exception';
 import { PaginatedResult, PaginationOptions } from '@/shared/domain/pagination/pagination';
+
+function toPublicStockAvailability(value: unknown): PublicStockAvailability {
+  switch (value) {
+    case 'AVAILABLE':
+    case 'LOW_STOCK':
+    case 'OUT_OF_STOCK':
+    case 'CHECK_AVAILABILITY':
+      return value;
+    default:
+      throw new ProductRepositoryException(
+        `Invalid public stock availability returned from database: ${value}`,
+      );
+  }
+}
 
 export class SupabasePublicProductReadRepository implements PublicProductReadRepositoryPort {
   constructor(private readonly supabase: SupabaseClient) {}
@@ -49,17 +66,19 @@ export class SupabasePublicProductReadRepository implements PublicProductReadRep
         image_url: string | null;
         has_variants: boolean;
         in_stock: boolean;
+        availability_status: unknown;
         total_count?: number;
       }) => ({
         id: row.id,
         name: row.name,
         priceCents: row.price_cents,
-        description: row.description,
+        description: row.description || '',
         categoryId: row.category_id,
-        sku: row.sku,
+        sku: row.sku || '',
         imageUrl: row.image_url,
         hasVariants: row.has_variants,
         inStock: row.in_stock,
+        stockAvailability: toPublicStockAvailability(row.availability_status),
       }),
     );
 
@@ -105,6 +124,7 @@ export class SupabasePublicProductReadRepository implements PublicProductReadRep
       imageUrl: row.image_url || null,
       hasVariants: row.has_variants,
       inStock: row.in_stock,
+      stockAvailability: toPublicStockAvailability(row.availability_status),
     };
   }
 }
