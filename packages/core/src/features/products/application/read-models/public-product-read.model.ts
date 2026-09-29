@@ -12,4 +12,6 @@ export interface PublicProductReadModel {
   hasVariants: boolean;
   inStock: boolean;
   stockAvailability: PublicStockAvailability;
+  wholesalePriceCents: number | null;
+  wholesaleMinQuantity: number | null;
 }

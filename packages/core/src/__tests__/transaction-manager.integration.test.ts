@@ -60,6 +60,7 @@ describe('PostgresTransactionManagerAdapter Integration', () => {
       [],
       false,
       Money.from(0),
+      null,
     );
     await productRepository.save(initialProduct);
 
@@ -140,6 +141,7 @@ describe('PostgresTransactionManagerAdapter Integration', () => {
       [],
       false,
       Money.from(0),
+      null,
     );
     await productRepository.save(initialProduct);
 
