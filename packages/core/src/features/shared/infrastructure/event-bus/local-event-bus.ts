@@ -7,7 +7,7 @@ export class LocalEventBus implements EventBusPort {
   async publish(events: DomainEvent[], tx?: TransactionContext): Promise<void>;
   async publish(
     items: (DomainEvent | DomainEventEnvelope)[],
-    tx?: TransactionContext,
+    _tx?: TransactionContext,
   ): Promise<void> {
     for (const item of items) {
       const isEnvelope = 'context' in item && 'event' in item;
