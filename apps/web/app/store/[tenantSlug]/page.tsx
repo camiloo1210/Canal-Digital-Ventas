@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { resolveTenantQuery } from '@/features/iam/queries/resolve-tenant.query';
-import { parseStoreFilters, PAGE_SIZE } from '@/features/store/utils/store-filters.parser';
+import { parseStoreFilters } from '@/features/store/utils/store-filters.parser';
 import { getStoreCategoryReadRepository } from '@/features/store/di/store.di';
 import { StoreCategoryNav } from '@/features/store/components/store-category-nav';
 import { StoreSearchBar } from '@/features/store/components/store-search-bar';
@@ -15,7 +15,7 @@ import { getTranslations } from 'next-intl/server';
 export default async function StorePage(props: {
   params: Promise<{ tenantSlug: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
+}): Promise<React.JSX.Element> {
   const params = await props.params;
   const searchParams = await props.searchParams;
 

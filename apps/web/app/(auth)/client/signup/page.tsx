@@ -6,7 +6,7 @@ export const metadata = {
 
 export default async function ClientSignupPage(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
+}): Promise<React.JSX.Element> {
   const searchParams = await props.searchParams;
   const tenantSlug =
     typeof searchParams.tenantSlug === 'string' ? searchParams.tenantSlug : undefined;

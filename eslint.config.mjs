@@ -27,7 +27,8 @@ const eslintConfig = defineConfig([
     rules: {
       '@next/next/no-html-link-for-pages': ['error', 'apps/web/app'],
       '@typescript-eslint/no-explicit-any': 'error',
-      '@typescript-eslint/explicit-function-return-type': 'warn',
+      '@typescript-eslint/explicit-function-return-type': 'error',
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       'boundaries/dependencies': [
         'error',
         {
@@ -68,10 +69,24 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  {
+    files: ['**/*.mjs', '**/*.js'],
+    rules: {
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/no-var-requires': 'off',
+    },
+  },
+  {
+    files: ['apps/web/components/ui/**/*.tsx', 'apps/web/components/ui/**/*.ts'],
+    rules: {
+      '@typescript-eslint/explicit-function-return-type': 'off',
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
     '.next/**',
+    'apps/web/.next/**',
     'out/**',
     'build/**',
     'next-env.d.ts',

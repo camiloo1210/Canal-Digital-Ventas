@@ -8,7 +8,7 @@ export const metadata = {
   title: 'Onboarding | Canal Digital',
 };
 
-export default async function OnboardingPage() {
+export default async function OnboardingPage(): Promise<React.JSX.Element> {
   const supabase = await createClient();
   const {
     data: { user },

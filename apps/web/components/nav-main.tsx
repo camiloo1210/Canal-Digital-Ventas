@@ -18,7 +18,7 @@ export function NavMain({
     url: string;
     icon?: React.ReactNode;
   }[];
-}) {
+}): React.JSX.Element {
   return (
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">

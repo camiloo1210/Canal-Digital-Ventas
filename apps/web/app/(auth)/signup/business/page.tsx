@@ -6,7 +6,7 @@ export const metadata = {
   title: 'Business Signup | Canal Digital',
 };
 
-export default function BusinessSignupPage() {
+export default function BusinessSignupPage(): React.JSX.Element {
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="flex flex-col gap-4 p-6 md:p-10">
