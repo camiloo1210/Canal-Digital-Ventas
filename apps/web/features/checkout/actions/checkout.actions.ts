@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { getTranslations } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
 import { resolveTenantQuery } from '@/features/iam/queries/resolve-tenant.query';
-import { checkoutDi } from '../di/checkout.di';
+import { checkoutDi } from '@/features/checkout/di/checkout.di';
 
 type CheckoutErrorCode =
   | 'OUT_OF_STOCK'
@@ -23,7 +23,7 @@ export interface CheckoutActionState {
 
 const CartItemSchema = z.object({
   productId: z.string().uuid(),
-  quantity: z.number().int().min(1).max(9999), // Límites defensivos técnicos
+  quantity: z.number().int().min(1).max(9999),
 });
 
 const CartItemsSchema = z
@@ -53,7 +53,6 @@ export async function submitCheckoutAction(
   const t = await getTranslations('Storefront.checkoutErrors');
 
   try {
-    // 1. Authenticate (Session wins)
     const supabase = await createClient();
     const {
       data: { user },
@@ -63,13 +62,11 @@ export async function submitCheckoutAction(
       return { success: false, errorCode: 'UNAUTHORIZED', message: t('unauthorized') };
     }
 
-    // 2. Resolve Context (Route wins)
     const tenantContext = await resolveTenantQuery(tenantSlug);
     if (!tenantContext) {
       return { success: false, errorCode: 'TENANT_NOT_FOUND', message: t('tenantNotFound') };
     }
 
-    // 3. Zod Structural Validation
     const cartData = formData.get('cartItems');
     if (!cartData || typeof cartData !== 'string') {
       return { success: false, errorCode: 'INVALID_CART', message: t('invalidCart') };
@@ -82,10 +79,8 @@ export async function submitCheckoutAction(
 
     const items = parseResult.data;
 
-    // 4. DI Composition
     const useCase = await checkoutDi.resolveGenerateCommercialOrderUseCase();
 
-    // 5. Invoke Authoritative Use Case
 
     const { data: tenantData, error: tenantError } = await supabase
       .from('tenants')
@@ -107,7 +102,6 @@ export async function submitCheckoutAction(
 
     return { success: true, errorCode: null };
   } catch (error: unknown) {
-    // Map Domain Exceptions to CheckoutErrorCode
     if (error instanceof Error) {
       if (error.name === 'ProductOutOfStockException') {
         return { success: false, errorCode: 'OUT_OF_STOCK', message: t('outOfStock') };
@@ -127,7 +121,6 @@ export async function submitCheckoutAction(
       }
     }
 
-    // Generic infrastructure/unexpected fallback
     return { success: false, errorCode: 'UNEXPECTED', message: t('unexpected') };
   }
 }

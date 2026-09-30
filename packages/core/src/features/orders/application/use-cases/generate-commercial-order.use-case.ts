@@ -46,29 +46,25 @@ export class GenerateCommercialOrderUseCase {
 
         const orderItems: OrderItem[] = [];
         let subtotalAmount = 0;
-        let currency = Currency.USD; // Arbitrary default, should come from product
+        let currency = Currency.USD;
 
         for (const itemDto of dto.items) {
           const productId = createProductId(itemDto.productId);
 
-          // 1. Authoritative lookup & ownership validation (findById checks tenantId)
           const product = await this.productRepository.findById(productId, tenantId, tx);
 
           if (!product) {
             throw new ProductUnavailableException();
           }
 
-          // 2. Availability validation
           if (product.getStatus() !== ProductStatus.ACTIVE) {
             throw new ProductUnavailableException();
           }
 
-          // 3. Stock validation
           if (product.getStock() < itemDto.quantity) {
             throw new ProductOutOfStockException();
           }
 
-          // 4. Pricing (Business Rules)
           let authoritativePrice = product.getPrice().getValue();
           currency = product.getPrice().getCurrency();
 
@@ -98,19 +94,16 @@ export class GenerateCommercialOrderUseCase {
           subtotalAmount += authoritativePrice * itemDto.quantity;
         }
 
-        // Totals
         const subtotal = Money.from(subtotalAmount, currency);
         const taxAmount = Money.from(0, currency);
         const discountAmount = Money.from(0, currency);
         const shippingCost = Money.from(0, currency);
 
-        // Fake address for now since we just create a DRAFT/PENDING order
         const shippingAddress = Address.create('Pending', 'Pending', 'Pending', '00000', 'Pending');
 
         const orderId = createOrderId(crypto.randomUUID());
         const orderNumber = `ORD-${Date.now().toString().slice(-6)}`;
 
-        // 5. Create CommercialOrder
         const order = Order.create(
           orderId,
           orderNumber,
@@ -124,10 +117,8 @@ export class GenerateCommercialOrderUseCase {
           shippingAddress,
         );
 
-        // Convert DRAFT to PENDING_PAYMENT
         order.confirm();
 
-        // 6. Commit
         await this.orderRepository.save(order, tx);
       },
       { userId: dto.buyerId },

@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useActionState, useEffect } from 'react';
-import { submitCheckoutAction, CheckoutActionState } from '../actions/checkout.actions';
+import { submitCheckoutAction, CheckoutActionState } from '@/features/checkout/actions/checkout.actions';
 import { useCartStore } from '@/features/cart/store/cart.store';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from 'next-intl';

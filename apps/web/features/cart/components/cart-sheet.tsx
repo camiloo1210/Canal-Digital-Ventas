@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useCartStore } from '../store/cart.store';
+import { useCartStore } from '@/features/cart/store/cart.store';
 import {
   Sheet,
   SheetContent,

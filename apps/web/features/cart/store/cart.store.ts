@@ -26,11 +26,11 @@ export const useCartStore = create<CartState>()(
       tenantSlug: null,
       items: [],
 
-      setTenant: (tenantSlug: string) => {
+      setTenant: (tenantSlug: string): void => {
         set({ tenantSlug });
       },
 
-      addItem: (item: CartItem, newTenantSlug: string) => {
+      addItem: (item: CartItem, newTenantSlug: string): void => {
         const currentTenant = get().tenantSlug;
         const currentItems = get().items;
 
@@ -54,13 +54,13 @@ export const useCartStore = create<CartState>()(
         }
       },
 
-      removeItem: (productId: string) => {
+      removeItem: (productId: string): void => {
         set((state) => ({
           items: state.items.filter((i) => i.productId !== productId),
         }));
       },
 
-      updateQuantity: (productId: string, quantity: number) => {
+      updateQuantity: (productId: string, quantity: number): void => {
         set((state) => ({
           items: state.items.map((i) =>
             i.productId === productId ? { ...i, quantity: Math.min(Math.max(1, quantity), i.maxStock) } : i
@@ -68,7 +68,7 @@ export const useCartStore = create<CartState>()(
         }));
       },
 
-      clearCart: () => {
+      clearCart: (): void => {
         set({ items: [] });
       },
     }),
