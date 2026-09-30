@@ -1,6 +1,6 @@
 export interface GenerateCommercialOrderDto {
   buyerId: string;
-  tenantId: string;
+  tenantSlug: string;
   items: Array<{
     productId: string;
     quantity: number;

@@ -189,3 +189,5 @@ export {
 } from '@/orders/application/use-cases/generate-commercial-order.use-case';
 export type { GenerateCommercialOrderDto } from '@/orders/application/dtos/generate-commercial-order.dto';
 export { PostgresOrderRepository } from '@/orders/infrastructure/repositories/postgres-order.repository';
+export { PostgresOrderTenantRepository } from '@/orders/infrastructure/repositories/postgres-order-tenant.repository';
+export { TenantNotAvailableException } from '@/orders/application/exceptions/tenant-not-available.exception';

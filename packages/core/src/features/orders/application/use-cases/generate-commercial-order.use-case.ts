@@ -1,4 +1,6 @@
 import { OrderRepositoryPort } from '@/orders/application/ports/out/order-repository.port';
+import { OrderTenantRepositoryPort } from '@/orders/application/ports/out/order-tenant-repository.port';
+import { TenantNotAvailableException } from '@/orders/application/exceptions/tenant-not-available.exception';
 import { ProductRepositoryPort } from '@/products/application/ports/out/product-repository.port';
 import {
   TransactionManagerPort,
@@ -12,7 +14,6 @@ import { Money } from '@/shared/domain/value-objects/money.vo';
 import { Currency } from '@/shared/domain/enums/currency.enum';
 import { createOrderId } from '@/orders/domain/types/order-id.type';
 import { createOrderItemId } from '@/orders/domain/types/order-item-id.type';
-import { createTenantId } from '@/shared/domain/types/tenant-id.type';
 import { createCustomerId } from '@/orders/domain/types/customer-id.type';
 import { createProductId } from '@/products/domain/types/product-id.type';
 import { ProductStatus } from '@/products/domain/enums/product-status.enum';
@@ -35,13 +36,18 @@ export class GenerateCommercialOrderUseCase {
   constructor(
     private readonly orderRepository: OrderRepositoryPort,
     private readonly productRepository: ProductRepositoryPort,
+    private readonly orderTenantRepository: OrderTenantRepositoryPort,
     private readonly transactionManager: TransactionManagerPort,
   ) {}
 
   async execute(dto: GenerateCommercialOrderDto): Promise<void> {
     await this.transactionManager.runInTransaction(
       async (tx: TransactionContext) => {
-        const tenantId = createTenantId(dto.tenantId);
+        const tenantData = await this.orderTenantRepository.findActiveBySlug(dto.tenantSlug, tx);
+        if (!tenantData) {
+          throw new TenantNotAvailableException();
+        }
+        const tenantId = tenantData.id;
         const customerId = createCustomerId(dto.buyerId);
 
         const orderItems: OrderItem[] = [];

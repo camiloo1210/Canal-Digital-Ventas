@@ -3,7 +3,6 @@
 import { z } from 'zod';
 import { getTranslations } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
-import { resolveTenantQuery } from '@/features/iam/queries/resolve-tenant.query';
 import { checkoutDi } from '@/features/checkout/di/checkout.di';
 
 type CheckoutErrorCode =
@@ -62,11 +61,6 @@ export async function submitCheckoutAction(
       return { success: false, errorCode: 'UNAUTHORIZED', message: t('unauthorized') };
     }
 
-    const tenantContext = await resolveTenantQuery(tenantSlug);
-    if (!tenantContext) {
-      return { success: false, errorCode: 'TENANT_NOT_FOUND', message: t('tenantNotFound') };
-    }
-
     const cartData = formData.get('cartItems');
     if (!cartData || typeof cartData !== 'string') {
       return { success: false, errorCode: 'INVALID_CART', message: t('invalidCart') };
@@ -82,27 +76,18 @@ export async function submitCheckoutAction(
     const useCase = await checkoutDi.resolveGenerateCommercialOrderUseCase();
 
 
-    const { data: tenantData, error: tenantError } = await supabase
-      .from('tenants')
-      .select('id')
-      .eq('slug', tenantSlug)
-      .single();
-
-    if (tenantError || !tenantData) {
-      return { success: false, errorCode: 'TENANT_NOT_FOUND', message: t('tenantNotFound') };
-    }
-
-    const tenantId = tenantData.id;
-
     await useCase.execute({
       buyerId: user.id,
-      tenantId: tenantId,
+      tenantSlug: tenantSlug,
       items: items,
     });
 
     return { success: true, errorCode: null };
   } catch (error: unknown) {
     if (error instanceof Error) {
+      if (error.name === 'TenantNotAvailableException') {
+        return { success: false, errorCode: 'TENANT_NOT_FOUND', message: t('tenantNotFound') };
+      }
       if (error.name === 'ProductOutOfStockException') {
         return { success: false, errorCode: 'OUT_OF_STOCK', message: t('outOfStock') };
       }
