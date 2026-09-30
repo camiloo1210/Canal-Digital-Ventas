@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -420,9 +420,7 @@ export function ProductFormFields({
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
-                      setSelectedImage(file);
                     } else {
-                      setSelectedImage(null);
                       setPreviewUrl(defaultValues?.imageUrl ?? null);
                     }
                   }}
