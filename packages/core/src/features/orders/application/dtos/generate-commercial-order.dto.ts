@@ -1,4 +1,8 @@
 export interface GenerateCommercialOrderDto {
-  orderId: string;
+  buyerId: string;
   tenantId: string;
+  items: Array<{
+    productId: string;
+    quantity: number;
+  }>;
 }

@@ -178,3 +178,14 @@ export { SupabasePublicTenantReadAdapter } from '@/tenants/infrastructure/reposi
 export * from '@/tenants/application/read-models/public-tenant-directory-item.model';
 export * from '@/tenants/application/ports/out/public-tenant-directory-read-repository.port';
 export * from '@/tenants/infrastructure/repositories/supabase-public-tenant-directory-read.adapter';
+
+// ==========================================
+// ORDERS EXPORTS
+// ==========================================
+export {
+  GenerateCommercialOrderUseCase,
+  ProductOutOfStockException,
+  ProductUnavailableException,
+} from '@/orders/application/use-cases/generate-commercial-order.use-case';
+export type { GenerateCommercialOrderDto } from '@/orders/application/dtos/generate-commercial-order.dto';
+export { PostgresOrderRepository } from '@/orders/infrastructure/repositories/postgres-order.repository';
