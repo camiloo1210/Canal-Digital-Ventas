@@ -2,9 +2,11 @@ import * as React from 'react';
 import { PublicProductReadModel } from '@canaldigital/packages/core';
 import { formatMoney } from '@/lib/money';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import Link from 'next/link';
 import { StoreProductStockBadge } from '@/features/store/components/store-product-stock-badge';
+import { getTranslations } from 'next-intl/server';
 
 interface StoreProductGridProps {
   tenantSlug: string;
@@ -14,18 +16,20 @@ interface StoreProductGridProps {
   pageInfoTemplate: string;
 }
 
-export function StoreProductGrid({
+export async function StoreProductGrid({
   products,
   currentPage,
   totalPages,
   pageInfoTemplate,
   tenantSlug,
-}: StoreProductGridProps): React.JSX.Element {
+}: StoreProductGridProps): Promise<React.JSX.Element> {
+  const t = await getTranslations('Storefront');
+
   if (products.length === 0) {
     return (
       <div className="w-full flex flex-col items-center justify-center py-24 text-center border border-dashed rounded-xl border-border bg-card">
-        <h3 className="text-xl font-semibold text-foreground mb-2">No products found</h3>
-        <p className="text-muted-foreground">Try adjusting your category or search filters.</p>
+        <h3 className="text-xl font-semibold text-foreground mb-2">{t('emptyStateTitle')}</h3>
+        <p className="text-muted-foreground">{t('emptyStateDesc')}</p>
       </div>
     );
   }
@@ -62,11 +66,25 @@ export function StoreProductGrid({
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 pt-0 flex flex-col flex-grow">
-                <div className="mt-auto pt-4 flex items-center justify-between">
-                  <span className="text-lg font-bold text-foreground">
-                    {formatMoney(product.priceCents)}
-                  </span>
-                  <StoreProductStockBadge availability={product.stockAvailability} />
+                <div className="mt-auto pt-4 flex flex-col gap-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-lg font-bold text-foreground">
+                      {formatMoney(product.priceCents)}
+                    </span>
+                    <StoreProductStockBadge availability={product.stockAvailability} />
+                  </div>
+                  {product.wholesalePriceCents !== null &&
+                    product.wholesaleMinQuantity !== null && (
+                      <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5">
+                        <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">
+                          {t('wholesaleBadge')}
+                        </Badge>
+                        <span>
+                          {formatMoney(product.wholesalePriceCents)} ({t('wholesaleMin')}:{' '}
+                          {product.wholesaleMinQuantity})
+                        </span>
+                      </div>
+                    )}
                 </div>
               </CardContent>
             </Card>

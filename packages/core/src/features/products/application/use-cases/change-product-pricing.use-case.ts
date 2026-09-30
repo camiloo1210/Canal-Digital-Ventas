@@ -22,10 +22,10 @@ export class ChangeProductPricingUseCase {
       throw new ProductNotFoundException(dto.productId);
     }
 
-    product.changePricing(
-      Money.from(dto.price),
-      Money.from(dto.cost),
+    product.changePricing(Money.from(dto.price), Money.from(dto.cost));
+    product.changeWholesaleRules(
       dto.wholesalePrice ? Money.from(dto.wholesalePrice) : Money.from(0),
+      dto.wholesaleMinQuantity ?? 0,
     );
 
     await this.productRepository.save(product);

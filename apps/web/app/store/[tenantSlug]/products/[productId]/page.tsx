@@ -3,6 +3,7 @@ import { getStoreProductReadRepository } from '@/features/store/di/store.di';
 import { getTranslations } from 'next-intl/server';
 import Image from 'next/image';
 import Link from 'next/link';
+import { Badge } from '@/components/ui/badge';
 import { formatMoney } from '@/lib/money';
 import { ArrowLeft } from 'lucide-react';
 import { StoreProductStockBadge } from '@/features/store/components/store-product-stock-badge';
@@ -62,9 +63,23 @@ export default async function ProductDetailPage(props: {
               {product.name}
             </h1>
 
-            <div className="text-4xl font-light text-foreground mb-8">
+            <div className="text-4xl font-light text-foreground mb-3">
               {formatMoney(product.priceCents)}
             </div>
+
+            {product.wholesalePriceCents !== null && product.wholesaleMinQuantity !== null && (
+              <div className="mb-8 flex items-center gap-2">
+                <Badge variant="secondary" className="text-sm">
+                  {t('wholesaleBadge')}
+                </Badge>
+                <span className="text-muted-foreground text-sm font-medium">
+                  {formatMoney(product.wholesalePriceCents)} ({t('wholesaleMin')}:{' '}
+                  {product.wholesaleMinQuantity})
+                </span>
+              </div>
+            )}
+
+            {!product.wholesalePriceCents && <div className="mb-8" />}
 
             <div className="border border-border rounded-xl p-6 mb-8 bg-card shadow-sm">
               <h2 className="text-lg font-medium mb-4">

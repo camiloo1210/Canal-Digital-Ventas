@@ -1,4 +1,4 @@
-import { PublicStockAvailability } from './public-product-read.model';
+import { PublicStockAvailability } from '@/products/application/read-models/public-product-read.model';
 
 export interface PublicProductDetailReadModel {
   id: string;
@@ -11,4 +11,6 @@ export interface PublicProductDetailReadModel {
   hasVariants: boolean;
   inStock: boolean;
   stockAvailability: PublicStockAvailability;
+  wholesalePriceCents: number | null;
+  wholesaleMinQuantity: number | null;
 }

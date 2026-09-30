@@ -25,6 +25,25 @@ function toPublicStockAvailability(value: unknown): PublicStockAvailability {
   }
 }
 
+function extractWholesaleRules(
+  price: unknown,
+  minQty: unknown,
+): { price: number | null; minQty: number | null } {
+  if (price === null && minQty === null) {
+    return { price: null, minQty: null };
+  }
+
+  if (typeof price === 'number' && typeof minQty === 'number') {
+    if (price > 0 && minQty >= 1 && Number.isInteger(price) && Number.isInteger(minQty)) {
+      return { price, minQty };
+    }
+  }
+
+  throw new ProductRepositoryException(
+    `Invalid wholesale rules returned from database: price=${price}, minQty=${minQty}`,
+  );
+}
+
 export class SupabasePublicProductReadRepository implements PublicProductReadRepositoryPort {
   constructor(private readonly supabase: SupabaseClient) {}
 
@@ -68,18 +87,28 @@ export class SupabasePublicProductReadRepository implements PublicProductReadRep
         in_stock: boolean;
         availability_status: unknown;
         total_count?: number;
-      }) => ({
-        id: row.id,
-        name: row.name,
-        priceCents: row.price_cents,
-        description: row.description || '',
-        categoryId: row.category_id,
-        sku: row.sku || '',
-        imageUrl: row.image_url,
-        hasVariants: row.has_variants,
-        inStock: row.in_stock,
-        stockAvailability: toPublicStockAvailability(row.availability_status),
-      }),
+        wholesale_price_cents: unknown;
+        wholesale_min_quantity: unknown;
+      }) => {
+        const wholesale = extractWholesaleRules(
+          row.wholesale_price_cents,
+          row.wholesale_min_quantity,
+        );
+        return {
+          id: row.id,
+          name: row.name,
+          priceCents: row.price_cents,
+          description: row.description || '',
+          categoryId: row.category_id,
+          sku: row.sku || '',
+          imageUrl: row.image_url,
+          hasVariants: row.has_variants,
+          inStock: row.in_stock,
+          stockAvailability: toPublicStockAvailability(row.availability_status),
+          wholesalePriceCents: wholesale.price,
+          wholesaleMinQuantity: wholesale.minQty,
+        };
+      },
     );
 
     const totalItems = data && data.length > 0 ? Number(data[0].total_count) : 0;
@@ -113,6 +142,7 @@ export class SupabasePublicProductReadRepository implements PublicProductReadRep
     }
 
     const row = data[0];
+    const wholesale = extractWholesaleRules(row.wholesale_price_cents, row.wholesale_min_quantity);
 
     return {
       id: row.id,
@@ -125,6 +155,8 @@ export class SupabasePublicProductReadRepository implements PublicProductReadRep
       hasVariants: row.has_variants,
       inStock: row.in_stock,
       stockAvailability: toPublicStockAvailability(row.availability_status),
+      wholesalePriceCents: wholesale.price,
+      wholesaleMinQuantity: wholesale.minQty,
     };
   }
 }

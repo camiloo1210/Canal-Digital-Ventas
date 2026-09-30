@@ -42,36 +42,51 @@ const optionalMoneySchema = z
   .transform((val) => (val === '' || val === null || val === undefined ? null : val))
   .pipe(z.union([z.null(), moneyFieldSchema]));
 
-const createProductSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(2, 'Name must be at least 2 characters long')
-    .max(50, 'Name must not exceed 50 characters'),
-  sku: z
-    .string()
-    .regex(
-      /^[A-Z0-9-]{5,20}$/,
-      'SKU must be 5-20 characters long and contain only uppercase letters, numbers, and dashes',
-    ),
-  price: moneyFieldSchema,
-  cost: moneyFieldSchema,
-  wholesalePrice: optionalMoneySchema,
-  categoryId: z.string().uuid('Please select a valid category'),
-  description: z
-    .string()
-    .max(200, 'Description must not exceed 200 characters')
-    .optional()
-    .default(''),
-  stock: z.coerce.number().int().nonnegative('Stock must be non-negative').default(0),
-  isVatExempt: z.preprocess((val) => val === 'true' || val === 'on', z.boolean()),
-  imageFile: z
-    .instanceof(File)
-    .refine((file) => Object.keys(IMAGE_EXTENSION_BY_MIME).includes(file.type), {
-      message: 'Invalid image format. Allowed: JPEG, PNG, WebP',
-    })
-    .optional(),
-});
+const createProductSchema = z
+  .object({
+    name: z
+      .string()
+      .trim()
+      .min(2, 'Name must be at least 2 characters long')
+      .max(50, 'Name must not exceed 50 characters'),
+    sku: z
+      .string()
+      .regex(
+        /^[A-Z0-9-]{5,20}$/,
+        'SKU must be 5-20 characters long and contain only uppercase letters, numbers, and dashes',
+      ),
+    price: moneyFieldSchema,
+    cost: moneyFieldSchema,
+    wholesalePrice: optionalMoneySchema,
+    wholesaleMinQuantity: z.coerce.number().int().nonnegative().optional().nullable(),
+    categoryId: z.string().uuid('Please select a valid category'),
+    description: z
+      .string()
+      .max(200, 'Description must not exceed 200 characters')
+      .optional()
+      .default(''),
+    stock: z.coerce.number().int().nonnegative('Stock must be non-negative').default(0),
+    isVatExempt: z.preprocess((val) => val === 'true' || val === 'on', z.boolean()),
+    imageFile: z
+      .instanceof(File)
+      .refine((file) => Object.keys(IMAGE_EXTENSION_BY_MIME).includes(file.type), {
+        message: 'Invalid image format. Allowed: JPEG, PNG, WebP',
+      })
+      .optional(),
+  })
+  .refine(
+    (data) => {
+      const hasPrice = data.wholesalePrice && data.wholesalePrice > 0;
+      const hasMinQty = data.wholesaleMinQuantity && data.wholesaleMinQuantity >= 1;
+      const noPrice = !data.wholesalePrice || data.wholesalePrice === 0;
+      const noMinQty = !data.wholesaleMinQuantity || data.wholesaleMinQuantity === 0;
+      return (hasPrice && hasMinQty) || (noPrice && noMinQty);
+    },
+    {
+      message: 'Minimum quantity must be at least 1 when wholesale price is set, and 0 otherwise.',
+      path: ['wholesaleMinQuantity'],
+    },
+  );
 
 export interface ActionState {
   success: boolean;
@@ -226,6 +241,7 @@ export async function createProductAction(
       price: parsed.data.price,
       cost: parsed.data.cost,
       wholesalePrice: parsed.data.wholesalePrice || null,
+      wholesaleMinQuantity: parsed.data.wholesaleMinQuantity || null,
       description: parsed.data.description,
       sku: parsed.data.sku,
       imagePath: publicUrl,
@@ -275,32 +291,47 @@ export async function createProductAction(
   };
 }
 
-const updateProductSchema = z.object({
-  productId: z.string().uuid(),
-  expectedVersion: z.coerce.number().int().nonnegative(),
-  name: z
-    .string()
-    .trim()
-    .min(2, 'Name must be at least 2 characters long')
-    .max(50, 'Name must not exceed 50 characters'),
-  sku: z
-    .string()
-    .regex(
-      /^[A-Z0-9-]{5,20}$/,
-      'SKU must be 5-20 characters long and contain only uppercase letters, numbers, and dashes',
-    ),
-  price: moneyFieldSchema,
-  cost: moneyFieldSchema,
-  wholesalePrice: optionalMoneySchema,
-  categoryId: z.string().uuid('Please select a valid category'),
-  description: z
-    .string()
-    .max(200, 'Description must not exceed 200 characters')
-    .optional()
-    .default(''),
-  stock: z.coerce.number().int().nonnegative('Stock must be non-negative').default(0),
-  isVatExempt: z.preprocess((val) => val === 'true' || val === 'on', z.boolean()),
-});
+const updateProductSchema = z
+  .object({
+    productId: z.string().uuid(),
+    expectedVersion: z.coerce.number().int().nonnegative(),
+    name: z
+      .string()
+      .trim()
+      .min(2, 'Name must be at least 2 characters long')
+      .max(50, 'Name must not exceed 50 characters'),
+    sku: z
+      .string()
+      .regex(
+        /^[A-Z0-9-]{5,20}$/,
+        'SKU must be 5-20 characters long and contain only uppercase letters, numbers, and dashes',
+      ),
+    price: moneyFieldSchema,
+    cost: moneyFieldSchema,
+    wholesalePrice: optionalMoneySchema,
+    wholesaleMinQuantity: z.coerce.number().int().nonnegative().optional().nullable(),
+    categoryId: z.string().uuid('Please select a valid category'),
+    description: z
+      .string()
+      .max(200, 'Description must not exceed 200 characters')
+      .optional()
+      .default(''),
+    stock: z.coerce.number().int().nonnegative('Stock must be non-negative').default(0),
+    isVatExempt: z.preprocess((val) => val === 'true' || val === 'on', z.boolean()),
+  })
+  .refine(
+    (data) => {
+      const hasPrice = data.wholesalePrice && data.wholesalePrice > 0;
+      const hasMinQty = data.wholesaleMinQuantity && data.wholesaleMinQuantity >= 1;
+      const noPrice = !data.wholesalePrice || data.wholesalePrice === 0;
+      const noMinQty = !data.wholesaleMinQuantity || data.wholesaleMinQuantity === 0;
+      return (hasPrice && hasMinQty) || (noPrice && noMinQty);
+    },
+    {
+      message: 'Minimum quantity must be at least 1 when wholesale price is set, and 0 otherwise.',
+      path: ['wholesaleMinQuantity'],
+    },
+  );
 
 export async function updateProductAction(
   prevState: ProductActionState,
@@ -380,6 +411,7 @@ export async function updateProductAction(
       price: parsed.data.price,
       cost: parsed.data.cost,
       wholesalePrice: parsed.data.wholesalePrice || null,
+      wholesaleMinQuantity: parsed.data.wholesaleMinQuantity || null,
       description: parsed.data.description,
       sku: parsed.data.sku,
       stock: parsed.data.stock,

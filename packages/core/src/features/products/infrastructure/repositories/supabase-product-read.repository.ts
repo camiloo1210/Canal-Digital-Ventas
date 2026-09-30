@@ -2,6 +2,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { ProductRepositoryException } from '@/products/application/exceptions/product-repository.exception';
 import { PaginationOptions, PaginatedResult } from '@/shared/domain/pagination/pagination';
 import { ProductFilters } from '@/products/application/ports/out/product-repository.port';
+import { ProductStatus } from '@/products/domain/enums/product-status.enum';
 
 export interface ProductReadModel {
   id: string;
@@ -9,11 +10,12 @@ export interface ProductReadModel {
   price_cents: number;
   cost_cents: number;
   wholesale_price_cents: number | null;
+  wholesale_min_quantity: number | null;
   description: string | null;
   stock: number;
   category_id: string;
   sku: string;
-  status: import('@/products/domain/enums/product-status.enum').ProductStatus;
+  status: ProductStatus;
   tenant_id: string;
   is_vat_exempt: boolean;
   version: number;

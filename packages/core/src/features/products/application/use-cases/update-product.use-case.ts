@@ -41,6 +41,7 @@ export class UpdateProductUseCase {
         const price = Money.from(dto.price);
         const cost = Money.from(dto.cost);
         const wholesalePrice = dto.wholesalePrice ? Money.from(dto.wholesalePrice) : Money.from(0);
+        const wholesaleMinQuantity = dto.wholesaleMinQuantity ?? 0;
         const categoryId = createCategoryId(dto.categoryId);
         const seasonIds = dto.seasonIds.map((id) => createSeasonId(id));
 
@@ -52,7 +53,8 @@ export class UpdateProductUseCase {
           seasonIds,
           dto.isVatExempt,
         );
-        product.changePricing(price, cost, wholesalePrice);
+        product.changePricing(price, cost);
+        product.changeWholesaleRules(wholesalePrice, wholesaleMinQuantity);
 
         if (dto.stock !== undefined) {
           product.adjustStock(dto.stock);

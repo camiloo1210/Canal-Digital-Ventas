@@ -29,6 +29,7 @@ interface ProductFormFieldsProps {
     price?: number | string;
     cost?: number | string;
     wholesalePrice?: number | string | null;
+    wholesaleMinQuantity?: number | string | null;
     categoryId?: string;
     description?: string;
     stock?: number | string;
@@ -315,6 +316,32 @@ export function ProductFormFields({
                   <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
                   <span className="leading-snug break-words mt-[1px]">
                     {getError('wholesalePrice')}
+                  </span>
+                </div>
+              )}
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="wholesaleMinQuantity">
+                {t('form_wholesale_min')}{' '}
+                <span className="text-muted-foreground font-normal ml-1">{t('form_optional')}</span>
+              </FieldLabel>
+              <Input
+                key={`wholesaleMinQuantity-${revision}`}
+                id="wholesaleMinQuantity"
+                name="wholesaleMinQuantity"
+                type="text"
+                inputMode="numeric"
+                pattern="^\d*$"
+                title="Enter minimum quantity"
+                defaultValue={defaultValues?.wholesaleMinQuantity ?? ''}
+                placeholder="10"
+              />
+              {getError('wholesaleMinQuantity') && (
+                <div className="mt-1.5 flex items-start gap-1.5 bg-destructive/10 text-destructive text-[0.8rem] px-2.5 py-1.5 rounded-md font-medium border border-destructive/20 animate-in fade-in slide-in-from-top-1">
+                  <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                  <span className="leading-snug break-words mt-[1px]">
+                    {getError('wholesaleMinQuantity')}
                   </span>
                 </div>
               )}
