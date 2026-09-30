@@ -145,7 +145,42 @@
       "lowStock": "Pocas unidades",
       "outOfStock": "Agotado",
       "checkAvailability": "Consultar disponibilidad"
-    }
+    },
+    "cartTitle": "Carrito de Compras",
+    "cartEmpty": "Tu carrito está vacío",
+    "cartCheckout": "Proceder al Pago",
+    "cartSubtotal": "Subtotal",
+    "cartAdd": "Añadir al Carrito",
+    "cartOutOfStock": "Agotado",
+    "cartDifferentStoreTitle": "Tienda Diferente",
+    "cartDifferentStoreDesc": "Tu carrito actual contiene productos de otra tienda.",
+    "cartCancel": "Cancelar",
+    "cartClearAndContinue": "Vaciar y Continuar",
+    "checkout": {
+      "pageTitle": "Checkout",
+      "billingInfo": "Información de Facturación",
+      "billingInfoDesc": "Tu recibo digital será enviado a este correo.",
+      "orderSummary": "Resumen del Pedido",
+      "items": "{count} artículos",
+      "subtotal": "Subtotal",
+      "totalsWarning": "* El precio final y la disponibilidad son confirmados por el servidor.",
+      "processing": "Procesando...",
+      "submit": "Confirmar Pedido",
+      "successTitle": "¡Pedido Confirmado!",
+      "successMessage": "Tu orden comercial ha sido registrada exitosamente.",
+      "continueShopping": "Continuar Comprando",
+      "errorTitle": "Fallo en Checkout",
+      "genericError": "Ocurrió un error inesperado. Por favor, intenta de nuevo."
+    },
+    "checkoutErrors": {
+      "outOfStock": "Uno o más productos en tu carrito están agotados.",
+      "productUnavailable": "Uno o más productos en tu carrito no están disponibles.",
+      "invalidCart": "Tu carrito es inválido. Por favor, recarga la página.",
+      "unauthorized": "Debes iniciar sesión para completar la compra.",
+      "tenantNotFound": "La tienda de la cual intentas comprar no está disponible.",
+      "unexpected": "Ocurrió un error inesperado procesando tu pedido."
+    },
+    "cartTaxesNote": "*Impuestos y envío calculados al finalizar la compra"
   },
   "BuyerDashboard": {
     "title": "Panel de Comprador",

@@ -35,6 +35,7 @@ export function CartSheet({ labels }: CartSheetProps): React.JSX.Element | null 
   // Hydration safety for Zustand
   const [isMounted, setIsMounted] = React.useState(false);
   React.useEffect((): void => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true);
   }, []);
 
@@ -42,29 +43,32 @@ export function CartSheet({ labels }: CartSheetProps): React.JSX.Element | null 
 
   const totalItems = cartStore.items.reduce((sum, item) => sum + item.quantity, 0);
   const informationalSubtotal = cartStore.items.reduce(
-    (sum, item) => sum + (item.price * 100) * item.quantity, // Convert decimal price to cents
-    0
+    (sum, item) => sum + item.price * 100 * item.quantity, // Convert decimal price to cents
+    0,
   );
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger render={<Button variant="ghost" size="icon" className="relative" />}>
-          <ShoppingCart className="h-5 w-5" />
-          {totalItems > 0 && (
-            <Badge
-              variant="destructive"
-              className="absolute -top-2 -right-2 px-1 min-w-[1.25rem] h-5 flex items-center justify-center text-xs"
-            >
-              {totalItems}
-            </Badge>
-          )}
+        <ShoppingCart className="h-5 w-5" />
+        {totalItems > 0 && (
+          <Badge
+            variant="destructive"
+            className="absolute -top-2 -right-2 px-1 min-w-[1.25rem] h-5 flex items-center justify-center text-xs"
+          >
+            {totalItems}
+          </Badge>
+        )}
       </SheetTrigger>
       <SheetContent className="flex flex-col w-full sm:max-w-md p-0">
         <SheetHeader className="px-6 py-6 border-b">
           <SheetTitle className="flex items-center gap-2">
             <ShoppingCart className="w-5 h-5" />
             {labels.title}
-            <Badge variant="secondary" className="ml-2 rounded-full px-2 py-0.5 text-xs font-normal">
+            <Badge
+              variant="secondary"
+              className="ml-2 rounded-full px-2 py-0.5 text-xs font-normal"
+            >
               {totalItems}
             </Badge>
           </SheetTitle>
@@ -100,7 +104,9 @@ export function CartSheet({ labels }: CartSheetProps): React.JSX.Element | null 
                   <div className="flex flex-1 flex-col justify-between">
                     <div className="flex justify-between items-start gap-2">
                       <div className="space-y-1">
-                        <h4 className="font-medium text-sm leading-none line-clamp-2">{item.name}</h4>
+                        <h4 className="font-medium text-sm leading-none line-clamp-2">
+                          {item.name}
+                        </h4>
                         <p className="text-sm font-semibold text-foreground">
                           {formatMoney(item.price * 100)}
                         </p>
@@ -121,7 +127,9 @@ export function CartSheet({ labels }: CartSheetProps): React.JSX.Element | null 
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7 rounded-none rounded-l-md hover:bg-muted focus-visible:ring-0 focus-visible:ring-offset-0"
-                          onClick={() => cartStore.updateQuantity(item.productId, item.quantity - 1)}
+                          onClick={() =>
+                            cartStore.updateQuantity(item.productId, item.quantity - 1)
+                          }
                           disabled={item.quantity <= 1}
                         >
                           <Minus className="h-3 w-3" />
@@ -131,7 +139,9 @@ export function CartSheet({ labels }: CartSheetProps): React.JSX.Element | null 
                           variant="ghost"
                           size="icon"
                           className="h-7 w-7 rounded-none rounded-r-md hover:bg-muted focus-visible:ring-0 focus-visible:ring-offset-0"
-                          onClick={() => cartStore.updateQuantity(item.productId, item.quantity + 1)}
+                          onClick={() =>
+                            cartStore.updateQuantity(item.productId, item.quantity + 1)
+                          }
                           disabled={item.quantity >= item.maxStock}
                         >
                           <Plus className="h-3 w-3" />
@@ -157,9 +167,7 @@ export function CartSheet({ labels }: CartSheetProps): React.JSX.Element | null 
                 <span>{labels.subtotal}</span>
                 <span>{formatMoney(informationalSubtotal)}</span>
               </div>
-              <p className="text-[0.8rem] text-muted-foreground text-center">
-                {labels.taxesNote}
-              </p>
+              <p className="text-[0.8rem] text-muted-foreground text-center">{labels.taxesNote}</p>
             </div>
             <Button
               className="w-full h-12 text-base font-medium rounded-xl shadow-sm"
