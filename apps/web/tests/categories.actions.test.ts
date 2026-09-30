@@ -11,6 +11,10 @@ import {
 import * as activeTenantQuery from '@/features/iam/queries/active-tenant.query';
 import * as categoriesDi from '@/features/categories/di/categories.di';
 
+vi.mock('next-intl/server', () => ({
+  getTranslations: vi.fn().mockResolvedValue((key: string) => key),
+}));
+
 vi.mock('@canaldigital/packages/core', () => {
   class ApplicationException extends Error {
     constructor(message: string) {
@@ -83,7 +87,7 @@ describe('Categories Actions Tenant Isolation', () => {
     const result = await createCategoryAction({ success: false, error: null }, formData);
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe('User does not have an assigned tenant ID.');
+    expect(result.error).toBe('errors_unexpected');
     expect(categoriesDi.getCreateCategoryUseCase).not.toHaveBeenCalled();
   });
 
@@ -142,7 +146,7 @@ describe('Categories Actions Tenant Isolation', () => {
     const result = await updateCategoryAction({ success: false, error: null }, formData);
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe('concurrency_error');
+    expect(result.error).toBe('errors_concurrency');
     expect(mockExecute).toHaveBeenCalledTimes(1);
   });
 });

@@ -134,7 +134,13 @@
     "outOfStock": "Agotado",
     "aboutThisProduct": "Acerca de este producto",
     "availability": "Disponibilidad",
-    "back": "Volver atrás"
+    "back": "Volver atrás",
+    "stock": {
+      "available": "Disponible",
+      "lowStock": "Pocas unidades",
+      "outOfStock": "Agotado",
+      "checkAvailability": "Consultar disponibilidad"
+    }
   },
   "BuyerDashboard": {
     "title": "Panel de Comprador",

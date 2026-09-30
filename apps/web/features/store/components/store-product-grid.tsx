@@ -4,6 +4,7 @@ import { formatMoney } from '@/lib/money';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Image from 'next/image';
 import Link from 'next/link';
+import { StoreProductStockBadge } from '@/features/store/components/store-product-stock-badge';
 
 interface StoreProductGridProps {
   tenantSlug: string;
@@ -65,6 +66,7 @@ export function StoreProductGrid({
                   <span className="text-lg font-bold text-foreground">
                     {formatMoney(product.priceCents)}
                   </span>
+                  <StoreProductStockBadge availability={product.stockAvailability} />
                 </div>
               </CardContent>
             </Card>

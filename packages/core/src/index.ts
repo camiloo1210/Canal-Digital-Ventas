@@ -157,7 +157,10 @@ export { createTenantId } from '@/shared/domain/types/tenant-id.type';
 export { createCategoryId } from '@/products/domain/types/category-id.type';
 export type { PublicCategoryReadModel } from '@/categories/application/read-models/public-category-read.model';
 export type { PublicCategoryReadRepositoryPort } from '@/categories/application/ports/out/public-category-read-repository.port';
-export type { PublicProductReadModel } from '@/products/application/read-models/public-product-read.model';
+export type {
+  PublicProductReadModel,
+  PublicStockAvailability,
+} from '@/products/application/read-models/public-product-read.model';
 export type {
   PublicProductFilters,
   PublicProductReadRepositoryPort,

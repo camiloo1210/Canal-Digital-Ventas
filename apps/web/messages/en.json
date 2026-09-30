@@ -132,7 +132,13 @@
     "outOfStock": "Out of Stock",
     "aboutThisProduct": "About this product",
     "availability": "Availability",
-    "back": "Back"
+    "back": "Back",
+    "stock": {
+      "available": "Available",
+      "lowStock": "Low Stock",
+      "outOfStock": "Out of Stock",
+      "checkAvailability": "Check availability"
+    }
   },
   "BuyerDashboard": {
     "title": "Buyer Dashboard",
