@@ -46,25 +46,25 @@ export function ProductFormFields({
 }: ProductFormFieldsProps): React.JSX.Element {
   const t = useTranslations('Products');
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
-  const [clearedFields, setClearedFields] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
-    setClearedFields(new Set());
-  }, [fieldErrors]);
+  const [clearedState, setClearedState] = useState({ rev: fieldErrors, fields: new Set<string>() });
+  if (clearedState.rev !== fieldErrors) {
+    setClearedState({ rev: fieldErrors, fields: new Set() });
+  }
+  const clearedFields = clearedState.fields;
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
-  ) => {
+  ): void => {
     const { name } = e.target;
     if (localErrors[name]) {
       setLocalErrors((prev) => ({ ...prev, [name]: '' }));
     }
     if (!clearedFields.has(name)) {
-      setClearedFields((prev) => new Set(prev).add(name));
+      setClearedState((prev) => ({ ...prev, fields: new Set(prev.fields).add(name) }));
     }
   };
 
-  const handleSkuBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+  const handleSkuBlur = (e: React.FocusEvent<HTMLInputElement>): void => {
     const { value, name } = e.target;
     if (!value.trim()) return;
 
@@ -81,11 +81,11 @@ export function ProductFormFields({
       });
     }
     if (fieldErrors?.[name] && !clearedFields.has(name)) {
-      setClearedFields((prev) => new Set(prev).add(name));
+      setClearedState((prev) => ({ ...prev, fields: new Set(prev.fields).add(name) }));
     }
   };
 
-  const handleMoneyBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+  const handleMoneyBlur = (e: React.FocusEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
     if (!value.trim()) {
       setLocalErrors((prev) => ({ ...prev, [name]: '' }));
@@ -105,7 +105,7 @@ export function ProductFormFields({
     }
   };
 
-  const handleStockBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+  const handleStockBlur = (e: React.FocusEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
     if (!value) {
       setLocalErrors((prev) => ({ ...prev, [name]: '' }));
@@ -121,25 +121,23 @@ export function ProductFormFields({
     }
   };
 
-  const getError = (fieldName: string) => {
+  const getError = (fieldName: string): string | undefined => {
     if (localErrors[fieldName]) return localErrors[fieldName];
     if (!clearedFields.has(fieldName)) return fieldErrors?.[fieldName]?.[0];
     return undefined;
   };
 
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  
+  const previewUrlRef = useRef<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(defaultValues?.imageUrl ?? null);
 
-  useEffect(() => {
-    if (!selectedImage) return;
-
-    const url = URL.createObjectURL(selectedImage);
-    setPreviewUrl(url);
-
-    return () => {
-      URL.revokeObjectURL(url);
+  useEffect((): (() => void) => {
+    const url = previewUrlRef.current;
+    return (): void => {
+      if (url) URL.revokeObjectURL(url);
+      
     };
-  }, [selectedImage]);
+  }, []);
 
   return (
     <FieldGroup className="space-y-6">
@@ -408,7 +406,8 @@ export function ProductFormFields({
             <div className="flex items-start gap-6">
               {previewUrl && (
                 <div className="relative w-32 h-32 rounded-md overflow-hidden border border-border shrink-0">
-                  <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
                 </div>
               )}
               <div className="flex-1">
