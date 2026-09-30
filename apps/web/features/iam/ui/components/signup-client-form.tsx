@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useFormStatus } from 'react-dom';
 import Link from 'next/link';
 
-function SubmitButton() {
+function SubmitButton(): React.JSX.Element {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" className="w-full" disabled={pending}>
@@ -17,7 +17,7 @@ function SubmitButton() {
   );
 }
 
-export function SignupClientForm({ tenantSlug }: { tenantSlug?: string }) {
+export function SignupClientForm({ tenantSlug }: { tenantSlug?: string }): React.JSX.Element {
   const [state, formAction] = useActionState(signupClientAction, {
     success: false,
     error: null,

@@ -10,7 +10,7 @@ import { StoreProductStockBadge } from '@/features/store/components/store-produc
 
 export default async function ProductDetailPage(props: {
   params: Promise<{ tenantSlug: string; productId: string }>;
-}) {
+}): Promise<React.JSX.Element> {
   const params = await props.params;
   const { tenantSlug, productId } = params;
 

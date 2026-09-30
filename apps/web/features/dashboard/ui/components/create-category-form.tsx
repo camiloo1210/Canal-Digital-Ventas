@@ -15,7 +15,7 @@ const initialState: ActionState = {
   error: null,
 };
 
-function SubmitButton() {
+function SubmitButton(): React.JSX.Element {
   const { pending } = useFormStatus();
 
   return (
@@ -25,7 +25,7 @@ function SubmitButton() {
   );
 }
 
-export function CreateCategoryForm() {
+export function CreateCategoryForm(): React.JSX.Element {
   const [state, formAction] = useActionState(quickCreateCategoryAction, initialState);
 
   return (

@@ -4,7 +4,7 @@ import { LoginForm } from '@/features/iam/ui/components/login-form';
 
 export default async function LoginPage(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
+}): Promise<React.JSX.Element> {
   const searchParams = await props.searchParams;
   const message = typeof searchParams.message === 'string' ? searchParams.message : undefined;
 

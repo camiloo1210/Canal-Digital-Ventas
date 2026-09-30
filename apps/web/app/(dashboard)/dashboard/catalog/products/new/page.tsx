@@ -12,7 +12,7 @@ export const metadata = {
 
 import { PageHeader } from '@/components/page-header';
 
-export default async function NewProductPage() {
+export default async function NewProductPage(): Promise<React.JSX.Element> {
   const supabase = await createClient();
   const {
     data: { user },

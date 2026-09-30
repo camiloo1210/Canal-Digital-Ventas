@@ -19,7 +19,7 @@ export function StoreCategoryNav({
   currentQuery,
   labels,
 }: StoreCategoryNavProps): React.JSX.Element {
-  const buildHref = (categorySlug?: string) => {
+  const buildHref = (categorySlug?: string): string => {
     const params = new URLSearchParams();
     if (currentQuery) params.set('q', currentQuery);
     if (categorySlug) params.set('category', categorySlug);

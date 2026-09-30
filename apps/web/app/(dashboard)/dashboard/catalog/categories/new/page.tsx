@@ -1,7 +1,6 @@
 import { CreateCategoryForm } from '@/features/categories/components/create-category-form';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
+import { Card, CardContent,  } from '@/components/ui/card';
+
 
 export const metadata = {
   title: 'Add Category | Canal Digital',

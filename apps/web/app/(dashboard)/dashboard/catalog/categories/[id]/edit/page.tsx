@@ -1,8 +1,7 @@
 import { getCategoryReadRepository } from '@/features/categories/di/categories.di';
 import { EditCategoryForm } from '@/features/categories/components/edit-category-form';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
+import { Card, CardContent,  } from '@/components/ui/card';
+
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getActiveTenantQuery } from '@/features/iam/queries/active-tenant.query';
