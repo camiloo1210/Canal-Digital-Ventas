@@ -319,7 +319,11 @@ const columns = columnHelper.columns([
     ),
   }),
 ]);
-function DraggableRow({ row }: { row: Row<typeof features, z.infer<typeof schema>> }): React.JSX.Element {
+function DraggableRow({
+  row,
+}: {
+  row: Row<typeof features, z.infer<typeof schema>>;
+}): React.JSX.Element {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
     id: row.original.id,
   });
@@ -342,7 +346,11 @@ function DraggableRow({ row }: { row: Row<typeof features, z.infer<typeof schema
     </TableRow>
   );
 }
-export function DataTable({ data: initialData }: { data: z.infer<typeof schema>[] }): React.JSX.Element {
+export function DataTable({
+  data: initialData,
+}: {
+  data: z.infer<typeof schema>[];
+}): React.JSX.Element {
   const [data, setData] = React.useState(() => initialData);
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] = React.useState<ColumnVisibilityState>({});

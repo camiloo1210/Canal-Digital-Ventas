@@ -20,6 +20,22 @@ export interface CheckoutActionState {
   message?: string; // Translated message for presentation
 }
 
+const CustomerSchema = z.object({
+  name: z.string().min(1),
+  email: z.string().email(),
+  phone: z.string().min(1),
+  documentId: z.string().min(1),
+});
+
+const AddressSchema = z.object({
+  street: z.string().min(1),
+  city: z.string().min(1),
+  state: z.string().min(1),
+  zipCode: z.string().min(1),
+  country: z.string().min(1),
+  reference: z.string().optional(),
+});
+
 const CartItemSchema = z.object({
   productId: z.string().uuid(),
   quantity: z.number().int().min(1).max(9999),
@@ -61,6 +77,28 @@ export async function submitCheckoutAction(
       return { success: false, errorCode: 'UNAUTHORIZED', message: t('unauthorized') };
     }
 
+        const customerData = {
+      name: formData.get('customer.name'),
+      email: formData.get('customer.email'),
+      phone: formData.get('customer.phone'),
+      documentId: formData.get('customer.documentId'),
+    };
+    const addressData = {
+      street: formData.get('shipping.street'),
+      city: formData.get('shipping.city'),
+      state: formData.get('shipping.state'),
+      zipCode: formData.get('shipping.zipCode'),
+      country: formData.get('shipping.country'),
+      reference: formData.get('shipping.reference') || undefined,
+    };
+
+    const parsedCustomer = CustomerSchema.safeParse(customerData);
+    const parsedAddress = AddressSchema.safeParse(addressData);
+
+    if (!parsedCustomer.success || !parsedAddress.success) {
+      return { success: false, errorCode: 'INVALID_CART', message: t('invalidCart') }; // Could be INVALID_FORM
+    }
+
     const cartData = formData.get('cartItems');
     if (!cartData || typeof cartData !== 'string') {
       return { success: false, errorCode: 'INVALID_CART', message: t('invalidCart') };
@@ -75,11 +113,12 @@ export async function submitCheckoutAction(
 
     const useCase = await checkoutDi.resolveGenerateCommercialOrderUseCase();
 
-
     await useCase.execute({
       buyerId: user.id,
       tenantSlug: tenantSlug,
       items: items,
+      customer: parsedCustomer.data,
+      shippingAddress: parsedAddress.data,
     });
 
     return { success: true, errorCode: null };

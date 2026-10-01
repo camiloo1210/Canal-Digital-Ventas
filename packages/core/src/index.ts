@@ -191,3 +191,5 @@ export type { GenerateCommercialOrderDto } from '@/orders/application/dtos/gener
 export { PostgresOrderRepository } from '@/orders/infrastructure/repositories/postgres-order.repository';
 export { PostgresOrderTenantRepository } from '@/orders/infrastructure/repositories/postgres-order-tenant.repository';
 export { TenantNotAvailableException } from '@/orders/application/exceptions/tenant-not-available.exception';
+export { PostgresStoreCustomerRepository } from '@/sales/infrastructure/repositories/postgres-store-customer.repository';
+export * from '@/sales/application/ports/out/store-customer-repository.port';

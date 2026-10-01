@@ -16,7 +16,7 @@ export class PostgresOrderTenantRepository implements OrderTenantRepositoryPort 
           WHERE slug = ${tenantSlug}
             AND status = 'ACTIVE'
         `;
-      }
+      },
     );
 
     if (result.length === 0) {

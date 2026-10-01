@@ -35,7 +35,10 @@ export const useCartStore = create<CartState>()(
         const currentItems = get().items;
 
         if (!currentTenant || currentTenant !== newTenantSlug) {
-          set({ tenantSlug: newTenantSlug, items: [{ ...item, quantity: Math.min(item.quantity, item.maxStock) }] });
+          set({
+            tenantSlug: newTenantSlug,
+            items: [{ ...item, quantity: Math.min(item.quantity, item.maxStock) }],
+          });
           return;
         }
 
@@ -46,11 +49,13 @@ export const useCartStore = create<CartState>()(
             items: currentItems.map((i) =>
               i.productId === item.productId
                 ? { ...i, quantity: Math.min(i.quantity + item.quantity, i.maxStock) }
-                : i
+                : i,
             ),
           });
         } else {
-          set({ items: [...currentItems, { ...item, quantity: Math.min(item.quantity, item.maxStock) }] });
+          set({
+            items: [...currentItems, { ...item, quantity: Math.min(item.quantity, item.maxStock) }],
+          });
         }
       },
 
@@ -63,7 +68,9 @@ export const useCartStore = create<CartState>()(
       updateQuantity: (productId: string, quantity: number): void => {
         set((state) => ({
           items: state.items.map((i) =>
-            i.productId === productId ? { ...i, quantity: Math.min(Math.max(1, quantity), i.maxStock) } : i
+            i.productId === productId
+              ? { ...i, quantity: Math.min(Math.max(1, quantity), i.maxStock) }
+              : i,
           ),
         }));
       },
@@ -75,6 +82,6 @@ export const useCartStore = create<CartState>()(
     {
       name: 'canal-digital-cart',
       storage: createJSONStorage(() => localStorage),
-    }
-  )
+    },
+  ),
 );

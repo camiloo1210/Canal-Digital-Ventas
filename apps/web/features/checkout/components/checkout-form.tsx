@@ -2,7 +2,10 @@
 
 import * as React from 'react';
 import { useActionState, useEffect } from 'react';
-import { submitCheckoutAction, CheckoutActionState } from '@/features/checkout/actions/checkout.actions';
+import {
+  submitCheckoutAction,
+  CheckoutActionState,
+} from '@/features/checkout/actions/checkout.actions';
 import { useCartStore } from '@/features/cart/store/cart.store';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from 'next-intl';
@@ -67,6 +70,59 @@ export function CheckoutForm({ tenantSlug }: CheckoutFormProps): React.JSX.Eleme
 
       {/* Trust Boundary: Strictly controlled payload via hidden input */}
       <input type="hidden" name="cartItems" value={JSON.stringify(cartPayload)} />
+
+      
+      <div className="space-y-4">
+        <h3 className="font-semibold text-lg">{t('customerDetails') || 'Datos del Cliente'}</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Nombre completo</label>
+            <input name="customer.name" required className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Email</label>
+            <input name="customer.email" type="email" required className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Teléfono</label>
+            <input name="customer.phone" required className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Documento de Identidad</label>
+            <input name="customer.documentId" required className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50" />
+          </div>
+        </div>
+
+        <h3 className="font-semibold text-lg mt-6">{t('shippingDetails') || 'Datos de Envío'}</h3>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Calle y número</label>
+            <input name="shipping.street" required className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Ciudad</label>
+              <input name="shipping.city" required className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Estado / Provincia</label>
+              <input name="shipping.state" required className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Código Postal</label>
+              <input name="shipping.zipCode" required className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">País</label>
+              <input name="shipping.country" required className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Referencia (Opcional)</label>
+            <input name="shipping.reference" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50" />
+          </div>
+        </div>
+      </div>
 
       <div className="bg-muted p-6 rounded-lg space-y-4">
         <h3 className="font-semibold text-lg">{t('orderSummary')}</h3>

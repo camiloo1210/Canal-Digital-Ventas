@@ -2,8 +2,5 @@ import { TransactionContext } from '@/shared/application/ports/out/transaction-m
 import { TenantId } from '@/shared/domain/types/tenant-id.type';
 
 export interface OrderTenantRepositoryPort {
-  findActiveBySlug(
-    tenantSlug: string,
-    tx: TransactionContext,
-  ): Promise<{ id: TenantId } | null>;
+  findActiveBySlug(tenantSlug: string, tx: TransactionContext): Promise<{ id: TenantId } | null>;
 }

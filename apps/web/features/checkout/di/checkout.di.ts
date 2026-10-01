@@ -7,6 +7,7 @@ import {
   LocalEventBus,
   PostgresTransactionManagerAdapter,
   PostgresOrderTenantRepository,
+  PostgresStoreCustomerRepository,
 } from '@canaldigital/packages/core';
 
 class CheckoutDIContainer {
@@ -20,11 +21,13 @@ class CheckoutDIContainer {
       const orderRepository = new PostgresOrderRepository(eventBus);
       const productRepository = new PostgresProductRepository(sql);
       const orderTenantRepository = new PostgresOrderTenantRepository();
+      const storeCustomerRepository = new PostgresStoreCustomerRepository();
 
       this.generateCommercialOrderUseCase = new GenerateCommercialOrderUseCase(
         orderRepository,
         productRepository,
         orderTenantRepository,
+        storeCustomerRepository,
         transactionManager,
       );
     }

@@ -1,4 +1,5 @@
 import { OrderRepositoryPort } from '@/orders/application/ports/out/order-repository.port';
+import { StoreCustomerRepositoryPort } from '@/sales/application/ports/out/store-customer-repository.port';
 import { OrderTenantRepositoryPort } from '@/orders/application/ports/out/order-tenant-repository.port';
 import { TenantNotAvailableException } from '@/orders/application/exceptions/tenant-not-available.exception';
 import { ProductRepositoryPort } from '@/products/application/ports/out/product-repository.port';
@@ -15,6 +16,8 @@ import { Currency } from '@/shared/domain/enums/currency.enum';
 import { createOrderId } from '@/orders/domain/types/order-id.type';
 import { createOrderItemId } from '@/orders/domain/types/order-item-id.type';
 import { createCustomerId } from '@/orders/domain/types/customer-id.type';
+import { createGlobalAuthId } from '@/sales/domain/types/global-auth-id.type';
+
 import { createProductId } from '@/products/domain/types/product-id.type';
 import { ProductStatus } from '@/products/domain/enums/product-status.enum';
 
@@ -37,6 +40,7 @@ export class GenerateCommercialOrderUseCase {
     private readonly orderRepository: OrderRepositoryPort,
     private readonly productRepository: ProductRepositoryPort,
     private readonly orderTenantRepository: OrderTenantRepositoryPort,
+    private readonly storeCustomerRepository: StoreCustomerRepositoryPort,
     private readonly transactionManager: TransactionManagerPort,
   ) {}
 
@@ -48,7 +52,26 @@ export class GenerateCommercialOrderUseCase {
           throw new TenantNotAvailableException();
         }
         const tenantId = tenantData.id;
-        const customerId = createCustomerId(dto.buyerId);
+        const customerAddress = Address.create(
+          dto.shippingAddress.street,
+          dto.shippingAddress.city,
+          dto.shippingAddress.state,
+          dto.shippingAddress.zipCode,
+          dto.shippingAddress.country,
+          dto.shippingAddress.reference
+        );
+
+        const customer = await this.storeCustomerRepository.resolveOrCreate({
+          tenantId,
+          globalAuthId: createGlobalAuthId(dto.buyerId),
+          name: dto.customer.name,
+          email: dto.customer.email,
+          phone: dto.customer.phone,
+          documentId: dto.customer.documentId,
+          address: customerAddress
+        }, tx);
+        
+        const customerId = createCustomerId(customer.getId());
 
         const orderItems: OrderItem[] = [];
         let subtotalAmount = 0;
@@ -105,7 +128,7 @@ export class GenerateCommercialOrderUseCase {
         const discountAmount = Money.from(0, currency);
         const shippingCost = Money.from(0, currency);
 
-        const shippingAddress = Address.create('Pending', 'Pending', 'Pending', '00000', 'Pending');
+        const shippingAddress = customerAddress;
 
         const orderId = createOrderId(crypto.randomUUID());
         const orderNumber = `ORD-${Date.now().toString().slice(-6)}`;
