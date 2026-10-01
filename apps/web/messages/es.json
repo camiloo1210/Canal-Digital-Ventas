@@ -170,7 +170,9 @@
       "successMessage": "Tu orden comercial ha sido registrada exitosamente.",
       "continueShopping": "Continuar Comprando",
       "errorTitle": "Fallo en Checkout",
-      "genericError": "Ocurrió un error inesperado. Por favor, intenta de nuevo."
+      "genericError": "Ocurrió un error inesperado. Por favor, intenta de nuevo.",
+      "customerDetails": "Datos del Cliente",
+      "shippingDetails": "Datos de Envío"
     },
     "checkoutErrors": {
       "outOfStock": "Uno o más productos en tu carrito están agotados.",

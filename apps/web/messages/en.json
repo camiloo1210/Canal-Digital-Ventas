@@ -168,7 +168,9 @@
       "successMessage": "Your commercial order has been placed successfully.",
       "continueShopping": "Continue Shopping",
       "errorTitle": "Checkout Failed",
-      "genericError": "An unexpected error occurred. Please try again."
+      "genericError": "An unexpected error occurred. Please try again.",
+      "customerDetails": "Customer Details",
+      "shippingDetails": "Shipping Details"
     },
     "checkoutErrors": {
       "outOfStock": "One or more items in your cart are out of stock.",

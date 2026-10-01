@@ -123,6 +123,7 @@ export async function submitCheckoutAction(
 
     return { success: true, errorCode: null };
   } catch (error: unknown) {
+    console.error('Checkout error:', error);
     if (error instanceof Error) {
       if (error.name === 'TenantNotAvailableException') {
         return { success: false, errorCode: 'TENANT_NOT_FOUND', message: t('tenantNotFound') };
