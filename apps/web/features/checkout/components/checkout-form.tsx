@@ -35,7 +35,7 @@ export function CheckoutForm({ tenantSlug }: CheckoutFormProps): React.JSX.Eleme
     if (state.success) {
       cartStore.clearCart();
     }
-  }, [state.success, cartStore]);
+  }, [state.success, cartStore.clearCart]);
 
   if (state.success) {
     return (
