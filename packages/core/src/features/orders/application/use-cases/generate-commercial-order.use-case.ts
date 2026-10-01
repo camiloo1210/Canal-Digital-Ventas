@@ -21,14 +21,14 @@ import { createGlobalAuthId } from '@/sales/domain/types/global-auth-id.type';
 import { createProductId } from '@/products/domain/types/product-id.type';
 import { ProductStatus } from '@/products/domain/enums/product-status.enum';
 
-class ProductOutOfStockException extends Error {
+export class ProductOutOfStockException extends Error {
   constructor() {
     super('Product is out of stock.');
     this.name = 'ProductOutOfStockException';
   }
 }
 
-class ProductUnavailableException extends Error {
+export class ProductUnavailableException extends Error {
   constructor() {
     super('Product is unavailable.');
     this.name = 'ProductUnavailableException';
