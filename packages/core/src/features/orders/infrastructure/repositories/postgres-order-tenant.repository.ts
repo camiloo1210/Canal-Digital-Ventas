@@ -14,7 +14,7 @@ export class PostgresOrderTenantRepository implements OrderTenantRepositoryPort 
           SELECT id
           FROM core.tenants
           WHERE slug = ${tenantSlug}
-            AND status = 'ACTIVE'
+            AND status = 'active'
         `;
       },
     );
