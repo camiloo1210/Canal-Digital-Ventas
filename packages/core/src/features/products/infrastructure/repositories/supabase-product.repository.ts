@@ -14,7 +14,7 @@ import { ProductRepositoryException } from '@/products/application/exceptions/pr
 export class SupabaseProductRepository implements ProductRepositoryPort {
   constructor(private readonly supabase: SupabaseClient) {}
 
-  async decreaseStock(id: any, tenantId: any, quantity: number, tx: any): Promise<void> {
+  async decreaseStock(): Promise<void> {
     throw new Error('Method not implemented.');
   }
 

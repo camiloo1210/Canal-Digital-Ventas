@@ -21,7 +21,6 @@ import { createGlobalAuthId } from '@/sales/domain/types/global-auth-id.type';
 import { createProductId } from '@/products/domain/types/product-id.type';
 import { ProductStatus } from '@/products/domain/enums/product-status.enum';
 
-import { ProductOutOfStockException } from '@/products/application/exceptions/product-out-of-stock.exception';
 import { ProductUnavailableException } from '@/products/application/exceptions/product-unavailable.exception';
 
 export class GenerateCommercialOrderUseCase {

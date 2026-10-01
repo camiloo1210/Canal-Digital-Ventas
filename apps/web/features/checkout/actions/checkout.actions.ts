@@ -77,7 +77,7 @@ export async function submitCheckoutAction(
       return { success: false, errorCode: 'UNAUTHORIZED', message: t('unauthorized') };
     }
 
-        const customerData = {
+    const customerData = {
       name: formData.get('customer.name'),
       email: formData.get('customer.email'),
       phone: formData.get('customer.phone'),
