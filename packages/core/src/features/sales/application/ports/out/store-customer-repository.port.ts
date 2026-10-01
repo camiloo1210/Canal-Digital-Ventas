@@ -15,8 +15,5 @@ export interface ResolveStoreCustomerInput {
 }
 
 export interface StoreCustomerRepositoryPort {
-  resolveOrCreate(
-    input: ResolveStoreCustomerInput,
-    tx: TransactionContext,
-  ): Promise<StoreCustomer>;
+  resolveOrCreate(input: ResolveStoreCustomerInput, tx: TransactionContext): Promise<StoreCustomer>;
 }

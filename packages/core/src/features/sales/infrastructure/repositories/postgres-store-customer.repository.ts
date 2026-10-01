@@ -34,12 +34,13 @@ export class PostgresStoreCustomerRepository implements StoreCustomerRepositoryP
     input: ResolveStoreCustomerInput,
     tx: TransactionContext,
   ): Promise<StoreCustomer> {
-    const row = await tx.executeNative(async (sql: postgres.TransactionSql<Record<string, unknown>>) => {
-      const newId = crypto.randomUUID();
-      const now = new Date();
+    const row = await tx.executeNative(
+      async (sql: postgres.TransactionSql<Record<string, unknown>>) => {
+        const newId = crypto.randomUUID();
+        const now = new Date();
 
-      // PostgreSQL atomic UPSERT / DO NOTHING to resolve or create safely
-      const inserted = await sql<DbStoreCustomerRow[]>`
+        // PostgreSQL atomic UPSERT / DO NOTHING to resolve or create safely
+        const inserted = await sql<DbStoreCustomerRow[]>`
         WITH inserted AS (
           INSERT INTO sales.customers (
             id, tenant_id, global_auth_id, name, email, phone, document_id, status,
@@ -60,11 +61,14 @@ export class PostgresStoreCustomerRepository implements StoreCustomerRepositoryP
         LIMIT 1;
       `;
 
-      return inserted[0];
-    });
+        return inserted[0];
+      },
+    );
 
     if (!row) {
-      throw new StoreCustomerRepositoryException('Failed to resolve or create customer due to a concurrent transaction edge case.');
+      throw new StoreCustomerRepositoryException(
+        'Failed to resolve or create customer due to a concurrent transaction edge case.',
+      );
     }
 
     const address = Address.create(
@@ -79,7 +83,8 @@ export class PostgresStoreCustomerRepository implements StoreCustomerRepositoryP
     const props: StoreCustomerProps = {
       id: row.id as unknown as import('@/sales/domain/types/customer-id.type').StoreCustomerId,
       tenantId: row.tenant_id as unknown as import('@/shared/domain/types/tenant-id.type').TenantId,
-      globalAuthId: row.global_auth_id as unknown as import('@/sales/domain/types/global-auth-id.type').GlobalAuthId,
+      globalAuthId:
+        row.global_auth_id as unknown as import('@/sales/domain/types/global-auth-id.type').GlobalAuthId,
       name: row.name,
       email: row.email,
       phone: row.phone,

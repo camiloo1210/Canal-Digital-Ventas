@@ -21,19 +21,8 @@ import { createGlobalAuthId } from '@/sales/domain/types/global-auth-id.type';
 import { createProductId } from '@/products/domain/types/product-id.type';
 import { ProductStatus } from '@/products/domain/enums/product-status.enum';
 
-export class ProductOutOfStockException extends Error {
-  constructor() {
-    super('Product is out of stock.');
-    this.name = 'ProductOutOfStockException';
-  }
-}
-
-export class ProductUnavailableException extends Error {
-  constructor() {
-    super('Product is unavailable.');
-    this.name = 'ProductUnavailableException';
-  }
-}
+import { ProductOutOfStockException } from '@/products/application/exceptions/product-out-of-stock.exception';
+import { ProductUnavailableException } from '@/products/application/exceptions/product-unavailable.exception';
 
 export class GenerateCommercialOrderUseCase {
   constructor(
@@ -58,26 +47,44 @@ export class GenerateCommercialOrderUseCase {
           dto.shippingAddress.state,
           dto.shippingAddress.zipCode,
           dto.shippingAddress.country,
-          dto.shippingAddress.reference
+          dto.shippingAddress.reference,
         );
 
-        const customer = await this.storeCustomerRepository.resolveOrCreate({
-          tenantId,
-          globalAuthId: createGlobalAuthId(dto.buyerId),
-          name: dto.customer.name,
-          email: dto.customer.email,
-          phone: dto.customer.phone,
-          documentId: dto.customer.documentId,
-          address: customerAddress
-        }, tx);
-        
+        const customer = await this.storeCustomerRepository.resolveOrCreate(
+          {
+            tenantId,
+            globalAuthId: createGlobalAuthId(dto.buyerId),
+            name: dto.customer.name,
+            email: dto.customer.email,
+            phone: dto.customer.phone,
+            documentId: dto.customer.documentId,
+            address: customerAddress,
+          },
+          tx,
+        );
+
         const customerId = createCustomerId(customer.getId());
 
         const orderItems: OrderItem[] = [];
         let subtotalAmount = 0;
         let currency = Currency.USD;
 
+        
+        const consolidatedItemsMap = new Map<string, number>();
         for (const itemDto of dto.items) {
+          const currentQty = consolidatedItemsMap.get(itemDto.productId) || 0;
+          consolidatedItemsMap.set(itemDto.productId, currentQty + itemDto.quantity);
+        }
+
+        const consolidatedItems = Array.from(consolidatedItemsMap.entries()).map(
+          ([productId, quantity]) => ({
+            productId,
+            quantity,
+          })
+        );
+
+        for (const itemDto of consolidatedItems) {
+
           const productId = createProductId(itemDto.productId);
 
           const product = await this.productRepository.findById(productId, tenantId, tx);
@@ -90,9 +97,8 @@ export class GenerateCommercialOrderUseCase {
             throw new ProductUnavailableException();
           }
 
-          if (product.getStock() < itemDto.quantity) {
-            throw new ProductOutOfStockException();
-          }
+          product.decreaseStock(itemDto.quantity);
+          await this.productRepository.decreaseStock(productId, tenantId, itemDto.quantity, tx);
 
           let authoritativePrice = product.getPrice().getValue();
           currency = product.getPrice().getCurrency();
