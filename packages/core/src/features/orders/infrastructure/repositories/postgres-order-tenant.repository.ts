@@ -12,7 +12,7 @@ export class PostgresOrderTenantRepository implements OrderTenantRepositoryPort 
       async (sql: postgres.TransactionSql<Record<string, unknown>>) => {
         return sql<{ id: string }[]>`
           SELECT id
-          FROM tenants
+          FROM core.tenants
           WHERE slug = ${tenantSlug}
             AND status = 'ACTIVE'
         `;
