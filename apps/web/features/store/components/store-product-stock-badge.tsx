@@ -16,7 +16,14 @@ export async function StoreProductStockBadge({
     case 'AVAILABLE':
       return <Badge variant="default">{t('available')}</Badge>;
     case 'LOW_STOCK':
-      return <Badge variant="warning">{t('lowStock')}</Badge>;
+      return (
+        <Badge
+          variant="secondary"
+          className="bg-amber-100 text-amber-800 hover:bg-amber-100 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800"
+        >
+          {t('lowStock')}
+        </Badge>
+      );
     case 'OUT_OF_STOCK':
       return <Badge variant="destructive">{t('outOfStock')}</Badge>;
     case 'CHECK_AVAILABILITY':

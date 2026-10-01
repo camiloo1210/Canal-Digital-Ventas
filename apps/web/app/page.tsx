@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { getStoreViewerQuery } from '@/features/store/queries/store-viewer.query';
 import { UserNav } from '@/features/iam/components/user-nav';
 import { getTranslations } from 'next-intl/server';
+import { AppHeader } from '@/components/app-header';
 
 export const metadata = {
   title: 'My Purchases | Canal Digital',
@@ -42,14 +43,10 @@ export default async function BuyerDashboardPage(props: {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="bg-card border-b border-border sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <h1 className="text-xl font-bold text-foreground">{tb('title')}</h1>
-            <UserNav viewer={viewer} redirectTo="/" labels={labels} />
-          </div>
-        </div>
-      </header>
+      <AppHeader>
+        <h1 className="text-xl font-bold text-foreground">{tb('title')}</h1>
+        <UserNav viewer={viewer} redirectTo="/" labels={labels} />
+      </AppHeader>
 
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12 w-full">
         <StoreDirectory

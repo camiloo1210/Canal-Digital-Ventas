@@ -1,3 +1,5 @@
+import { ProductOutOfStockException } from '@/products/application/exceptions/product-out-of-stock.exception';
+import { ProductUnavailableException } from '@/products/application/exceptions/product-unavailable.exception';
 import postgres from 'postgres';
 import { ProductRepositoryPort } from '@/products/application/ports/out/product-repository.port';
 import { Product } from '@/products/domain/entities/product.entity';
@@ -102,6 +104,62 @@ export class PostgresProductRepository implements ProductRepositoryPort {
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unknown error';
       throw new ProductRepositoryException(`Failed to delete product: ${message}`, error);
+    }
+  }
+
+  
+  async decreaseStock(
+    id: ProductId,
+    tenantId: TenantId,
+    quantity: number,
+    tx: TransactionContext
+  ): Promise<void> {
+    try {
+      await this.executeSql(tx, async (conn) => {
+        const rows = await conn`
+          UPDATE catalog.products
+          SET stock = stock - ${quantity},
+              version = version + 1,
+              updated_at = NOW()
+          WHERE id = ${id}
+            AND tenant_id = ${tenantId}
+            AND stock >= ${quantity}
+            AND status = 'active'
+          RETURNING stock, version, updated_at
+        `;
+
+        if (rows.length === 0) {
+          const current = await conn`
+            SELECT status, stock FROM catalog.products
+            WHERE id = ${id} AND tenant_id = ${tenantId}
+          `;
+
+          if (current.length === 0) {
+            throw new ProductUnavailableException('Product not found.');
+          }
+
+          const row = current[0];
+          if (row.status !== 'active') {
+            throw new ProductUnavailableException('Product is not active.');
+          }
+
+          if (row.stock < quantity) {
+            throw new ProductOutOfStockException('Insufficient stock.');
+          }
+
+          throw new ProductRepositoryException('Failed to decrease stock due to an unknown conflict.');
+        }
+      });
+    } catch (error: unknown) {
+      if (
+        error instanceof ProductOutOfStockException ||
+        error instanceof ProductUnavailableException ||
+        error instanceof ProductRepositoryException
+      ) {
+        throw error;
+      }
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      throw new ProductRepositoryException(`Failed to decrease stock: ${message}`, error);
     }
   }
 

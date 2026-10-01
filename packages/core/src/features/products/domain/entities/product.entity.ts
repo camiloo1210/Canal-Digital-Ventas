@@ -261,6 +261,18 @@ export class Product {
     this.updateUpdatedAt();
   }
 
+  
+  public decreaseStock(quantity: number): void {
+    if (quantity <= 0) {
+      throw new InvalidProductAttributeException('Decrease quantity must be strictly positive.');
+    }
+    if (quantity > this.stock) {
+      throw new InvalidProductStateException('Insufficient stock.');
+    }
+    this.stock -= quantity;
+    this.updateUpdatedAt();
+  }
+
   public adjustStock(newStock: number): void {
     Product.validateStock(newStock);
     this.stock = newStock;

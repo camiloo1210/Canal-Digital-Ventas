@@ -143,7 +143,44 @@
       "lowStock": "Low Stock",
       "outOfStock": "Out of Stock",
       "checkAvailability": "Check availability"
-    }
+    },
+    "cartTitle": "Shopping Cart",
+    "cartEmpty": "Your cart is empty",
+    "cartCheckout": "Proceed to Checkout",
+    "cartSubtotal": "Subtotal",
+    "cartAdd": "Add to Cart",
+    "cartOutOfStock": "Out of Stock",
+    "cartDifferentStoreTitle": "Different Store",
+    "cartDifferentStoreDesc": "Your cart contains items from another store.",
+    "cartCancel": "Cancel",
+    "cartClearAndContinue": "Clear Cart & Continue",
+    "checkout": {
+      "pageTitle": "Checkout",
+      "billingInfo": "Billing Information",
+      "billingInfoDesc": "Your digital receipt will be sent to this email.",
+      "orderSummary": "Order Summary",
+      "items": "{count} items",
+      "subtotal": "Subtotal",
+      "totalsWarning": "* Final pricing and availability are confirmed by the server.",
+      "processing": "Processing...",
+      "submit": "Confirm Order",
+      "successTitle": "Order Confirmed!",
+      "successMessage": "Your commercial order has been placed successfully.",
+      "continueShopping": "Continue Shopping",
+      "errorTitle": "Checkout Failed",
+      "genericError": "An unexpected error occurred. Please try again.",
+      "customerDetails": "Customer Details",
+      "shippingDetails": "Shipping Details"
+    },
+    "checkoutErrors": {
+      "outOfStock": "One or more items in your cart are out of stock.",
+      "productUnavailable": "One or more items in your cart are unavailable.",
+      "invalidCart": "Your cart is invalid. Please refresh the page.",
+      "unauthorized": "You must be logged in to complete checkout.",
+      "tenantNotFound": "The store you are trying to buy from is unavailable.",
+      "unexpected": "An unexpected error occurred processing your order."
+    },
+    "cartTaxesNote": "*Taxes and shipping calculated at checkout"
   },
   "BuyerDashboard": {
     "title": "Buyer Dashboard",

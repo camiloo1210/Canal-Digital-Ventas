@@ -4,7 +4,11 @@ import { AppSidebar } from '@/components/app-sidebar';
 
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 
-export default async function DashboardLayout({ children }: { children: React.ReactNode }): Promise<React.JSX.Element> {
+export default async function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}): Promise<React.JSX.Element> {
   const supabase = await createClient();
   const {
     data: { user },

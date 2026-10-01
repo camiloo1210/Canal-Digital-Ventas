@@ -25,7 +25,10 @@ function SubmitButton(): React.JSX.Element {
   );
 }
 
-export function SignupCustomerForm({ className, ...props }: React.ComponentProps<'form'>): React.JSX.Element {
+export function SignupCustomerForm({
+  className,
+  ...props
+}: React.ComponentProps<'form'>): React.JSX.Element {
   const [state, formAction] = useActionState(signupCustomerAction, {
     success: false,
     error: null,

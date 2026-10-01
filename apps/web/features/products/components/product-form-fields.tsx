@@ -127,7 +127,6 @@ export function ProductFormFields({
     return undefined;
   };
 
-  
   const previewUrlRef = useRef<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(defaultValues?.imageUrl ?? null);
 
@@ -135,7 +134,6 @@ export function ProductFormFields({
     const url = previewUrlRef.current;
     return (): void => {
       if (url) URL.revokeObjectURL(url);
-      
     };
   }, []);
 
@@ -407,7 +405,7 @@ export function ProductFormFields({
               {previewUrl && (
                 <div className="relative w-32 h-32 rounded-md overflow-hidden border border-border shrink-0">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                  <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
                 </div>
               )}
               <div className="flex-1">
