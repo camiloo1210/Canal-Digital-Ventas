@@ -10,14 +10,14 @@ labels:
   - ai-generated
 relations:
   - type: relates_to
-    id: 969ea942-0560-448d-9fe0-10911755ff0e
+    id: 3faefaab-d136-40c0-b336-673945ece6a0
   - type: relates_to
     id: a80dfdb8-a769-4a1a-8f93-ba7c29cd16a6
   - type: relates_to
     id: b16a27c2-19c3-4e75-bf77-55440bfe7a23
 priority: Must
 story_points: "3"
-integrity_hash: "sha256:d345e8c765631fa9d002d587114dc1eae5ccd5fbbd85759769ad8637cca7a4a1"
+integrity_hash: "sha256:217946286bfa7944b77966e96f1aebb580625135ea8ecc7ec949f902ae10bec1"
 ---
 
 ## Criterios de Aceptación

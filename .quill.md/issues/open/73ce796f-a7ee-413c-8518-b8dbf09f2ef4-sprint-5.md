@@ -8,10 +8,16 @@ issue_type: sprint
 status: open
 labels:
   - ai-generated
-integrity_hash: "sha256:f876f7c175b36824a486bebfcff135f2185204e7af5c511d482ce8618427ac21"
+integrity_hash: "sha256:e27992836190970d1ce33eab0cef815b71cf571d1ac9226e2e3f1591a190c740"
 ---
 
 ## Fechas y Metas
 <!-- [SECTION_START: Fechas y Metas] -->
-Sprint 5: 19/10/2026 - 26/10/2026. HUs: HU-12, HU-18, HU-22, HU-24 (13 Story Points).
+Sprint 5: 19/10/2026 - 26/10/2026. HUs: HU-18, HU-19, HU-20, HU-22 (12 Story Points).
 <!-- [SECTION_END: Fechas y Metas] -->
+
+## Objetivo del Sprint
+<!-- [SECTION_START: Objetivo del Sprint] -->
+MVP 5: Roles y Analítica Básica.
+Entregable: Habilitación del panel analítico para que la gerencia vea KPIs de ventas y métricas de pedidos. También se restringe el acceso al dashboard creando perfiles y asignándolos a usuarios.
+<!-- [SECTION_END: Objetivo del Sprint] -->

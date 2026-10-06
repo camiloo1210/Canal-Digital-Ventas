@@ -10,6 +10,8 @@ labels:
   - ai-generated
 relations:
   - type: relates_to
+    id: 969ea942-0560-448d-9fe0-10911755ff0e
+  - type: relates_to
     id: d2918cfa-e65f-46c1-93ba-2c6e4b191ceb
   - type: relates_to
     id: 0815a777-53d4-4426-b843-8b81b666d0af
@@ -17,7 +19,7 @@ relations:
     id: 5911ab43-ce6b-441a-85ac-2f8e430eadfa
 priority: Must
 story_points: "3"
-integrity_hash: "sha256:645157d6098ae4809e2b32f8b5f43b3401317ee7623808350d2e0b4fe676fb25"
+integrity_hash: "sha256:764a21d35023c87bb48c3432350374df19499ffd9fd9051e5d6c87972c548094"
 ---
 
 ## Criterios de Aceptación

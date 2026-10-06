@@ -10,12 +10,12 @@ labels:
   - ai-generated
 relations:
   - type: relates_to
-    id: 78096126-aded-4762-a4f1-3adc6f4763a1
+    id: ad2865f9-cda3-47ad-95d9-5e34a5d4708e
   - type: relates_to
     id: cb3e6de8-90eb-413c-925f-a722f89536ae
 priority: Must
 story_points: "8"
-integrity_hash: "sha256:37ecdfb751529b3000dbef7c01445581764089a24059db9bb277832562b8a60b"
+integrity_hash: "sha256:7def539b2b68f831d0a9a9501c05fcfb6ef8e4947be547376e301a66d1b4fcb5"
 ---
 
 ## Criterios de Aceptación

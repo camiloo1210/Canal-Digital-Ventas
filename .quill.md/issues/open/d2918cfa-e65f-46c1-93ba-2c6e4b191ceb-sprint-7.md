@@ -8,10 +8,16 @@ issue_type: sprint
 status: open
 labels:
   - ai-generated
-integrity_hash: "sha256:a772c0c50fc424ebbe3c50d4580f8a5f5f6cb528894043ce214642bbb89bf3c1"
+integrity_hash: "sha256:45a9151f4a92f17744db5e4b7c820d6a2811b92c7cd1b03c036a6ec6940eef9c"
 ---
 
 ## Fechas y Metas
 <!-- [SECTION_START: Fechas y Metas] -->
-Sprint 7: 2/11/2026 - 9/11/2026. HUs: HU-14, HU-15, HU-20, HU-23 (11 Story Points).
+Sprint 7: 2/11/2026 - 9/11/2026. HUs: HU-13, HU-24, HU-25 (8 Story Points).
 <!-- [SECTION_END: Fechas y Metas] -->
+
+## Objetivo del Sprint
+<!-- [SECTION_START: Objetivo del Sprint] -->
+MVP 7: Perfil de Usuario y Autonomía.
+Entregable: Dar autonomía al usuario para que gestione su propia cuenta, sus datos personales, y pueda cancelar pedidos pendientes de forma nativa sin acudir a soporte.
+<!-- [SECTION_END: Objetivo del Sprint] -->
