@@ -8,7 +8,10 @@ issue_type: epic
 status: open
 labels:
   - ai-generated
-integrity_hash: "sha256:f6bb0b3e882458f670f0df77bdc7b8d789550d15bec6e4aa2d9ddc453f1cd4b5"
+relations:
+  - type: relates_to
+    id: e651f3ed-4102-4e1b-9a94-9f5a179dd2b1
+integrity_hash: "sha256:a203a2aa0f10fec71d4b607c833204b552a6865bdabbe54b8a7ca74fb2670063"
 ---
 
 ## Acceptance criteria
