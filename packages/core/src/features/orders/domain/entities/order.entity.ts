@@ -175,10 +175,15 @@ export class Order {
   }
   //Updates
   public changeShippingAddress(shippingAddress: Address): void {
-    const allowedStates = [OrderStatus.DRAFT, OrderStatus.PENDING_PAYMENT, OrderStatus.PROCESSING];
+    const allowedStates = [
+      OrderStatus.DRAFT,
+      OrderStatus.CONFIRMED,
+      OrderStatus.PENDING_PAYMENT,
+      OrderStatus.PROCESSING,
+    ];
     if (!allowedStates.includes(this.status)) {
       throw new InvalidOrderStateException(
-        'Solo se puede cambiar la dirección de envío en estado de borrador, pendiente de pago o en proceso.',
+        'Solo se puede cambiar la dirección de envío en estado de borrador, confirmado, pendiente de pago o en proceso.',
       );
     }
     Order.validateShippingAddress(shippingAddress);
@@ -232,14 +237,14 @@ export class Order {
       throw new InvalidOrderStateException('No se puede confirmar un pedido sin productos.');
     }
 
-    this.status = OrderStatus.PENDING_PAYMENT;
+    this.status = OrderStatus.CONFIRMED;
     this.addDomainEvent(new OrderConfirmedEvent(this.id));
     this.updateUpdatedAt();
   }
 
   public markAsPaid(paymentGatewayId: PaymentGatewayId): void {
-    if (this.status !== OrderStatus.PENDING_PAYMENT) {
-      throw new InvalidOrderStateException('Order must be pending to be paid.');
+    if (this.status !== OrderStatus.PENDING_PAYMENT && this.status !== OrderStatus.CONFIRMED) {
+      throw new InvalidOrderStateException('Order must be pending or confirmed to be paid.');
     }
     this.status = OrderStatus.PAID;
     this.paymentGatewayId = paymentGatewayId;
@@ -255,10 +260,14 @@ export class Order {
     this.addDomainEvent(new OrderProcessingEvent(this.id));
     this.updateUpdatedAt();
   }
+  public shouldRestoreInventory(): boolean {
+    return this.status === OrderStatus.CONFIRMED || this.status === OrderStatus.PROCESSING;
+  }
+
   public cancel(): void {
-    if (this.status === OrderStatus.SHIPPED || this.status === OrderStatus.DELIVERED) {
+    if (this.status !== OrderStatus.CONFIRMED && this.status !== OrderStatus.PROCESSING) {
       throw new InvalidOrderStateException(
-        'An order that has already been shipped or delivered cannot be cancelled.',
+        'Solo es posible cancelar pedidos en estado Confirmado (CONFIRMED) o En Proceso (PROCESSING).',
       );
     }
     this.status = OrderStatus.CANCELLED;

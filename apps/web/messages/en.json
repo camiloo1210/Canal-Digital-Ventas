@@ -190,5 +190,46 @@
     "recent_purchases": "Recent Purchases",
     "recent_purchases_desc": "Here you can see all orders placed across any tenant store.",
     "empty_purchases": "You haven't made any purchases yet."
+  },
+  "Orders": {
+    "actions": {
+      "unauthorized": "You must be signed in to cancel an order.",
+      "invalidInput": "Invalid order identifier.",
+      "cancelSuccess": "The order was cancelled successfully and inventory was restored.",
+      "orderNotFound": "The order could not be found or you are not authorized to access it.",
+      "invalidOrderState": "The order cannot be cancelled in its current state.",
+      "concurrencyError": "The order was updated concurrently. Please refresh the page and try again.",
+      "unexpectedError": "An unexpected error occurred while attempting to cancel the order."
+    },
+    "status": {
+      "confirmed": "Confirmed",
+      "processing": "Processing",
+      "paid": "Paid",
+      "shipped": "Shipped",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
+    },
+    "dialog": {
+      "trigger": "Cancel Order",
+      "title": "Cancel Order",
+      "description": "Are you sure you want to cancel order {orderNumber}? This will return items to store inventory and permanently void the order.",
+      "confirmButton": "Yes, Cancel Order",
+      "cancelButton": "Keep Order",
+      "cancelling": "Cancelling order...",
+      "success": "Order cancelled successfully"
+    },
+    "card": {
+      "order": "Order",
+      "store": "Store",
+      "date": "Date",
+      "items": "Items",
+      "quantity": "qty",
+      "subtotal": "Subtotal",
+      "tax": "Tax",
+      "shipping": "Shipping",
+      "total": "Total",
+      "paidNotice": "Paid order. For accounting security reasons, please contact the store to arrange cancellations or refunds.",
+      "inTransitNotice": "The order is already in transit or has been delivered."
+    }
   }
 }
