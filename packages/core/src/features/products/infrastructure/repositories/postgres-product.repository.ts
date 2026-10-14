@@ -107,12 +107,11 @@ export class PostgresProductRepository implements ProductRepositoryPort {
     }
   }
 
-  
   async decreaseStock(
     id: ProductId,
     tenantId: TenantId,
     quantity: number,
-    tx: TransactionContext
+    tx: TransactionContext,
   ): Promise<void> {
     try {
       await this.executeSql(tx, async (conn) => {
@@ -147,7 +146,9 @@ export class PostgresProductRepository implements ProductRepositoryPort {
             throw new ProductOutOfStockException('Insufficient stock.');
           }
 
-          throw new ProductRepositoryException('Failed to decrease stock due to an unknown conflict.');
+          throw new ProductRepositoryException(
+            'Failed to decrease stock due to an unknown conflict.',
+          );
         }
       });
     } catch (error: unknown) {
@@ -160,6 +161,41 @@ export class PostgresProductRepository implements ProductRepositoryPort {
       }
       const message = error instanceof Error ? error.message : 'Unknown error';
       throw new ProductRepositoryException(`Failed to decrease stock: ${message}`, error);
+    }
+  }
+
+  async increaseStock(
+    id: ProductId,
+    tenantId: TenantId,
+    quantity: number,
+    tx: TransactionContext,
+  ): Promise<void> {
+    if (quantity <= 0) {
+      throw new ProductRepositoryException('Quantity to increase must be strictly positive.');
+    }
+
+    try {
+      await this.executeSql(tx, async (conn) => {
+        const rows = await conn`
+          UPDATE catalog.products
+          SET stock = stock + ${quantity},
+              version = version + 1,
+              updated_at = NOW()
+          WHERE id = ${id}
+            AND tenant_id = ${tenantId}
+          RETURNING stock, version, updated_at
+        `;
+
+        if (rows.length === 0) {
+          throw new ProductRepositoryException('Product not found for stock increase.');
+        }
+      });
+    } catch (error: unknown) {
+      if (error instanceof ProductRepositoryException) {
+        throw error;
+      }
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      throw new ProductRepositoryException(`Failed to increase stock: ${message}`, error);
     }
   }
 

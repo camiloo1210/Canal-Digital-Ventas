@@ -98,4 +98,53 @@ export class PostgresStoreCustomerRepository implements StoreCustomerRepositoryP
 
     return StoreCustomer.reconstitute(props);
   }
+
+  async findByGlobalAuthId(
+    globalAuthId: import('@/sales/domain/types/global-auth-id.type').GlobalAuthId,
+    tenantId: import('@/shared/domain/types/tenant-id.type').TenantId,
+    tx: TransactionContext,
+  ): Promise<StoreCustomer | null> {
+    const row = await tx.executeNative<
+      postgres.TransactionSql<Record<string, unknown>>,
+      DbStoreCustomerRow | null
+    >(async (sql) => {
+      const rows = await sql<DbStoreCustomerRow[]>`
+        SELECT * FROM sales.customers
+        WHERE tenant_id = ${tenantId} AND global_auth_id = ${globalAuthId}
+        LIMIT 1;
+      `;
+      return rows[0] || null;
+    });
+
+    if (!row) {
+      return null;
+    }
+
+    const address = Address.create(
+      row.address_street,
+      row.address_city,
+      row.address_state,
+      row.address_zip_code,
+      row.address_country,
+      row.address_reference || undefined,
+    );
+
+    const props: StoreCustomerProps = {
+      id: row.id as unknown as import('@/sales/domain/types/customer-id.type').StoreCustomerId,
+      tenantId: row.tenant_id as unknown as import('@/shared/domain/types/tenant-id.type').TenantId,
+      globalAuthId:
+        row.global_auth_id as unknown as import('@/sales/domain/types/global-auth-id.type').GlobalAuthId,
+      name: row.name,
+      email: row.email,
+      phone: row.phone,
+      documentId: row.document_id,
+      address,
+      status: row.status as StoreCustomerStatus,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      version: row.version,
+    };
+
+    return StoreCustomer.reconstitute(props);
+  }
 }

@@ -192,5 +192,46 @@
     "recent_purchases": "Compras Recientes",
     "recent_purchases_desc": "Aquí puedes ver todos los pedidos realizados en cualquier tienda.",
     "empty_purchases": "Aún no has realizado ninguna compra."
+  },
+  "Orders": {
+    "actions": {
+      "unauthorized": "Debes iniciar sesión para cancelar un pedido.",
+      "invalidInput": "Identificador de pedido inválido.",
+      "cancelSuccess": "El pedido ha sido cancelado exitosamente y el inventario restituido.",
+      "orderNotFound": "No se encontró el pedido o no tienes autorización para acceder a él.",
+      "invalidOrderState": "El pedido no se encuentra en un estado que permita su cancelación.",
+      "concurrencyError": "El pedido fue modificado concurrentemente. Por favor, recarga la página e intenta de nuevo.",
+      "unexpectedError": "Ocurrió un error inesperado al intentar cancelar el pedido."
+    },
+    "status": {
+      "confirmed": "Confirmado",
+      "processing": "En Proceso",
+      "paid": "Pagado",
+      "shipped": "Enviado",
+      "delivered": "Entregado",
+      "cancelled": "Cancelado"
+    },
+    "dialog": {
+      "trigger": "Cancelar Pedido",
+      "title": "Cancelar Pedido",
+      "description": "¿Estás seguro de que deseas cancelar el pedido {orderNumber}? Esta acción devolverá los productos al inventario del comercio y anulará la orden definitivamente.",
+      "confirmButton": "Sí, Cancelar Pedido",
+      "cancelButton": "Mantener Pedido",
+      "cancelling": "Cancelando pedido...",
+      "success": "Pedido cancelado con éxito"
+    },
+    "card": {
+      "order": "Pedido",
+      "store": "Tienda",
+      "date": "Fecha",
+      "items": "Productos",
+      "quantity": "cant.",
+      "subtotal": "Subtotal",
+      "tax": "Impuestos",
+      "shipping": "Envío",
+      "total": "Total",
+      "paidNotice": "Pedido pagado. Por razones de seguridad contable, contacta a la tienda para tramitar cancelaciones o devoluciones.",
+      "inTransitNotice": "El pedido ya está en camino o ha sido entregado."
+    }
   }
 }

@@ -68,7 +68,6 @@ export class GenerateCommercialOrderUseCase {
         let subtotalAmount = 0;
         let currency = Currency.USD;
 
-        
         const consolidatedItemsMap = new Map<string, number>();
         for (const itemDto of dto.items) {
           const currentQty = consolidatedItemsMap.get(itemDto.productId) || 0;
@@ -79,11 +78,10 @@ export class GenerateCommercialOrderUseCase {
           ([productId, quantity]) => ({
             productId,
             quantity,
-          })
+          }),
         );
 
         for (const itemDto of consolidatedItems) {
-
           const productId = createProductId(itemDto.productId);
 
           const product = await this.productRepository.findById(productId, tenantId, tx);

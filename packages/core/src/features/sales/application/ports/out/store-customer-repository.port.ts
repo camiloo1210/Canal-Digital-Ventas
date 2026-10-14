@@ -16,4 +16,9 @@ export interface ResolveStoreCustomerInput {
 
 export interface StoreCustomerRepositoryPort {
   resolveOrCreate(input: ResolveStoreCustomerInput, tx: TransactionContext): Promise<StoreCustomer>;
+  findByGlobalAuthId(
+    globalAuthId: GlobalAuthId,
+    tenantId: TenantId,
+    tx: TransactionContext,
+  ): Promise<StoreCustomer | null>;
 }

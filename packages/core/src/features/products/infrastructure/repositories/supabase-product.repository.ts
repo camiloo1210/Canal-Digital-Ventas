@@ -14,10 +14,6 @@ import { ProductRepositoryException } from '@/products/application/exceptions/pr
 export class SupabaseProductRepository implements ProductRepositoryPort {
   constructor(private readonly supabase: SupabaseClient) {}
 
-  async decreaseStock(): Promise<void> {
-    throw new Error('Method not implemented.');
-  }
-
   async searchByFilters(
     filters: ProductFilters,
     pagination?: PaginationOptions,
@@ -153,6 +149,18 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
   }
 
   async delete(): Promise<void> {
+    throw new ProductRepositoryException(
+      'SupabaseProductRepository is read-only. Use PostgresProductRepository for writes.',
+    );
+  }
+
+  async decreaseStock(): Promise<void> {
+    throw new ProductRepositoryException(
+      'SupabaseProductRepository is read-only. Use PostgresProductRepository for writes.',
+    );
+  }
+
+  async increaseStock(): Promise<void> {
     throw new ProductRepositoryException(
       'SupabaseProductRepository is read-only. Use PostgresProductRepository for writes.',
     );

@@ -3,11 +3,13 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { listActiveTenantsQuery } from '@/features/iam/queries/list-active-tenants.query';
 import { StoreDirectory } from '@/features/store-directory/components/store-directory';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { getStoreViewerQuery } from '@/features/store/queries/store-viewer.query';
 import { UserNav } from '@/features/iam/components/user-nav';
 import { getTranslations } from 'next-intl/server';
 import { AppHeader } from '@/components/app-header';
+
+import { ordersDi } from '@/features/orders/di/orders.di';
+import { BuyerOrdersList } from '@/features/orders/components/buyer-orders-list';
 
 export const metadata = {
   title: 'My Purchases | Canal Digital',
@@ -32,6 +34,9 @@ export default async function BuyerDashboardPage(props: {
   const viewer = await getStoreViewerQuery();
   const t = await getTranslations('Storefront');
   const tb = await getTranslations('BuyerDashboard');
+
+  const buyerOrderReadRepo = ordersDi.resolveBuyerOrderReadRepository();
+  const orders = await buyerOrderReadRepo.findOrdersByBuyerId(user.id);
 
   const labels = {
     login: t('login'),
@@ -58,16 +63,15 @@ export default async function BuyerDashboardPage(props: {
           }}
         />
 
-        <section>
-          <Card className="shadow-sm border-border">
-            <CardHeader className="border-b border-border bg-muted/20">
-              <CardTitle className="text-lg text-foreground">{tb('recent_purchases')}</CardTitle>
-              <CardDescription>{tb('recent_purchases_desc')}</CardDescription>
-            </CardHeader>
-            <CardContent className="p-12 text-center text-muted-foreground">
-              {tb('empty_purchases')}
-            </CardContent>
-          </Card>
+        <section className="space-y-4">
+          <div className="space-y-1">
+            <h2 className="text-xl font-bold tracking-tight text-foreground">
+              {tb('recent_purchases')}
+            </h2>
+            <p className="text-sm text-muted-foreground">{tb('recent_purchases_desc')}</p>
+          </div>
+
+          <BuyerOrdersList orders={orders} />
         </section>
       </main>
     </div>
