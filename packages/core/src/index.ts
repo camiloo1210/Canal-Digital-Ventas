@@ -220,3 +220,6 @@ export { RabbitMqEventPublisherAdapter } from '@/shared/infrastructure/adapters/
 export { loadMessagingWorkerConfig } from '@/shared/infrastructure/messaging/messaging-worker-config';
 export type { MessagingWorkerConfig } from '@/shared/infrastructure/messaging/messaging-worker-config';
 export { runOutboxWorker } from '@/shared/infrastructure/messaging/outbox-worker';
+export { ORDER_NOTIFICATION_EVENT_TYPES } from '@/notifications/application/notification-events';
+export { loadSmtpConfig } from '@/notifications/infrastructure/smtp-config';
+export { runNotificationWorker } from '@/notifications/infrastructure/notification-worker';
