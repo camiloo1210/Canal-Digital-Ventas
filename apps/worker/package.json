@@ -1,0 +1,16 @@
+{
+  "name": "@canaldigital/worker",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.9.0"
+  },
+  "scripts": {
+    "start": "tsx --env-file-if-exists=.env --tsconfig tsconfig.json src/main.ts",
+    "check": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@canaldigital/packages/core": "workspace:*",
+    "tsx": "^4.23.15"
+  }
+}

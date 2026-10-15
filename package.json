@@ -6,6 +6,7 @@
     "lint": "eslint . --max-warnings=0",
     "prepare": "husky",
     "test": "vitest run --passWithNoTests",
+    "worker:outbox": "pnpm --filter @canaldigital/worker start",
     "commit": "cz"
   },
   "lint-staged": {
