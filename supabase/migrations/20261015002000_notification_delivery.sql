@@ -15,8 +15,11 @@ GRANT USAGE ON SCHEMA core TO notification_worker_role;
 GRANT SELECT (id, tenant_id, aggregate_type, aggregate_id, event_type) ON core.outbox_events TO notification_rpc_owner;
 CREATE POLICY notification_outbox_read ON core.outbox_events FOR SELECT TO notification_rpc_owner USING (true);
 GRANT SELECT (id, tenant_id, customer_id, order_number) ON sales.orders TO notification_rpc_owner;
+-- Personal data: this role reads customer emails only to address notifications, through core.read_order_notification.
 GRANT SELECT (id, tenant_id, email) ON sales.customers TO notification_rpc_owner;
 GRANT SELECT (id, name) ON core.tenants TO notification_rpc_owner;
+GRANT SELECT ON core.outbox_relay_exclusions TO notification_rpc_owner;
+CREATE POLICY notification_exclusions_read ON core.outbox_relay_exclusions FOR SELECT TO notification_rpc_owner USING (true);
 CREATE POLICY notification_order_read ON sales.orders FOR SELECT TO notification_rpc_owner USING (true);
 CREATE POLICY notification_customer_read ON sales.customers FOR SELECT TO notification_rpc_owner USING (true);
 CREATE POLICY notification_tenant_read ON core.tenants FOR SELECT TO notification_rpc_owner USING (true);
@@ -52,6 +55,7 @@ BEGIN
     SELECT 1 FROM core.outbox_events o
     WHERE o.id = p_message_id AND o.tenant_id = p_tenant_id AND o.aggregate_id = p_order_id
       AND o.aggregate_type = 'Order' AND o.event_type = p_event_type
+      AND NOT EXISTS (SELECT 1 FROM core.outbox_relay_exclusions x WHERE x.event_id = o.id)
   ) THEN RETURN 'INVALID'; END IF;
 
   UPDATE core.notification_deliveries SET status = 'DEAD', owner_token = NULL, lease_until = NULL
@@ -120,3 +124,4 @@ GRANT EXECUTE ON FUNCTION core.claim_notification_delivery(uuid, uuid, uuid, tex
 GRANT EXECUTE ON FUNCTION core.finish_notification_delivery(uuid, uuid, text) TO notification_worker_role;
 GRANT EXECUTE ON FUNCTION core.read_order_notification(uuid, uuid) TO notification_worker_role;
 REVOKE CREATE ON SCHEMA core FROM notification_rpc_owner;
+REVOKE notification_rpc_owner FROM current_user;
