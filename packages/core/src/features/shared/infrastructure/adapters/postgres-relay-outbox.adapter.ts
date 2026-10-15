@@ -19,12 +19,13 @@ export class PostgresRelayOutboxAdapter implements RelayOutboxPort {
   constructor(
     private readonly sql: postgres.Sql<Record<string, unknown>>,
     private readonly workerToken: string,
+    private readonly eventTypes: string[],
   ) {}
 
   public async claim(): Promise<IntegrationEvent | null> {
     try {
       const rows = await this.sql<ClaimedRow[]>`
-        SELECT * FROM core.claim_relay_outbox_event(${this.workerToken}::uuid)
+        SELECT * FROM core.claim_notification_outbox_event(${this.workerToken}::uuid, ${this.eventTypes}::text[])
       `;
       const row = rows[0];
       if (!row) return null;

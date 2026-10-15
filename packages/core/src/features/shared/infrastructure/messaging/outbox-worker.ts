@@ -15,6 +15,7 @@ export async function runOutboxWorker(
   config: MessagingWorkerConfig,
   signal: AbortSignal,
   logger: OutboxWorkerLogger,
+  eventTypes: string[],
 ): Promise<void> {
   const sql = postgres(config.databaseUrl, {
     max: 1,
@@ -27,7 +28,7 @@ export async function runOutboxWorker(
       let publisher: RabbitMqEventPublisherAdapter | undefined;
       try {
         publisher = await RabbitMqEventPublisherAdapter.connect(config.rabbitMqUrl, config.queue);
-        const outbox = new PostgresRelayOutboxAdapter(sql, crypto.randomUUID());
+        const outbox = new PostgresRelayOutboxAdapter(sql, crypto.randomUUID(), eventTypes);
         const relay = new RelayOutboxUseCase(outbox, publisher);
         logger.info('Outbox relay connected');
         while (!signal.aborted) {

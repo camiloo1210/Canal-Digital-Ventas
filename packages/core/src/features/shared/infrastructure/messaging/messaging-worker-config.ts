@@ -9,12 +9,13 @@ export interface MessagingWorkerConfig {
 
 export function loadMessagingWorkerConfig(
   env: Record<string, string | undefined>,
+  databaseVariable: string = 'OUTBOX_DATABASE_URL',
 ): MessagingWorkerConfig {
-  const databaseUrl = env.OUTBOX_DATABASE_URL ?? '';
+  const databaseUrl = env[databaseVariable] ?? '';
   const rabbitMqUrl = env.RABBITMQ_URL ?? '';
-  validateUrl(databaseUrl, ['postgres:', 'postgresql:'], 'OUTBOX_DATABASE_URL');
+  validateUrl(databaseUrl, ['postgres:', 'postgresql:'], databaseVariable);
   validateUrl(rabbitMqUrl, ['amqp:', 'amqps:'], 'RABBITMQ_URL');
-  const queue = env.RABBITMQ_QUEUE ?? 'canaldigital.events';
+  const queue = env.RABBITMQ_QUEUE ?? 'canaldigital.notifications';
   if (!/^[a-zA-Z0-9._-]{1,200}$/.test(queue) || queue.startsWith('amq.')) {
     throw new MessagingException('Invalid RABBITMQ_QUEUE');
   }

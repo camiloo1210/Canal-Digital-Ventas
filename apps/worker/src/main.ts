@@ -1,4 +1,8 @@
-import { loadMessagingWorkerConfig, runOutboxWorker } from '@canaldigital/packages/core';
+import {
+  loadMessagingWorkerConfig,
+  runOutboxWorker,
+  ORDER_NOTIFICATION_EVENT_TYPES,
+} from '@canaldigital/packages/core';
 
 async function main(): Promise<void> {
   const config = loadMessagingWorkerConfig(process.env);
@@ -9,7 +13,7 @@ async function main(): Promise<void> {
   process.once('SIGINT', stop);
   process.once('SIGTERM', stop);
   try {
-    await runOutboxWorker(config, controller.signal, console);
+    await runOutboxWorker(config, controller.signal, console, ORDER_NOTIFICATION_EVENT_TYPES);
   } finally {
     process.removeListener('SIGINT', stop);
     process.removeListener('SIGTERM', stop);

@@ -1,6 +1,7 @@
 import postgres from 'postgres';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { PostgresRelayOutboxAdapter } from '@/shared/infrastructure/adapters/postgres-relay-outbox.adapter';
+import { PostgresNotificationAdapter } from '@/notifications/infrastructure/postgres-notification.adapter';
 
 // Explicitly opt in using an isolated, migrated database whose name contains "test".
 const url = process.env.OUTBOX_TEST_DATABASE_URL;
@@ -24,8 +25,8 @@ describe.skipIf(!url)('PostgreSQL outbox relay fencing integration', (): void =>
       INSERT INTO core.tenants (id, name, slug, contact_email, base_currency, status)
       VALUES (${tenantId}, 'Relay test', ${`relay-test-${tenantId}`}, 'relay@example.test', 'USD', 'active')
     `;
-    first = new PostgresRelayOutboxAdapter(sql, crypto.randomUUID());
-    second = new PostgresRelayOutboxAdapter(sql, crypto.randomUUID());
+    first = new PostgresRelayOutboxAdapter(sql, crypto.randomUUID(), ['OrderCancelledEvent']);
+    second = new PostgresRelayOutboxAdapter(sql, crypto.randomUUID(), ['OrderCancelledEvent']);
   });
 
   beforeEach(async (): Promise<void> => {
@@ -33,7 +34,7 @@ describe.skipIf(!url)('PostgreSQL outbox relay fencing integration', (): void =>
     eventId = crypto.randomUUID();
     await sql`
       INSERT INTO core.outbox_events (id, tenant_id, aggregate_type, aggregate_id, event_type, payload)
-      VALUES (${eventId}, ${tenantId}, 'Order', ${crypto.randomUUID()}, 'OrderCancelled', '{"orderId":"order-1"}'::jsonb)
+      VALUES (${eventId}, ${tenantId}, 'Order', ${crypto.randomUUID()}, 'OrderCancelledEvent', '{"orderId":"order-1"}'::jsonb)
     `;
   });
 
@@ -53,6 +54,45 @@ describe.skipIf(!url)('PostgreSQL outbox relay fencing integration', (): void =>
       tenantId,
       payload: { orderId: 'order-1' },
     });
+  });
+
+  it('leaves non-notification events pending instead of consuming or completing them', async (): Promise<void> => {
+    const unrelatedId = crypto.randomUUID();
+    await sql`
+      INSERT INTO core.outbox_events (id, tenant_id, aggregate_type, aggregate_id, event_type, payload)
+      VALUES (${unrelatedId}, ${tenantId}, 'Product', ${crypto.randomUUID()}, 'ProductCreatedEvent', '{}'::jsonb)
+    `;
+    const event = await first.claim();
+    expect(event?.messageId).toBe(eventId);
+    await first.complete(eventId);
+    expect(await first.claim()).toBeNull();
+    const [row] = await sql<
+      { status: string; attempt_count: number }[]
+    >`SELECT status, attempt_count FROM core.outbox_events WHERE id = ${unrelatedId}`;
+    expect(row).toMatchObject({ status: 'PENDING', attempt_count: 0 });
+  });
+
+  it('deduplicates sent notifications and rejects messages with a forged tenant', async (): Promise<void> => {
+    const event = await first.claim();
+    if (!event) throw new Error('Missing notification fixture');
+    const deliveries = new PostgresNotificationAdapter(sql, crypto.randomUUID());
+    expect(await deliveries.claim(event)).toBe('CLAIMED');
+    await deliveries.complete(event.messageId);
+    expect(await deliveries.claim(event)).toBe('SENT');
+    await expect(deliveries.claim({ ...event, tenantId: crypto.randomUUID() })).rejects.toThrow(
+      'INVALID_NOTIFICATION_EVENT',
+    );
+  });
+
+  it('fences delivery completion to its notification consumer', async (): Promise<void> => {
+    const event = await first.claim();
+    if (!event) throw new Error('Missing notification fixture');
+    const deliveries = new PostgresNotificationAdapter(sql, crypto.randomUUID());
+    const other = new PostgresNotificationAdapter(sql, crypto.randomUUID());
+    expect(await deliveries.claim(event)).toBe('CLAIMED');
+    expect(await other.claim(event)).toBe('BUSY');
+    await expect(other.complete(event.messageId)).rejects.toThrow('lease');
+    await deliveries.complete(event.messageId);
   });
 
   it('rejects completion by a worker that does not own the lease', async (): Promise<void> => {
@@ -91,7 +131,7 @@ describe.skipIf(!url)('PostgreSQL outbox relay fencing integration', (): void =>
     await expect(
       sql.begin(async (tx): Promise<void> => {
         await tx`SET LOCAL ROLE authenticated`;
-        await tx`SELECT * FROM core.claim_relay_outbox_event(${crypto.randomUUID()}::uuid)`;
+        await tx`SELECT * FROM core.claim_notification_outbox_event(${crypto.randomUUID()}::uuid, ARRAY['OrderCancelledEvent']::text[])`;
       }),
     ).rejects.toMatchObject({ code: '42501' });
   });

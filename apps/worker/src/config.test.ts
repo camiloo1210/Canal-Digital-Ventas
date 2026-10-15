@@ -26,7 +26,7 @@ describe('messaging worker configuration', (): void => {
     expect(loadMessagingWorkerConfig(valid)).toEqual({
       databaseUrl: valid.OUTBOX_DATABASE_URL,
       rabbitMqUrl: valid.RABBITMQ_URL,
-      queue: 'canaldigital.events',
+      queue: 'canaldigital.notifications',
       pollIntervalMs: 1000,
     });
   });

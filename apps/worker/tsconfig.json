@@ -2,7 +2,22 @@
   "extends": "../../packages/core/tsconfig.json",
   "compilerOptions": {
     "baseUrl": "../../packages/core",
-    "noEmit": true
+    "noEmit": true,
+    "paths": {
+      "@/shared/*": ["src/features/shared/*"],
+      "@/products/*": ["src/features/products/*"],
+      "@/categories/*": ["src/features/categories/*"],
+      "@/orders/*": ["src/features/orders/*"],
+      "@/customers/*": ["src/features/customers/*"],
+      "@/carts/*": ["src/features/carts/*"],
+      "@/payments/*": ["src/features/payments/*"],
+      "@/tenants/*": ["src/features/tenants/*"],
+      "@/iam/*": ["src/features/iam/*"],
+      "@/sales/*": ["src/features/sales/*"],
+      "@/notifications/*": ["src/features/notifications/*"],
+      "@/messages/*": ["../../apps/web/messages/*"]
+    },
+    "resolveJsonModule": true
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "**/*.test.ts"]

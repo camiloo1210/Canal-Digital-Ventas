@@ -7,6 +7,7 @@
     "prepare": "husky",
     "test": "vitest run --passWithNoTests",
     "worker:outbox": "pnpm --filter @canaldigital/worker start",
+    "worker:notifications": "pnpm --filter @canaldigital/worker notifications",
     "commit": "cz"
   },
   "lint-staged": {

@@ -7,6 +7,7 @@
   },
   "scripts": {
     "start": "tsx --env-file-if-exists=.env --tsconfig tsconfig.json src/main.ts",
+    "notifications": "tsx --env-file-if-exists=.env --tsconfig tsconfig.json src/notifications.ts",
     "check": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
