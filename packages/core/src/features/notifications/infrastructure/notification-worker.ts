@@ -12,6 +12,7 @@ import {
   assertNotificationTopology,
   processNotificationMessage,
 } from '@/notifications/infrastructure/rabbitmq-notification-consumer';
+import { MessagingException } from '@/shared/application/exceptions/messaging.exception';
 
 export async function runNotificationWorker(
   config: MessagingWorkerConfig,
@@ -19,6 +20,7 @@ export async function runNotificationWorker(
   copies: NotificationCopies,
   signal: AbortSignal,
   logger: OutboxWorkerLogger,
+  onReady: (ready: boolean) => void = (): void => {},
 ): Promise<void> {
   const sql = postgres(config.databaseUrl, {
     max: 1,
@@ -32,6 +34,14 @@ export async function runNotificationWorker(
       let channel: ConfirmChannel | undefined;
       try {
         await email.verify();
+        const [database] = await sql<{ authorized: boolean }[]>`
+          SELECT pg_catalog.pg_has_role(session_user, 'notification_worker_role', 'MEMBER')
+            AND has_function_privilege(current_user, 'core.claim_notification_delivery(uuid,uuid,uuid,text,uuid)', 'EXECUTE')
+            AND has_function_privilege(current_user, 'core.finish_notification_delivery(uuid,uuid,text)', 'EXECUTE')
+            AND has_function_privilege(current_user, 'core.read_order_notification(uuid,uuid)', 'EXECUTE') AS authorized
+        `;
+        if (!database?.authorized)
+          throw new MessagingException('Notification database access is unavailable');
         connection = await amqp.connect(config.rabbitMqUrl, { timeout: 10_000 });
         connection.on('error', (): void => {});
         channel = await connection.createConfirmChannel();
@@ -77,6 +87,7 @@ export async function runNotificationWorker(
             { noAck: false },
           );
           logger.info('Notification consumer connected; SMTP verified');
+          onReady(true);
           await stopped;
           await channel.cancel(consumer.consumerTag).catch((): void => {});
           await pending;
@@ -86,6 +97,7 @@ export async function runNotificationWorker(
       } catch {
         if (!signal.aborted) logger.error('Notification worker interrupted; reconnecting');
       } finally {
+        onReady(false);
         await channel?.close().catch((): void => {});
         await connection?.close().catch((): void => {});
       }

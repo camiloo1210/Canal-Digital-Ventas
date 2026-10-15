@@ -15,7 +15,8 @@
       "@/iam/*": ["src/features/iam/*"],
       "@/sales/*": ["src/features/sales/*"],
       "@/notifications/*": ["src/features/notifications/*"],
-      "@/messages/*": ["../../apps/web/messages/*"]
+      "@/messages/*": ["../../apps/web/messages/*"],
+      "@/worker/*": ["../../apps/worker/src/*"]
     },
     "resolveJsonModule": true
   },

@@ -3,9 +3,11 @@ import {
   runOutboxWorker,
   ORDER_NOTIFICATION_EVENT_TYPES,
 } from '@canaldigital/packages/core';
+import { startWorkerHealth, loadWorkerHealthPort } from '@/worker/health';
 
 async function main(): Promise<void> {
   const config = loadMessagingWorkerConfig(process.env);
+  const health = await startWorkerHealth(loadWorkerHealthPort(process.env, 8081));
   const controller = new AbortController();
   const stop = (): void => {
     controller.abort();
@@ -13,10 +15,17 @@ async function main(): Promise<void> {
   process.once('SIGINT', stop);
   process.once('SIGTERM', stop);
   try {
-    await runOutboxWorker(config, controller.signal, console, ORDER_NOTIFICATION_EVENT_TYPES);
+    await runOutboxWorker(
+      config,
+      controller.signal,
+      console,
+      ORDER_NOTIFICATION_EVENT_TYPES,
+      health.setReady,
+    );
   } finally {
     process.removeListener('SIGINT', stop);
     process.removeListener('SIGTERM', stop);
+    await health.close();
   }
 }
 

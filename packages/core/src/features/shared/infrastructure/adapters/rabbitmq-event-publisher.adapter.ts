@@ -61,6 +61,10 @@ export class RabbitMqEventPublisherAdapter implements IntegrationEventPublisherP
     return pending;
   }
 
+  public isConnected(): boolean {
+    return !this.closed;
+  }
+
   private async publishConfirmed(event: IntegrationEvent): Promise<void> {
     if (this.closed) throw new MessagingException('RabbitMQ publisher is closed');
     let returned = false;

@@ -4,6 +4,7 @@ import { RelayOutboxUseCase } from '@/shared/application/use-cases/relay-outbox.
 import { PostgresRelayOutboxAdapter } from '@/shared/infrastructure/adapters/postgres-relay-outbox.adapter';
 import { RabbitMqEventPublisherAdapter } from '@/shared/infrastructure/adapters/rabbitmq-event-publisher.adapter';
 import type { MessagingWorkerConfig } from '@/shared/infrastructure/messaging/messaging-worker-config';
+import { MessagingException } from '@/shared/application/exceptions/messaging.exception';
 
 export interface OutboxWorkerLogger {
   info(message: string): void;
@@ -16,6 +17,7 @@ export async function runOutboxWorker(
   signal: AbortSignal,
   logger: OutboxWorkerLogger,
   eventTypes: string[],
+  onReady: (ready: boolean) => void = (): void => {},
 ): Promise<void> {
   const sql = postgres(config.databaseUrl, {
     max: 1,
@@ -32,11 +34,16 @@ export async function runOutboxWorker(
         const relay = new RelayOutboxUseCase(outbox, publisher);
         logger.info('Outbox relay connected');
         while (!signal.aborted) {
-          if (!(await relay.execute())) await pause(config.pollIntervalMs, signal);
+          const published = await relay.execute();
+          if (!publisher.isConnected())
+            throw new MessagingException('RabbitMQ publisher disconnected');
+          onReady(true);
+          if (!published) await pause(config.pollIntervalMs, signal);
         }
       } catch {
         if (!signal.aborted) logger.error('Outbox relay interrupted; reconnecting');
       } finally {
+        onReady(false);
         await publisher?.close();
       }
       if (!signal.aborted) await pause(5000, signal);

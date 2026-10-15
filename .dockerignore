@@ -1,0 +1,17 @@
+.git
+**/node_modules
+**/.next
+**/coverage
+**/*.test.ts
+**/*.test.tsx
+**/*.tsbuildinfo
+**/.env
+**/.env.*
+**/*.pem
+**/*.key
+docs
+.agents
+.codex
+.aws
+.quill.md
+supabase

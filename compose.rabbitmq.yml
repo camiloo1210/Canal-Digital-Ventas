@@ -1,12 +1,38 @@
+x-worker: &worker
+  image: canaldigital-messaging-worker:local
+  build:
+    context: .
+    dockerfile: apps/worker/Dockerfile
+    target: runtime
+  init: true
+  restart: unless-stopped
+  stop_grace_period: 90s
+  depends_on:
+    rabbitmq:
+      condition: service_healthy
+  healthcheck:
+    test: ['CMD', 'node', 'healthcheck.mjs']
+    interval: 15s
+    timeout: 5s
+    retries: 3
+    start_period: 30s
+  logging:
+    driver: json-file
+    options:
+      max-size: '10m'
+      max-file: '3'
+
 services:
   rabbitmq:
     image: rabbitmq:4.3-management
+    hostname: canaldigital-rabbitmq
     ports:
-      - '127.0.0.1:5672:5672'
-      - '127.0.0.1:15672:15672'
+      - '${RABBITMQ_BIND_ADDRESS:-127.0.0.1}:${RABBITMQ_AMQP_PORT:-5673}:5672'
+      - '${RABBITMQ_BIND_ADDRESS:-127.0.0.1}:${RABBITMQ_MANAGEMENT_PORT:-15673}:15672'
     environment:
-      RABBITMQ_DEFAULT_USER: canaldigital
-      RABBITMQ_DEFAULT_PASS: canaldigital-local
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:?Configure RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?Configure RABBITMQ_PASSWORD}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:-canaldigital}
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
     healthcheck:
@@ -15,6 +41,37 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+  outbox-worker:
+    <<: *worker
+    command: ['src/main.ts']
+    environment:
+      WORKER_HEALTH_PORT: '8081'
+      OUTBOX_DATABASE_URL: ${OUTBOX_DATABASE_URL:?Configure OUTBOX_DATABASE_URL}
+      RABBITMQ_URL: ${RABBITMQ_URL:?Configure RABBITMQ_URL with host rabbitmq}
+      RABBITMQ_QUEUE: ${RABBITMQ_QUEUE:-canaldigital.notifications}
+      OUTBOX_POLL_INTERVAL_MS: ${OUTBOX_POLL_INTERVAL_MS:-1000}
+
+  notification-worker:
+    <<: *worker
+    command: ['src/notifications.ts']
+    environment:
+      WORKER_HEALTH_PORT: '8081'
+      NOTIFICATION_DATABASE_URL: ${NOTIFICATION_DATABASE_URL:?Configure NOTIFICATION_DATABASE_URL}
+      RABBITMQ_URL: ${RABBITMQ_URL:?Configure RABBITMQ_URL with host rabbitmq}
+      RABBITMQ_QUEUE: ${RABBITMQ_QUEUE:-canaldigital.notifications}
+      SMTP_HOST: ${SMTP_HOST:-smtp-relay.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:?Configure SMTP_FROM_EMAIL}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      NOTIFICATION_LOCALE: ${NOTIFICATION_LOCALE:-es}
 
 volumes:
   rabbitmq-data:
