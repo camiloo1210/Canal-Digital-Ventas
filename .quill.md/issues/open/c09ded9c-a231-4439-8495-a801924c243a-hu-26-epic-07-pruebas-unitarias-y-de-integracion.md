@@ -3,9 +3,9 @@ id: c09ded9c-a231-4439-8495-a801924c243a
 title: "HU-26(EPIC-07): Pruebas Unitarias y de Integración"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-29"
+updated_date: "2026-10-16"
 issue_type: user-story
-status: open
+status: in_progress
 labels:
   - ai-generated
 relations:
@@ -15,7 +15,7 @@ relations:
     id: cb3e6de8-90eb-413c-925f-a722f89536ae
 priority: Must
 story_points: "5"
-integrity_hash: "sha256:1c64a425344527041ea992b075daae275f7574f07ef4b131ccb557d81a9d26cc"
+integrity_hash: "sha256:3074226b5e71b220d5c3ee44f5f953b91fbef862d1daa947cbae532f27f58da8"
 ---
 
 ## Criterios de Aceptación
