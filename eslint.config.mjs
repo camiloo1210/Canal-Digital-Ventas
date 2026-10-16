@@ -29,6 +29,28 @@ const eslintConfig = defineConfig([
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/explicit-function-return-type': 'error',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['./**', '../**', '.', '..'],
+              message: 'Utiliza un alias @/ o el nombre público del paquete; no imports relativos.',
+            },
+          ],
+        },
+      ],
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'ImportExpression[source.value=/^\\./]',
+          message: 'Utiliza un alias @/ o el nombre público del paquete en imports dinámicos.',
+        },
+        {
+          selector: 'CallExpression[callee.name="require"] > Literal.arguments[value=/^\\./]',
+          message: 'Utiliza un alias @/ o el nombre público del paquete; no rutas relativas.',
+        },
+      ],
       'boundaries/dependencies': [
         'error',
         {
@@ -89,7 +111,7 @@ const eslintConfig = defineConfig([
     'apps/web/.next/**',
     'out/**',
     'build/**',
-    'next-env.d.ts',
+    '**/next-env.d.ts',
   ]),
 ]);
 
