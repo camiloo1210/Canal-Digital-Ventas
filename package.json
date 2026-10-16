@@ -3,9 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "lint": "eslint",
+    "lint": "eslint . --max-warnings=0",
     "prepare": "husky",
     "test": "vitest run --passWithNoTests",
+    "worker:outbox": "pnpm --filter @canaldigital/worker start",
+    "worker:notifications": "pnpm --filter @canaldigital/worker notifications",
+    "messaging:up": "docker compose --env-file apps/worker/.env -f compose.rabbitmq.yml up --build -d",
+    "messaging:logs": "docker compose --env-file apps/worker/.env -f compose.rabbitmq.yml logs -f",
+    "messaging:down": "docker compose --env-file apps/worker/.env -f compose.rabbitmq.yml down",
     "commit": "cz"
   },
   "lint-staged": {

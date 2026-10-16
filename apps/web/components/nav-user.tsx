@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -22,6 +23,7 @@ import {
   CreditCardIcon,
   BellIcon,
   LogOutIcon,
+  StoreIcon,
 } from 'lucide-react';
 import { logoutAction } from '@/features/iam/actions/logout.action';
 import { LocaleSwitcher } from '@/components/locale-switcher';
@@ -33,6 +35,7 @@ export function NavUser({
     name: string;
     email: string;
     avatar: string;
+    tenantSlug?: string | null;
   };
 }): React.JSX.Element {
   const { isMobile } = useSidebar();
@@ -88,6 +91,25 @@ export function NavUser({
                 Notifications
               </DropdownMenuItem>
             </DropdownMenuGroup>
+            {user.tenantSlug && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    render={
+                      <Link
+                        href={`/store/${user.tenantSlug}`}
+                        target="_blank"
+                        className="flex w-full items-center gap-2 cursor-pointer"
+                      />
+                    }
+                  >
+                    <StoreIcon className="size-4" />
+                    <span>View Storefront</span>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              </>
+            )}
             <LocaleSwitcher />
             <DropdownMenuSeparator />
             <form action={logoutAction} className="w-full">

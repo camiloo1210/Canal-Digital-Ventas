@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -29,6 +29,7 @@ interface ProductFormFieldsProps {
     price?: number | string;
     cost?: number | string;
     wholesalePrice?: number | string | null;
+    wholesaleMinQuantity?: number | string | null;
     categoryId?: string;
     description?: string;
     stock?: number | string;
@@ -45,25 +46,25 @@ export function ProductFormFields({
 }: ProductFormFieldsProps): React.JSX.Element {
   const t = useTranslations('Products');
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
-  const [clearedFields, setClearedFields] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
-    setClearedFields(new Set());
-  }, [fieldErrors]);
+  const [clearedState, setClearedState] = useState({ rev: fieldErrors, fields: new Set<string>() });
+  if (clearedState.rev !== fieldErrors) {
+    setClearedState({ rev: fieldErrors, fields: new Set() });
+  }
+  const clearedFields = clearedState.fields;
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
-  ) => {
+  ): void => {
     const { name } = e.target;
     if (localErrors[name]) {
       setLocalErrors((prev) => ({ ...prev, [name]: '' }));
     }
     if (!clearedFields.has(name)) {
-      setClearedFields((prev) => new Set(prev).add(name));
+      setClearedState((prev) => ({ ...prev, fields: new Set(prev.fields).add(name) }));
     }
   };
 
-  const handleSkuBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+  const handleSkuBlur = (e: React.FocusEvent<HTMLInputElement>): void => {
     const { value, name } = e.target;
     if (!value.trim()) return;
 
@@ -80,11 +81,11 @@ export function ProductFormFields({
       });
     }
     if (fieldErrors?.[name] && !clearedFields.has(name)) {
-      setClearedFields((prev) => new Set(prev).add(name));
+      setClearedState((prev) => ({ ...prev, fields: new Set(prev.fields).add(name) }));
     }
   };
 
-  const handleMoneyBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+  const handleMoneyBlur = (e: React.FocusEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
     if (!value.trim()) {
       setLocalErrors((prev) => ({ ...prev, [name]: '' }));
@@ -104,7 +105,7 @@ export function ProductFormFields({
     }
   };
 
-  const handleStockBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+  const handleStockBlur = (e: React.FocusEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
     if (!value) {
       setLocalErrors((prev) => ({ ...prev, [name]: '' }));
@@ -120,25 +121,21 @@ export function ProductFormFields({
     }
   };
 
-  const getError = (fieldName: string) => {
+  const getError = (fieldName: string): string | undefined => {
     if (localErrors[fieldName]) return localErrors[fieldName];
     if (!clearedFields.has(fieldName)) return fieldErrors?.[fieldName]?.[0];
     return undefined;
   };
 
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const previewUrlRef = useRef<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(defaultValues?.imageUrl ?? null);
 
-  useEffect(() => {
-    if (!selectedImage) return;
-
-    const url = URL.createObjectURL(selectedImage);
-    setPreviewUrl(url);
-
-    return () => {
-      URL.revokeObjectURL(url);
+  useEffect((): (() => void) => {
+    const url = previewUrlRef.current;
+    return (): void => {
+      if (url) URL.revokeObjectURL(url);
     };
-  }, [selectedImage]);
+  }, []);
 
   return (
     <FieldGroup className="space-y-6">
@@ -319,6 +316,32 @@ export function ProductFormFields({
                 </div>
               )}
             </Field>
+
+            <Field>
+              <FieldLabel htmlFor="wholesaleMinQuantity">
+                {t('form_wholesale_min')}{' '}
+                <span className="text-muted-foreground font-normal ml-1">{t('form_optional')}</span>
+              </FieldLabel>
+              <Input
+                key={`wholesaleMinQuantity-${revision}`}
+                id="wholesaleMinQuantity"
+                name="wholesaleMinQuantity"
+                type="text"
+                inputMode="numeric"
+                pattern="^\d*$"
+                title="Enter minimum quantity"
+                defaultValue={defaultValues?.wholesaleMinQuantity ?? ''}
+                placeholder="10"
+              />
+              {getError('wholesaleMinQuantity') && (
+                <div className="mt-1.5 flex items-start gap-1.5 bg-destructive/10 text-destructive text-[0.8rem] px-2.5 py-1.5 rounded-md font-medium border border-destructive/20 animate-in fade-in slide-in-from-top-1">
+                  <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                  <span className="leading-snug break-words mt-[1px]">
+                    {getError('wholesaleMinQuantity')}
+                  </span>
+                </div>
+              )}
+            </Field>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -381,6 +404,7 @@ export function ProductFormFields({
             <div className="flex items-start gap-6">
               {previewUrl && (
                 <div className="relative w-32 h-32 rounded-md overflow-hidden border border-border shrink-0">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
                 </div>
               )}
@@ -394,9 +418,7 @@ export function ProductFormFields({
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
-                      setSelectedImage(file);
                     } else {
-                      setSelectedImage(null);
                       setPreviewUrl(defaultValues?.imageUrl ?? null);
                     }
                   }}

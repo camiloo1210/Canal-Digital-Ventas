@@ -1,9 +1,9 @@
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { resolveTenantQuery } from '@/features/iam/queries/resolve-tenant.query';
-import { parseStoreFilters, PAGE_SIZE } from '@/features/store/utils/store-filters.parser';
+import { parseStoreFilters } from '@/features/store/utils/store-filters.parser';
 import { getStoreCategoryReadRepository } from '@/features/store/di/store.di';
-import { StoreCategorySidebar } from '@/features/store/components/store-category-sidebar';
+import { StoreCategoryNav } from '@/features/store/components/store-category-nav';
 import { StoreSearchBar } from '@/features/store/components/store-search-bar';
 import { StoreProfileHeader } from '@/features/store/components/store-profile-header';
 import {
@@ -15,7 +15,7 @@ import { getTranslations } from 'next-intl/server';
 export default async function StorePage(props: {
   params: Promise<{ tenantSlug: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
+}): Promise<React.JSX.Element> {
   const params = await props.params;
   const searchParams = await props.searchParams;
 
@@ -32,6 +32,11 @@ export default async function StorePage(props: {
   const categoryRepo = await getStoreCategoryReadRepository();
   const categoriesResult = await categoryRepo.searchActiveByTenantSlug(params.tenantSlug);
 
+  const effectiveCategory =
+    filters.category && categoriesResult.some((category) => category.slug === filters.category)
+      ? filters.category
+      : undefined;
+
   return (
     <div className="flex flex-col min-h-screen">
       <StoreProfileHeader
@@ -42,14 +47,14 @@ export default async function StorePage(props: {
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 w-full flex flex-col">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
-          <StoreSearchBar placeholder={t('searchProducts')} />
-        </div>
+        <div className="flex flex-col gap-4 mb-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between">
+            <StoreSearchBar placeholder={t('searchProducts')} />
+          </div>
 
-        <div className="flex flex-col md:flex-row gap-8 items-start">
-          <StoreCategorySidebar
+          <StoreCategoryNav
             categories={categoriesResult}
-            currentCategorySlug={filters.category}
+            currentCategorySlug={effectiveCategory}
             currentQuery={filters.q}
             labels={{
               categories: t('categories'),
@@ -57,21 +62,21 @@ export default async function StorePage(props: {
               noCategories: t('noCategories'),
             }}
           />
+        </div>
 
-          <div className="flex-1 w-full">
-            <Suspense
-              fallback={<StoreResultsSkeleton />}
-              key={`${filters.q}-${filters.category}-${filters.page}`}
-            >
-              <StoreResultsBoundary
-                tenantSlug={params.tenantSlug}
-                categorySlug={filters.category}
-                q={filters.q}
-                page={filters.page}
-                pageInfoTemplate={t('pageInfo', { current: '{current}', total: '{total}' })}
-              />
-            </Suspense>
-          </div>
+        <div className="flex-1 w-full">
+          <Suspense
+            fallback={<StoreResultsSkeleton />}
+            key={`${filters.q}-${effectiveCategory}-${filters.page}`}
+          >
+            <StoreResultsBoundary
+              tenantSlug={params.tenantSlug}
+              categorySlug={effectiveCategory}
+              q={filters.q}
+              page={filters.page}
+              pageInfoTemplate={t('pageInfo', { current: '{current}', total: '{total}' })}
+            />
+          </Suspense>
         </div>
       </div>
     </div>

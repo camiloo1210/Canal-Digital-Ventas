@@ -58,6 +58,7 @@ describe('RLS Cross-Tenant Security Integration', () => {
       [],
       false,
       Money.from(0),
+      null,
     );
 
     // Bypass RLS to seed data if needed or use TENANT_B context

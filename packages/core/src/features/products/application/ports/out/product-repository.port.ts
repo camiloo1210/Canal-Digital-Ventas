@@ -20,6 +20,20 @@ export interface ProductRepositoryPort {
 
   delete(id: ProductId, tenantId: TenantId, tx?: TransactionContext): Promise<void>;
 
+  decreaseStock(
+    id: ProductId,
+    tenantId: TenantId,
+    quantity: number,
+    tx: TransactionContext,
+  ): Promise<void>;
+
+  increaseStock(
+    id: ProductId,
+    tenantId: TenantId,
+    quantity: number,
+    tx: TransactionContext,
+  ): Promise<void>;
+
   findById(id: ProductId, tenantId: TenantId, tx?: TransactionContext): Promise<Product | null>;
 
   findAll(tenantId: TenantId, pagination?: PaginationOptions): Promise<PaginatedResult<Product>>;

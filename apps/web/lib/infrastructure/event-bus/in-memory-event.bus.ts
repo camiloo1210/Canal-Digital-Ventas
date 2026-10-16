@@ -8,7 +8,7 @@ export class InMemoryEventBus implements EventBusPort {
   async publish(events: DomainEvent[], tx?: TransactionContext): Promise<void>;
   async publish(
     items: (DomainEvent | DomainEventEnvelope)[],
-    tx?: TransactionContext,
+    _tx?: TransactionContext,
   ): Promise<void> {
     this.events.push(...items);
   }

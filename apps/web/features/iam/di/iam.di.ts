@@ -30,7 +30,7 @@ export async function getExchangeOAuthCodeUseCase(): Promise<ExchangeOAuthCodeUs
   return new ExchangeOAuthCodeUseCase(adapter);
 }
 
-export async function getOnboardTenantUseCase() {
+export async function getOnboardTenantUseCase(): Promise<OnboardTenantUseCase> {
   // 1. SAFE CLIENT: Uses cookies, respects Row Level Security (RLS)
   const userClient = await createSupabaseServerClient();
   const tenantRepository = new SupabaseTenantRepository(userClient);
@@ -41,7 +41,7 @@ export async function getOnboardTenantUseCase() {
   return new OnboardTenantUseCase(tenantRepository, userRepository, eventBus);
 }
 
-export async function getRegisterGlobalIdentityUseCase() {
+export async function getRegisterGlobalIdentityUseCase(): Promise<RegisterGlobalIdentityUseCase> {
   const supabaseClient = await createSupabaseServerClient();
   const adapter = new SupabaseAuthAdapter(supabaseClient);
   return new RegisterGlobalIdentityUseCase(adapter);

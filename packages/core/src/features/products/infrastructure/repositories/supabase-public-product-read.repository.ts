@@ -4,9 +4,45 @@ import {
   PublicProductFilters,
 } from '@/products/application/ports/out/public-product-read-repository.port';
 import { PublicProductDetailReadModel } from '@/products/application/read-models/public-product-detail-read.model';
-import { PublicProductReadModel } from '@/products/application/read-models/public-product-read.model';
+import {
+  PublicProductReadModel,
+  PublicStockAvailability,
+} from '@/products/application/read-models/public-product-read.model';
 import { ProductRepositoryException } from '@/products/application/exceptions/product-repository.exception';
 import { PaginatedResult, PaginationOptions } from '@/shared/domain/pagination/pagination';
+
+function toPublicStockAvailability(value: unknown): PublicStockAvailability {
+  switch (value) {
+    case 'AVAILABLE':
+    case 'LOW_STOCK':
+    case 'OUT_OF_STOCK':
+    case 'CHECK_AVAILABILITY':
+      return value;
+    default:
+      throw new ProductRepositoryException(
+        `Invalid public stock availability returned from database: ${value}`,
+      );
+  }
+}
+
+function extractWholesaleRules(
+  price: unknown,
+  minQty: unknown,
+): { price: number | null; minQty: number | null } {
+  if (price === null && minQty === null) {
+    return { price: null, minQty: null };
+  }
+
+  if (typeof price === 'number' && typeof minQty === 'number') {
+    if (price > 0 && minQty >= 1 && Number.isInteger(price) && Number.isInteger(minQty)) {
+      return { price, minQty };
+    }
+  }
+
+  throw new ProductRepositoryException(
+    `Invalid wholesale rules returned from database: price=${price}, minQty=${minQty}`,
+  );
+}
 
 export class SupabasePublicProductReadRepository implements PublicProductReadRepositoryPort {
   constructor(private readonly supabase: SupabaseClient) {}
@@ -49,18 +85,30 @@ export class SupabasePublicProductReadRepository implements PublicProductReadRep
         image_url: string | null;
         has_variants: boolean;
         in_stock: boolean;
+        availability_status: unknown;
         total_count?: number;
-      }) => ({
-        id: row.id,
-        name: row.name,
-        priceCents: row.price_cents,
-        description: row.description,
-        categoryId: row.category_id,
-        sku: row.sku,
-        imageUrl: row.image_url,
-        hasVariants: row.has_variants,
-        inStock: row.in_stock,
-      }),
+        wholesale_price_cents: unknown;
+        wholesale_min_quantity: unknown;
+      }) => {
+        const wholesale = extractWholesaleRules(
+          row.wholesale_price_cents,
+          row.wholesale_min_quantity,
+        );
+        return {
+          id: row.id,
+          name: row.name,
+          priceCents: row.price_cents,
+          description: row.description || '',
+          categoryId: row.category_id,
+          sku: row.sku || '',
+          imageUrl: row.image_url,
+          hasVariants: row.has_variants,
+          inStock: row.in_stock,
+          stockAvailability: toPublicStockAvailability(row.availability_status),
+          wholesalePriceCents: wholesale.price,
+          wholesaleMinQuantity: wholesale.minQty,
+        };
+      },
     );
 
     const totalItems = data && data.length > 0 ? Number(data[0].total_count) : 0;
@@ -94,6 +142,7 @@ export class SupabasePublicProductReadRepository implements PublicProductReadRep
     }
 
     const row = data[0];
+    const wholesale = extractWholesaleRules(row.wholesale_price_cents, row.wholesale_min_quantity);
 
     return {
       id: row.id,
@@ -105,6 +154,9 @@ export class SupabasePublicProductReadRepository implements PublicProductReadRep
       imageUrl: row.image_url || null,
       hasVariants: row.has_variants,
       inStock: row.in_stock,
+      stockAvailability: toPublicStockAvailability(row.availability_status),
+      wholesalePriceCents: wholesale.price,
+      wholesaleMinQuantity: wholesale.minQty,
     };
   }
 }

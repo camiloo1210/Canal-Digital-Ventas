@@ -4,4 +4,5 @@ export interface ChangeProductPricingDto {
   price: number;
   cost: number;
   wholesalePrice?: number | null;
+  wholesaleMinQuantity?: number | null;
 }

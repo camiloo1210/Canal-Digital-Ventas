@@ -47,7 +47,13 @@ export default async function StoreLayout({
     logout: t('logout'),
     dashboard: t('dashboard'),
     settings: t('settings'),
-    back: t('back', { fallback: 'Back' }),
+    backToHome: t('backToHome'),
+    backToStore: t('backToStore'),
+    cartTitle: t('cartTitle', { fallback: 'Shopping Cart' }),
+    cartEmpty: t('cartEmpty', { fallback: 'Your cart is empty' }),
+    cartCheckout: t('cartCheckout', { fallback: 'Proceed to Checkout' }),
+    cartSubtotal: t('cartSubtotal', { fallback: 'Subtotal' }),
+    cartTaxesNote: t('cartTaxesNote', { fallback: '*Taxes and shipping calculated at checkout' }),
   };
 
   return (

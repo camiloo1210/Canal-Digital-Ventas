@@ -1,0 +1,6 @@
+# Optional development access. Do not include this override in Coolify.
+services:
+  rabbitmq:
+    ports:
+      - '127.0.0.1:${RABBITMQ_AMQP_PORT:-5673}:5672'
+      - '127.0.0.1:${RABBITMQ_MANAGEMENT_PORT:-15673}:15672'

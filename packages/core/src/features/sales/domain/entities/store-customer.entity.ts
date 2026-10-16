@@ -6,11 +6,17 @@ import { InvalidStoreCustomerAttributeException } from '@/sales/domain/exception
 import { InvalidTenantIdException } from '@/shared/domain/exceptions/invalid-tenant-id.exception';
 import { DomainEvent } from '@/shared/domain/events/domain-event.interface';
 import { StoreCustomerCreatedEvent } from '@/sales/domain/events/store-customer-created.event';
+import { Address } from '@/shared/domain/value-objects/adress.vo';
 
 export interface StoreCustomerProps {
   id: StoreCustomerId;
   tenantId: TenantId;
   globalAuthId: GlobalAuthId;
+  name: string;
+  email: string;
+  phone: string;
+  documentId: string;
+  address: Address;
   status: StoreCustomerStatus;
   createdAt: Date;
   updatedAt: Date;
@@ -24,6 +30,11 @@ export class StoreCustomer {
     private readonly id: StoreCustomerId,
     private readonly tenantId: TenantId,
     private readonly globalAuthId: GlobalAuthId,
+    private name: string,
+    private email: string,
+    private phone: string,
+    private documentId: string,
+    private address: Address,
     private status: StoreCustomerStatus,
     private readonly createdAt: Date,
     private updatedAt: Date,
@@ -34,6 +45,11 @@ export class StoreCustomer {
     id: StoreCustomerId,
     tenantId: TenantId,
     globalAuthId: GlobalAuthId,
+    name: string,
+    email: string,
+    phone: string,
+    documentId: string,
+    address: Address,
   ): StoreCustomer {
     StoreCustomer.validateId(id);
     StoreCustomer.validateTenantId(tenantId);
@@ -43,6 +59,11 @@ export class StoreCustomer {
       id,
       tenantId,
       globalAuthId,
+      name,
+      email,
+      phone,
+      documentId,
+      address,
       StoreCustomerStatus.ACTIVE,
       new Date(),
       new Date(),
@@ -100,6 +121,11 @@ export class StoreCustomer {
       props.id,
       props.tenantId,
       props.globalAuthId,
+      props.name,
+      props.email,
+      props.phone,
+      props.documentId,
+      props.address,
       props.status,
       props.createdAt,
       props.updatedAt,
@@ -134,6 +160,26 @@ export class StoreCustomer {
 
   public getGlobalAuthId(): GlobalAuthId {
     return this.globalAuthId;
+  }
+
+  public getName(): string {
+    return this.name;
+  }
+
+  public getEmail(): string {
+    return this.email;
+  }
+
+  public getPhone(): string {
+    return this.phone;
+  }
+
+  public getDocumentId(): string {
+    return this.documentId;
+  }
+
+  public getAddress(): Address {
+    return this.address;
   }
 
   public getStatus(): StoreCustomerStatus {

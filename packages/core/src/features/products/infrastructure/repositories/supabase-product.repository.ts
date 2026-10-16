@@ -153,4 +153,16 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
       'SupabaseProductRepository is read-only. Use PostgresProductRepository for writes.',
     );
   }
+
+  async decreaseStock(): Promise<void> {
+    throw new ProductRepositoryException(
+      'SupabaseProductRepository is read-only. Use PostgresProductRepository for writes.',
+    );
+  }
+
+  async increaseStock(): Promise<void> {
+    throw new ProductRepositoryException(
+      'SupabaseProductRepository is read-only. Use PostgresProductRepository for writes.',
+    );
+  }
 }

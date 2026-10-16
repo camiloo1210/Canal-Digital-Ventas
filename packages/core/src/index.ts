@@ -157,7 +157,10 @@ export { createTenantId } from '@/shared/domain/types/tenant-id.type';
 export { createCategoryId } from '@/products/domain/types/category-id.type';
 export type { PublicCategoryReadModel } from '@/categories/application/read-models/public-category-read.model';
 export type { PublicCategoryReadRepositoryPort } from '@/categories/application/ports/out/public-category-read-repository.port';
-export type { PublicProductReadModel } from '@/products/application/read-models/public-product-read.model';
+export type {
+  PublicProductReadModel,
+  PublicStockAvailability,
+} from '@/products/application/read-models/public-product-read.model';
 export type {
   PublicProductFilters,
   PublicProductReadRepositoryPort,
@@ -175,3 +178,74 @@ export { SupabasePublicTenantReadAdapter } from '@/tenants/infrastructure/reposi
 export * from '@/tenants/application/read-models/public-tenant-directory-item.model';
 export * from '@/tenants/application/ports/out/public-tenant-directory-read-repository.port';
 export * from '@/tenants/infrastructure/repositories/supabase-public-tenant-directory-read.adapter';
+
+// ==========================================
+// ORDERS EXPORTS
+// ==========================================
+export { GenerateCommercialOrderUseCase } from '@/orders/application/use-cases/generate-commercial-order.use-case';
+export type { GenerateCommercialOrderDto } from '@/orders/application/dtos/generate-commercial-order.dto';
+export { CancelOrderUseCase } from '@/orders/application/use-cases/cancel-order.use-case';
+export type { CancelOrderDto } from '@/orders/application/dtos/cancel-order.dto';
+export { OrderNotFoundException } from '@/orders/application/exceptions/order-not-found.exception';
+export { InvalidOrderStateException } from '@/orders/domain/exceptions/invalid-order-state.exception';
+export { PostgresOrderRepository } from '@/orders/infrastructure/repositories/postgres-order.repository';
+export { PostgresOrderPaymentCoordinationAdapter } from '@/orders/infrastructure/repositories/postgres-order-payment-coordination.adapter';
+export { PostgresOrderTenantRepository } from '@/orders/infrastructure/repositories/postgres-order-tenant.repository';
+export { TenantNotAvailableException } from '@/orders/application/exceptions/tenant-not-available.exception';
+export { PostgresStoreCustomerRepository } from '@/sales/infrastructure/repositories/postgres-store-customer.repository';
+export * from '@/sales/application/ports/out/store-customer-repository.port';
+
+// Buyer Orders CQRS-Lite Read Models & Repositories
+export type {
+  BuyerOrderReadModel,
+  BuyerOrderItemReadModel,
+} from '@/orders/application/read-models/buyer-order.read-model';
+export type { BuyerOrderReadRepositoryPort } from '@/orders/application/ports/out/buyer-order-read-repository.port';
+export { PostgresBuyerOrderReadRepository } from '@/orders/infrastructure/repositories/postgres-buyer-order-read.repository';
+export { ORDER_AGGREGATE_TYPE } from '@/orders/application/outbox/order-aggregate.constants';
+
+export * from '@/products/application/exceptions/product-out-of-stock.exception';
+export * from '@/products/application/exceptions/product-unavailable.exception';
+
+// Reliable integration messaging (driven by apps/worker, never by web requests).
+export type {
+  IntegrationEvent,
+  IntegrationEventPublisherPort,
+} from '@/shared/application/ports/out/integration-event-publisher.port';
+export type { RelayOutboxPort } from '@/shared/application/ports/out/relay-outbox.port';
+export { RelayOutboxUseCase } from '@/shared/application/use-cases/relay-outbox.use-case';
+export { MessagingException } from '@/shared/application/exceptions/messaging.exception';
+export { OutboxRelayException } from '@/shared/application/exceptions/outbox-relay.exception';
+export { PostgresRelayOutboxAdapter } from '@/shared/infrastructure/adapters/postgres-relay-outbox.adapter';
+export { RabbitMqEventPublisherAdapter } from '@/shared/infrastructure/adapters/rabbitmq-event-publisher.adapter';
+export { loadMessagingWorkerConfig } from '@/shared/infrastructure/messaging/messaging-worker-config';
+export type { MessagingWorkerConfig } from '@/shared/infrastructure/messaging/messaging-worker-config';
+export { runOutboxWorker } from '@/shared/infrastructure/messaging/outbox-worker';
+export { ORDER_NOTIFICATION_EVENT_TYPES } from '@/notifications/application/notification-events';
+export { loadSmtpConfig } from '@/notifications/infrastructure/smtp-config';
+export { runNotificationWorker } from '@/notifications/infrastructure/notification-worker';
+
+// Payment delivery adapters. Financial authority remains in core and restricted RPCs.
+export { StartPaymentCheckoutUseCase } from '@/payments/application/use-cases/start-payment-checkout.use-case';
+export { IngestPaymentWebhookUseCase } from '@/payments/application/use-cases/ingest-payment-webhook.use-case';
+export { PaymentCheckoutException } from '@/payments/application/exceptions/payment-checkout.exception';
+export { LemonSqueezyCheckoutAdapter } from '@/payments/infrastructure/adapters/lemon-squeezy-checkout.adapter';
+export { PostgresPaymentCheckoutRepository } from '@/payments/infrastructure/adapters/postgres-payment-checkout.repository';
+export { PostgresPaymentWebhookInboxAdapter } from '@/payments/infrastructure/adapters/postgres-payment-webhook-inbox.adapter';
+export type { PaymentEnvironment } from '@/payments/application/ports/out/provider-checkout.port';
+export type { StartPaymentCheckoutResult } from '@/payments/application/use-cases/start-payment-checkout.use-case';
+export { ProcessPaymentInboxUseCase } from '@/payments/application/use-cases/process-payment-inbox.use-case';
+export { loadPaymentWorkerConfig } from '@/payments/infrastructure/payment-worker-config';
+export { runPaymentInboxWorker } from '@/payments/infrastructure/payment-inbox-worker';
+export {
+  runPaymentOrderWorker,
+  PAYMENT_ORDER_EVENT_TYPES,
+} from '@/orders/infrastructure/payment-order-worker';
+export {
+  runPaymentRefundDispatchWorker,
+  runPaymentReconciliationWorker,
+} from '@/payments/infrastructure/payment-refund-workers';
+export {
+  runPaymentEvidenceWorker,
+  runPaymentRetentionWorker,
+} from '@/payments/infrastructure/payment-evidence-worker';

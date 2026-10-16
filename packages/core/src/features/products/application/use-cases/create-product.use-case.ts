@@ -54,6 +54,7 @@ export class CreateProductUseCase {
           [], // variants
           dto.isVatExempt,
           wholesalePrice,
+          dto.wholesaleMinQuantity !== undefined ? dto.wholesaleMinQuantity : null,
         );
 
         if (imageUrl) {

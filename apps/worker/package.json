@@ -1,0 +1,24 @@
+{
+  "name": "@canaldigital/worker",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.9.0"
+  },
+  "scripts": {
+    "start": "tsx --tsconfig tsconfig.json src/main.ts",
+    "notifications": "tsx --tsconfig tsconfig.json src/notifications.ts",
+    "payments": "tsx --tsconfig tsconfig.json src/payments.ts",
+    "payment-orders": "tsx --tsconfig tsconfig.json src/payment-orders.ts",
+    "payment-relay": "tsx --tsconfig tsconfig.json src/payment-relay.ts",
+    "payment-dispatch": "tsx --tsconfig tsconfig.json src/payment-dispatch.ts",
+    "payment-reconciliation": "tsx --tsconfig tsconfig.json src/payment-reconciliation.ts",
+    "payment-egress": "tsx --tsconfig tsconfig.json src/payment-egress.ts",
+    "payment-retention": "tsx --tsconfig tsconfig.json src/payment-retention.ts",
+    "check": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@canaldigital/packages/core": "workspace:*",
+    "tsx": "^4.23.15"
+  }
+}

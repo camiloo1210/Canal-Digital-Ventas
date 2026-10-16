@@ -21,7 +21,7 @@ import { toast } from '@/components/ui/toast';
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 
-function SubmitButton() {
+function SubmitButton(): React.JSX.Element {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" disabled={pending}>
@@ -34,7 +34,7 @@ export function LoginForm({
   className,
   message,
   ...props
-}: React.ComponentProps<'form'> & { message?: string }) {
+}: React.ComponentProps<'form'> & { message?: string }): React.JSX.Element {
   const initialState: ActionState = { error: null, success: false };
   const [state, formAction] = useActionState(loginWithEmailAction, initialState);
 

@@ -7,6 +7,7 @@ export interface UpdateProductDto {
   price: number;
   cost: number;
   wholesalePrice: number | null;
+  wholesaleMinQuantity: number | null;
   categoryId: string;
   description?: string;
   stock?: number;

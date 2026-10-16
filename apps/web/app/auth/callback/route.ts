@@ -9,7 +9,7 @@ const oauthQuerySchema = z.object({
   code: z.string().min(1, 'Authorization code is missing'),
 });
 
-export async function GET(request: Request) {
+export async function GET(request: Request): Promise<NextResponse> {
   const requestUrl = new URL(request.url);
   const codeParam = requestUrl.searchParams.get('code');
 

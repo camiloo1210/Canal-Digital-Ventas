@@ -12,9 +12,16 @@ export interface OrderFilters {
 }
 
 export interface OrderRepositoryPort {
-  save(order: Order): Promise<void>;
+  save(
+    order: Order,
+    tx?: import('@/shared/application/ports/out/transaction-manager.port').TransactionContext,
+  ): Promise<void>;
 
-  findById(id: OrderId, tenantId: TenantId): Promise<Order | null>;
+  findById(
+    id: OrderId,
+    tenantId?: TenantId,
+    tx?: import('@/shared/application/ports/out/transaction-manager.port').TransactionContext,
+  ): Promise<Order | null>;
 
   findPendingByCustomerId(customerId: CustomerId, tenantId: TenantId): Promise<Order | null>;
 

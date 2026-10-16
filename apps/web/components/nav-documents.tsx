@@ -26,7 +26,7 @@ export function NavDocuments({
     url: string;
     icon: React.ReactNode;
   }[];
-}) {
+}): React.JSX.Element {
   const { isMobile } = useSidebar();
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">

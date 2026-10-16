@@ -42,5 +42,7 @@ next-env.d.ts
 
 # General 
 .env.local
+.local/
 .quill.md/
 .next
+docs

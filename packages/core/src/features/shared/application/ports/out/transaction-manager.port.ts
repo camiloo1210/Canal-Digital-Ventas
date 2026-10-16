@@ -20,6 +20,6 @@ export interface TransactionManagerPort {
    */
   runInTransaction<T>(
     operation: (tx: TransactionContext) => Promise<T>,
-    options: { userId: string },
+    options: { userId: string; tenantId?: string },
   ): Promise<T>;
 }

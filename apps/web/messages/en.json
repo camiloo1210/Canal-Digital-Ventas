@@ -37,6 +37,7 @@
     "form_price": "Price ($)",
     "form_cost": "Cost ($)",
     "form_wholesale": "Wholesale Price ($)",
+    "form_wholesale_min": "Wholesale Min Quantity",
     "form_optional": "(Optional)",
     "form_stock": "Initial Stock",
     "form_category": "Category",
@@ -123,8 +124,13 @@
     "allProducts": "All Products",
     "noCategories": "No categories available.",
     "searchProducts": "Search products...",
+    "emptyStateTitle": "No products found",
+    "emptyStateDesc": "Try adjusting your category or search filters.",
+    "wholesaleBadge": "Wholesale",
+    "wholesaleMin": "Min",
     "pageInfo": "Page {current} of {total}",
     "backToStore": "Back to store",
+    "backToHome": "Back to home",
     "noImage": "No image",
     "sku": "SKU",
     "noDescription": "No description available.",
@@ -132,7 +138,50 @@
     "outOfStock": "Out of Stock",
     "aboutThisProduct": "About this product",
     "availability": "Availability",
-    "back": "Back"
+    "back": "Back",
+    "stock": {
+      "available": "Available",
+      "lowStock": "Low Stock",
+      "outOfStock": "Out of Stock",
+      "checkAvailability": "Check availability"
+    },
+    "cartTitle": "Shopping Cart",
+    "cartEmpty": "Your cart is empty",
+    "cartCheckout": "Proceed to Checkout",
+    "cartSubtotal": "Subtotal",
+    "cartAdd": "Add to Cart",
+    "cartOutOfStock": "Out of Stock",
+    "cartDifferentStoreTitle": "Different Store",
+    "cartDifferentStoreDesc": "Your cart contains items from another store.",
+    "cartCancel": "Cancel",
+    "cartClearAndContinue": "Clear Cart & Continue",
+    "checkout": {
+      "pageTitle": "Checkout",
+      "billingInfo": "Billing Information",
+      "billingInfoDesc": "Your digital receipt will be sent to this email.",
+      "orderSummary": "Order Summary",
+      "items": "{count} items",
+      "subtotal": "Subtotal",
+      "totalsWarning": "* Final pricing and availability are confirmed by the server.",
+      "processing": "Processing...",
+      "submit": "Confirm Order",
+      "successTitle": "Order Confirmed!",
+      "successMessage": "Your commercial order has been placed successfully.",
+      "continueShopping": "Continue Shopping",
+      "errorTitle": "Checkout Failed",
+      "genericError": "An unexpected error occurred. Please try again.",
+      "customerDetails": "Customer Details",
+      "shippingDetails": "Shipping Details"
+    },
+    "checkoutErrors": {
+      "outOfStock": "One or more items in your cart are out of stock.",
+      "productUnavailable": "One or more items in your cart are unavailable.",
+      "invalidCart": "Your cart is invalid. Please refresh the page.",
+      "unauthorized": "You must be logged in to complete checkout.",
+      "tenantNotFound": "The store you are trying to buy from is unavailable.",
+      "unexpected": "An unexpected error occurred processing your order."
+    },
+    "cartTaxesNote": "*Taxes and shipping calculated at checkout"
   },
   "BuyerDashboard": {
     "title": "Buyer Dashboard",
@@ -142,5 +191,82 @@
     "recent_purchases": "Recent Purchases",
     "recent_purchases_desc": "Here you can see all orders placed across any tenant store.",
     "empty_purchases": "You haven't made any purchases yet."
+  },
+  "Orders": {
+    "actions": {
+      "unauthorized": "You must be signed in to cancel an order.",
+      "invalidInput": "Invalid order identifier.",
+      "cancelSuccess": "The order was cancelled successfully and inventory was restored.",
+      "orderNotFound": "The order could not be found or you are not authorized to access it.",
+      "invalidOrderState": "The order cannot be cancelled in its current state.",
+      "concurrencyError": "The order was updated concurrently. Please refresh the page and try again.",
+      "unexpectedError": "An unexpected error occurred while attempting to cancel the order."
+    },
+    "status": {
+      "confirmed": "Confirmed",
+      "processing": "Processing",
+      "paid": "Paid",
+      "shipped": "Shipped",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
+    },
+    "dialog": {
+      "trigger": "Cancel Order",
+      "title": "Cancel Order",
+      "description": "Are you sure you want to cancel order {orderNumber}? This will return items to store inventory and permanently void the order.",
+      "confirmButton": "Yes, Cancel Order",
+      "cancelButton": "Keep Order",
+      "cancelling": "Cancelling order...",
+      "success": "Order cancelled successfully"
+    },
+    "card": {
+      "order": "Order",
+      "store": "Store",
+      "date": "Date",
+      "items": "Items",
+      "quantity": "qty",
+      "subtotal": "Subtotal",
+      "tax": "Tax",
+      "shipping": "Shipping",
+      "total": "Total",
+      "paidNotice": "Paid order. For accounting security reasons, please contact the store to arrange cancellations or refunds.",
+      "inTransitNotice": "The order is already in transit or has been delivered."
+    }
+  },
+  "Payments": {
+    "payOrder": "Pay for order",
+    "openingCheckout": "Opening checkout…",
+    "alreadyPaid": "Payment for this order has already been confirmed.",
+    "UNAUTHORIZED": "Sign in to pay for this order.",
+    "INVALID_INPUT": "The order could not be identified.",
+    "BUSY": "Your payment is being prepared. Try again in a few seconds.",
+    "CREATION_UNAVAILABLE": "We could not confirm whether checkout opened. Do not create another attempt while this order is reconciled.",
+    "CHECKOUT_REJECTED": "Checkout could not be opened. You can try again.",
+    "NOT_FOUND": "We could not find an available order for your account.",
+    "NOT_CONFIGURED": "Online payments are not available yet.",
+    "DISABLED": "Online payments are temporarily disabled.",
+    "UNEXPECTED": "We could not start payment. Your order is saved. Try again later."
+  },
+  "Notifications": {
+    "merchant": {
+      "subjects": {
+        "new_order": "New order in your store: {orderNumber}",
+        "paid": "Payment received in your store: {orderNumber}",
+        "cancelled": "Order cancelled in your store: {orderNumber}",
+        "low_stock": "Low stock in {tenantName}"
+      },
+      "body": "{tenantName}: {status}. Order: {orderNumber}. Check the details in your business dashboard.",
+      "stockLine": "{name} (SKU: {sku}): {stock} units available."
+    },
+    "email": {
+      "subjects": {
+        "processing": "Order being prepared: {orderNumber}",
+        "confirmed": "Purchase confirmed: order {orderNumber}",
+        "shipped": "Order shipped: {orderNumber}",
+        "cancelled": "Purchase cancelled: order {orderNumber}",
+        "paid": "Payment received: order {orderNumber}"
+      },
+      "body": "{tenantName}: {status}. You can view your order details in your account."
+    }
   }
 }

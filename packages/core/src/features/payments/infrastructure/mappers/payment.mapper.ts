@@ -3,7 +3,8 @@ import { PaymentId } from '@/payments/domain/types/payment-id.type';
 import { OrderId } from '@/payments/domain/types/order-id.type';
 import { CustomerId } from '@/payments/domain/types/customer-id.type';
 import { TenantId } from '@/shared/domain/types/tenant-id.type';
-import { PaymentStatus } from '@/payments/domain/enums/payment-status.enum';
+import { resolvePaymentStatus } from '@/payments/domain/enums/payment-status.enum';
+import { UnpersistablePaymentStatusException } from '@/payments/domain/exceptions/unpersistable-payment-status.exception';
 import { PaymentGateway } from '@/payments/domain/enums/payment-gateway.enum';
 import { Money } from '@/shared/domain/value-objects/money.vo';
 import { Currency } from '@/shared/domain/enums/currency.enum';
@@ -16,7 +17,8 @@ export class PaymentMapper {
       orderId: row.order_id as OrderId,
       tenantId: row.tenant_id as TenantId,
       customerId: row.customer_id as CustomerId,
-      status: row.status as PaymentStatus,
+      status: resolvePaymentStatus(row.status),
+      rawStatus: row.status,
       gateway: row.gateway as PaymentGateway,
       amount: Money.from(row.amount_cents, Currency.USD),
       gatewayTransactionId: row.gateway_transaction_id,
@@ -30,6 +32,10 @@ export class PaymentMapper {
   }
 
   static toPersistence(entity: Payment): DbPaymentRow {
+    if (entity.isReadOnly()) {
+      throw new UnpersistablePaymentStatusException(entity.getRawStatus());
+    }
+
     return {
       id: entity.getId(),
       order_id: entity.getOrderId(),

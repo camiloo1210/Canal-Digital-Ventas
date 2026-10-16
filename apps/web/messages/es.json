@@ -48,6 +48,7 @@
     "form_price": "Precio ($)",
     "form_cost": "Costo ($)",
     "form_wholesale": "Precio Mayorista ($)",
+    "form_wholesale_min": "Cantidad Mínima Mayorista",
     "form_optional": "(Opcional)",
     "form_stock": "Stock Inicial",
     "form_category": "Categoría",
@@ -125,8 +126,13 @@
     "allProducts": "Todos los productos",
     "noCategories": "No hay categorías disponibles.",
     "searchProducts": "Buscar productos...",
+    "emptyStateTitle": "No se encontraron productos",
+    "emptyStateDesc": "Intenta ajustar tu categoría o filtros de búsqueda.",
+    "wholesaleBadge": "Mayorista",
+    "wholesaleMin": "Mín",
     "pageInfo": "Página {current} de {total}",
     "backToStore": "Volver a la tienda",
+    "backToHome": "Volver al inicio",
     "noImage": "Sin imagen",
     "sku": "SKU",
     "noDescription": "No hay descripción disponible.",
@@ -134,7 +140,50 @@
     "outOfStock": "Agotado",
     "aboutThisProduct": "Acerca de este producto",
     "availability": "Disponibilidad",
-    "back": "Volver atrás"
+    "back": "Volver atrás",
+    "stock": {
+      "available": "Disponible",
+      "lowStock": "Pocas unidades",
+      "outOfStock": "Agotado",
+      "checkAvailability": "Consultar disponibilidad"
+    },
+    "cartTitle": "Carrito de Compras",
+    "cartEmpty": "Tu carrito está vacío",
+    "cartCheckout": "Proceder al Pago",
+    "cartSubtotal": "Subtotal",
+    "cartAdd": "Añadir al Carrito",
+    "cartOutOfStock": "Agotado",
+    "cartDifferentStoreTitle": "Tienda Diferente",
+    "cartDifferentStoreDesc": "Tu carrito actual contiene productos de otra tienda.",
+    "cartCancel": "Cancelar",
+    "cartClearAndContinue": "Vaciar y Continuar",
+    "checkout": {
+      "pageTitle": "Checkout",
+      "billingInfo": "Información de Facturación",
+      "billingInfoDesc": "Tu recibo digital será enviado a este correo.",
+      "orderSummary": "Resumen del Pedido",
+      "items": "{count} artículos",
+      "subtotal": "Subtotal",
+      "totalsWarning": "* El precio final y la disponibilidad son confirmados por el servidor.",
+      "processing": "Procesando...",
+      "submit": "Confirmar Pedido",
+      "successTitle": "¡Pedido Confirmado!",
+      "successMessage": "Tu orden comercial ha sido registrada exitosamente.",
+      "continueShopping": "Continuar Comprando",
+      "errorTitle": "Fallo en Checkout",
+      "genericError": "Ocurrió un error inesperado. Por favor, intenta de nuevo.",
+      "customerDetails": "Datos del Cliente",
+      "shippingDetails": "Datos de Envío"
+    },
+    "checkoutErrors": {
+      "outOfStock": "Uno o más productos en tu carrito están agotados.",
+      "productUnavailable": "Uno o más productos en tu carrito no están disponibles.",
+      "invalidCart": "Tu carrito es inválido. Por favor, recarga la página.",
+      "unauthorized": "Debes iniciar sesión para completar la compra.",
+      "tenantNotFound": "La tienda de la cual intentas comprar no está disponible.",
+      "unexpected": "Ocurrió un error inesperado procesando tu pedido."
+    },
+    "cartTaxesNote": "*Impuestos y envío calculados al finalizar la compra"
   },
   "BuyerDashboard": {
     "title": "Panel de Comprador",
@@ -144,5 +193,82 @@
     "recent_purchases": "Compras Recientes",
     "recent_purchases_desc": "Aquí puedes ver todos los pedidos realizados en cualquier tienda.",
     "empty_purchases": "Aún no has realizado ninguna compra."
+  },
+  "Orders": {
+    "actions": {
+      "unauthorized": "Debes iniciar sesión para cancelar un pedido.",
+      "invalidInput": "Identificador de pedido inválido.",
+      "cancelSuccess": "El pedido ha sido cancelado exitosamente y el inventario restituido.",
+      "orderNotFound": "No se encontró el pedido o no tienes autorización para acceder a él.",
+      "invalidOrderState": "El pedido no se encuentra en un estado que permita su cancelación.",
+      "concurrencyError": "El pedido fue modificado concurrentemente. Por favor, recarga la página e intenta de nuevo.",
+      "unexpectedError": "Ocurrió un error inesperado al intentar cancelar el pedido."
+    },
+    "status": {
+      "confirmed": "Confirmado",
+      "processing": "En Proceso",
+      "paid": "Pagado",
+      "shipped": "Enviado",
+      "delivered": "Entregado",
+      "cancelled": "Cancelado"
+    },
+    "dialog": {
+      "trigger": "Cancelar Pedido",
+      "title": "Cancelar Pedido",
+      "description": "¿Estás seguro de que deseas cancelar el pedido {orderNumber}? Esta acción devolverá los productos al inventario del comercio y anulará la orden definitivamente.",
+      "confirmButton": "Sí, Cancelar Pedido",
+      "cancelButton": "Mantener Pedido",
+      "cancelling": "Cancelando pedido...",
+      "success": "Pedido cancelado con éxito"
+    },
+    "card": {
+      "order": "Pedido",
+      "store": "Tienda",
+      "date": "Fecha",
+      "items": "Productos",
+      "quantity": "cant.",
+      "subtotal": "Subtotal",
+      "tax": "Impuestos",
+      "shipping": "Envío",
+      "total": "Total",
+      "paidNotice": "Pedido pagado. Por razones de seguridad contable, contacta a la tienda para tramitar cancelaciones o devoluciones.",
+      "inTransitNotice": "El pedido ya está en camino o ha sido entregado."
+    }
+  },
+  "Payments": {
+    "payOrder": "Pagar pedido",
+    "openingCheckout": "Abriendo pago…",
+    "alreadyPaid": "El pago de este pedido ya fue confirmado.",
+    "UNAUTHORIZED": "Inicia sesión para pagar este pedido.",
+    "INVALID_INPUT": "No se pudo identificar el pedido.",
+    "BUSY": "El pago se está preparando. Inténtalo de nuevo en unos segundos.",
+    "CREATION_UNAVAILABLE": "No pudimos confirmar la apertura del pago. No crees otro intento mientras conciliamos este pedido.",
+    "CHECKOUT_REJECTED": "No se pudo abrir el pago. Puedes intentarlo de nuevo.",
+    "NOT_FOUND": "No encontramos un pedido disponible para tu cuenta.",
+    "NOT_CONFIGURED": "Los pagos en línea aún no están disponibles.",
+    "DISABLED": "Los pagos en línea están temporalmente desactivados.",
+    "UNEXPECTED": "No pudimos iniciar el pago. Tu pedido se conserva. Inténtalo de nuevo más tarde."
+  },
+  "Notifications": {
+    "merchant": {
+      "subjects": {
+        "new_order": "Nuevo pedido en tu tienda: {orderNumber}",
+        "paid": "Pago recibido en tu tienda: {orderNumber}",
+        "cancelled": "Pedido cancelado en tu tienda: {orderNumber}",
+        "low_stock": "Poco stock en {tenantName}"
+      },
+      "body": "{tenantName}: {status}. Pedido: {orderNumber}. Consulta los detalles en el panel de tu negocio.",
+      "stockLine": "{name} (SKU: {sku}): {stock} unidades disponibles."
+    },
+    "email": {
+      "subjects": {
+        "processing": "Pedido en preparación: {orderNumber}",
+        "confirmed": "Compra confirmada: pedido {orderNumber}",
+        "shipped": "Pedido enviado: {orderNumber}",
+        "cancelled": "Compra cancelada: pedido {orderNumber}",
+        "paid": "Pago recibido: pedido {orderNumber}"
+      },
+      "body": "{tenantName}: {status}. Puedes consultar los detalles de tu pedido en tu cuenta."
+    }
   }
 }
