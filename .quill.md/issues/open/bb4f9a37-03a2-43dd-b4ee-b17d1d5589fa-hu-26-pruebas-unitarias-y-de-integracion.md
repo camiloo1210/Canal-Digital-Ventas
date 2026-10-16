@@ -3,9 +3,9 @@ id: bb4f9a37-03a2-43dd-b4ee-b17d1d5589fa
 title: "HU-26: Pruebas Unitarias y de Integración"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-29"
+updated_date: "2026-10-16"
 issue_type: user-story
-status: open
+status: in_progress
 labels:
   - ai-generated
 relations:
@@ -15,7 +15,7 @@ relations:
     id: cb3e6de8-90eb-413c-925f-a722f89536ae
 priority: Must
 story_points: "5"
-integrity_hash: "sha256:2961cab0366a426820ad3ac22dee39f138db2acdcf684708f08a83ed9458d5b4"
+integrity_hash: "sha256:b30f7b5216586c2aa4e25a4aceef06d866d248159a8b691877d5816fc22a4f29"
 ---
 
 ## Criterios de Aceptación
