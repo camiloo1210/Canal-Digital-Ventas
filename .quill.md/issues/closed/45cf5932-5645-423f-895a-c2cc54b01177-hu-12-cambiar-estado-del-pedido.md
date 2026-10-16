@@ -3,9 +3,9 @@ id: 45cf5932-5645-423f-895a-c2cc54b01177
 title: "HU-12: Cambiar Estado del Pedido"
 author: AI Agent (MCP)
 creation_date: "2026-07-29"
-updated_date: "2026-07-29"
+updated_date: "2026-10-16"
 issue_type: user-story
-status: open
+status: done
 labels:
   - ai-generated
 relations:
@@ -17,7 +17,7 @@ relations:
     id: 8a3bb7ac-f7f7-4816-b696-270bbcb5b1f9
 priority: Must
 story_points: "3"
-integrity_hash: "sha256:c954d147ae560c3794df535101357f28851a904b2a634d1528383af78a38ee53"
+integrity_hash: "sha256:4d8346db2aafdc24aec8406f2956ada232bb26e7d2d95dc73ab073eda823c0de"
 ---
 
 ## Criterios de Aceptación
