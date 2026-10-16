@@ -23,6 +23,40 @@ export class PostgresOrderRepository implements OrderRepositoryPort {
     private readonly sql?: postgres.Sql<Record<string, unknown>>,
   ) {}
 
+  public async findByIdForUpdate(
+    id: OrderId,
+    tenantId: TenantId,
+    tx: TransactionContext,
+  ): Promise<Order | null> {
+    try {
+      await tx.executeNative<postgres.TransactionSql<Record<string, unknown>>, void>(
+        async (sql): Promise<void> => {
+          await sql`SELECT id FROM sales.orders WHERE id=${id}::uuid AND tenant_id=${tenantId}::uuid FOR UPDATE`;
+        },
+      );
+      return await this.findById(id, tenantId, tx);
+    } catch (error: unknown) {
+      throw new OrderRepositoryException('Locked order read failed.', error);
+    }
+  }
+
+  public async saveLifecycle(order: Order, tx: TransactionContext): Promise<void> {
+    try {
+      await tx.executeNative<postgres.TransactionSql<Record<string, unknown>>, void>(
+        async (sql): Promise<void> => {
+          const rows =
+            await sql`UPDATE sales.orders SET status=${order.getStatus()},payment_gateway_id=${order.getPaymentGatewayId()},
+          version=${order.getVersion()},updated_at=${order.getUpdatedAt()}
+          WHERE id=${order.getId()}::uuid AND tenant_id=${order.getTenantId()}::uuid AND version=${order.getVersion() - 1} RETURNING id`;
+          if (rows.length !== 1) throw new OptimisticConcurrencyException('Order', order.getId());
+        },
+      );
+    } catch (error: unknown) {
+      if (error instanceof OptimisticConcurrencyException) throw error;
+      throw new OrderRepositoryException('Order lifecycle persistence failed.', error);
+    }
+  }
+
   async save(order: Order, tx?: TransactionContext): Promise<void> {
     if (!tx) {
       throw new OrderRepositoryException(

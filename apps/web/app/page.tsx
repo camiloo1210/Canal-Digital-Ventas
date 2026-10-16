@@ -71,7 +71,10 @@ export default async function BuyerDashboardPage(props: {
             <p className="text-sm text-muted-foreground">{tb('recent_purchases_desc')}</p>
           </div>
 
-          <BuyerOrdersList orders={orders} />
+          <BuyerOrdersList
+            orders={orders}
+            paymentsEnabled={process.env.PAYMENTS_CHECKOUT_UI_ENABLED === 'true'}
+          />
         </section>
       </main>
     </div>

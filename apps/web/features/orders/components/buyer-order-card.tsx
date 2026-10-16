@@ -2,29 +2,34 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import type { BuyerOrderReadModel } from '@canaldigital/packages/core';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { OrderStatusBadge } from '@/features/orders/components/order-status-badge';
 import { CancelOrderDialog } from '@/features/orders/components/cancel-order-dialog';
+import { PayOrderButton } from '@/features/payments/components/pay-order-button';
 import { Store, Calendar, Package, AlertCircle, Truck } from 'lucide-react';
 
 interface BuyerOrderCardProps {
   order: BuyerOrderReadModel;
+  paymentsEnabled?: boolean;
 }
 
-export function BuyerOrderCard({ order }: BuyerOrderCardProps): React.JSX.Element {
+export function BuyerOrderCard({
+  order,
+  paymentsEnabled = false,
+}: BuyerOrderCardProps): React.JSX.Element {
   const t = useTranslations('Orders.card');
+  const locale = useLocale();
 
   const formatMoney = (cents: number): string => {
-    return new Intl.NumberFormat('es-CO', {
+    return new Intl.NumberFormat(locale, {
       style: 'currency',
-      currency: 'COP',
-      maximumFractionDigits: 0,
+      currency: order.currency,
     }).format(cents / 100);
   };
 
-  const formattedDate = new Intl.DateTimeFormat('es-CO', {
+  const formattedDate = new Intl.DateTimeFormat(locale, {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(order.createdAt));
@@ -119,6 +124,9 @@ export function BuyerOrderCard({ order }: BuyerOrderCardProps): React.JSX.Elemen
       </CardContent>
 
       <CardFooter className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-t border-border bg-muted/10 p-4">
+        {paymentsEnabled && normalizedStatus === 'confirmed' && (
+          <PayOrderButton orderId={order.id} />
+        )}
         {order.canCancel ? (
           <div className="flex items-center justify-between w-full">
             <span className="text-xs text-muted-foreground">

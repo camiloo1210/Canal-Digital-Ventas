@@ -4,8 +4,10 @@ import {
   ORDER_NOTIFICATION_EVENT_TYPES,
 } from '@canaldigital/packages/core';
 import { startWorkerHealth, loadWorkerHealthPort } from '@/worker/health';
+import { loadWorkerEnvironment } from '@/worker/environment';
 
 async function main(): Promise<void> {
+  loadWorkerEnvironment();
   const config = loadMessagingWorkerConfig(process.env);
   const health = await startWorkerHealth(loadWorkerHealthPort(process.env, 8081));
   const controller = new AbortController();

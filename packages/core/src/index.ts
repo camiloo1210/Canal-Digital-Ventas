@@ -189,6 +189,7 @@ export type { CancelOrderDto } from '@/orders/application/dtos/cancel-order.dto'
 export { OrderNotFoundException } from '@/orders/application/exceptions/order-not-found.exception';
 export { InvalidOrderStateException } from '@/orders/domain/exceptions/invalid-order-state.exception';
 export { PostgresOrderRepository } from '@/orders/infrastructure/repositories/postgres-order.repository';
+export { PostgresOrderPaymentCoordinationAdapter } from '@/orders/infrastructure/repositories/postgres-order-payment-coordination.adapter';
 export { PostgresOrderTenantRepository } from '@/orders/infrastructure/repositories/postgres-order-tenant.repository';
 export { TenantNotAvailableException } from '@/orders/application/exceptions/tenant-not-available.exception';
 export { PostgresStoreCustomerRepository } from '@/sales/infrastructure/repositories/postgres-store-customer.repository';
@@ -223,3 +224,28 @@ export { runOutboxWorker } from '@/shared/infrastructure/messaging/outbox-worker
 export { ORDER_NOTIFICATION_EVENT_TYPES } from '@/notifications/application/notification-events';
 export { loadSmtpConfig } from '@/notifications/infrastructure/smtp-config';
 export { runNotificationWorker } from '@/notifications/infrastructure/notification-worker';
+
+// Payment delivery adapters. Financial authority remains in core and restricted RPCs.
+export { StartPaymentCheckoutUseCase } from '@/payments/application/use-cases/start-payment-checkout.use-case';
+export { IngestPaymentWebhookUseCase } from '@/payments/application/use-cases/ingest-payment-webhook.use-case';
+export { PaymentCheckoutException } from '@/payments/application/exceptions/payment-checkout.exception';
+export { LemonSqueezyCheckoutAdapter } from '@/payments/infrastructure/adapters/lemon-squeezy-checkout.adapter';
+export { PostgresPaymentCheckoutRepository } from '@/payments/infrastructure/adapters/postgres-payment-checkout.repository';
+export { PostgresPaymentWebhookInboxAdapter } from '@/payments/infrastructure/adapters/postgres-payment-webhook-inbox.adapter';
+export type { PaymentEnvironment } from '@/payments/application/ports/out/provider-checkout.port';
+export type { StartPaymentCheckoutResult } from '@/payments/application/use-cases/start-payment-checkout.use-case';
+export { ProcessPaymentInboxUseCase } from '@/payments/application/use-cases/process-payment-inbox.use-case';
+export { loadPaymentWorkerConfig } from '@/payments/infrastructure/payment-worker-config';
+export { runPaymentInboxWorker } from '@/payments/infrastructure/payment-inbox-worker';
+export {
+  runPaymentOrderWorker,
+  PAYMENT_ORDER_EVENT_TYPES,
+} from '@/orders/infrastructure/payment-order-worker';
+export {
+  runPaymentRefundDispatchWorker,
+  runPaymentReconciliationWorker,
+} from '@/payments/infrastructure/payment-refund-workers';
+export {
+  runPaymentEvidenceWorker,
+  runPaymentRetentionWorker,
+} from '@/payments/infrastructure/payment-evidence-worker';

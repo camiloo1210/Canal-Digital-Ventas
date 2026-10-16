@@ -81,6 +81,9 @@ export class GenerateCommercialOrderUseCase {
           }),
         );
 
+        consolidatedItems.sort((left, right): number =>
+          left.productId.localeCompare(right.productId),
+        );
         for (const itemDto of consolidatedItems) {
           const productId = createProductId(itemDto.productId);
 

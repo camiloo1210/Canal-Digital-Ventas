@@ -17,14 +17,18 @@ FROM node:22-bookworm-slim@sha256:c3de60bf2f9dd0ac6370e6117950ff62d6e339527e7472
 ENV NODE_ENV=production
 ENV WORKER_HEALTH_PORT=8081
 ENV TSX_TSCONFIG_PATH=/app/apps/worker/tsconfig.json
+# postgres.js uses PGSSL when the connection URL does not specify ssl/sslmode.
+ENV PGSSL=verify-full
+ENV NODE_EXTRA_CA_CERTS=/app/apps/worker/certificates/supabase-prod-ca-2021.crt
 
 WORKDIR /app
-COPY --from=dependencies --chown=node:node /app/ ./
-COPY --chown=node:node packages/core/src ./packages/core/src
-COPY --chown=node:node packages/core/tsconfig.json ./packages/core/tsconfig.json
-COPY --chown=node:node apps/worker/src ./apps/worker/src
-COPY --chown=node:node apps/worker/tsconfig.json apps/worker/healthcheck.mjs ./apps/worker/
-COPY --chown=node:node apps/web/messages/es.json apps/web/messages/en.json ./apps/web/messages/
+COPY --from=dependencies /app/ ./
+COPY packages/core/src ./packages/core/src
+COPY packages/core/tsconfig.json ./packages/core/tsconfig.json
+COPY apps/worker/src ./apps/worker/src
+COPY apps/worker/tsconfig.json apps/worker/healthcheck.mjs ./apps/worker/
+COPY apps/worker/certificates/supabase-prod-ca-2021.crt ./apps/worker/certificates/
+COPY apps/web/messages/es.json apps/web/messages/en.json ./apps/web/messages/
 
 USER node
 WORKDIR /app/apps/worker

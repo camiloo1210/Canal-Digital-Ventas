@@ -10,6 +10,7 @@ import { OrderId } from '@/orders/domain/types/order-id.type';
 import { OrderCreatedEvent } from '@/orders/domain/events/order-created.event';
 import { OrderShippedEvent } from '@/orders/domain/events/order-shipped.event';
 import { OrderPaidEvent } from '@/orders/domain/events/order-paid.event';
+import { OrderRefundedEvent } from '@/orders/domain/events/order-refunded.event';
 import { OrderProcessingEvent } from '@/orders/domain/events/order-processing.event';
 import { OrderCancelledEvent } from '@/orders/domain/events/order-cancelled.event';
 import { OrderConfirmedEvent } from '@/orders/domain/events/order-confirmed.event';
@@ -260,6 +261,30 @@ export class Order {
     this.addDomainEvent(new OrderProcessingEvent(this.id));
     this.updateUpdatedAt();
   }
+
+  /** Called only after the authoritative payment book confirms a full refund. Stock returns are a separate business flow. */
+  public applyObservedFullRefund(paymentGatewayId: PaymentGatewayId): void {
+    if (
+      ![
+        OrderStatus.CONFIRMED,
+        OrderStatus.PAID,
+        OrderStatus.PROCESSING,
+        OrderStatus.SHIPPED,
+        OrderStatus.DELIVERED,
+      ].includes(this.status)
+    ) {
+      throw new InvalidOrderStateException(
+        'Order cannot receive an observed refund in its current state.',
+      );
+    }
+    if (this.paymentGatewayId !== null && this.paymentGatewayId !== paymentGatewayId) {
+      throw new InvalidOrderStateException('Refund provider order does not match the paid order.');
+    }
+    this.status = OrderStatus.REFUNDED;
+    this.paymentGatewayId = paymentGatewayId;
+    this.addDomainEvent(new OrderRefundedEvent(this.id, paymentGatewayId));
+    this.updateUpdatedAt();
+  }
   public shouldRestoreInventory(): boolean {
     return this.status === OrderStatus.CONFIRMED || this.status === OrderStatus.PROCESSING;
   }
@@ -269,6 +294,15 @@ export class Order {
       throw new InvalidOrderStateException(
         'Solo es posible cancelar pedidos en estado Confirmado (CONFIRMED) o En Proceso (PROCESSING).',
       );
+    }
+    this.status = OrderStatus.CANCELLED;
+    this.addDomainEvent(new OrderCancelledEvent(this.id));
+    this.updateUpdatedAt();
+  }
+
+  public cancelDueToPaymentExpiry(): void {
+    if (this.status !== OrderStatus.CONFIRMED) {
+      throw new InvalidOrderStateException('Only a confirmed order may expire.');
     }
     this.status = OrderStatus.CANCELLED;
     this.addDomainEvent(new OrderCancelledEvent(this.id));

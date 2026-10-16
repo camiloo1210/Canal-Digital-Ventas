@@ -5,6 +5,15 @@ x-worker: &worker
     dockerfile: apps/worker/Dockerfile
     target: runtime
   init: true
+  read_only: true
+  tmpfs:
+    - /tmp:rw,noexec,nosuid,nodev,size=64m,mode=1777
+  cap_drop: [ALL]
+  security_opt:
+    - no-new-privileges:true
+  pids_limit: 128
+  mem_limit: 384m
+  cpus: 0.5
   restart: unless-stopped
   stop_grace_period: 90s
   depends_on:
@@ -24,15 +33,19 @@ x-worker: &worker
 
 services:
   rabbitmq:
-    image: rabbitmq:4.3-management
+    image: rabbitmq:4.3-management@sha256:8d0592c8f13b9ca76d844aa269f54461503223f36d0bf955859608d78baaf8fb
     hostname: canaldigital-rabbitmq
-    ports:
-      - '${RABBITMQ_BIND_ADDRESS:-127.0.0.1}:${RABBITMQ_AMQP_PORT:-5673}:5672'
-      - '${RABBITMQ_BIND_ADDRESS:-127.0.0.1}:${RABBITMQ_MANAGEMENT_PORT:-15673}:15672'
+    # Private broker: no host ports or Coolify public domains are required.
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 512
+    mem_limit: 768m
+    cpus: 1.0
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:?Configure RABBITMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?Configure RABBITMQ_PASSWORD}
       RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:-canaldigital}
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: '+S 2:2'
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
     healthcheck:
@@ -65,13 +78,77 @@ services:
       NOTIFICATION_DATABASE_URL: ${NOTIFICATION_DATABASE_URL:?Configure NOTIFICATION_DATABASE_URL}
       RABBITMQ_URL: ${RABBITMQ_URL:?Configure RABBITMQ_URL with host rabbitmq}
       RABBITMQ_QUEUE: ${RABBITMQ_QUEUE:-canaldigital.notifications}
-      SMTP_HOST: ${SMTP_HOST:-smtp-relay.gmail.com}
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_SECURE: ${SMTP_SECURE:-false}
-      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:?Configure SMTP_FROM_EMAIL}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-}
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       NOTIFICATION_LOCALE: ${NOTIFICATION_LOCALE:-es}
+
+  payment-inbox:
+    <<: *worker
+    command: ['src/payments.ts']
+    environment:
+      PAYMENT_WORKER_DATABASE_URL: ${PAYMENT_WORKER_DATABASE_URL:?Configure PAYMENT_WORKER_DATABASE_URL}
+      PAYMENT_INBOX_POLL_INTERVAL_MS: ${PAYMENT_INBOX_POLL_INTERVAL_MS:-1000}
+
+  payment-relay:
+    <<: *worker
+    command: ['src/payment-relay.ts']
+    environment:
+      OUTBOX_DATABASE_URL: ${PAYMENT_RELAY_DATABASE_URL:?Configure PAYMENT_RELAY_DATABASE_URL}
+      RABBITMQ_URL: ${RABBITMQ_URL:?Configure RABBITMQ_URL with host rabbitmq}
+      PAYMENT_DOMAIN_QUEUE: ${PAYMENT_DOMAIN_QUEUE:-canaldigital.payments.domain}
+      OUTBOX_POLL_INTERVAL_MS: ${OUTBOX_POLL_INTERVAL_MS:-1000}
+
+  payment-orders:
+    <<: *worker
+    command: ['src/payment-orders.ts']
+    environment:
+      PAYMENT_DOMAIN_DATABASE_URL: ${PAYMENT_DOMAIN_DATABASE_URL:?Configure PAYMENT_DOMAIN_DATABASE_URL}
+      RABBITMQ_URL: ${RABBITMQ_URL:?Configure RABBITMQ_URL with host rabbitmq}
+      PAYMENT_DOMAIN_QUEUE: ${PAYMENT_DOMAIN_QUEUE:-canaldigital.payments.domain}
+
+  payment-dispatch:
+    <<: *worker
+    command: ['src/payment-dispatch.ts']
+    environment:
+      PAYMENT_WORKER_DATABASE_URL: ${PAYMENT_DISPATCH_DATABASE_URL:?Configure PAYMENT_DISPATCH_DATABASE_URL}
+      PAYMENT_INBOX_POLL_INTERVAL_MS: ${PAYMENT_INBOX_POLL_INTERVAL_MS:-1000}
+      LEMON_SQUEEZY_API_KEY: ${LEMON_SQUEEZY_API_KEY:?Configure LEMON_SQUEEZY_API_KEY}
+
+  payment-egress:
+    <<: *worker
+    command: ['src/payment-egress.ts']
+    environment:
+      PAYMENT_EGRESS_DATABASE_URL: ${PAYMENT_EGRESS_DATABASE_URL:?Configure PAYMENT_EGRESS_DATABASE_URL}
+      PAYMENT_EGRESS_PORT: ${PAYMENT_EGRESS_PORT:-8090}
+      PAYMENT_EGRESS_TOKEN: ${PAYMENT_EGRESS_TOKEN:?Configure PAYMENT_EGRESS_TOKEN}
+      PAYMENTS_ENVIRONMENT: ${PAYMENTS_ENVIRONMENT:?Configure PAYMENTS_ENVIRONMENT}
+      LEMON_SQUEEZY_API_KEY: ${LEMON_SQUEEZY_API_KEY:?Configure LEMON_SQUEEZY_API_KEY}
+
+  payment-reconciliation:
+    <<: *worker
+    command: ['src/payment-reconciliation.ts']
+    # Evidence stays on loopback; share its network namespace, never its credentials.
+    network_mode: 'service:payment-egress'
+    depends_on:
+      payment-egress:
+        condition: service_healthy
+        restart: true
+    environment:
+      WORKER_HEALTH_PORT: '8087'
+      PAYMENT_RECONCILIATION_DATABASE_URL: ${PAYMENT_RECONCILIATION_DATABASE_URL:?Configure PAYMENT_RECONCILIATION_DATABASE_URL}
+      PAYMENT_INBOX_POLL_INTERVAL_MS: ${PAYMENT_INBOX_POLL_INTERVAL_MS:-1000}
+      PAYMENT_EGRESS_PORT: ${PAYMENT_EGRESS_PORT:-8090}
+      PAYMENT_EGRESS_TOKEN: ${PAYMENT_EGRESS_TOKEN:?Configure PAYMENT_EGRESS_TOKEN}
+
+  payment-retention:
+    <<: *worker
+    command: ['src/payment-retention.ts']
+    environment:
+      PAYMENT_RETENTION_DATABASE_URL: ${PAYMENT_RETENTION_DATABASE_URL:?Configure PAYMENT_RETENTION_DATABASE_URL}
 
 volumes:
   rabbitmq-data:

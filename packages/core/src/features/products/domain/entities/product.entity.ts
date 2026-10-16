@@ -261,7 +261,6 @@ export class Product {
     this.updateUpdatedAt();
   }
 
-  
   public decreaseStock(quantity: number): void {
     if (quantity <= 0) {
       throw new InvalidProductAttributeException('Decrease quantity must be strictly positive.');

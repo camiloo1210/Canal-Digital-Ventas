@@ -116,4 +116,39 @@ describe('Kiroku SMTP relay adaptation', (): void => {
       }),
     ).rejects.toBeInstanceOf(NotificationPermanentException);
   });
+  it('addresses the owner separately and uses a distinct stable receipt for low stock', async (): Promise<void> => {
+    const merchantCopy = {
+      subjects: {
+        new_order: 'New {orderNumber}',
+        paid: 'Paid {orderNumber}',
+        cancelled: 'Cancelled {orderNumber}',
+        low_stock: 'Low stock {tenantName}',
+      },
+      body: '{tenantName}: {status}. {orderNumber}',
+      stockLine: '{name} ({sku}): {stock}',
+    };
+    const adapter = new SmtpNotificationAdapter(
+      loadSmtpConfig({ SMTP_FROM_EMAIL: 'sales@example.test' }),
+      copies,
+      { es: merchantCopy, en: merchantCopy },
+    );
+    await adapter.sendMerchant({
+      messageId: 'event-1',
+      userId: 'owner-1',
+      email: 'owner@example.test',
+      orderNumber: 'ORD-1',
+      tenantName: 'Store',
+      kind: 'low_stock',
+      locale: 'es',
+      stockItems: [{ productId: 'product-1', name: 'Paper', sku: 'PAPER', stock: 10 }],
+    });
+    expect(smtp.send).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        to: 'owner@example.test',
+        messageId: '<event-1.owner-1.low_stock@example.test>',
+        subject: 'Low stock Store',
+        text: 'Store: Low stock Store. ORD-1\nPaper (PAPER): 10',
+      }),
+    );
+  });
 });
