@@ -30,7 +30,7 @@ beforeEach((): void => {
 });
 
 describe('Kiroku SMTP relay adaptation', (): void => {
-  it('matches ema3 STARTTLS, optional authentication and certificate verification', (): void => {
+  it('matches STARTTLS, optional authentication and certificate verification', (): void => {
     new SmtpNotificationAdapter(loadSmtpConfig({ SMTP_FROM_EMAIL: 'sales@example.test' }), copies);
     expect(smtp.create).toHaveBeenLastCalledWith(
       expect.objectContaining({
