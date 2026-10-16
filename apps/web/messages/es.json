@@ -233,5 +233,17 @@
       "paidNotice": "Pedido pagado. Por razones de seguridad contable, contacta a la tienda para tramitar cancelaciones o devoluciones.",
       "inTransitNotice": "El pedido ya está en camino o ha sido entregado."
     }
+  },
+  "Notifications": {
+    "email": {
+      "subjects": {
+        "processing": "Pedido en preparación: {orderNumber}",
+        "confirmed": "Compra confirmada: pedido {orderNumber}",
+        "shipped": "Pedido enviado: {orderNumber}",
+        "cancelled": "Compra cancelada: pedido {orderNumber}",
+        "paid": "Pago recibido: pedido {orderNumber}"
+      },
+      "body": "{tenantName}: {status}. Puedes consultar los detalles de tu pedido en tu cuenta."
+    }
   }
 }

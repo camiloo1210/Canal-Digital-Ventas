@@ -205,3 +205,21 @@ export { ORDER_AGGREGATE_TYPE } from '@/orders/application/outbox/order-aggregat
 
 export * from '@/products/application/exceptions/product-out-of-stock.exception';
 export * from '@/products/application/exceptions/product-unavailable.exception';
+
+// Reliable integration messaging (driven by apps/worker, never by web requests).
+export type {
+  IntegrationEvent,
+  IntegrationEventPublisherPort,
+} from '@/shared/application/ports/out/integration-event-publisher.port';
+export type { RelayOutboxPort } from '@/shared/application/ports/out/relay-outbox.port';
+export { RelayOutboxUseCase } from '@/shared/application/use-cases/relay-outbox.use-case';
+export { MessagingException } from '@/shared/application/exceptions/messaging.exception';
+export { OutboxRelayException } from '@/shared/application/exceptions/outbox-relay.exception';
+export { PostgresRelayOutboxAdapter } from '@/shared/infrastructure/adapters/postgres-relay-outbox.adapter';
+export { RabbitMqEventPublisherAdapter } from '@/shared/infrastructure/adapters/rabbitmq-event-publisher.adapter';
+export { loadMessagingWorkerConfig } from '@/shared/infrastructure/messaging/messaging-worker-config';
+export type { MessagingWorkerConfig } from '@/shared/infrastructure/messaging/messaging-worker-config';
+export { runOutboxWorker } from '@/shared/infrastructure/messaging/outbox-worker';
+export { ORDER_NOTIFICATION_EVENT_TYPES } from '@/notifications/application/notification-events';
+export { loadSmtpConfig } from '@/notifications/infrastructure/smtp-config';
+export { runNotificationWorker } from '@/notifications/infrastructure/notification-worker';

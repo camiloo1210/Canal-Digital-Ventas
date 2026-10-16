@@ -4,7 +4,7 @@ import {
   GenerateCommercialOrderUseCase,
   PostgresOrderRepository,
   PostgresProductRepository,
-  LocalEventBus,
+  PostgresEventBusAdapter,
   PostgresTransactionManagerAdapter,
   PostgresOrderTenantRepository,
   PostgresStoreCustomerRepository,
@@ -16,7 +16,7 @@ class CheckoutDIContainer {
   public async resolveGenerateCommercialOrderUseCase(): Promise<GenerateCommercialOrderUseCase> {
     if (!this.generateCommercialOrderUseCase) {
       const transactionManager = new PostgresTransactionManagerAdapter(sql);
-      const eventBus = new LocalEventBus();
+      const eventBus = new PostgresEventBusAdapter();
 
       const orderRepository = new PostgresOrderRepository(eventBus);
       const productRepository = new PostgresProductRepository(sql);

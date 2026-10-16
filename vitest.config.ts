@@ -20,6 +20,8 @@ export default defineConfig({
       '@/payments': path.resolve(__dirname, 'packages/core/src/features/payments'),
       '@/tenants': path.resolve(__dirname, 'packages/core/src/features/tenants'),
       '@/iam': path.resolve(__dirname, 'packages/core/src/features/iam'),
+      '@/notifications': path.resolve(__dirname, 'packages/core/src/features/notifications'),
+      '@/worker': path.resolve(__dirname, 'apps/worker/src'),
       '@/sales': path.resolve(__dirname, 'packages/core/src/features/sales'),
     },
   },
