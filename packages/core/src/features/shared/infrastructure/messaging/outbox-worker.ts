@@ -18,9 +18,11 @@ export async function runOutboxWorker(
   logger: OutboxWorkerLogger,
   eventTypes: string[],
   onReady: (ready: boolean) => void = (): void => {},
+  aggregateType: string = 'Order',
 ): Promise<void> {
   const sql = postgres(config.databaseUrl, {
     max: 1,
+    prepare: false,
     connect_timeout: 10,
     idle_timeout: 20,
     connection: { statement_timeout: 10_000, application_name: 'canaldigital-outbox' },
@@ -30,7 +32,12 @@ export async function runOutboxWorker(
       let publisher: RabbitMqEventPublisherAdapter | undefined;
       try {
         publisher = await RabbitMqEventPublisherAdapter.connect(config.rabbitMqUrl, config.queue);
-        const outbox = new PostgresRelayOutboxAdapter(sql, crypto.randomUUID(), eventTypes);
+        const outbox = new PostgresRelayOutboxAdapter(
+          sql,
+          crypto.randomUUID(),
+          eventTypes,
+          aggregateType,
+        );
         const relay = new RelayOutboxUseCase(outbox, publisher);
         logger.info('Outbox relay connected');
         while (!signal.aborted) {

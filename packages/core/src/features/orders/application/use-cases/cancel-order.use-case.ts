@@ -8,6 +8,9 @@ import { OrderNotFoundException } from '@/orders/application/exceptions/order-no
 import { createOrderId } from '@/orders/domain/types/order-id.type';
 import { createGlobalAuthId } from '@/sales/domain/types/global-auth-id.type';
 import { ORDER_AGGREGATE_TYPE } from '@/orders/application/outbox/order-aggregate.constants';
+import type { OrderPaymentCoordinationPort } from '@/orders/application/ports/out/order-payment-coordination.port';
+import type { OrderItem } from '@/orders/domain/entities/order-item.entity';
+import { InvalidOrderStateException } from '@/orders/domain/exceptions/invalid-order-state.exception';
 
 export class CancelOrderUseCase {
   constructor(
@@ -16,6 +19,7 @@ export class CancelOrderUseCase {
     private readonly storeCustomerRepository: StoreCustomerRepositoryPort,
     private readonly eventBus: EventBusPort,
     private readonly transactionManager: TransactionManagerPort,
+    private readonly paymentCoordination: OrderPaymentCoordinationPort,
   ) {}
 
   async execute(dto: CancelOrderDto): Promise<void> {
@@ -23,7 +27,8 @@ export class CancelOrderUseCase {
     const globalAuthId = createGlobalAuthId(dto.authenticatedBuyerId);
 
     await this.transactionManager.runInTransaction(
-      async (tx) => {
+      async (tx): Promise<void> => {
+        const payment = await this.paymentCoordination.lockAndReadPayment(orderId, tx);
         // 1. Fetch the order within the transaction
         const order = await this.orderRepository.findById(orderId, undefined, tx);
         if (!order) {
@@ -42,6 +47,15 @@ export class CancelOrderUseCase {
           throw new OrderNotFoundException();
         }
 
+        if (
+          payment &&
+          !['pending', 'failed', 'expired_unpaid_awaiting_reconciliation'].includes(payment.status)
+        ) {
+          throw new InvalidOrderStateException(
+            'A collected payment requires the refund workflow before cancellation.',
+          );
+        }
+
         // 3. Pre-cancellation check for inventory restoration
         const shouldRestore = order.shouldRestoreInventory();
 
@@ -53,7 +67,12 @@ export class CancelOrderUseCase {
 
         // 6. Conditional stock restoration (strictly arithmetic, zero status mutation)
         if (shouldRestore) {
-          for (const item of order.getItems()) {
+          const items = order
+            .getItems()
+            .sort((left: OrderItem, right: OrderItem): number =>
+              left.getProductId().localeCompare(right.getProductId()),
+            );
+          for (const item of items) {
             await this.productRepository.increaseStock(
               item.getProductId(),
               order.getTenantId(),

@@ -132,6 +132,7 @@
     "wholesaleMin": "Mín",
     "pageInfo": "Página {current} de {total}",
     "backToStore": "Volver a la tienda",
+    "backToHome": "Volver al inicio",
     "noImage": "Sin imagen",
     "sku": "SKU",
     "noDescription": "No hay descripción disponible.",
@@ -234,7 +235,31 @@
       "inTransitNotice": "El pedido ya está en camino o ha sido entregado."
     }
   },
+  "Payments": {
+    "payOrder": "Pagar pedido",
+    "openingCheckout": "Abriendo pago…",
+    "alreadyPaid": "El pago de este pedido ya fue confirmado.",
+    "UNAUTHORIZED": "Inicia sesión para pagar este pedido.",
+    "INVALID_INPUT": "No se pudo identificar el pedido.",
+    "BUSY": "El pago se está preparando. Inténtalo de nuevo en unos segundos.",
+    "CREATION_UNAVAILABLE": "No pudimos confirmar la apertura del pago. No crees otro intento mientras conciliamos este pedido.",
+    "CHECKOUT_REJECTED": "No se pudo abrir el pago. Puedes intentarlo de nuevo.",
+    "NOT_FOUND": "No encontramos un pedido disponible para tu cuenta.",
+    "NOT_CONFIGURED": "Los pagos en línea aún no están disponibles.",
+    "DISABLED": "Los pagos en línea están temporalmente desactivados.",
+    "UNEXPECTED": "No pudimos iniciar el pago. Tu pedido se conserva. Inténtalo de nuevo más tarde."
+  },
   "Notifications": {
+    "merchant": {
+      "subjects": {
+        "new_order": "Nuevo pedido en tu tienda: {orderNumber}",
+        "paid": "Pago recibido en tu tienda: {orderNumber}",
+        "cancelled": "Pedido cancelado en tu tienda: {orderNumber}",
+        "low_stock": "Poco stock en {tenantName}"
+      },
+      "body": "{tenantName}: {status}. Pedido: {orderNumber}. Consulta los detalles en el panel de tu negocio.",
+      "stockLine": "{name} (SKU: {sku}): {stock} unidades disponibles."
+    },
     "email": {
       "subjects": {
         "processing": "Pedido en preparación: {orderNumber}",

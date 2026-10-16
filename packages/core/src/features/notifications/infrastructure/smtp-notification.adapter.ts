@@ -8,12 +8,21 @@ import type {
 import type { SmtpConfig } from '@/notifications/infrastructure/smtp-config';
 import { MessagingException } from '@/shared/application/exceptions/messaging.exception';
 import { NotificationPermanentException } from '@/notifications/application/exceptions/notification-permanent.exception';
+import type {
+  MerchantNotificationCopies,
+  MerchantNotificationEmail,
+  MerchantNotificationEmailPort,
+  MerchantStockItem,
+} from '@/notifications/application/ports/out/merchant-notification.ports';
 
-export class SmtpNotificationAdapter implements NotificationEmailPort {
+export class SmtpNotificationAdapter
+  implements NotificationEmailPort, MerchantNotificationEmailPort
+{
   private readonly transport: Transporter<SMTPPool.SentMessageInfo>;
   constructor(
     private readonly config: SmtpConfig,
     private readonly copies: NotificationCopies,
+    private readonly merchantCopies?: MerchantNotificationCopies,
   ) {
     this.transport = nodemailer.createTransport({
       pool: true,
@@ -45,12 +54,46 @@ export class SmtpNotificationAdapter implements NotificationEmailPort {
       .replaceAll('{orderNumber}', email.orderNumber)
       .replaceAll('{tenantName}', email.tenantName)
       .replaceAll('{status}', subject);
+    await this.sendMessage(email.messageId, email.email, subject, text);
+  }
+  public async sendMerchant(email: MerchantNotificationEmail): Promise<void> {
+    if (!this.merchantCopies)
+      throw new MessagingException('Merchant notification translations unavailable');
+    const copy = this.merchantCopies[email.locale];
+    const subject = copy.subjects[email.kind]
+      .replaceAll('{orderNumber}', email.orderNumber)
+      .replaceAll('{tenantName}', email.tenantName);
+    const text = [
+      copy.body
+        .replaceAll('{tenantName}', email.tenantName)
+        .replaceAll('{orderNumber}', email.orderNumber)
+        .replaceAll('{status}', subject),
+      ...email.stockItems.map((item: MerchantStockItem): string =>
+        copy.stockLine
+          .replaceAll('{name}', item.name)
+          .replaceAll('{sku}', item.sku)
+          .replaceAll('{stock}', String(item.stock)),
+      ),
+    ].join('\n');
+    await this.sendMessage(
+      `${email.messageId}.${email.userId}.${email.kind}`,
+      email.email,
+      subject,
+      text,
+    );
+  }
+  private async sendMessage(
+    messageId: string,
+    recipient: string,
+    subject: string,
+    text: string,
+  ): Promise<void> {
     try {
       const result = await this.transport.sendMail({
         from: this.config.from,
-        to: email.email,
-        envelope: { from: this.config.from, to: email.email },
-        messageId: `<${email.messageId}@${this.config.from.split('@')[1]}>`,
+        to: recipient,
+        envelope: { from: this.config.from, to: recipient },
+        messageId: `<${messageId}@${this.config.from.split('@')[1]}>`,
         subject,
         text,
       });

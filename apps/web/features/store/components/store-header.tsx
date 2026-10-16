@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { ChevronLeftIcon } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { StoreViewer } from '@/features/store/queries/store-viewer.query';
 import { UserNav } from '@/features/iam/components/user-nav';
 import { CartSheet } from '@/features/cart/components/cart-sheet';
@@ -19,7 +19,8 @@ interface StoreHeaderProps {
     logout: string;
     dashboard: string;
     settings: string;
-    back: string;
+    backToHome: string;
+    backToStore: string;
     cartTitle: string;
     cartEmpty: string;
     cartCheckout: string;
@@ -34,19 +35,22 @@ export function StoreHeader({
   tenantName,
   labels,
 }: StoreHeaderProps): React.JSX.Element {
-  const router = useRouter();
+  const pathname = usePathname();
+  const storeHref = `/store/${tenantSlug}`;
+  const isStoreHome = pathname === storeHref || pathname === `${storeHref}/`;
+  const backHref = isStoreHome ? '/' : storeHref;
+  const backLabel = isStoreHome ? labels.backToHome : labels.backToStore;
   return (
     <AppHeader>
       <div className="flex items-center gap-2 md:gap-4">
-        <button
-          onClick={() => router.back()}
-          type="button"
+        <Link
+          href={backHref}
           className="flex items-center justify-center size-8 rounded-full hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
-          aria-label={labels.back}
-          title={labels.back}
+          aria-label={backLabel}
+          title={backLabel}
         >
           <ChevronLeftIcon className="size-5" />
-        </button>
+        </Link>
 
         <div className="h-6 w-px bg-border hidden sm:block mx-1"></div>
 

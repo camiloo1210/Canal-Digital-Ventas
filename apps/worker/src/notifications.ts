@@ -6,8 +6,10 @@ import {
 import es from '@/messages/es.json';
 import en from '@/messages/en.json';
 import { startWorkerHealth, loadWorkerHealthPort } from '@/worker/health';
+import { loadWorkerEnvironment } from '@/worker/environment';
 
 async function main(): Promise<void> {
+  loadWorkerEnvironment();
   const config = loadMessagingWorkerConfig(process.env, 'NOTIFICATION_DATABASE_URL');
   const smtp = loadSmtpConfig(process.env);
   const health = await startWorkerHealth(loadWorkerHealthPort(process.env, 8082));
@@ -22,6 +24,7 @@ async function main(): Promise<void> {
       config,
       smtp,
       { es: es.Notifications.email, en: en.Notifications.email },
+      { es: es.Notifications.merchant, en: en.Notifications.merchant },
       controller.signal,
       console,
       health.setReady,

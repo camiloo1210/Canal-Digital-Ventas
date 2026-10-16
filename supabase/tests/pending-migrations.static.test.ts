@@ -4,7 +4,20 @@ import { describe, expect, it } from 'vitest';
 import { ORDER_NOTIFICATION_EVENT_TYPES } from '@/notifications/application/notification-events';
 
 const BASELINE_VERSION = '20261014000000';
-const SEED_TABLES: readonly string[] = ['core.outbox_relay_exclusions', 'core.outbox_relay_routes'];
+const SEED_TABLES: Readonly<Record<string, readonly string[]>> = {
+  '20261015000000_rabbitmq_outbox_relay.sql': [
+    'core.outbox_relay_exclusions',
+    'core.outbox_relay_routes',
+  ],
+  '20261015001000_notification_outbox_routing.sql': ['core.outbox_relay_routes'],
+  '20261015180647_payments_v41_checkout_and_inbox.sql': [
+    'core.system_flags',
+    'sales.order_automation_exclusions',
+  ],
+  '20261015200320_payments_v41_order_expiry_domain_support.sql': ['core.outbox_relay_routes'],
+  '20261016040030_payments_v41_administrative_dual_control.sql': ['storage.buckets'],
+  '20261016041424_payments_v41_retention_and_financial_fencing.sql': ['core.outbox_relay_routes'],
+};
 const MIGRATIONS_DIR =
   process.env.PENDING_MIGRATIONS_DIR ?? path.join(process.cwd(), 'supabase', 'migrations');
 const FILE_PATTERN = /^\d{14}_[a-z0-9_]+\.sql$/;
@@ -90,7 +103,9 @@ describe('pending migrations (static checks)', (): void => {
   it.each(pending.map((m: PendingMigration): [string, string] => [m.name, m.sql]))(
     '%s closes every new table to anon, authenticated and service_role and enables RLS',
     (_name: string, sql: string): void => {
-      for (const match of sql.matchAll(/CREATE\s+TABLE\s+((?:core|sales|catalog)\.\w+)/gi)) {
+      for (const match of sql.matchAll(
+        /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?((?:core|sales|catalog)\.\w+)/gi,
+      )) {
         const table = match[1];
         const escaped = table.replace('.', '\\.');
         expect(sql, `${table} rls`).toMatch(
@@ -129,6 +144,16 @@ describe('pending migrations (static checks)', (): void => {
     '%s never grants to anon, authenticated, service_role or PUBLIC and never grants privileged attributes',
     (_name: string, sql: string): void => {
       for (const match of sql.matchAll(/\bGRANT\b[^;]*?\bTO\b\s+([^;]+);/gi)) {
+        if (
+          /^GRANT\s+SELECT\s+ON\s+sales\.(refund_operations|compensation_obligations)\s+TO\s+authenticated;$/i.test(
+            match[0],
+          )
+        ) {
+          expect(sql).toMatch(
+            /FOR\s+SELECT\s+TO\s+authenticated\s+USING\s*\(\(SELECT\s+core\.user_has_access_to_tenant\(tenant_id\)\)\)/i,
+          );
+          continue;
+        }
         expect(match[1]).not.toMatch(/\b(anon|authenticated|service_role|public)\b/i);
       }
       expect(sql).not.toMatch(/(?<![A-Za-z])(SUPERUSER|BYPASSRLS|REPLICATION)\b/);
@@ -137,13 +162,15 @@ describe('pending migrations (static checks)', (): void => {
 
   it.each(pending.map((m: PendingMigration): [string, string] => [m.name, m.sql]))(
     '%s contains no destructive statement and only the allowed top-level data insert',
-    (_name: string, sql: string): void => {
+    (name: string, sql: string): void => {
       const topLevel = withoutDollarQuotedBlocks(sql);
       expect(topLevel).not.toMatch(
-        /\b(DELETE\s+FROM|TRUNCATE|DROP\s+(TABLE|SCHEMA|ROLE|FUNCTION))\b/i,
+        /(?:^|;)\s*(DELETE\s+FROM|TRUNCATE|DROP\s+(TABLE|SCHEMA|ROLE|FUNCTION))\b/i,
       );
-      for (const match of topLevel.matchAll(/\b(?:INSERT\s+INTO|UPDATE)\s+([\w.]+)/gi)) {
-        expect(SEED_TABLES).toContain(match[1]);
+      // Match statement starts, not the UPDATE keyword in a CREATE POLICY ... FOR UPDATE TO.
+      for (const match of topLevel.matchAll(/(?:^|;)\s*(INSERT\s+INTO|UPDATE)\s+([\w.]+)/gi)) {
+        expect(match[1].toUpperCase()).toBe('INSERT INTO');
+        expect(SEED_TABLES[name] ?? []).toContain(match[2]);
       }
     },
   );

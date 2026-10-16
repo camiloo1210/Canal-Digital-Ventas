@@ -130,6 +130,7 @@
     "wholesaleMin": "Min",
     "pageInfo": "Page {current} of {total}",
     "backToStore": "Back to store",
+    "backToHome": "Back to home",
     "noImage": "No image",
     "sku": "SKU",
     "noDescription": "No description available.",
@@ -232,7 +233,31 @@
       "inTransitNotice": "The order is already in transit or has been delivered."
     }
   },
+  "Payments": {
+    "payOrder": "Pay for order",
+    "openingCheckout": "Opening checkout…",
+    "alreadyPaid": "Payment for this order has already been confirmed.",
+    "UNAUTHORIZED": "Sign in to pay for this order.",
+    "INVALID_INPUT": "The order could not be identified.",
+    "BUSY": "Your payment is being prepared. Try again in a few seconds.",
+    "CREATION_UNAVAILABLE": "We could not confirm whether checkout opened. Do not create another attempt while this order is reconciled.",
+    "CHECKOUT_REJECTED": "Checkout could not be opened. You can try again.",
+    "NOT_FOUND": "We could not find an available order for your account.",
+    "NOT_CONFIGURED": "Online payments are not available yet.",
+    "DISABLED": "Online payments are temporarily disabled.",
+    "UNEXPECTED": "We could not start payment. Your order is saved. Try again later."
+  },
   "Notifications": {
+    "merchant": {
+      "subjects": {
+        "new_order": "New order in your store: {orderNumber}",
+        "paid": "Payment received in your store: {orderNumber}",
+        "cancelled": "Order cancelled in your store: {orderNumber}",
+        "low_stock": "Low stock in {tenantName}"
+      },
+      "body": "{tenantName}: {status}. Order: {orderNumber}. Check the details in your business dashboard.",
+      "stockLine": "{name} (SKU: {sku}): {stock} units available."
+    },
     "email": {
       "subjects": {
         "processing": "Order being prepared: {orderNumber}",

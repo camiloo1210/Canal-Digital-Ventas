@@ -13,21 +13,27 @@ import {
   processNotificationMessage,
 } from '@/notifications/infrastructure/rabbitmq-notification-consumer';
 import { MessagingException } from '@/shared/application/exceptions/messaging.exception';
+import { PostgresMerchantNotificationAdapter } from '@/notifications/infrastructure/postgres-merchant-notification.adapter';
+import { DeliverMerchantNotificationsUseCase } from '@/notifications/application/deliver-merchant-notifications.use-case';
+import { DeliverOrderNotificationsUseCase } from '@/notifications/application/deliver-order-notifications.use-case';
+import type { MerchantNotificationCopies } from '@/notifications/application/ports/out/merchant-notification.ports';
 
 export async function runNotificationWorker(
   config: MessagingWorkerConfig,
   smtp: SmtpConfig,
   copies: NotificationCopies,
+  merchantCopies: MerchantNotificationCopies,
   signal: AbortSignal,
   logger: OutboxWorkerLogger,
   onReady: (ready: boolean) => void = (): void => {},
 ): Promise<void> {
   const sql = postgres(config.databaseUrl, {
     max: 1,
+    prepare: false,
     connect_timeout: 10,
     connection: { statement_timeout: 10_000, application_name: 'canaldigital-notifications' },
   });
-  const email = new SmtpNotificationAdapter(smtp, copies);
+  const email = new SmtpNotificationAdapter(smtp, copies, merchantCopies);
   try {
     while (!signal.aborted) {
       let connection: ChannelModel | undefined;
@@ -38,7 +44,10 @@ export async function runNotificationWorker(
           SELECT pg_catalog.pg_has_role(session_user, 'notification_worker_role', 'MEMBER')
             AND has_function_privilege(current_user, 'core.claim_notification_delivery(uuid,uuid,uuid,text,uuid)', 'EXECUTE')
             AND has_function_privilege(current_user, 'core.finish_notification_delivery(uuid,uuid,text)', 'EXECUTE')
-            AND has_function_privilege(current_user, 'core.read_order_notification(uuid,uuid)', 'EXECUTE') AS authorized
+            AND has_function_privilege(current_user, 'core.read_order_notification(uuid,uuid)', 'EXECUTE')
+            AND has_function_privilege(current_user, 'core.read_merchant_order_notification(uuid,uuid,uuid,text)', 'EXECUTE')
+            AND has_function_privilege(current_user, 'core.claim_merchant_notification_delivery(uuid,uuid,text,uuid)', 'EXECUTE')
+            AND has_function_privilege(current_user, 'core.finish_merchant_notification_delivery(uuid,uuid,text,uuid,text)', 'EXECUTE') AS authorized
         `;
         if (!database?.authorized)
           throw new MessagingException('Notification database access is unavailable');
@@ -50,12 +59,23 @@ export async function runNotificationWorker(
         await channel.prefetch(1);
         if (signal.aborted) continue;
         const deliveries = new PostgresNotificationAdapter(sql, crypto.randomUUID());
-        const useCase = new DeliverOrderNotificationUseCase(
+        const buyer = new DeliverOrderNotificationUseCase(
           deliveries,
           deliveries,
           email,
           smtp.locale,
         );
+        const merchantDeliveries = new PostgresMerchantNotificationAdapter(
+          sql,
+          crypto.randomUUID(),
+        );
+        const merchant = new DeliverMerchantNotificationsUseCase(
+          merchantDeliveries,
+          merchantDeliveries,
+          email,
+          smtp.locale,
+        );
+        const useCase = new DeliverOrderNotificationsUseCase([buyer, merchant]);
         const activeChannel = channel;
         let pending: Promise<void> = Promise.resolve();
         let stop: () => void = (): void => {};

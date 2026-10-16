@@ -16,6 +16,7 @@ export class PostgresBuyerOrderReadRepository implements BuyerOrderReadRepositor
         o.tenant_id,
         t.name as tenant_name,
         t.slug as tenant_slug,
+        t.base_currency as currency,
         o.status,
         o.total_amount_cents,
         o.subtotal_cents,
@@ -23,7 +24,7 @@ export class PostgresBuyerOrderReadRepository implements BuyerOrderReadRepositor
         o.shipping_cost_cents,
         o.created_at
       FROM sales.orders o
-      INNER JOIN sales.customers c ON o.customer_id = c.id
+      INNER JOIN sales.customers c ON o.customer_id = c.id AND c.tenant_id = o.tenant_id
       INNER JOIN core.tenants t ON o.tenant_id = t.id
       WHERE c.global_auth_id = ${buyerAuthId}
       ORDER BY o.created_at DESC;
@@ -33,7 +34,7 @@ export class PostgresBuyerOrderReadRepository implements BuyerOrderReadRepositor
       return [];
     }
 
-    const orderIds = ordersData.map((o) => o.id);
+    const orderIds = ordersData.map((o): string => o.id as string);
 
     const itemsData = await this.sql`
       SELECT 
@@ -63,7 +64,7 @@ export class PostgresBuyerOrderReadRepository implements BuyerOrderReadRepositor
       itemsByOrderId.set(orderId, list);
     }
 
-    return ordersData.map((o) => {
+    return ordersData.map((o): BuyerOrderReadModel => {
       const status = (o.status as string).toLowerCase();
       const canCancel = status === 'confirmed' || status === 'processing';
       return {
@@ -73,6 +74,7 @@ export class PostgresBuyerOrderReadRepository implements BuyerOrderReadRepositor
         tenantName: o.tenant_name as string,
         tenantSlug: o.tenant_slug as string,
         status: o.status as string,
+        currency: o.currency as string,
         totalAmountCents: Number(o.total_amount_cents),
         subtotalCents: Number(o.subtotal_cents),
         taxAmountCents: Number(o.tax_amount_cents),

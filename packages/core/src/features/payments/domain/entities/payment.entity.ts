@@ -2,7 +2,11 @@ import { PaymentId } from '@/payments/domain/types/payment-id.type';
 import { TenantId } from '@/shared/domain/types/tenant-id.type';
 import { OrderId } from '@/payments/domain/types/order-id.type';
 import { CustomerId } from '@/payments/domain/types/customer-id.type';
-import { PaymentStatus } from '@/payments/domain/enums/payment-status.enum';
+import {
+  PaymentStatus,
+  isLegacyWritablePaymentStatus,
+  resolvePaymentStatus,
+} from '@/payments/domain/enums/payment-status.enum';
 import { PaymentGateway } from '@/payments/domain/enums/payment-gateway.enum';
 import { Money } from '@/shared/domain/value-objects/money.vo';
 import { DomainEvent } from '@/shared/domain/events/domain-event.interface';
@@ -20,6 +24,7 @@ export interface PaymentProps {
   tenantId: TenantId;
   customerId: CustomerId;
   status: PaymentStatus;
+  rawStatus?: string;
   gateway: PaymentGateway;
   amount: Money;
   gatewayTransactionId: string | null;
@@ -45,6 +50,7 @@ export class Payment {
     private readonly createdAt: Date,
     private updatedAt: Date,
     private version: number,
+    private rawStatus: string,
   ) {}
 
   public static create(
@@ -75,6 +81,7 @@ export class Payment {
       new Date(), // createdAt
       new Date(), // updatedAt
       0, // initial version
+      PaymentStatus.PENDING,
     );
 
     payment.addDomainEvent(new PaymentCreatedEvent(id));
@@ -124,13 +131,19 @@ export class Payment {
   }
 
   // Reconstitute
+  // Nunca lanza por estado: un estado desconocido o incoherente queda UNRECOGNIZED (solo lectura).
   public static reconstitute(props: PaymentProps): Payment {
+    const rawStatus = props.rawStatus ?? props.status;
+    const resolved = resolvePaymentStatus(rawStatus);
+    const status =
+      resolved === resolvePaymentStatus(props.status) ? resolved : PaymentStatus.UNRECOGNIZED;
+
     return new Payment(
       props.id,
       props.orderId,
       props.tenantId,
       props.customerId,
-      props.status,
+      status,
       props.gateway,
       props.amount,
       props.gatewayTransactionId,
@@ -138,12 +151,18 @@ export class Payment {
       props.createdAt,
       props.updatedAt,
       props.version,
+      rawStatus,
     );
   }
 
   // Actions (Business Logic)
 
+  public isReadOnly(): boolean {
+    return !isLegacyWritablePaymentStatus(this.status);
+  }
+
   public markAsCompleted(gatewayTransactionId: string): void {
+    this.assertNotReadOnly();
     if (this.status !== PaymentStatus.PENDING) {
       throw new InvalidPaymentStateException('Only pending payments can be completed.');
     }
@@ -154,12 +173,14 @@ export class Payment {
     }
 
     this.status = PaymentStatus.COMPLETED;
+    this.rawStatus = PaymentStatus.COMPLETED;
     this.gatewayTransactionId = gatewayTransactionId;
     this.addDomainEvent(new PaymentCompletedEvent(this.id, this.orderId));
     this.updateUpdatedAt();
   }
 
   public markAsFailed(reason: string): void {
+    this.assertNotReadOnly();
     if (this.status !== PaymentStatus.PENDING) {
       throw new InvalidPaymentStateException('Only pending payments can be marked as failed.');
     }
@@ -168,19 +189,30 @@ export class Payment {
     }
 
     this.status = PaymentStatus.FAILED;
+    this.rawStatus = PaymentStatus.FAILED;
     this.failureReason = reason;
     this.addDomainEvent(new PaymentFailedEvent(this.id, this.orderId, reason));
     this.updateUpdatedAt();
   }
 
   public refund(): void {
+    this.assertNotReadOnly();
     if (this.status !== PaymentStatus.COMPLETED) {
       throw new InvalidPaymentStateException('Only completed payments can be refunded.');
     }
 
     this.status = PaymentStatus.REFUNDED;
+    this.rawStatus = PaymentStatus.REFUNDED;
     this.addDomainEvent(new PaymentRefundedEvent(this.id, this.orderId));
     this.updateUpdatedAt();
+  }
+
+  private assertNotReadOnly(): void {
+    if (this.isReadOnly()) {
+      throw new InvalidPaymentStateException(
+        `Payment in status "${this.rawStatus}" is read-only for the legacy domain.`,
+      );
+    }
   }
 
   private updateUpdatedAt(): void {
@@ -224,6 +256,10 @@ export class Payment {
 
   public getStatus(): PaymentStatus {
     return this.status;
+  }
+
+  public getRawStatus(): string {
+    return this.rawStatus;
   }
 
   public getGateway(): PaymentGateway {

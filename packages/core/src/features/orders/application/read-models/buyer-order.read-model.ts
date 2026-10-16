@@ -14,6 +14,7 @@ export interface BuyerOrderReadModel {
   tenantName: string;
   tenantSlug: string;
   status: string;
+  currency: string;
   totalAmountCents: number;
   subtotalCents: number;
   taxAmountCents: number;

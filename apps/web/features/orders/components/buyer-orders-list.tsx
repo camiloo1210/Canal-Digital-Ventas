@@ -9,9 +9,13 @@ import { ShoppingBag } from 'lucide-react';
 
 interface BuyerOrdersListProps {
   orders: BuyerOrderReadModel[];
+  paymentsEnabled?: boolean;
 }
 
-export function BuyerOrdersList({ orders }: BuyerOrdersListProps): React.JSX.Element {
+export function BuyerOrdersList({
+  orders,
+  paymentsEnabled = false,
+}: BuyerOrdersListProps): React.JSX.Element {
   const tb = useTranslations('BuyerDashboard');
 
   if (orders.length === 0) {
@@ -30,7 +34,7 @@ export function BuyerOrdersList({ orders }: BuyerOrdersListProps): React.JSX.Ele
   return (
     <div className="space-y-4">
       {orders.map((order): React.JSX.Element => (
-        <BuyerOrderCard key={order.id} order={order} />
+        <BuyerOrderCard key={order.id} order={order} paymentsEnabled={paymentsEnabled} />
       ))}
     </div>
   );

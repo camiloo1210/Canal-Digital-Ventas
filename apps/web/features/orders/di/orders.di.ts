@@ -3,6 +3,7 @@ import { sql } from '@/lib/postgres/server';
 import {
   CancelOrderUseCase,
   PostgresOrderRepository,
+  PostgresOrderPaymentCoordinationAdapter,
   PostgresProductRepository,
   PostgresStoreCustomerRepository,
   PostgresEventBusAdapter,
@@ -30,6 +31,7 @@ class OrdersDIContainer {
         storeCustomerRepository,
         eventBus,
         transactionManager,
+        new PostgresOrderPaymentCoordinationAdapter(),
       );
     }
     return this.cancelOrderUseCase;
