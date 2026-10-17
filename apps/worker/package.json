@@ -20,5 +20,9 @@
   "dependencies": {
     "@canaldigital/packages/core": "workspace:*",
     "tsx": "^4.23.15"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.43",
+    "typescript": "^5"
   }
 }
