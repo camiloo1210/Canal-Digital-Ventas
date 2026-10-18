@@ -3,9 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "lint": "eslint",
+    "lint": "eslint . --max-warnings=0",
     "prepare": "husky",
     "test": "vitest run --passWithNoTests",
+    "worker:outbox": "pnpm --filter @canaldigital/worker start",
+    "worker:notifications": "pnpm --filter @canaldigital/worker notifications",
+    "messaging:build": "node apps/worker/docker/messaging.mjs build",
+    "messaging:up": "node apps/worker/docker/messaging.mjs up",
+    "messaging:verify": "node apps/worker/docker/verify.mjs",
+    "messaging:logs": "docker compose --env-file apps/worker/.env -f compose.rabbitmq.yml logs -f",
+    "messaging:down": "docker compose --env-file apps/worker/.env -f compose.rabbitmq.yml down",
     "commit": "cz"
   },
   "lint-staged": {
@@ -28,6 +35,7 @@
     "commitizen": "^4.3.2",
     "cz-conventional-changelog": "^3.3.0",
     "eslint": "^9",
+    "eslint-config-next": "16.2.10",
     "eslint-import-resolver-typescript": "^4.4.5",
     "eslint-plugin-boundaries": "^7.2.0",
     "husky": "^9.1.7",

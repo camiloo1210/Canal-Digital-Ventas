@@ -3,6 +3,7 @@ import { PaginationOptions, PaginatedResult } from '@/shared/domain/pagination/p
 import { CategoryStatus } from '@/categories/domain/enums/category-status.enum';
 import { CategoryId } from '@/categories/domain/types/category-id.type';
 import { TenantId } from '@/shared/domain/types/tenant-id.type';
+import { TransactionContext } from '@/shared/application/ports/out/transaction-manager.port';
 
 export interface CategoryFilters {
   id?: CategoryId;
@@ -12,11 +13,11 @@ export interface CategoryFilters {
 }
 
 export interface CategoryRepositoryPort {
-  save(category: Category): Promise<void>;
+  save(category: Category, tx?: TransactionContext): Promise<void>;
 
-  deleteById(id: CategoryId, tenantId: TenantId): Promise<void>;
+  deleteById(id: CategoryId, tenantId: TenantId, tx?: TransactionContext): Promise<void>;
 
-  findById(id: CategoryId, tenantId: TenantId): Promise<Category | null>;
+  findById(id: CategoryId, tenantId: TenantId, tx?: TransactionContext): Promise<Category | null>;
 
   findAll(tenantId: TenantId, pagination?: PaginationOptions): Promise<PaginatedResult<Category>>;
 

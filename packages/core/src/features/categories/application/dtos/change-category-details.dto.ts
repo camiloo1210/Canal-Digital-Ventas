@@ -3,4 +3,5 @@ export interface ChangeCategoryDetailsDto {
   name: string;
   description: string;
   tenantId: string;
+  expectedVersion: number;
 }

@@ -1,7 +1,7 @@
 'use server';
 
 import { z } from 'zod';
-import { getCreateCategoryUseCase } from '@/features/dashboard/di/dashboard.di';
+import { getCreateCategoryUseCase } from '@/features/categories/di/categories.di';
 import { DomainException } from '@canaldigital/packages/core';
 
 export type ActionState = {
@@ -33,7 +33,7 @@ export async function quickCreateCategoryAction(
   }
 
   try {
-    const useCase = await getCreateCategoryUseCase();
+    const useCase = getCreateCategoryUseCase();
 
     // We pass a dummy tenantId and id for the dashboard quick action context.
     // In a real app, tenantId comes from the session/context.
@@ -42,7 +42,7 @@ export async function quickCreateCategoryAction(
       tenantId: 'default-tenant-id',
       name: validatedFields.data.name,
       description: validatedFields.data.description,
-      status: 'active', // Default status
+      status: 'ACTIVE', // Default status
     });
 
     return { success: true, error: null };

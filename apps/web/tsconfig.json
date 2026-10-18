@@ -24,8 +24,11 @@
       "@/products/*": ["../../packages/core/src/features/products/*"],
       "@/categories/*": ["../../packages/core/src/features/categories/*"],
       "@/orders/*": ["../../packages/core/src/features/orders/*"],
+      "@/payments/*": ["../../packages/core/src/features/payments/*"],
       "@/iam/*": ["../../packages/core/src/features/iam/*"],
-      "@/tenants/*": ["../../packages/core/src/features/tenants/*"]
+      "@/tenants/*": ["../../packages/core/src/features/tenants/*"],
+      "@/sales/*": ["../../packages/core/src/features/sales/*"],
+      "@/notifications/*": ["../../packages/core/src/features/notifications/*"]
     }
   },
   "include": [

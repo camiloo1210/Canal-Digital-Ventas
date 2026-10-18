@@ -1,4 +1,4 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseClient, Provider } from '@supabase/supabase-js';
 import { AuthPort } from '@/iam/application/ports/out/auth.port';
 import { InvalidCredentialsException } from '@/iam/domain/exceptions/invalid-credentials.exception';
 import { AuthGatewayException } from '@/iam/application/exceptions/auth-gateway.exception';
@@ -45,7 +45,7 @@ export class SupabaseAuthAdapter implements AuthPort {
 
   async getOAuthSignInUrl(provider: string, redirectTo: string): Promise<string> {
     const { data, error } = await this.supabase.auth.signInWithOAuth({
-      provider: provider as any,
+      provider: provider as Provider,
       options: {
         redirectTo,
       },
