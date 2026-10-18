@@ -2,13 +2,12 @@ import { OnboardingForm } from '@/features/iam/ui/components/onboarding-form';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Image from 'next/image';
-import Logo from '@/public/Logo.svg';
 
 export const metadata = {
   title: 'Onboarding | Canal Digital',
 };
 
-export default async function OnboardingPage() {
+export default async function OnboardingPage(): Promise<React.JSX.Element> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -25,7 +24,7 @@ export default async function OnboardingPage() {
       <div className="flex flex-col gap-4 p-6 md:p-10">
         <div className="flex justify-center gap-2 md:justify-start">
           <a href="#" className="flex items-center gap-2 font-medium">
-            <Image src={Logo} alt="Canal Digital Logo" width={24} height={24} />
+            <Image src="/Logo.svg" alt="Canal Digital Logo" width={24} height={24} />
             <span className="font-semibold text-lg">Canal Digital</span>
           </a>
         </div>
@@ -45,7 +44,7 @@ export default async function OnboardingPage() {
       </div>
       <div className="bg-muted relative hidden lg:flex items-center justify-center sticky top-0 h-svh">
         <Image
-          src={Logo}
+          src="/Logo.svg"
           alt="Canal Digital Logo"
           width={400}
           height={400}

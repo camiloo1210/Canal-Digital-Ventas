@@ -4,7 +4,10 @@ import { ProductStatus } from '@/products/domain/enums/product-status.enum';
 import { Money } from '@/shared/domain/value-objects/money.vo';
 import { ProductName } from '@/products/domain/value-objects/product-name.vo';
 import { Sku } from '@/products/domain/value-objects/sku.vo';
-import { DbProductRow, DbProductVariantRow } from '../types/supabase-product.types';
+import {
+  DbProductRow,
+  DbProductVariantRow,
+} from '@/products/infrastructure/types/supabase-product.types';
 import { ProductId, createProductId } from '@/products/domain/types/product-id.type';
 import { CategoryId } from '@/products/domain/types/category-id.type';
 import { TenantId } from '@/shared/domain/types/tenant-id.type';
@@ -13,7 +16,7 @@ import { createSeasonId } from '@/products/domain/types/season-id.type';
 
 export class SupabaseProductMapper {
   public static toDomain(row: DbProductRow): Product {
-    // 1. Mapear las variantes primero si vienen en el JOIN
+    // 1. Map variants first when they are included in the JOIN.
     const variants =
       row.product_variants?.map((v: DbProductVariantRow) =>
         ProductVariant.reconstitute({
@@ -35,6 +38,7 @@ export class SupabaseProductMapper {
       price: Money.from(row.price_cents),
       cost: Money.from(row.cost_cents),
       wholesalePrice: Money.from(row.wholesale_price_cents),
+      wholesaleMinQuantity: row.wholesale_min_quantity,
       description: row.description,
       stock: row.stock,
       categoryId: row.category_id as CategoryId,
@@ -60,6 +64,7 @@ export class SupabaseProductMapper {
       price_cents: product.getPrice().getValue(),
       cost_cents: product.getCost().getValue(),
       wholesale_price_cents: product.getWholesalePrice().getValue(),
+      wholesale_min_quantity: product.getWholesaleMinQuantity(),
       description: product.getDescription(),
       stock: product.getStock(),
       category_id: product.getCategory(),

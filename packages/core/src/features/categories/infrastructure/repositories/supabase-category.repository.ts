@@ -23,6 +23,7 @@ export class SupabaseCategoryRepository implements CategoryRepositoryPort {
     pagination?: PaginationOptions,
   ): Promise<PaginatedResult<Category>> {
     let query = this.supabase
+      .schema('catalog')
       .from('categories')
       .select('*', { count: 'exact' })
       .eq('tenant_id', filters.tenantId);
@@ -65,6 +66,7 @@ export class SupabaseCategoryRepository implements CategoryRepositoryPort {
     const to = from + limit - 1;
 
     const { data, error, count } = await this.supabase
+      .schema('catalog')
       .from('categories')
       .select('*', { count: 'exact' })
       .eq('tenant_id', tenantId)
@@ -91,6 +93,7 @@ export class SupabaseCategoryRepository implements CategoryRepositoryPort {
 
   async searchCategoriesByName(query: string, tenantId: TenantId): Promise<Category[]> {
     const { data, error } = await this.supabase
+      .schema('catalog')
       .from('categories')
       .select('*')
       .eq('tenant_id', tenantId)
@@ -104,6 +107,7 @@ export class SupabaseCategoryRepository implements CategoryRepositoryPort {
 
   async findById(id: CategoryId, tenantId: TenantId): Promise<Category | null> {
     const { data, error } = await this.supabase
+      .schema('catalog')
       .from('categories')
       .select('*')
       .eq('id', id)
@@ -146,6 +150,7 @@ export class SupabaseCategoryRepository implements CategoryRepositoryPort {
 
   async deleteById(id: CategoryId, tenantId: TenantId): Promise<void> {
     const { error } = await this.supabase
+      .schema('catalog')
       .from('categories')
       .delete()
       .eq('id', id)

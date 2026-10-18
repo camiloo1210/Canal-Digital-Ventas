@@ -1,4 +1,4 @@
 export interface CancelOrderDto {
   orderId: string;
-  tenantId: string;
+  authenticatedBuyerId: string;
 }

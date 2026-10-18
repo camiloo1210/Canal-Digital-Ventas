@@ -1,19 +1,10 @@
 import { describe, it, expect, vi, beforeEach, Mocked } from 'vitest';
-import { OnboardTenantUseCase } from './onboard-tenant.use-case';
+import { OnboardTenantUseCase } from '@/iam/application/use-cases/onboard-tenant.use-case';
 import { TenantRepositoryPort } from '@/tenants/application/ports/out/tenant-repository.port';
 import { UserRepositoryPort } from '@/iam/application/ports/out/user-repository.port';
 import { EventBusPort } from '@/shared/application/ports/out/event-bus.port';
 import { OnboardTenantDto } from '@/iam/application/dtos/onboard-tenant.dto';
-import { User } from '@/iam/domain/entities/user.entity';
 import { SlugAlreadyTakenException } from '@/tenants/application/exceptions/slug-already-taken.exception';
-import { Tenant } from '@/tenants/domain/entities/tenant.entity';
-import { TenantName } from '@/tenants/domain/value-objects/tenant-name.vo';
-import { TenantSlug } from '@/tenants/domain/value-objects/tenant-slug.vo';
-import { Email } from '@/shared/domain/value-objects/email.vo';
-import { Currency } from '@/shared/domain/enums/currency.enum';
-import { PersonName } from '@/shared/domain/value-objects/person-name.vo';
-import { createUserId } from '@/iam/domain/types/user-id.type';
-import { createTenantId } from '@/shared/domain/types/tenant-id.type';
 
 describe('OnboardTenantUseCase', () => {
   let useCase: OnboardTenantUseCase;

@@ -26,7 +26,7 @@ export async function onboardBusinessAction(
   prevState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  // 1. Zod parsea SOLO datos del formulario (Nombre, Tienda, etc)
+  // 1. Zod parses ONLY form data (name, store, etc.).
   const parsed = onboardingSchema.safeParse(Object.fromEntries(formData));
 
   if (!parsed.success) {
@@ -39,7 +39,7 @@ export async function onboardBusinessAction(
   let success = false;
 
   try {
-    // 2. SEGURIDAD CRÍTICA: Obtenemos el ID del usuario directamente de la sesión (No puede ser falsificado)
+    // 2. SECURITY: Obtain the user ID directly from the session to prevent actor spoofing.
     const supabase = await createClient();
     const {
       data: { user },
@@ -55,7 +55,7 @@ export async function onboardBusinessAction(
     const idempotencyKey = crypto.randomUUID(); // Idempotency key for atomic onboarding
     const useCase = await getOnboardTenantUseCase();
 
-    // 3. Pasamos el userId verificado por separado al Caso de Uso
+    // 3. Pass the verified user ID separately to the use case.
     await useCase.execute(
       {
         tenantId,
@@ -83,7 +83,7 @@ export async function onboardBusinessAction(
     };
   }
 
-  // 4. Redirect SIEMPRE fuera del try/catch
+  // 4. ALWAYS redirect outside the try/catch block.
   if (success) {
     redirect('/dashboard');
   }

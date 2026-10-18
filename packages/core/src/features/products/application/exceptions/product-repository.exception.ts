@@ -1,6 +1,6 @@
-import { ApplicationException } from '@/shared/application/exceptions/application.exception';
+import { InfrastructureException } from '@/shared/application/exceptions/infrastructure.exception';
 
-export class ProductRepositoryException extends ApplicationException {
+export class ProductRepositoryException extends InfrastructureException {
   constructor(
     message: string,
     public readonly originalError?: unknown,

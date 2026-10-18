@@ -1,110 +1,558 @@
 'use server';
 
 import { z } from 'zod';
-import { getCreateProductUseCase, getStorageAdapter } from '@/features/products/di/products.di';
+import {
+  getCreateProductUseCase,
+  getUpdateProductUseCase,
+  getArchiveProductUseCase,
+  getUnarchiveProductUseCase,
+  getStorageAdapter,
+} from '@/features/products/di/products.di';
 import { revalidatePath } from 'next/cache';
-import { DomainException } from '@canaldigital/packages/core';
+import { DomainException, ApplicationException } from '@canaldigital/packages/core';
 import { createClient } from '@/lib/supabase/server';
-// Removed inline storage adapter import
+import { redirect } from 'next/navigation';
+import { parseToMinorUnits } from '@/lib/money';
+import { getActiveTenantQuery } from '@/features/iam/queries/active-tenant.query';
 
-// 1. Define the correct shape of the data using Zod
-const createProductSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters long'),
-  sku: z.string().min(1, 'SKU is required'),
-  price: z.coerce.number().positive('Price must be greater than 0'),
-  cost: z.coerce.number().positive('Cost must be greater than 0'),
-  wholesalePrice: z.coerce
-    .number()
-    .positive('Wholesale price must be greater than 0')
-    .nullable()
-    .optional(),
-  categoryId: z.string().uuid('Please select a valid category'),
-  description: z.string().optional().default(''),
-  isVatExempt: z.preprocess((val) => val === 'true' || val === 'on', z.boolean()),
-  imageFile: z.instanceof(File).optional(),
-});
+const IMAGE_EXTENSION_BY_MIME = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+} as const;
+
+type AllowedImageMime = keyof typeof IMAGE_EXTENSION_BY_MIME;
+
+const moneyRegex = /^\d+(\.\d{1,2})?$/;
+const moneyFieldSchema = z
+  .union([z.string(), z.number()])
+  .refine(
+    (val) => {
+      if (typeof val === 'number') return val >= 0;
+      return moneyRegex.test(val);
+    },
+    { message: 'Invalid format (e.g. 10.99)' },
+  )
+  .transform(parseToMinorUnits);
+
+const optionalMoneySchema = z
+  .union([z.string(), z.number()])
+  .nullable()
+  .optional()
+  .transform((val) => (val === '' || val === null || val === undefined ? null : val))
+  .pipe(z.union([z.null(), moneyFieldSchema]));
+
+const createProductSchema = z
+  .object({
+    name: z
+      .string()
+      .trim()
+      .min(2, 'Name must be at least 2 characters long')
+      .max(50, 'Name must not exceed 50 characters'),
+    sku: z
+      .string()
+      .regex(
+        /^[A-Z0-9-]{5,20}$/,
+        'SKU must be 5-20 characters long and contain only uppercase letters, numbers, and dashes',
+      ),
+    price: moneyFieldSchema,
+    cost: moneyFieldSchema,
+    wholesalePrice: optionalMoneySchema,
+    wholesaleMinQuantity: z.coerce.number().int().nonnegative().optional().nullable(),
+    categoryId: z.string().uuid('Please select a valid category'),
+    description: z
+      .string()
+      .max(200, 'Description must not exceed 200 characters')
+      .optional()
+      .default(''),
+    stock: z.coerce.number().int().nonnegative('Stock must be non-negative').default(0),
+    isVatExempt: z.preprocess((val) => val === 'true' || val === 'on', z.boolean()),
+    imageFile: z
+      .instanceof(File)
+      .refine((file) => Object.keys(IMAGE_EXTENSION_BY_MIME).includes(file.type), {
+        message: 'Invalid image format. Allowed: JPEG, PNG, WebP',
+      })
+      .optional(),
+  })
+  .refine(
+    (data) => {
+      const hasPrice = data.wholesalePrice && data.wholesalePrice > 0;
+      const hasMinQty = data.wholesaleMinQuantity && data.wholesaleMinQuantity >= 1;
+      const noPrice = !data.wholesalePrice || data.wholesalePrice === 0;
+      const noMinQty = !data.wholesaleMinQuantity || data.wholesaleMinQuantity === 0;
+      return (hasPrice && hasMinQty) || (noPrice && noMinQty);
+    },
+    {
+      message: 'Minimum quantity must be at least 1 when wholesale price is set, and 0 otherwise.',
+      path: ['wholesaleMinQuantity'],
+    },
+  );
 
 export interface ActionState {
   success: boolean;
   error: string | null;
 }
 
+export interface ProductFormValues {
+  name: string;
+  sku: string;
+  categoryId: string;
+  description: string;
+  price: string;
+  cost: string;
+  wholesalePrice: string;
+  stock: string;
+  isVatExempt: string;
+}
+
+export interface ProductActionState {
+  success: boolean;
+  error: string | null;
+  fieldErrors?: Partial<Record<keyof ProductFormValues, string[]>>;
+  values?: ProductFormValues;
+  revision?: number;
+}
+
+function normalizeSku(value: string): string {
+  if (!value) return value;
+  const stripped = value.trim().replace(/^(?:sku[\s-]*)+/i, '');
+  if (!stripped) return value;
+  return `SKU-${stripped.toUpperCase()}`;
+}
+
+function extractProductFormValues(formData: FormData): ProductFormValues {
+  return {
+    name: (formData.get('name') as string) || '',
+    sku: normalizeSku((formData.get('sku') as string) || ''),
+    categoryId: (formData.get('categoryId') as string) || '',
+    description: (formData.get('description') as string) || '',
+    price: (formData.get('price') as string) || '',
+    cost: (formData.get('cost') as string) || '',
+    wholesalePrice: (formData.get('wholesalePrice') as string) || '',
+    stock: (formData.get('stock') as string) || '',
+    isVatExempt: (formData.get('isVatExempt') as string) || '',
+  };
+}
+
 export async function createProductAction(
-  prevState: ActionState,
+  prevState: ProductActionState,
   formData: FormData,
-): Promise<ActionState> {
-  // Parse, Don't Validate
+): Promise<ProductActionState> {
   const rawData = Object.fromEntries(formData.entries());
-
+  if (typeof rawData.sku === 'string') {
+    rawData.sku = normalizeSku(rawData.sku);
+  }
+  const extractedValues = extractProductFormValues(formData);
   const imageField = formData.get('image');
-  const imageFile = imageField instanceof File && imageField.size > 0 ? imageField : undefined;
 
-  const parsed = createProductSchema.safeParse({
-    ...rawData,
-    imageFile,
-    wholesalePrice: rawData.wholesalePrice ? rawData.wholesalePrice : null,
-  });
+  let imageFile: File | undefined = undefined;
 
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0].message, success: false };
+  if (imageField !== null) {
+    if (imageField instanceof File) {
+      if (imageField.size > 0) {
+        imageFile = imageField;
+      }
+    } else {
+      return {
+        error: 'System error: The image field payload is invalid. Expected a binary file.',
+        success: false,
+        values: extractedValues,
+        revision: (prevState.revision || 0) + 1,
+      };
+    }
   }
 
+  let parsed;
   try {
-    let publicUrl = undefined;
-
-    // Upload image to Supabase Storage if it exists
-    if (parsed.data.imageFile) {
-      const storageAdapter = getStorageAdapter();
-      // Generate a secure unique name to avoid collisions
-      const fileName = `${crypto.randomUUID()}-${parsed.data.imageFile.name}`;
-      publicUrl = await storageAdapter.uploadImage(parsed.data.imageFile, fileName);
+    parsed = createProductSchema.safeParse({
+      ...rawData,
+      imageFile,
+    });
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      return {
+        error: err.message,
+        success: false,
+        values: extractedValues,
+        revision: (prevState.revision || 0) + 1,
+      };
     }
+    return {
+      error: 'Invalid data format',
+      success: false,
+      values: extractedValues,
+      revision: (prevState.revision || 0) + 1,
+    };
+  }
 
-    const useCase = await getCreateProductUseCase();
+  if (!parsed.success) {
+    return {
+      error: 'Please fix the highlighted errors.',
+      success: false,
+      fieldErrors: parsed.error.flatten().fieldErrors,
+      values: extractedValues,
+      revision: (prevState.revision || 0) + 1,
+    };
+  }
 
+  let isSuccess = false;
+
+  try {
     const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return { error: 'Unauthorized user', success: false };
+      return {
+        error: 'Unauthorized session.',
+        success: false,
+        values: extractedValues,
+        revision: (prevState.revision || 0) + 1,
+      };
     }
 
-    const rawTenantId = user.app_metadata?.app_tenant_id;
-
-    if (!rawTenantId) {
-      return { error: 'User does not have an assigned tenant ID.', success: false };
+    const tenantId = await getActiveTenantQuery(user.id);
+    if (!tenantId) {
+      return {
+        error: 'User does not have an assigned tenant ID.',
+        success: false,
+        values: extractedValues,
+        revision: (prevState.revision || 0) + 1,
+      };
     }
 
-    // Call the core Use Case passing primitive, clean DTOs
+    let publicUrl = undefined;
+    if (parsed.data.imageFile) {
+      const storageAdapter = getStorageAdapter();
+      const mimeType = parsed.data.imageFile.type as AllowedImageMime;
+      const extension = IMAGE_EXTENSION_BY_MIME[mimeType];
+      const fileName = `${tenantId}/${crypto.randomUUID()}.${extension}`;
+      publicUrl = await storageAdapter.uploadImage(parsed.data.imageFile, fileName);
+    }
+
+    const useCase = getCreateProductUseCase();
+
     await useCase.execute({
       id: crypto.randomUUID(),
-      tenantId: rawTenantId,
+      tenantId: tenantId,
       categoryId: parsed.data.categoryId,
       name: parsed.data.name,
       price: parsed.data.price,
       cost: parsed.data.cost,
       wholesalePrice: parsed.data.wholesalePrice || null,
+      wholesaleMinQuantity: parsed.data.wholesaleMinQuantity || null,
       description: parsed.data.description,
       sku: parsed.data.sku,
-      imagePath: publicUrl, // Using the public URL for both path and URL fields for now
+      imagePath: publicUrl,
       imageUrl: publicUrl,
-      stock: 0,
+      stock: parsed.data.stock,
       seasonIds: [],
       isVatExempt: parsed.data.isVatExempt,
     });
 
-    // Clear the cache for this route so new data is read from the DB
-    revalidatePath('/dashboard/catalog/products');
-
-    return { success: true, error: null };
+    isSuccess = true;
   } catch (error: unknown) {
-    // Catch native core architecture exceptions
+    if (error instanceof DomainException) {
+      return {
+        error: error.message,
+        success: false,
+        values: extractedValues,
+        revision: (prevState.revision || 0) + 1,
+      };
+    }
+    if (error instanceof ApplicationException) {
+      return {
+        error: error.message,
+        success: false,
+        values: extractedValues,
+        revision: (prevState.revision || 0) + 1,
+      };
+    }
+    console.error('Critical Server Exception:', error);
+    return {
+      error: 'An unexpected server error occurred.',
+      success: false,
+      values: extractedValues,
+      revision: (prevState.revision || 0) + 1,
+    };
+  }
+
+  if (isSuccess) {
+    revalidatePath('/dashboard/catalog/products');
+    redirect('/dashboard/catalog/products');
+  }
+
+  return {
+    success: false,
+    error: 'Failed to process request.',
+    values: extractedValues,
+    revision: (prevState.revision || 0) + 1,
+  };
+}
+
+const updateProductSchema = z
+  .object({
+    productId: z.string().uuid(),
+    expectedVersion: z.coerce.number().int().nonnegative(),
+    name: z
+      .string()
+      .trim()
+      .min(2, 'Name must be at least 2 characters long')
+      .max(50, 'Name must not exceed 50 characters'),
+    sku: z
+      .string()
+      .regex(
+        /^[A-Z0-9-]{5,20}$/,
+        'SKU must be 5-20 characters long and contain only uppercase letters, numbers, and dashes',
+      ),
+    price: moneyFieldSchema,
+    cost: moneyFieldSchema,
+    wholesalePrice: optionalMoneySchema,
+    wholesaleMinQuantity: z.coerce.number().int().nonnegative().optional().nullable(),
+    categoryId: z.string().uuid('Please select a valid category'),
+    description: z
+      .string()
+      .max(200, 'Description must not exceed 200 characters')
+      .optional()
+      .default(''),
+    stock: z.coerce.number().int().nonnegative('Stock must be non-negative').default(0),
+    isVatExempt: z.preprocess((val) => val === 'true' || val === 'on', z.boolean()),
+  })
+  .refine(
+    (data) => {
+      const hasPrice = data.wholesalePrice && data.wholesalePrice > 0;
+      const hasMinQty = data.wholesaleMinQuantity && data.wholesaleMinQuantity >= 1;
+      const noPrice = !data.wholesalePrice || data.wholesalePrice === 0;
+      const noMinQty = !data.wholesaleMinQuantity || data.wholesaleMinQuantity === 0;
+      return (hasPrice && hasMinQty) || (noPrice && noMinQty);
+    },
+    {
+      message: 'Minimum quantity must be at least 1 when wholesale price is set, and 0 otherwise.',
+      path: ['wholesaleMinQuantity'],
+    },
+  );
+
+export async function updateProductAction(
+  prevState: ProductActionState,
+  formData: FormData,
+): Promise<ProductActionState> {
+  const rawData = Object.fromEntries(formData.entries());
+  if (typeof rawData.sku === 'string') {
+    rawData.sku = normalizeSku(rawData.sku);
+  }
+  const extractedValues = extractProductFormValues(formData);
+
+  let parsed;
+  try {
+    parsed = updateProductSchema.safeParse(rawData);
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      return {
+        error: err.message,
+        success: false,
+        values: extractedValues,
+        revision: (prevState.revision || 0) + 1,
+      };
+    }
+    return {
+      error: 'Invalid data format',
+      success: false,
+      values: extractedValues,
+      revision: (prevState.revision || 0) + 1,
+    };
+  }
+
+  if (!parsed.success) {
+    return {
+      error: 'Please fix the highlighted errors.',
+      success: false,
+      fieldErrors: parsed.error.flatten().fieldErrors,
+      values: extractedValues,
+      revision: (prevState.revision || 0) + 1,
+    };
+  }
+
+  let isSuccess = false;
+
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return {
+        error: 'Unauthorized session.',
+        success: false,
+        values: extractedValues,
+        revision: (prevState.revision || 0) + 1,
+      };
+    }
+
+    const tenantId = await getActiveTenantQuery(user.id);
+    if (!tenantId) {
+      return {
+        error: 'User does not have an assigned tenant ID.',
+        success: false,
+        values: extractedValues,
+        revision: (prevState.revision || 0) + 1,
+      };
+    }
+
+    const useCase = getUpdateProductUseCase();
+
+    await useCase.execute({
+      productId: parsed.data.productId,
+      tenantId,
+      expectedVersion: parsed.data.expectedVersion,
+      categoryId: parsed.data.categoryId,
+      name: parsed.data.name,
+      price: parsed.data.price,
+      cost: parsed.data.cost,
+      wholesalePrice: parsed.data.wholesalePrice || null,
+      wholesaleMinQuantity: parsed.data.wholesaleMinQuantity || null,
+      description: parsed.data.description,
+      sku: parsed.data.sku,
+      stock: parsed.data.stock,
+      seasonIds: [],
+      isVatExempt: parsed.data.isVatExempt,
+    });
+
+    isSuccess = true;
+  } catch (error: unknown) {
+    if (error instanceof DomainException) {
+      return {
+        error: error.message,
+        success: false,
+        values: extractedValues,
+        revision: (prevState.revision || 0) + 1,
+      };
+    }
+    if (error instanceof ApplicationException) {
+      if (error.name === 'OptimisticConcurrencyException') {
+        return {
+          error: 'concurrency_error',
+          success: false,
+          values: extractedValues,
+          revision: (prevState.revision || 0) + 1,
+        };
+      }
+      return {
+        error: error.message,
+        success: false,
+        values: extractedValues,
+        revision: (prevState.revision || 0) + 1,
+      };
+    }
+    console.error('Critical Server Exception:', error);
+    return {
+      error: 'An unexpected server error occurred.',
+      success: false,
+      values: extractedValues,
+      revision: (prevState.revision || 0) + 1,
+    };
+  }
+
+  if (isSuccess) {
+    revalidatePath('/dashboard/catalog/products');
+    redirect('/dashboard/catalog/products');
+  }
+
+  return {
+    success: false,
+    error: 'Failed to process request.',
+    values: extractedValues,
+    revision: (prevState.revision || 0) + 1,
+  };
+}
+
+export async function archiveProductAction(id: string): Promise<ActionState> {
+  let isSuccess = false;
+
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { error: 'Unauthorized session.', success: false };
+    }
+
+    const tenantId = await getActiveTenantQuery(user.id);
+    if (!tenantId) {
+      return { error: 'User does not have an assigned tenant ID.', success: false };
+    }
+
+    const useCase = getArchiveProductUseCase();
+
+    await useCase.execute({
+      id,
+      tenantId,
+    });
+
+    isSuccess = true;
+  } catch (error: unknown) {
     if (error instanceof DomainException) {
       return { error: error.message, success: false };
     }
-    console.error('Critical Server Error:', error);
+    if (error instanceof ApplicationException) {
+      return { error: error.message, success: false };
+    }
+    console.error('Critical Server Exception:', error);
     return { error: 'An unexpected server error occurred.', success: false };
   }
+
+  if (isSuccess) {
+    revalidatePath('/dashboard/catalog/products');
+    return { success: true, error: null };
+  }
+
+  return { success: false, error: 'Failed to process request.' };
+}
+
+export async function unarchiveProductAction(id: string): Promise<ActionState> {
+  let isSuccess = false;
+
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { error: 'Unauthorized session.', success: false };
+    }
+
+    const tenantId = await getActiveTenantQuery(user.id);
+    if (!tenantId) {
+      return { error: 'User does not have an assigned tenant ID.', success: false };
+    }
+
+    const useCase = getUnarchiveProductUseCase();
+
+    await useCase.execute({
+      id,
+      tenantId,
+    });
+
+    isSuccess = true;
+  } catch (error: unknown) {
+    if (error instanceof DomainException) {
+      return { error: error.message, success: false };
+    }
+    if (error instanceof ApplicationException) {
+      return { error: error.message, success: false };
+    }
+    console.error('Critical Server Exception:', error);
+    return { error: 'An unexpected server error occurred.', success: false };
+  }
+
+  if (isSuccess) {
+    revalidatePath('/dashboard/catalog/products');
+    return { success: true, error: null };
+  }
+
+  return { success: false, error: 'Failed to process request.' };
 }
