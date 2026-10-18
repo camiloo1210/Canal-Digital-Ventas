@@ -1,6 +1,7 @@
 import 'server-only';
 
 import postgres from 'postgres';
+import { resolveCheckoutReturnUrl } from '@/features/payments/config/checkout-return-url';
 import {
   IngestPaymentWebhookUseCase,
   LemonSqueezyCheckoutAdapter,
@@ -45,7 +46,7 @@ class PaymentsDIContainer {
         new PostgresPaymentCheckoutRepository(
           this.connection(process.env.PAYMENT_CHECKOUT_DATABASE_URL),
         ),
-        new LemonSqueezyCheckoutAdapter(key, variant),
+        new LemonSqueezyCheckoutAdapter(key, variant, resolveCheckoutReturnUrl(process.env)),
         this.environment(),
       );
     }

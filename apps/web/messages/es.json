@@ -232,7 +232,39 @@
       "shipping": "Envío",
       "total": "Total",
       "paidNotice": "Pedido pagado. Por razones de seguridad contable, contacta a la tienda para tramitar cancelaciones o devoluciones.",
-      "inTransitNotice": "El pedido ya está en camino o ha sido entregado."
+      "inTransitNotice": "El pedido ya está en camino.",
+      "deliveredNotice": "El pedido ya fue entregado.",
+      "cancelNotice": "¿Deseas anular esta compra? Puedes cancelarla antes de su despacho.",
+      "currentStatusNotice": "Estado actual: {status}"
+    }
+  },
+  "SellerOrders": {
+    "title": "Pedidos",
+    "description": "Gestiona la preparación, el envío y la entrega de los pedidos de tu negocio.",
+    "empty": "No hay pedidos disponibles para gestionar en este negocio.",
+    "customer": "Cliente",
+    "address": "Dirección de entrega",
+    "total": "Total",
+    "products": "Productos del pedido",
+    "quantity": "{quantity} unidades",
+    "saving": "Guardando…",
+    "updated": "Estado del pedido actualizado.",
+    "noTransition": "Este pedido no tiene un avance logístico disponible.",
+    "pagination": "Páginas de pedidos",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "actions": {
+      "processing": "Comenzar preparación",
+      "shipped": "Marcar como enviado",
+      "delivered": "Marcar como entregado"
+    },
+    "errors": {
+      "UNAUTHORIZED": "Inicia sesión para gestionar pedidos.",
+      "INVALID_INPUT": "Los datos del cambio de estado no son válidos.",
+      "NOT_FOUND": "No encontramos un pedido que puedas gestionar en este negocio.",
+      "CONCURRENCY": "El pedido cambió mientras lo consultabas. Actualiza la página antes de continuar.",
+      "INVALID_STATE": "El pedido no puede avanzar desde su estado actual o su pago requiere revisión.",
+      "UNEXPECTED": "No pudimos actualizar el pedido. Inténtalo de nuevo."
     }
   },
   "Payments": {
@@ -265,6 +297,7 @@
         "processing": "Pedido en preparación: {orderNumber}",
         "confirmed": "Compra confirmada: pedido {orderNumber}",
         "shipped": "Pedido enviado: {orderNumber}",
+        "delivered": "Pedido entregado: {orderNumber}",
         "cancelled": "Compra cancelada: pedido {orderNumber}",
         "paid": "Pago recibido: pedido {orderNumber}"
       },
