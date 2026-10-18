@@ -8,7 +8,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { OrderStatusBadge } from '@/features/orders/components/order-status-badge';
 import { CancelOrderDialog } from '@/features/orders/components/cancel-order-dialog';
 import { PayOrderButton } from '@/features/payments/components/pay-order-button';
-import { Store, Calendar, Package, AlertCircle, Truck } from 'lucide-react';
+import { Store, Calendar, Package, PackageCheck, AlertCircle, Truck } from 'lucide-react';
 
 interface BuyerOrderCardProps {
   order: BuyerOrderReadModel;
@@ -36,10 +36,14 @@ export function BuyerOrderCard({
 
   const normalizedStatus = order.status.toLowerCase();
   const isPaid = normalizedStatus === 'paid';
+  const isDelivered = normalizedStatus === 'delivered';
   const isInTransitOrDelivered = normalizedStatus === 'shipped' || normalizedStatus === 'delivered';
 
   return (
-    <Card className="shadow-sm border-border hover:shadow-md transition-shadow duration-200">
+    <Card
+      id={`order-${order.id}`}
+      className="scroll-mt-6 shadow-sm border-border hover:shadow-md transition-shadow duration-200"
+    >
       <CardHeader className="border-b border-border bg-muted/20 pb-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="space-y-1">
@@ -129,9 +133,7 @@ export function BuyerOrderCard({
         )}
         {order.canCancel ? (
           <div className="flex items-center justify-between w-full">
-            <span className="text-xs text-muted-foreground">
-              ¿Deseas anular esta compra? Puedes cancelarla antes de su despacho.
-            </span>
+            <span className="text-xs text-muted-foreground">{t('cancelNotice')}</span>
             <CancelOrderDialog orderId={order.id} orderNumber={order.orderNumber} />
           </div>
         ) : isPaid ? (
@@ -141,12 +143,16 @@ export function BuyerOrderCard({
           </div>
         ) : isInTransitOrDelivered ? (
           <div className="flex items-center gap-2 text-xs text-muted-foreground w-full">
-            <Truck className="w-4 h-4 shrink-0 text-purple-500" />
-            <span>{t('inTransitNotice')}</span>
+            {isDelivered ? (
+              <PackageCheck className="w-4 h-4 shrink-0 text-emerald-600" />
+            ) : (
+              <Truck className="w-4 h-4 shrink-0 text-purple-500" />
+            )}
+            <span>{t(isDelivered ? 'deliveredNotice' : 'inTransitNotice')}</span>
           </div>
         ) : (
           <div className="text-xs text-muted-foreground italic w-full">
-            Estado actual: {order.status}
+            {t('currentStatusNotice', { status: order.status })}
           </div>
         )}
       </CardFooter>

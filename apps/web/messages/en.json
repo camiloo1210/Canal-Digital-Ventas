@@ -230,7 +230,39 @@
       "shipping": "Shipping",
       "total": "Total",
       "paidNotice": "Paid order. For accounting security reasons, please contact the store to arrange cancellations or refunds.",
-      "inTransitNotice": "The order is already in transit or has been delivered."
+      "inTransitNotice": "The order is already in transit.",
+      "deliveredNotice": "The order has been delivered.",
+      "cancelNotice": "Would you like to cancel this purchase? You can cancel it before dispatch.",
+      "currentStatusNotice": "Current status: {status}"
+    }
+  },
+  "SellerOrders": {
+    "title": "Orders",
+    "description": "Manage preparation, shipping and delivery for your business orders.",
+    "empty": "There are no orders available to manage for this business.",
+    "customer": "Customer",
+    "address": "Delivery address",
+    "total": "Total",
+    "products": "Order products",
+    "quantity": "{quantity} units",
+    "saving": "Saving…",
+    "updated": "Order status updated.",
+    "noTransition": "No fulfillment transition is available for this order.",
+    "pagination": "Order pages",
+    "previous": "Previous",
+    "next": "Next",
+    "actions": {
+      "processing": "Start preparation",
+      "shipped": "Mark as shipped",
+      "delivered": "Mark as delivered"
+    },
+    "errors": {
+      "UNAUTHORIZED": "Sign in to manage orders.",
+      "INVALID_INPUT": "The status change data is invalid.",
+      "NOT_FOUND": "No order you can manage was found for this business.",
+      "CONCURRENCY": "The order changed while you were viewing it. Refresh the page before continuing.",
+      "INVALID_STATE": "The order cannot advance from its current state or its payment needs review.",
+      "UNEXPECTED": "The order could not be updated. Please try again."
     }
   },
   "Payments": {
@@ -263,6 +295,7 @@
         "processing": "Order being prepared: {orderNumber}",
         "confirmed": "Purchase confirmed: order {orderNumber}",
         "shipped": "Order shipped: {orderNumber}",
+        "delivered": "Order delivered: {orderNumber}",
         "cancelled": "Purchase cancelled: order {orderNumber}",
         "paid": "Payment received: order {orderNumber}"
       },

@@ -5,6 +5,7 @@ import { ORDER_NOTIFICATION_EVENT_TYPES } from '@/notifications/application/noti
 
 const BASELINE_VERSION = '20261014000000';
 const SEED_TABLES: Readonly<Record<string, readonly string[]>> = {
+  '20261018183618_seller_order_delivery_notifications.sql': ['core.outbox_relay_routes'],
   '20261015000000_rabbitmq_outbox_relay.sql': [
     'core.outbox_relay_exclusions',
     'core.outbox_relay_routes',
@@ -273,6 +274,6 @@ describe('pending migrations (static checks)', (): void => {
       (eventType: string): string => `outbox_worker_role/Order/${eventType}`,
     );
     expect([...seeded].sort()).toEqual([...expected].sort());
-    expect(expected).toHaveLength(5);
+    expect(expected).toHaveLength(6);
   });
 });
