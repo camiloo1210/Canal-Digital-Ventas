@@ -10,7 +10,7 @@ Completar `apps/worker/.env` y ejecutar desde la raíz:
 pnpm messaging:up
 ```
 
-Este comando usa Node.js y Docker Buildx: si falta la imagen local predeterminada, la construye con límites; después arranca Compose y espera hasta 180 segundos a que los servicios estén saludables. Un fallo devuelve error, pero no borra ni detiene automáticamente el stack parcialmente iniciado. Si se configura una imagen de registro y falta localmente, la descarga; no sustituye esa imagen por código local.
+Este comando usa Node.js y Docker Buildx: si falta la imagen local, la construye con límites; después arranca Compose y espera hasta 180 segundos a que los servicios estén saludables. Un fallo devuelve error, pero no borra ni detiene automáticamente el stack parcialmente iniciado. Los nueve workers comparten `canaldigital-messaging-worker:local`; `pull_policy: never` evita intentar descargarla de un registro privado.
 
 Para incorporar cambios posteriores del código a la imagen y recrear los servicios:
 
@@ -32,7 +32,22 @@ pnpm messaging:down
 
 Usar `/compose.rabbitmq.yml` desde la raíz del repositorio, como Compose sin modificaciones automáticas de redes o puertos. Configurar las variables de `apps/worker/.env.example` en Coolify. No se usa `PAYMENTS_CGROUP_PARENT` ni hay que instalar unidades Linux.
 
-**Bloqueo previo al despliegue:** Coolify no construye la imagen. Construirla fuera del servidor de producción, publicarla en un registro y fijar `PAYMENTS_WORKER_IMAGE` con su digest (`registro/imagen@sha256:...`). La imagen debe estar disponible antes del despliegue: construirla en el mismo Docker daemon con `pnpm messaging:build`, o proporcionar en `PAYMENTS_WORKER_IMAGE` una imagen publicada en un registro, preferiblemente fijada por digest. Configurar acceso al registro si es privado. Coolify ejecuta Compose directamente y no ejecuta el comando pnpm por sí solo. Compose no contiene un build sin límites; sus límites de ejecución no limitan una construcción externa de Coolify.
+El servicio `outbox-worker` declara el único `build:` del Compose. Los otros ocho workers reutilizan la imagen resultante. No hace falta publicar nuestra imagen en GHCR ni configurar tokens de registro. Las imágenes base públicas siguen descargándose de sus registros oficiales.
+
+Antes de desplegar, configurar en Coolify:
+
+1. Base Directory: `/`; Docker Compose Location: `/compose.rabbitmq.yml`.
+2. **Custom Build Command:** `bash apps/worker/docker/build-coolify.sh`.
+3. Mantener el comando de inicio Compose predeterminado, sin dominios ni puertos públicos.
+4. Activar **Preserve repository during deployment** para conservar el archivo de configuración de RabbitMQ montado desde el repositorio.
+5. Eliminar la antigua variable `PAYMENTS_WORKER_IMAGE`; el nombre de imagen está fijado en el Compose. Completar las demás variables de la plantilla.
+6. Recargar el Compose desde Git y desplegar. No marcar credenciales de ejecución como argumentos de build; el script no las necesita.
+
+El script requiere Bash, Docker Buildx y un Docker Linux con cgroup v2, disponibles a través del helper de despliegue compatible. Construye una sola imagen con un builder temporal: 1,5 GiB de RAM, sin swap, 1 CPU, 256 procesos y paralelismo 1. Verifica los límites efectivos antes de construir y elimina su propio builder y caché al terminar, también ante un fallo normal. No ejecuta prune global ni monta el socket Docker dentro de los servicios de aplicación.
+
+**El Custom Build Command es obligatorio para limitar la construcción.** El build Compose predeterminado no aplica estos límites. Comprobar en el log que se ejecuta el script antes de aceptar el despliegue; si la versión de Coolify no admite ese comando, no usar un build sin límites como sustituto. Una interrupción forzada puede dejar el builder `cdv-coolify-<resource UUID>`: revisar que no haya construcción activa antes de retirarlo. El nombre estable impide iniciar otro builder simultáneo del mismo recurso. Otros recursos de Coolify tienen presupuestos independientes.
+
+Reservar capacidad para el build además de los servicios existentes: hasta 1,5 GiB adicionales mientras los servicios de la versión anterior siguen activos. Los objetivos de GC no limitan el disco de forma estricta; vigilar el espacio de imágenes y capas. No se ha verificado desde este repositorio la configuración efectiva del servidor remoto.
 
 Evitar dos copias simultáneas del stack, incluidos previews/rolling, porque cada copia tiene su propio presupuesto. No publicar los puertos del broker ni montar el socket Docker dentro de los servicios. No mantener los workers locales y los publicados trabajando contra la misma base durante la aceptación.
 
