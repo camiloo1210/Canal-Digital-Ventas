@@ -2,7 +2,6 @@ import { InvalidOrderAttributeException } from '@/orders/domain/exceptions/inval
 
 export enum OrderStatus {
   DRAFT = 'draft',
-  CONFIRMED = 'confirmed',
   PENDING_PAYMENT = 'pending_payment',
   PAID = 'paid',
   PROCESSING = 'processing',

@@ -4,7 +4,6 @@ export interface CreateProductDto {
   price: number;
   cost: number;
   wholesalePrice: number | null;
-  wholesaleMinQuantity: number | null;
   description: string;
   stock: number;
   categoryId: string;

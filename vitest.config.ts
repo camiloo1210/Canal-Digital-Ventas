@@ -8,10 +8,6 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@/app': path.resolve(__dirname, 'apps/web/app'),
-      '@/features': path.resolve(__dirname, 'apps/web/features'),
-      '@/lib': path.resolve(__dirname, 'apps/web/lib'),
-      '@/components': path.resolve(__dirname, 'apps/web/components'),
       '@/shared': path.resolve(__dirname, 'packages/core/src/features/shared'),
       '@/products': path.resolve(__dirname, 'packages/core/src/features/products'),
       '@/categories': path.resolve(__dirname, 'packages/core/src/features/categories'),
@@ -21,8 +17,6 @@ export default defineConfig({
       '@/payments': path.resolve(__dirname, 'packages/core/src/features/payments'),
       '@/tenants': path.resolve(__dirname, 'packages/core/src/features/tenants'),
       '@/iam': path.resolve(__dirname, 'packages/core/src/features/iam'),
-      '@/notifications': path.resolve(__dirname, 'packages/core/src/features/notifications'),
-      '@/worker': path.resolve(__dirname, 'apps/worker/src'),
       '@/sales': path.resolve(__dirname, 'packages/core/src/features/sales'),
     },
   },

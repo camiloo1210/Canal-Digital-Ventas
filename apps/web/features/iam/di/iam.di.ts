@@ -1,4 +1,5 @@
 import 'server-only';
+import { createClient as createBaseSupabaseClient } from '@supabase/supabase-js';
 import { createClient as createSupabaseServerClient } from '@/lib/supabase/server';
 import {
   SignInWithEmailUseCase,
@@ -7,6 +8,7 @@ import {
   SupabaseAuthAdapter,
   SupabaseTenantRepository,
   SupabaseUserRepository,
+  SupabaseAdminAuthAdapter,
   OnboardTenantUseCase,
   LocalEventBus,
   RegisterGlobalIdentityUseCase,
@@ -30,7 +32,7 @@ export async function getExchangeOAuthCodeUseCase(): Promise<ExchangeOAuthCodeUs
   return new ExchangeOAuthCodeUseCase(adapter);
 }
 
-export async function getOnboardTenantUseCase(): Promise<OnboardTenantUseCase> {
+export async function getOnboardTenantUseCase() {
   // 1. SAFE CLIENT: Uses cookies, respects Row Level Security (RLS)
   const userClient = await createSupabaseServerClient();
   const tenantRepository = new SupabaseTenantRepository(userClient);
@@ -45,4 +47,24 @@ export async function getRegisterGlobalIdentityUseCase(): Promise<RegisterGlobal
   const supabaseClient = await createSupabaseServerClient();
   const adapter = new SupabaseAuthAdapter(supabaseClient);
   return new RegisterGlobalIdentityUseCase(adapter);
+}
+
+export function getServiceRoleClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url) {
+    throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL');
+  }
+
+  if (!serviceRoleKey) {
+    throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY');
+  }
+
+  return createBaseSupabaseClient(url, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
 }

@@ -131,7 +131,7 @@ export const schema = z.object({
 });
 
 // Create a separate component for the drag handle
-function DragHandle({ id }: { id: number }): React.JSX.Element {
+function DragHandle({ id }: { id: number }) {
   const { attributes, listeners } = useSortable({
     id,
   });
@@ -319,11 +319,7 @@ const columns = columnHelper.columns([
     ),
   }),
 ]);
-function DraggableRow({
-  row,
-}: {
-  row: Row<typeof features, z.infer<typeof schema>>;
-}): React.JSX.Element {
+function DraggableRow({ row }: { row: Row<typeof features, z.infer<typeof schema>> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
     id: row.original.id,
   });
@@ -346,11 +342,7 @@ function DraggableRow({
     </TableRow>
   );
 }
-export function DataTable({
-  data: initialData,
-}: {
-  data: z.infer<typeof schema>[];
-}): React.JSX.Element {
+export function DataTable({ data: initialData }: { data: z.infer<typeof schema>[] }) {
   const [data, setData] = React.useState(() => initialData);
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] = React.useState<ColumnVisibilityState>({});
@@ -386,7 +378,7 @@ export function DataTable({
     onColumnVisibilityChange: setColumnVisibility,
     onPaginationChange: setPagination,
   });
-  function handleDragEnd(event: DragEndEvent): void {
+  function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (active && over && active.id !== over.id) {
       setData((data) => {
@@ -643,7 +635,7 @@ const chartConfig = {
     color: 'var(--primary)',
   },
 } satisfies ChartConfig;
-function TableCellViewer({ item }: { item: z.infer<typeof schema> }): React.JSX.Element {
+function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
   const isMobile = useIsMobile();
   return (
     <Drawer swipeDirection={isMobile ? 'down' : 'right'}>

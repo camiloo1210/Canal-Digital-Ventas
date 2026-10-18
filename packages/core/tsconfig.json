@@ -17,9 +17,7 @@
       "@/payments/*": ["src/features/payments/*"],
       "@/tenants/*": ["src/features/tenants/*"],
       "@/iam/*": ["src/features/iam/*"],
-      "@/sales/*": ["src/features/sales/*"],
-      "@/notifications/*": ["src/features/notifications/*"]
-    },
-    "types": ["node"]
+      "@/sales/*": ["src/features/sales/*"]
+    }
   }
 }

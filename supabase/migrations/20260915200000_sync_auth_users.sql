@@ -1,13 +1,13 @@
 -- Migration: sync_auth_users
 -- Description: Adds FK to core.users and Secure Sync Trigger for identities.
 
--- 1. Add the foreign key to enforce strict referential integrity.
+-- 1. Añadir la llave foránea para asegurar integridad referencial estricta
 ALTER TABLE core.users
 ADD CONSTRAINT fk_core_users_auth_id
 FOREIGN KEY (id) REFERENCES auth.users(id)
 ON DELETE CASCADE;
 
--- 2. SECURITY DEFINER function with a safe search_path.
+-- 2. Función SECURITY DEFINER con search_path seguro
 CREATE OR REPLACE FUNCTION core.handle_new_user()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -45,7 +45,7 @@ BEGIN
 END;
 $$;
 
--- 3. Trigger on auth.users.
+-- 3. Trigger en auth.users
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
 AFTER INSERT ON auth.users

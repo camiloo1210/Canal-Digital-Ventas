@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-export async function updateSession(request: NextRequest): Promise<NextResponse> {
+export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   });
@@ -40,10 +40,7 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
 
   // Any route that doesn't strictly require authentication
   // Note: /storefront is considered public, as buyers can browse without an account
-  const isPublicRoute =
-    isAuthRoute ||
-    request.nextUrl.pathname.startsWith('/storefront') ||
-    request.nextUrl.pathname.startsWith('/api');
+  const isPublicRoute = isAuthRoute || request.nextUrl.pathname.startsWith('/storefront');
   // Under V5, we query tenant_memberships instead of trusting JWT claims
   let hasTenant = false;
   if (user && (isDashboardRoute || isOnboardingPath || isAuthRoute)) {

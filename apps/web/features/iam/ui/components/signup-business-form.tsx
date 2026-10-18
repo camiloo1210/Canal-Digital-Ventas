@@ -16,7 +16,7 @@ import { useFormStatus } from 'react-dom';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
-function SubmitButton(): React.JSX.Element {
+function SubmitButton() {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" className="w-full" disabled={pending}>
@@ -25,10 +25,7 @@ function SubmitButton(): React.JSX.Element {
   );
 }
 
-export function SignupBusinessForm({
-  className,
-  ...props
-}: React.ComponentProps<'form'>): React.JSX.Element {
+export function SignupBusinessForm({ className, ...props }: React.ComponentProps<'form'>) {
   const [state, formAction] = useActionState(signupBusinessAction, {
     success: false,
     error: null,
@@ -38,7 +35,7 @@ export function SignupBusinessForm({
   const [manualSlug, setManualSlug] = useState(false);
 
   // Auto-generate slug from store name
-  const handleStoreNameChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+  const handleStoreNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.value;
     if (!manualSlug) {
       setStoreSlug(
@@ -50,7 +47,7 @@ export function SignupBusinessForm({
     }
   };
 
-  const handleSlugInput = (e: React.ChangeEvent<HTMLInputElement>): void => {
+  const handleSlugInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setManualSlug(true);
     setStoreSlug(e.target.value);
   };

@@ -80,7 +80,7 @@ export async function loginWithEmailAction(
 import { cookies } from 'next/headers';
 import { OAUTH_INTENT_COOKIE } from '@/features/iam/constants';
 
-async function setOAuthIntentCookie(intent: 'business' | 'customer'): Promise<void> {
+async function setOAuthIntentCookie(intent: 'business' | 'customer') {
   const cookieStore = await cookies();
   cookieStore.set(OAUTH_INTENT_COOKIE, intent, {
     httpOnly: true,
@@ -91,7 +91,7 @@ async function setOAuthIntentCookie(intent: 'business' | 'customer'): Promise<vo
   });
 }
 
-export async function loginWithGoogleAction(): Promise<void> {
+export async function loginWithGoogleAction() {
   await setOAuthIntentCookie('customer');
 
   let errorMessage: string | null = null;
@@ -122,7 +122,7 @@ export async function loginWithGoogleAction(): Promise<void> {
   redirect(url);
 }
 
-export async function loginBusinessWithGoogleAction(): Promise<void> {
+export async function loginBusinessWithGoogleAction() {
   await setOAuthIntentCookie('business');
 
   let errorMessage: string | null = null;

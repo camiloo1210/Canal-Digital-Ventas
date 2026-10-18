@@ -39,7 +39,7 @@ export class SupabaseTenantRepository implements TenantRepositoryPort {
   async onboard(
     tenant: Tenant,
     ownerId: string,
-    ownerData: Record<string, unknown>,
+    ownerData: any,
     idempotencyKey: string,
   ): Promise<void> {
     const tenantRow = SupabaseTenantMapper.toPersistence(tenant);

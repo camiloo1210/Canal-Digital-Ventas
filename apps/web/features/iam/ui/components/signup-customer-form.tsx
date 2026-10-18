@@ -16,7 +16,7 @@ import { useFormStatus } from 'react-dom';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
-function SubmitButton(): React.JSX.Element {
+function SubmitButton() {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" className="w-full" disabled={pending}>
@@ -25,10 +25,7 @@ function SubmitButton(): React.JSX.Element {
   );
 }
 
-export function SignupCustomerForm({
-  className,
-  ...props
-}: React.ComponentProps<'form'>): React.JSX.Element {
+export function SignupCustomerForm({ className, ...props }: React.ComponentProps<'form'>) {
   const [state, formAction] = useActionState(signupCustomerAction, {
     success: false,
     error: null,

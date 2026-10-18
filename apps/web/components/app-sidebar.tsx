@@ -185,7 +185,6 @@ type UserProp = {
   avatar: string;
   role?: string;
   tenantName?: string;
-  tenantSlug?: string | null;
 };
 
 export function AppSidebar({

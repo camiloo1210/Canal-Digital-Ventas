@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { onboardBusinessAction, ActionState } from '@/features/iam/actions/onboarding.actions';
+import { onboardBusinessAction, ActionState } from '../../actions/onboarding.actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,7 +12,7 @@ const initialState: ActionState = {
   error: null,
 };
 
-function SubmitButton(): React.JSX.Element {
+function SubmitButton() {
   const { pending } = useFormStatus();
 
   return (
@@ -22,14 +22,14 @@ function SubmitButton(): React.JSX.Element {
   );
 }
 
-export function OnboardingForm(): React.JSX.Element {
+export function OnboardingForm() {
   const [state, formAction] = useActionState(onboardBusinessAction, initialState);
 
   const [storeSlug, setStoreSlug] = useState('');
   const [manualSlug, setManualSlug] = useState(false);
 
   // Auto-generate slug from store name
-  const handleStoreNameChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+  const handleStoreNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.value;
     if (!manualSlug) {
       setStoreSlug(
@@ -41,7 +41,7 @@ export function OnboardingForm(): React.JSX.Element {
     }
   };
 
-  const handleSlugInput = (e: React.ChangeEvent<HTMLInputElement>): void => {
+  const handleSlugInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setManualSlug(true);
     setStoreSlug(e.target.value);
   };
