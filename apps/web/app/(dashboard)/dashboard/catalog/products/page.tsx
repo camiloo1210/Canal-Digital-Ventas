@@ -40,8 +40,8 @@ export default async function ProductsPage(): Promise<React.JSX.Element> {
   const t = await getTranslations('Products');
 
   const repository = await getProductReadRepository();
-  // Todo(Performance): Evaluar EXPLAIN ANALYZE en el índice (tenant_id, status, created_at DESC)
-  // antes de migrar limit/offset a keyset cursor pagination para esta consulta.
+  // TODO(Performance): Evaluate EXPLAIN ANALYZE on the (tenant_id, status, created_at DESC) index
+  // before replacing limit/offset with keyset cursor pagination for this query.
   const result = await repository.findAll(tenantId, { limit: 50, page: 1 });
   const products = result.items;
 

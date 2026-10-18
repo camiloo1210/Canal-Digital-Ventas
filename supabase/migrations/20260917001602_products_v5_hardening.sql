@@ -23,15 +23,15 @@ BEGIN
       CREATE ROLE app_rpc_owner NOLOGIN;
   END IF;
 
-  -- Requisito de PostgreSQL: Para hacer ALTER OWNER, el usuario ejecutando la migración
-  -- (generalmente 'postgres') debe ser miembro del rol destino.
+  -- PostgreSQL requirement: To execute ALTER OWNER, the user running the migration
+  -- (usually 'postgres') must be a member of the target role.
   GRANT app_rpc_owner TO current_user;
   GRANT outbox_rpc_owner TO current_user;
 END
 $$;
 
--- Requisito de PostgreSQL: El nuevo owner debe tener USAGE y CREATE en el schema asociado
--- para poder asumir la propiedad (propiedad de objetos) a través de ALTER OWNER.
+-- PostgreSQL requirement: The new owner must have USAGE and CREATE on the associated schema
+-- to take ownership of objects through ALTER OWNER.
 GRANT USAGE, CREATE ON SCHEMA catalog TO app_rpc_owner;
 GRANT USAGE, CREATE ON SCHEMA core TO app_rpc_owner;
 GRANT USAGE, CREATE ON SCHEMA core TO outbox_rpc_owner;

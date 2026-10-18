@@ -8,7 +8,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.110.8",
     "amqplib": "^0.10.9",
-    "nodemailer": "^7.0.13",
+    "nodemailer": "^10.1.2",
     "postgres": "^3.4.9"
   },
   "devDependencies": {
