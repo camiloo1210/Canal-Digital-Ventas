@@ -1,14 +1,14 @@
 -- Migration: v5_auth_multi_tenancy
--- Description: Implementa la arquitectura Multi-Tenant V5 (Lean JWT, RBAC estricto, Idempotencia).
+-- Description: Implements the V5 multi-tenant architecture (lean JWT, strict RBAC, idempotency).
 
--- 1. Crear ENUM para Roles
+-- 1. Create the role ENUM.
 CREATE TYPE core.tenant_role AS ENUM (
   'OWNER',
   'ADMIN',
   'MEMBER'
 );
 
--- 2. Crear tabla de Idempotencia para Onboarding
+-- 2. Create the onboarding idempotency table.
 CREATE TABLE IF NOT EXISTS core.onboarding_requests (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -19,15 +19,15 @@ CREATE TABLE IF NOT EXISTS core.onboarding_requests (
 );
 
 ALTER TABLE core.onboarding_requests ENABLE ROW LEVEL SECURITY;
--- Solo acceso interno o service_role
+-- Internal or service_role access only.
 CREATE POLICY "Deny all for public" ON core.onboarding_requests FOR ALL TO public USING (false);
 
--- 3. Modificar core.users (Remover acoplamiento 1:1)
+-- 3. Modify core.users (remove 1:1 coupling).
 ALTER TABLE core.users DROP COLUMN IF EXISTS tenant_id CASCADE;
 ALTER TABLE core.users DROP COLUMN IF EXISTS role CASCADE;
 ALTER TABLE core.users DROP COLUMN IF EXISTS permissions CASCADE;
 
--- 4. Crear core.tenant_memberships (Única Fuente de Verdad)
+-- 4. Create core.tenant_memberships (single source of truth).
 CREATE TABLE IF NOT EXISTS core.tenant_memberships (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES core.users(id) ON DELETE CASCADE,
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS core.tenant_memberships (
 CREATE INDEX idx_tenant_memberships_user_id ON core.tenant_memberships(user_id);
 CREATE INDEX idx_tenant_memberships_tenant_id ON core.tenant_memberships(tenant_id);
 
--- 5. Invariantes de Negocio (Triggers en tenant_memberships)
+-- 5. Business invariants (triggers on tenant_memberships).
 CREATE OR REPLACE FUNCTION core.check_last_owner()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -50,7 +50,7 @@ AS $$
 DECLARE
   owner_count INT;
 BEGIN
-  -- Si se está eliminando o degradando a un OWNER
+  -- When an OWNER is being deleted or demoted.
   IF (TG_OP = 'DELETE' AND OLD.role = 'OWNER') OR (TG_OP = 'UPDATE' AND OLD.role = 'OWNER' AND NEW.role != 'OWNER') THEN
     SELECT COUNT(*) INTO owner_count 
     FROM core.tenant_memberships 
@@ -69,7 +69,7 @@ BEFORE DELETE OR UPDATE ON core.tenant_memberships
 FOR EACH ROW
 EXECUTE FUNCTION core.check_last_owner();
 
--- 6. Funciones RLS (SECURITY DEFINER)
+-- 6. RLS functions (SECURITY DEFINER).
 CREATE OR REPLACE FUNCTION core.user_has_access_to_tenant(t_id uuid)
 RETURNS boolean
 LANGUAGE sql
@@ -108,7 +108,7 @@ REVOKE EXECUTE ON FUNCTION core.user_has_role_in_tenant(uuid, core.tenant_role[]
 GRANT EXECUTE ON FUNCTION core.user_has_access_to_tenant(uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION core.user_has_role_in_tenant(uuid, core.tenant_role[]) TO authenticated;
 
--- 7. Políticas RLS en tenant_memberships
+-- 7. RLS policies on tenant_memberships.
 ALTER TABLE core.tenant_memberships ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can read their own memberships" 
@@ -136,7 +136,7 @@ USING (
   (SELECT core.user_has_role_in_tenant(tenant_id, ARRAY['OWNER', 'ADMIN']::core.tenant_role[]))
 );
 
--- 8. Actualizar Políticas RLS existentes para usar la nueva función
+-- 8. Update existing RLS policies to use the new function.
 -- core.tenants
 DROP POLICY IF EXISTS "Enable read/write for authenticated users" ON core.tenants;
 CREATE POLICY "Enable read for authorized users" ON core.tenants FOR SELECT TO authenticated USING ((SELECT core.user_has_access_to_tenant(id)));
@@ -163,7 +163,7 @@ CREATE POLICY "Enable read for authorized users" ON catalog.product_variants FOR
 CREATE POLICY "Enable all for authorized users" ON catalog.product_variants FOR ALL TO authenticated USING (product_id IN (SELECT id FROM catalog.products WHERE (SELECT core.user_has_access_to_tenant(tenant_id)))) WITH CHECK (product_id IN (SELECT id FROM catalog.products WHERE (SELECT core.user_has_access_to_tenant(tenant_id))));
 
 -- sales.customers, carts, cart_items, orders, order_items, payments...
--- Para simplificar, actualizaremos algunas clave, el patrón es el mismo:
+-- For simplicity, update selected key policies using the same pattern:
 DROP POLICY IF EXISTS "Enable read/write for authenticated users" ON sales.customers;
 CREATE POLICY "Enable read for authorized users" ON sales.customers FOR SELECT TO authenticated USING ((SELECT core.user_has_access_to_tenant(tenant_id)));
 CREATE POLICY "Enable all for authorized users" ON sales.customers FOR ALL TO authenticated USING ((SELECT core.user_has_access_to_tenant(tenant_id))) WITH CHECK ((SELECT core.user_has_access_to_tenant(tenant_id)));
@@ -172,7 +172,7 @@ DROP POLICY IF EXISTS "Enable read/write for authenticated users" ON sales.order
 CREATE POLICY "Enable read for authorized users" ON sales.orders FOR SELECT TO authenticated USING ((SELECT core.user_has_access_to_tenant(tenant_id)));
 CREATE POLICY "Enable all for authorized users" ON sales.orders FOR ALL TO authenticated USING ((SELECT core.user_has_access_to_tenant(tenant_id))) WITH CHECK ((SELECT core.user_has_access_to_tenant(tenant_id)));
 
--- 9. RPC Idempotente para Onboarding (Atomicidad)
+-- 9. Idempotent onboarding RPC (atomicity).
 CREATE OR REPLACE FUNCTION core.onboard_tenant_transactional(
     p_idempotency_key uuid,
     p_user_id uuid,
@@ -187,20 +187,20 @@ DECLARE
     v_tenant_id uuid;
     v_existing_tenant uuid;
 BEGIN
-    -- 1. Verificar Idempotencia
+    -- 1. Check idempotency.
     SELECT tenant_id INTO v_existing_tenant
     FROM core.onboarding_requests
     WHERE user_id = p_user_id AND idempotency_key = p_idempotency_key;
 
     IF FOUND THEN
-        -- Si ya se procesó, retornamos el tenant existente (Idempotencia pura)
+        -- If already processed, return the existing tenant (pure idempotency).
         RETURN v_existing_tenant;
     END IF;
 
-    -- 2. Transacción Atómica
+    -- 2. Atomic transaction.
     v_tenant_id := (p_tenant_data->>'id')::uuid;
 
-    -- Crear Tenant
+    -- Create the tenant.
     INSERT INTO core.tenants (id, name, slug, contact_email, base_currency, status, created_at, updated_at, version)
     VALUES (
         v_tenant_id,
@@ -212,7 +212,7 @@ BEGIN
         NOW(), NOW(), 1
     );
 
-    -- Crear o Actualizar Perfil de Usuario
+    -- Create or update the user profile.
     INSERT INTO core.users (id, email, status, first_name, last_name, created_at, updated_at, version)
     VALUES (
         p_user_id,
@@ -227,11 +227,11 @@ BEGIN
         last_name = EXCLUDED.last_name,
         updated_at = NOW();
 
-    -- Asignar Membresía OWNER
+    -- Assign OWNER membership.
     INSERT INTO core.tenant_memberships (user_id, tenant_id, role, status)
     VALUES (p_user_id, v_tenant_id, 'OWNER', 'active');
 
-    -- Registrar la petición completada
+    -- Record the completed request.
     INSERT INTO core.onboarding_requests (user_id, idempotency_key, tenant_id)
     VALUES (p_user_id, p_idempotency_key, v_tenant_id);
 
@@ -239,7 +239,7 @@ BEGIN
 END;
 $$;
 
--- 10. Actualizar upsert_user_transactional
+-- 10. Update upsert_user_transactional.
 CREATE OR REPLACE FUNCTION public.upsert_user_transactional(user_data jsonb)
 RETURNS void
 LANGUAGE plpgsql
