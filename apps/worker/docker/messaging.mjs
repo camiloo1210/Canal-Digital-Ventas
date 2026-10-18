@@ -109,7 +109,7 @@ export function workerImage(output) {
 function main() {
   const action = process.argv[2];
   if (!['up', 'build'].includes(action)) throw new Error('Usage: messaging.mjs up|build');
-  // Compose resolves PAYMENTS_WORKER_IMAGE from its own env file. The rendered configuration is parsed in memory and never printed.
+  // Read the shared image from Compose in memory; never print rendered credentials.
   const image = workerImage(docker([...compose, 'config', '--format', 'json'], true));
   if (action === 'build') {
     build(image);
