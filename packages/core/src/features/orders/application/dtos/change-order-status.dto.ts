@@ -1,5 +1,7 @@
 export interface ChangeOrderStatusDto {
-  orderId: string;
-  tenantId: string;
-  status: string;
+  readonly orderId: string;
+  readonly tenantId: string;
+  readonly status: string;
+  readonly authenticatedSellerId: string;
+  readonly expectedVersion: number;
 }

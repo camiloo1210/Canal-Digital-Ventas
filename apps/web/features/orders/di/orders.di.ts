@@ -10,9 +10,28 @@ import {
   PostgresTransactionManagerAdapter,
   PostgresBuyerOrderReadRepository,
   BuyerOrderReadRepositoryPort,
+  ChangeOrderStatusUseCase,
+  PostgresSellerOrderAccessAdapter,
+  PostgresSellerOrderReadRepository,
+  type SellerOrderReadRepositoryPort,
 } from '@canaldigital/packages/core';
 
 class OrdersDIContainer {
+  public resolveChangeOrderStatusUseCase(): ChangeOrderStatusUseCase {
+    const events = new PostgresEventBusAdapter();
+    return new ChangeOrderStatusUseCase(
+      new PostgresOrderRepository(events, sql),
+      new PostgresSellerOrderAccessAdapter(),
+      new PostgresOrderPaymentCoordinationAdapter(),
+      events,
+      new PostgresTransactionManagerAdapter(sql),
+    );
+  }
+
+  public resolveSellerOrderReadRepository(): SellerOrderReadRepositoryPort {
+    return new PostgresSellerOrderReadRepository(sql);
+  }
+
   private cancelOrderUseCase: CancelOrderUseCase | null = null;
   private buyerOrderReadRepository: BuyerOrderReadRepositoryPort | null = null;
 

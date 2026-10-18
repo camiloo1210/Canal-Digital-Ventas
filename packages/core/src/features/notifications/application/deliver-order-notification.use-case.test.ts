@@ -32,37 +32,47 @@ class Deliveries implements NotificationDeliveryPort {
   }
 }
 describe('DeliverOrderNotificationUseCase', (): void => {
-  it('uses tenant-scoped trusted recipient data and completes only after SMTP delivery', async (): Promise<void> => {
-    const deliveries = new Deliveries();
-    let email: NotificationEmail | undefined;
-    const useCase = new DeliverOrderNotificationUseCase(
-      deliveries,
-      {
-        findRecipient: async (
-          tenant: string,
-          order: string,
-        ): Promise<{ email: string; orderNumber: string; tenantName: string }> => {
-          expect([tenant, order]).toEqual(['tenant-1', 'order-1']);
-          return { email: 'buyer@example.test', orderNumber: 'ORD-1', tenantName: 'Store' };
+  it.each([
+    ['OrderConfirmedEvent', 'confirmed'],
+    ['OrderPaidEvent', 'paid'],
+    ['OrderProcessingEvent', 'processing'],
+    ['OrderShippedEvent', 'shipped'],
+    ['OrderDeliveredEvent', 'delivered'],
+    ['OrderCancelledEvent', 'cancelled'],
+  ])(
+    'delivers %s using trusted tenant recipient data before completing',
+    async (eventType: string, type: string): Promise<void> => {
+      const deliveries = new Deliveries();
+      let email: NotificationEmail | undefined;
+      const useCase = new DeliverOrderNotificationUseCase(
+        deliveries,
+        {
+          findRecipient: async (
+            tenant: string,
+            order: string,
+          ): Promise<{ email: string; orderNumber: string; tenantName: string }> => {
+            expect([tenant, order]).toEqual(['tenant-1', 'order-1']);
+            return { email: 'buyer@example.test', orderNumber: 'ORD-1', tenantName: 'Store' };
+          },
         },
-      },
-      {
-        send: async (value: NotificationEmail): Promise<void> => {
-          expect(deliveries.completed).toBe(false);
-          email = value;
+        {
+          send: async (value: NotificationEmail): Promise<void> => {
+            expect(deliveries.completed).toBe(false);
+            email = value;
+          },
         },
-      },
-      'es',
-    );
-    expect(await useCase.execute(event, 1)).toBe('SENT');
-    expect(email).toMatchObject({
-      messageId: 'event-1',
-      email: 'buyer@example.test',
-      type: 'confirmed',
-      locale: 'es',
-    });
-    expect(deliveries.completed).toBe(true);
-  });
+        'es',
+      );
+      expect(await useCase.execute({ ...event, eventType }, 1)).toBe('SENT');
+      expect(email).toMatchObject({
+        messageId: 'event-1',
+        email: 'buyer@example.test',
+        type,
+        locale: 'es',
+      });
+      expect(deliveries.completed).toBe(true);
+    },
+  );
   it('does not send duplicates or notifications for unsupported events', async (): Promise<void> => {
     const deliveries = new Deliveries();
     deliveries.state = 'SENT';

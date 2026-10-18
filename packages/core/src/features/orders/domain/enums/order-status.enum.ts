@@ -12,6 +12,19 @@ export enum OrderStatus {
   REFUNDED = 'refunded',
 }
 
+export function nextLogisticsStatus(status: OrderStatus): OrderStatus | null {
+  switch (status) {
+    case OrderStatus.PAID:
+      return OrderStatus.PROCESSING;
+    case OrderStatus.PROCESSING:
+      return OrderStatus.SHIPPED;
+    case OrderStatus.SHIPPED:
+      return OrderStatus.DELIVERED;
+    default:
+      return null;
+  }
+}
+
 export function parseOrderStatus(value: string): OrderStatus {
   const isValid = Object.values(OrderStatus).includes(value as OrderStatus);
   if (!isValid) {
