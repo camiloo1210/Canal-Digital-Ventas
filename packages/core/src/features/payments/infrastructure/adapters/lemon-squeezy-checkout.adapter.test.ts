@@ -43,7 +43,7 @@ describe('Lemon Squeezy checkout HTTP boundary', (): void => {
       return response({ expires_at: '2026-10-16T12:00:00Z' });
     });
     await expect(
-      new LemonSqueezyCheckoutAdapter('secret', '34').create({
+      new LemonSqueezyCheckoutAdapter('secret', '34', 'https://app.example.test/').create({
         ...input,
         expiresAt: '2026-10-16T12:00:00.825Z',
       }),
@@ -59,7 +59,11 @@ describe('Lemon Squeezy checkout HTTP boundary', (): void => {
       request = JSON.parse(String(options.body)) as Record<string, unknown>;
       return response();
     });
-    const result = await new LemonSqueezyCheckoutAdapter('secret', '34').create(input);
+    const result = await new LemonSqueezyCheckoutAdapter(
+      'secret',
+      '34',
+      'https://app.example.test/',
+    ).create(input);
     expect(request).toMatchObject({
       data: {
         attributes: {
@@ -67,7 +71,11 @@ describe('Lemon Squeezy checkout HTTP boundary', (): void => {
           test_mode: true,
           expires_at: input.expiresAt,
           preview: true,
-          product_options: { enabled_variants: [34] },
+          product_options: {
+            enabled_variants: [34],
+            redirect_url: `https://app.example.test/#order-${input.orderId}`,
+            receipt_link_url: `https://app.example.test/#order-${input.orderId}`,
+          },
           checkout_options: { discount: false },
           checkout_data: {
             custom: {
@@ -86,6 +94,54 @@ describe('Lemon Squeezy checkout HTTP boundary', (): void => {
   });
 
   it.each([
+    '',
+    '/purchases',
+    'javascript:alert(1)',
+    'http://app.example.test/',
+    'https://user:password@app.example.test/',
+    'https://user@app.example.test/',
+  ])(
+    'rejects an unsafe return URL before contacting the provider: %s',
+    async (url: string): Promise<void> => {
+      const fetchMock = vi.fn();
+      vi.stubGlobal('fetch', fetchMock);
+      await expect(
+        new LemonSqueezyCheckoutAdapter('secret', '34', url).create(input),
+      ).rejects.toMatchObject({
+        outcome: 'REJECTED',
+        reasonCode: 'INVALID_CONFIGURATION',
+      });
+      expect(fetchMock).not.toHaveBeenCalled();
+    },
+  );
+
+  it('allows a local test checkout to return to the development app', async (): Promise<void> => {
+    const fetchMock = vi.fn().mockResolvedValue(response());
+    vi.stubGlobal('fetch', fetchMock);
+    await new LemonSqueezyCheckoutAdapter('secret', '34', 'http://localhost:3000/').create(input);
+    const options: RequestInit = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(JSON.parse(String(options.body))).toMatchObject({
+      data: {
+        attributes: {
+          product_options: { redirect_url: `http://localhost:3000/#order-${input.orderId}` },
+        },
+      },
+    });
+  });
+
+  it('rejects HTTP localhost return URLs for live payments', async (): Promise<void> => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(
+      new LemonSqueezyCheckoutAdapter('secret', '34', 'http://localhost:3000/').create({
+        ...input,
+        environment: 'production',
+      }),
+    ).rejects.toMatchObject({ outcome: 'REJECTED', reasonCode: 'INVALID_CONFIGURATION' });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it.each([
     { url: 'https://lemonsqueezy.com.attacker.test/pay' },
     { url: 'http://demo.lemonsqueezy.com/pay' },
     { url: 'https://user:pass@demo.lemonsqueezy.com/pay' },
@@ -100,7 +156,7 @@ describe('Lemon Squeezy checkout HTTP boundary', (): void => {
     async (attributes: Record<string, unknown>): Promise<void> => {
       vi.stubGlobal('fetch', async (): Promise<Response> => response(attributes));
       await expect(
-        new LemonSqueezyCheckoutAdapter('secret', '34').create(input),
+        new LemonSqueezyCheckoutAdapter('secret', '34', 'https://app.example.test/').create(input),
       ).rejects.toMatchObject({ outcome: 'AMBIGUOUS' });
     },
   );
@@ -114,7 +170,7 @@ describe('Lemon Squeezy checkout HTTP boundary', (): void => {
         return new Response('provider secret', { status });
       });
       await expect(
-        new LemonSqueezyCheckoutAdapter('secret', '34').create(input),
+        new LemonSqueezyCheckoutAdapter('secret', '34', 'https://app.example.test/').create(input),
       ).rejects.toMatchObject({ outcome: 'AMBIGUOUS' });
       expect(calls).toBe(1);
     },
@@ -126,11 +182,11 @@ describe('Lemon Squeezy checkout HTTP boundary', (): void => {
       async (): Promise<Response> => new Response('private API key secret', { status: 422 }),
     );
     await expect(
-      new LemonSqueezyCheckoutAdapter('secret', '34').create(input),
+      new LemonSqueezyCheckoutAdapter('secret', '34', 'https://app.example.test/').create(input),
     ).rejects.toMatchObject({ outcome: 'REJECTED', reasonCode: 'HTTP_422' });
-    await expect(new LemonSqueezyCheckoutAdapter('secret', '34').create(input)).rejects.not.toThrow(
-      'private API',
-    );
+    await expect(
+      new LemonSqueezyCheckoutAdapter('secret', '34', 'https://app.example.test/').create(input),
+    ).rejects.not.toThrow('private API');
   });
 
   it('classifies a network failure as ambiguous without retrying', async (): Promise<void> => {
@@ -140,7 +196,7 @@ describe('Lemon Squeezy checkout HTTP boundary', (): void => {
       throw new TypeError('network');
     });
     await expect(
-      new LemonSqueezyCheckoutAdapter('secret', '34').create(input),
+      new LemonSqueezyCheckoutAdapter('secret', '34', 'https://app.example.test/').create(input),
     ).rejects.toMatchObject({ outcome: 'AMBIGUOUS' });
     expect(calls).toBe(1);
   });
@@ -152,7 +208,10 @@ describe('Lemon Squeezy checkout HTTP boundary', (): void => {
       return response();
     });
     await expect(
-      new LemonSqueezyCheckoutAdapter('secret', '34').create({ ...input, amountCents: 1.5 }),
+      new LemonSqueezyCheckoutAdapter('secret', '34', 'https://app.example.test/').create({
+        ...input,
+        amountCents: 1.5,
+      }),
     ).rejects.toThrow();
     expect(calls).toBe(0);
   });

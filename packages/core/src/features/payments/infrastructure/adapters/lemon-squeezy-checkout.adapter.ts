@@ -16,9 +16,29 @@ export class LemonSqueezyCheckoutAdapter implements ProviderCheckoutPort {
   public constructor(
     private readonly apiKey: string,
     private readonly variantId: string,
+    private readonly returnUrl: string,
   ) {}
 
   public async create(input: CreateProviderCheckout): Promise<ProviderCheckout> {
+    let returnUrl: URL;
+    try {
+      returnUrl = new URL(this.returnUrl);
+      const localTest =
+        input.environment === 'test' &&
+        returnUrl.protocol === 'http:' &&
+        ['localhost', '127.0.0.1', '[::1]'].includes(returnUrl.hostname);
+      if (
+        (returnUrl.protocol !== 'https:' && !localTest) ||
+        returnUrl.username ||
+        returnUrl.password
+      ) {
+        throw new ProviderCheckoutException('REJECTED', 'INVALID_CONFIGURATION');
+      }
+      returnUrl.hash = `order-${input.orderId}`;
+    } catch (error: unknown) {
+      if (error instanceof ProviderCheckoutException) throw error;
+      throw new ProviderCheckoutException('REJECTED', 'INVALID_CONFIGURATION');
+    }
     if (
       !this.apiKey ||
       !/^[1-9]\d*$/.test(this.variantId) ||
@@ -54,7 +74,11 @@ export class LemonSqueezyCheckoutAdapter implements ProviderCheckoutPort {
               expires_at: providerExpiresAt,
               test_mode: input.environment === 'test',
               preview: true,
-              product_options: { enabled_variants: [Number(this.variantId)] },
+              product_options: {
+                enabled_variants: [Number(this.variantId)],
+                redirect_url: returnUrl.href,
+                receipt_link_url: returnUrl.href,
+              },
               checkout_options: { discount: false },
               checkout_data: {
                 custom: {

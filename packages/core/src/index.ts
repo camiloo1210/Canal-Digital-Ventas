@@ -1,6 +1,4 @@
-// ==========================================
 // CATEGORIES EXPORTS
-// ==========================================
 
 // Domain
 export { Category } from '@/categories/domain/entities/category.entity';
@@ -31,9 +29,7 @@ export { SupabaseCategoryReadRepository } from '@/categories/infrastructure/repo
 export type { CategoryReadModel } from '@/categories/infrastructure/repositories/supabase-category-read.repository';
 export { PostgresCategoryRepository } from '@/categories/infrastructure/repositories/postgres-category.repository';
 
-// ==========================================
 // PRODUCTS EXPORTS
-// ==========================================
 
 // Domain
 export { Product } from '@/products/domain/entities/product.entity';
@@ -81,16 +77,12 @@ export type { SetProductVariantsDto } from '@/products/application/dtos/set-prod
 // Infrastructure
 export { SupabaseProductRepository } from '@/products/infrastructure/repositories/supabase-product.repository';
 
-// ==========================================
 // TENANTS EXPORTS
-// ==========================================
 
 // Infrastructure
 export { SupabaseTenantRepository } from '@/tenants/infrastructure/repositories/supabase-tenant.repository';
 
-// ==========================================
 // SHARED EXPORTS
-// ==========================================
 
 // Domain
 export type { PaginatedResult, PaginationOptions } from '@/shared/domain/pagination/pagination';
@@ -109,9 +101,7 @@ export { TransactionException } from '@/shared/application/exceptions/transactio
 // Infrastructure
 export { LocalEventBus } from '@/shared/infrastructure/event-bus/local-event-bus';
 
-// ==========================================
 // IAM EXPORTS
-// ==========================================
 
 // Domain
 export { InvalidProviderException } from '@/iam/domain/exceptions/invalid-provider.exception';
@@ -137,9 +127,7 @@ export { SupabaseAuthAdapter } from '@/iam/infrastructure/adapters/supabase-auth
 export { SupabaseAdminAuthAdapter } from '@/iam/infrastructure/adapters/supabase-admin-auth.adapter';
 export { SupabaseUserRepository } from '@/iam/infrastructure/repositories/supabase-user.repository';
 
-// ==========================================
 // SHARED EXPORTS (Outbox)
-// ==========================================
 export type { OutboxPort, OutboxEvent } from '@/shared/application/ports/out/outbox.port';
 export { SupabaseOutboxAdapter } from '@/shared/infrastructure/adapters/supabase-outbox.adapter';
 export { OptimisticConcurrencyException } from '@/shared/application/exceptions/optimistic-concurrency.exception';
@@ -179,12 +167,19 @@ export * from '@/tenants/application/read-models/public-tenant-directory-item.mo
 export * from '@/tenants/application/ports/out/public-tenant-directory-read-repository.port';
 export * from '@/tenants/infrastructure/repositories/supabase-public-tenant-directory-read.adapter';
 
-// ==========================================
 // ORDERS EXPORTS
-// ==========================================
 export { GenerateCommercialOrderUseCase } from '@/orders/application/use-cases/generate-commercial-order.use-case';
 export type { GenerateCommercialOrderDto } from '@/orders/application/dtos/generate-commercial-order.dto';
 export { CancelOrderUseCase } from '@/orders/application/use-cases/cancel-order.use-case';
+export { ChangeOrderStatusUseCase } from '@/orders/application/use-cases/change-order-status.use-case';
+export { UnsupportedOrderStatusException } from '@/orders/application/exceptions/unsupported-order-status.exception';
+export { PostgresSellerOrderAccessAdapter } from '@/orders/infrastructure/repositories/postgres-seller-order-access.adapter';
+export { PostgresSellerOrderReadRepository } from '@/orders/infrastructure/repositories/postgres-seller-order-read.repository';
+export type { SellerOrderReadRepositoryPort } from '@/orders/application/ports/out/seller-order-read-repository.port';
+export type {
+  SellerOrderReadModel,
+  SellerOrderPage,
+} from '@/orders/application/read-models/seller-order.read-model';
 export type { CancelOrderDto } from '@/orders/application/dtos/cancel-order.dto';
 export { OrderNotFoundException } from '@/orders/application/exceptions/order-not-found.exception';
 export { InvalidOrderStateException } from '@/orders/domain/exceptions/invalid-order-state.exception';

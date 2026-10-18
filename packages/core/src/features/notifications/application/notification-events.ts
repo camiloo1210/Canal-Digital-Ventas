@@ -3,6 +3,7 @@ export const ORDER_NOTIFICATION_EVENTS = {
   OrderPaidEvent: 'paid',
   OrderProcessingEvent: 'processing',
   OrderShippedEvent: 'shipped',
+  OrderDeliveredEvent: 'delivered',
   OrderCancelledEvent: 'cancelled',
 } as const;
 

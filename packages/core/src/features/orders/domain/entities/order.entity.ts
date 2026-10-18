@@ -9,6 +9,7 @@ import { DomainEvent } from '@/shared/domain/events/domain-event.interface';
 import { OrderId } from '@/orders/domain/types/order-id.type';
 import { OrderCreatedEvent } from '@/orders/domain/events/order-created.event';
 import { OrderShippedEvent } from '@/orders/domain/events/order-shipped.event';
+import { OrderDeliveredEvent } from '@/orders/domain/events/order-delivered.event';
 import { OrderPaidEvent } from '@/orders/domain/events/order-paid.event';
 import { OrderRefundedEvent } from '@/orders/domain/events/order-refunded.event';
 import { OrderProcessingEvent } from '@/orders/domain/events/order-processing.event';
@@ -102,7 +103,6 @@ export class Order {
     order.addDomainEvent(new OrderCreatedEvent(id));
     return order;
   }
-  //Validations
   private static validateId(id: OrderId): void {
     if (!id || id.trim().length === 0) {
       throw new InvalidOrderAttributeException('Order ID is required.');
@@ -174,7 +174,6 @@ export class Order {
       throw new InvalidOrderAttributeException('Created at date must be before updated at date.');
     }
   }
-  //Updates
   public changeShippingAddress(shippingAddress: Address): void {
     const allowedStates = [
       OrderStatus.DRAFT,
@@ -184,7 +183,7 @@ export class Order {
     ];
     if (!allowedStates.includes(this.status)) {
       throw new InvalidOrderStateException(
-        'Solo se puede cambiar la dirección de envío en estado de borrador, confirmado, pendiente de pago o en proceso.',
+        'Shipping address can only change while the order is draft, confirmed, awaiting payment or processing.',
       );
     }
     Order.validateShippingAddress(shippingAddress);
@@ -197,7 +196,6 @@ export class Order {
     this.version++;
   }
 
-  //Reconstitute
   public static reconstitute(props: OrderProps): Order {
     return new Order(
       props.id,
@@ -218,10 +216,9 @@ export class Order {
       props.version,
     );
   }
-  //Actions(Business Logic)
   public markAsShipped(): void {
-    if (this.status !== OrderStatus.PAID && this.status !== OrderStatus.PROCESSING) {
-      throw new InvalidOrderStateException('Order must be paid or processing to be shipped.');
+    if (this.status !== OrderStatus.PROCESSING) {
+      throw new InvalidOrderStateException('Order must be processing to be shipped.');
     }
     this.status = OrderStatus.SHIPPED;
     this.addDomainEvent(new OrderShippedEvent(this.id));
@@ -230,12 +227,10 @@ export class Order {
 
   public confirm(): void {
     if (this.status !== OrderStatus.DRAFT) {
-      throw new InvalidOrderStateException(
-        'Solo los pedidos en estado de carrito (DRAFT) pueden ser confirmados.',
-      );
+      throw new InvalidOrderStateException('Only draft orders can be confirmed.');
     }
     if (this.items.length === 0) {
-      throw new InvalidOrderStateException('No se puede confirmar un pedido sin productos.');
+      throw new InvalidOrderStateException('An order without items cannot be confirmed.');
     }
 
     this.status = OrderStatus.CONFIRMED;
@@ -262,7 +257,16 @@ export class Order {
     this.updateUpdatedAt();
   }
 
-  /** Called only after the authoritative payment book confirms a full refund. Stock returns are a separate business flow. */
+  public markAsDelivered(): void {
+    if (this.status !== OrderStatus.SHIPPED) {
+      throw new InvalidOrderStateException('Order must be shipped to be delivered.');
+    }
+    this.status = OrderStatus.DELIVERED;
+    this.addDomainEvent(new OrderDeliveredEvent(this.id));
+    this.updateUpdatedAt();
+  }
+
+  /** Apply a confirmed full refund; inventory returns are handled separately. */
   public applyObservedFullRefund(paymentGatewayId: PaymentGatewayId): void {
     if (
       ![
@@ -291,9 +295,7 @@ export class Order {
 
   public cancel(): void {
     if (this.status !== OrderStatus.CONFIRMED && this.status !== OrderStatus.PROCESSING) {
-      throw new InvalidOrderStateException(
-        'Solo es posible cancelar pedidos en estado Confirmado (CONFIRMED) o En Proceso (PROCESSING).',
-      );
+      throw new InvalidOrderStateException('Only confirmed or processing orders can be cancelled.');
     }
     this.status = OrderStatus.CANCELLED;
     this.addDomainEvent(new OrderCancelledEvent(this.id));
@@ -311,12 +313,11 @@ export class Order {
 
   public addOrderItem(item: OrderItem): void {
     if (this.status !== OrderStatus.DRAFT) {
-      throw new InvalidOrderStateException(
-        'Solo se pueden añadir productos cuando el pedido es un carrito (DRAFT).',
-      );
+      throw new InvalidOrderStateException('Items can only be added to draft orders.');
     }
     const existingItem = this.items.find(
-      (i) => i.getProductId() === item.getProductId() && i.getVariantId() === item.getVariantId(),
+      (i: OrderItem): boolean =>
+        i.getProductId() === item.getProductId() && i.getVariantId() === item.getVariantId(),
     );
     if (existingItem) {
       existingItem.changeQuantity(existingItem.getQuantity() + item.getQuantity());
@@ -329,11 +330,9 @@ export class Order {
 
   public removeOrderItem(itemId: string): void {
     if (this.status !== OrderStatus.DRAFT) {
-      throw new InvalidOrderStateException(
-        'Solo se pueden eliminar productos cuando el pedido es un carrito (DRAFT).',
-      );
+      throw new InvalidOrderStateException('Items can only be removed from draft orders.');
     }
-    this.items = this.items.filter((i) => i.getId() !== itemId);
+    this.items = this.items.filter((i: OrderItem): boolean => i.getId() !== itemId);
     if (this.items.length === 0)
       throw new InvalidOrderAttributeException('Order must have at least one item.');
     this.recalculateAllTotals();
@@ -342,11 +341,9 @@ export class Order {
 
   public changeItemQuantity(itemId: string, quantity: number): void {
     if (this.status !== OrderStatus.DRAFT) {
-      throw new InvalidOrderStateException(
-        'Solo se pueden cambiar cantidades cuando el pedido es un carrito (DRAFT).',
-      );
+      throw new InvalidOrderStateException('Item quantities can only change in draft orders.');
     }
-    const item = this.items.find((i) => i.getId() === itemId);
+    const item = this.items.find((i: OrderItem): boolean => i.getId() === itemId);
     if (!item) throw new InvalidOrderAttributeException('Item not found in order.');
     item.changeQuantity(quantity);
     this.recalculateAllTotals();
@@ -379,8 +376,6 @@ export class Order {
   public clearDomainEvents(): void {
     this._domainEvents.length = 0;
   }
-
-  //Getters
 
   public getId(): OrderId {
     return this.id;

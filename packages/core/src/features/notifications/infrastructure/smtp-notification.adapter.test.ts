@@ -19,6 +19,7 @@ const subjects = {
   paid: 'Paid {orderNumber}',
   processing: 'Processing {orderNumber}',
   shipped: 'Shipped {orderNumber}',
+  delivered: 'Delivered {orderNumber}',
 };
 const copies: NotificationCopies = {
   es: { subjects, body: '{tenantName}: {status}' },
