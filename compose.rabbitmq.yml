@@ -1,9 +1,5 @@
-x-worker: &worker
-  image: canaldigital-messaging-worker:local
-  build:
-    context: .
-    dockerfile: apps/worker/Dockerfile
-    target: runtime
+x-worker: &worker # `pnpm messaging:up` builds the default local image if missing.
+  image: ${PAYMENTS_WORKER_IMAGE:-canaldigital-messaging-worker:local}
   init: true
   read_only: true
   tmpfs:
@@ -12,19 +8,24 @@ x-worker: &worker
   security_opt:
     - no-new-privileges:true
   pids_limit: 128
-  mem_limit: 384m
+  mem_limit: 256m
+  memswap_limit: 256m
   cpus: 0.5
   restart: unless-stopped
+  ulimits:
+    core: { soft: 0, hard: 0 }
+    nofile: { soft: 1024, hard: 4096 }
   stop_grace_period: 90s
   depends_on:
     rabbitmq:
       condition: service_healthy
   healthcheck:
     test: ['CMD', 'node', 'healthcheck.mjs']
-    interval: 15s
+    interval: 30s
     timeout: 5s
     retries: 3
     start_period: 30s
+    start_interval: 5s
   logging:
     driver: json-file
     options:
@@ -33,13 +34,17 @@ x-worker: &worker
 
 services:
   rabbitmq:
-    image: rabbitmq:4.3-management@sha256:8d0592c8f13b9ca76d844aa269f54461503223f36d0bf955859608d78baaf8fb
+    image: rabbitmq:4.3.6-alpine@sha256:6931816af1a943f471c038b278835d36692d55dec769232739296bb91b7de0f5
     hostname: canaldigital-rabbitmq
     # Private broker: no host ports or Coolify public domains are required.
+    # The official entrypoint chowns the data volume, then drops to rabbitmq with su-exec.
+    cap_drop: [ALL]
+    cap_add: [CHOWN, SETUID, SETGID]
     security_opt:
       - no-new-privileges:true
     pids_limit: 512
     mem_limit: 768m
+    memswap_limit: 768m
     cpus: 1.0
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:?Configure RABBITMQ_USER}
@@ -48,12 +53,20 @@ services:
       RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: '+S 2:2'
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
+    configs:
+      - source: rabbitmq-resource-limits
+        target: /etc/rabbitmq/conf.d/20-resource-limits.conf
     healthcheck:
-      test: ['CMD', 'rabbitmq-diagnostics', '-q', 'ping']
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ['CMD', 'su-exec', 'rabbitmq', 'rabbitmq-diagnostics', '-q', 'check_running']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+      start_interval: 5s
     restart: unless-stopped
+    ulimits:
+      core: { soft: 0, hard: 0 }
+      nofile: { soft: 4096, hard: 4096 }
     logging:
       driver: json-file
       options:
@@ -152,3 +165,7 @@ services:
 
 volumes:
   rabbitmq-data:
+
+configs:
+  rabbitmq-resource-limits:
+    file: ./apps/worker/docker/rabbitmq.conf

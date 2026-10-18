@@ -5,13 +5,13 @@ DROP FUNCTION IF EXISTS core.list_public_active_tenants();
 DROP FUNCTION IF EXISTS catalog.get_public_categories_by_slug(VARCHAR);
 DROP FUNCTION IF EXISTS catalog.get_public_products_by_slug(VARCHAR, UUID, VARCHAR, INT, INT);
 
--- Drop exacto porque el RETURNS TABLE contract cambió:
+-- Drop the exact signature because the RETURNS TABLE contract changed:
 DROP FUNCTION IF EXISTS public.get_public_categories_by_slug(VARCHAR);
 
--- Remove explícitamente el contrato legacy basado en UUID para evitar dualidad de APIs:
+-- Explicitly remove the legacy UUID-based contract to avoid duplicate APIs:
 DROP FUNCTION IF EXISTS public.get_public_products_by_slug(VARCHAR, UUID, VARCHAR, INT, INT);
 
--- Remove el RPC legacy global no-paginado (violación de seguridad V5):
+-- Remove the legacy global RPC without pagination (a V5 security violation):
 DROP FUNCTION IF EXISTS public.list_public_active_tenants();
 
 

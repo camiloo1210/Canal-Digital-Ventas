@@ -16,7 +16,7 @@ import { createSeasonId } from '@/products/domain/types/season-id.type';
 
 export class SupabaseProductMapper {
   public static toDomain(row: DbProductRow): Product {
-    // 1. Mapear las variantes primero si vienen en el JOIN
+    // 1. Map variants first when they are included in the JOIN.
     const variants =
       row.product_variants?.map((v: DbProductVariantRow) =>
         ProductVariant.reconstitute({

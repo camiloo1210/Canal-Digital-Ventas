@@ -6,7 +6,7 @@ export enum PaymentStatus {
   EXPIRED_UNPAID_AWAITING_RECONCILIATION = 'expired_unpaid_awaiting_reconciliation',
   LATE_PAYMENT_PENDING_COMPENSATION = 'late_payment_pending_compensation',
   PARTIALLY_REFUNDED = 'partially_refunded',
-  // Centinela de lectura: nunca es un valor persistible.
+  // Read sentinel: this value must never be persisted.
   UNRECOGNIZED = '__unrecognized__',
 }
 
@@ -27,7 +27,7 @@ const LEGACY_WRITABLE_PAYMENT_STATUSES: ReadonlySet<PaymentStatus> = new Set<Pay
   PaymentStatus.REFUNDED,
 ]);
 
-// Lector tolerante (plan §5.4): función total, nunca lanza.
+// Tolerant reader (plan §5.4): a total function that never throws.
 export function resolvePaymentStatus(raw: unknown): PaymentStatus {
   if (typeof raw === 'string' && RECOGNIZED_PAYMENT_STATUSES.has(raw)) {
     return raw as PaymentStatus;
