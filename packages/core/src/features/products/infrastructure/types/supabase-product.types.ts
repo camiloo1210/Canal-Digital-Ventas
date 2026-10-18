@@ -16,7 +16,6 @@ export interface DbProductRow {
   price_cents: number;
   cost_cents: number;
   wholesale_price_cents: number;
-  wholesale_min_quantity: number;
   description: string;
   stock: number;
   category_id: string;

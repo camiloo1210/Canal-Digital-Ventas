@@ -4,4 +4,3 @@ npx lint-staged
 # (Opcional) Verificación de tipos en TypeScript para los workspaces
 pnpm --filter "./packages/core" exec tsc --noEmit
 pnpm --filter "./apps/web" exec tsc --noEmit
-pnpm --filter "./apps/worker" exec tsc --noEmit

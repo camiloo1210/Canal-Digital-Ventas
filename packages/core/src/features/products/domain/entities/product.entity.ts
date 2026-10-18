@@ -22,7 +22,6 @@ export interface ProductProps {
   price: Money;
   cost: Money;
   wholesalePrice: Money;
-  wholesaleMinQuantity: number;
   description: string;
   stock: number;
   categoryId: CategoryId;
@@ -49,7 +48,6 @@ export class Product {
     private price: Money,
     private cost: Money,
     private wholesalePrice: Money,
-    private wholesaleMinQuantity: number,
     private description: string,
     private stock: number,
     private categoryId: CategoryId,
@@ -84,7 +82,6 @@ export class Product {
     variants: ProductVariant[],
     isVatExempt: boolean,
     wholesalePrice: Money | null,
-    wholesaleMinQuantity: number | null,
   ): Product {
     Product.validateId(id);
     Product.validateCategoryId(categoryId);
@@ -99,9 +96,6 @@ export class Product {
       status || (stock === 0 ? ProductStatus.OUT_OF_STOCK : ProductStatus.ACTIVE);
     const hasVariants = variants.length > 0;
     const finalWholesalePrice = wholesalePrice ?? Money.from(0, price.getCurrency());
-    const finalWholesaleMinQty = wholesaleMinQuantity ?? 0;
-
-    Product.validateWholesaleRules(finalWholesalePrice, finalWholesaleMinQty);
 
     const product = new Product(
       id,
@@ -109,7 +103,6 @@ export class Product {
       price,
       cost,
       finalWholesalePrice,
-      finalWholesaleMinQty,
       description,
       stock,
       categoryId,
@@ -138,7 +131,6 @@ export class Product {
       props.price,
       props.cost,
       props.wholesalePrice,
-      props.wholesaleMinQuantity,
       props.description,
       props.stock,
       props.categoryId,
@@ -158,19 +150,6 @@ export class Product {
   }
 
   // Validations
-  private static validateWholesaleRules(price: Money, minQuantity: number): void {
-    if (price.getValue() === 0 && minQuantity > 0) {
-      throw new InvalidProductAttributeException(
-        'Wholesale minimum quantity cannot be greater than 0 if there is no wholesale price.',
-      );
-    }
-    if (price.getValue() > 0 && minQuantity < 1) {
-      throw new InvalidProductAttributeException(
-        'Wholesale minimum quantity must be at least 1 when a wholesale price is set.',
-      );
-    }
-  }
-
   private static validateId(id: ProductId): void {
     if (!id || id.trim().length === 0)
       throw new InvalidProductAttributeException('Product ID is required.');
@@ -201,14 +180,6 @@ export class Product {
   }
 
   // Business Actions
-  public unarchive(): void {
-    if (this.status !== ProductStatus.ARCHIVED) {
-      throw new InvalidProductStateException('Only archived products can be unarchived.');
-    }
-    this.status = this.stock > 0 ? ProductStatus.ACTIVE : ProductStatus.OUT_OF_STOCK;
-    this.version++;
-  }
-
   public archive(): void {
     if (this.status === ProductStatus.ARCHIVED) {
       throw new InvalidProductStateException('Product is already archived.');
@@ -243,32 +214,14 @@ export class Product {
     this.updateUpdatedAt();
   }
 
-  public changePricing(price: Money, cost: Money): void {
-    this.price = price;
-    this.cost = cost;
-    this.addDomainEvent(new ProductPricingChangedEvent(this.id));
-    this.updateUpdatedAt();
-  }
-
-  public changeWholesaleRules(wholesalePrice: Money, wholesaleMinQuantity: number): void {
+  public changePricing(price: Money, cost: Money, wholesalePrice: Money): void {
     if (wholesalePrice.getValue() < 0) {
       throw new InvalidProductAttributeException('Wholesale price cannot be negative.');
     }
-    Product.validateWholesaleRules(wholesalePrice, wholesaleMinQuantity);
+    this.price = price;
+    this.cost = cost;
     this.wholesalePrice = wholesalePrice;
-    this.wholesaleMinQuantity = wholesaleMinQuantity;
     this.addDomainEvent(new ProductPricingChangedEvent(this.id));
-    this.updateUpdatedAt();
-  }
-
-  public decreaseStock(quantity: number): void {
-    if (quantity <= 0) {
-      throw new InvalidProductAttributeException('Decrease quantity must be strictly positive.');
-    }
-    if (quantity > this.stock) {
-      throw new InvalidProductStateException('Insufficient stock.');
-    }
-    this.stock -= quantity;
     this.updateUpdatedAt();
   }
 
@@ -350,9 +303,6 @@ export class Product {
   }
   public getWholesalePrice(): Money {
     return this.wholesalePrice;
-  }
-  public getWholesaleMinQuantity(): number {
-    return this.wholesaleMinQuantity;
   }
   public getDescription(): string {
     return this.description;
