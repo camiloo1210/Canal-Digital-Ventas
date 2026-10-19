@@ -105,6 +105,7 @@ export { LocalEventBus } from '@/shared/infrastructure/event-bus/local-event-bus
 
 // Domain
 export { InvalidProviderException } from '@/iam/domain/exceptions/invalid-provider.exception';
+export { InvalidCredentialsException } from '@/iam/domain/exceptions/invalid-credentials.exception';
 export { InvalidPermissionException } from '@/iam/domain/exceptions/invalid-permission.exception';
 export type { OAuthProvider } from '@/iam/domain/types/oauth-provider.type';
 

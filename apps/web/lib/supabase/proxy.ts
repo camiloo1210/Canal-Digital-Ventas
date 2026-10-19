@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { safeAuthReturnPath } from '@/features/iam/utils/auth-return-path';
 
 export async function updateSession(request: NextRequest): Promise<NextResponse> {
   let supabaseResponse = NextResponse.next({
@@ -38,12 +39,12 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
   const isOnboardingPath = request.nextUrl.pathname.startsWith('/onboarding');
   const isDashboardRoute = request.nextUrl.pathname.startsWith('/dashboard');
 
-  // Any route that doesn't strictly require authentication
-  // Note: /storefront is considered public, as buyers can browse without an account
+  // Only catalog and product detail are public; checkout remains authenticated.
+  const isPublicStoreRoute = /^\/store\/[^/]+(?:\/products\/[^/]+)?\/?$/.test(
+    request.nextUrl.pathname,
+  );
   const isPublicRoute =
-    isAuthRoute ||
-    request.nextUrl.pathname.startsWith('/storefront') ||
-    request.nextUrl.pathname.startsWith('/api');
+    isAuthRoute || isPublicStoreRoute || request.nextUrl.pathname.startsWith('/api');
   // Under V5, we query tenant_memberships instead of trusting JWT claims
   let hasTenant = false;
   if (user && (isDashboardRoute || isOnboardingPath || isAuthRoute)) {
@@ -52,6 +53,7 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
       .from('tenant_memberships')
       .select('tenant_id')
       .eq('user_id', user.id)
+      .eq('status', 'active')
       .limit(1);
 
     if (error) {
@@ -65,6 +67,11 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
+    url.search = '';
+    url.searchParams.set(
+      'redirectTo',
+      safeAuthReturnPath(`${request.nextUrl.pathname}${request.nextUrl.search}`),
+    );
     return NextResponse.redirect(url);
   }
 
@@ -86,8 +93,11 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
 
     // Auth Routes -> Logged in -> Redirect away from auth forms
     if (isAuthRoute && !request.nextUrl.pathname.startsWith('/auth/callback')) {
-      const url = request.nextUrl.clone();
-      url.pathname = hasTenant ? '/dashboard' : '/';
+      const destination = safeAuthReturnPath(
+        request.nextUrl.searchParams.get('redirectTo'),
+        hasTenant ? '/dashboard' : '/',
+      );
+      const url = new URL(destination, request.url);
       return NextResponse.redirect(url);
     }
   }

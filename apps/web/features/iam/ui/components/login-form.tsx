@@ -19,13 +19,17 @@ import {
 } from '@/features/iam/actions/login.actions';
 import { toast } from '@/components/ui/toast';
 import { useActionState } from 'react';
+import { useTranslations } from 'next-intl';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useFormStatus } from 'react-dom';
+import { buyerAuthHref, safeAuthReturnPath } from '@/features/iam/utils/auth-return-path';
 
 function SubmitButton(): React.JSX.Element {
   const { pending } = useFormStatus();
+  const t = useTranslations('Storefront.auth');
   return (
-    <Button type="submit" disabled={pending}>
-      {pending ? 'Logging in...' : 'Login'}
+    <Button type="submit" className="min-h-11" disabled={pending}>
+      {pending ? t('loggingIn') : t('login')}
     </Button>
   );
 }
@@ -33,8 +37,10 @@ function SubmitButton(): React.JSX.Element {
 export function LoginForm({
   className,
   message,
+  redirectTo,
   ...props
-}: React.ComponentProps<'form'> & { message?: string }): React.JSX.Element {
+}: React.ComponentProps<'form'> & { message?: string; redirectTo?: string }): React.JSX.Element {
+  const t = useTranslations('Storefront.auth');
   const initialState: ActionState = { error: null, success: false };
   const [state, formAction] = useActionState(loginWithEmailAction, initialState);
 
@@ -44,47 +50,62 @@ export function LoginForm({
         className="flex flex-col gap-6"
         action={formAction}
         {...props}
-        onSubmit={(e) => {
+        onSubmit={(e: React.FormEvent<HTMLFormElement>): void => {
           if (typeof navigator !== 'undefined' && !navigator.onLine) {
             e.preventDefault();
             toast.add({
               type: 'error',
-              title: 'Offline',
-              description: 'You are OFFLINE. Internet is required to log in.',
+              title: t('offlineTitle'),
+              description: t('offlineDescription'),
             });
             return;
           }
         }}
       >
+        <input
+          type="hidden"
+          name="redirectTo"
+          value={redirectTo ? safeAuthReturnPath(redirectTo) : ''}
+        />
         <FieldGroup>
           <div className="flex flex-col items-center gap-1 text-center">
-            <h1 className="text-2xl font-bold">Login to your account</h1>
-            <p className="text-muted-foreground text-sm text-balance">
-              Enter your email below to login to your account
-            </p>
+            <h1 className="text-2xl font-bold">{t('loginTitle')}</h1>
+            <p className="text-muted-foreground text-sm text-balance">{t('loginDescription')}</p>
           </div>
           {state?.error && (
-            <div className="p-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded-md">
-              {state.error}
-            </div>
+            <Alert variant="destructive" role="alert">
+              <AlertDescription>{state.error}</AlertDescription>
+            </Alert>
           )}
           {(message || state?.success) && (
-            <div className="p-3 text-sm text-blue-500 bg-blue-50 border border-blue-200 rounded-md">
-              {state?.success ? 'Sign in successful! Redirecting...' : message}
-            </div>
+            <Alert role="status">
+              <AlertDescription>{state?.success ? t('success') : message}</AlertDescription>
+            </Alert>
           )}
           <Field>
-            <FieldLabel htmlFor="email">Email</FieldLabel>
-            <Input id="email" name="email" type="email" placeholder="m@example.com" required />
+            <FieldLabel htmlFor="email">{t('email')}</FieldLabel>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              className="min-h-11"
+              placeholder={t('emailPlaceholder')}
+              required
+            />
           </Field>
           <Field>
             <div className="flex items-center">
-              <FieldLabel htmlFor="password">Password</FieldLabel>
-              <a href="#" className="ml-auto text-sm underline-offset-4 hover:underline">
-                Forgot your password?
-              </a>
+              <FieldLabel htmlFor="password">{t('password')}</FieldLabel>
             </div>
-            <Input id="password" name="password" type="password" required />
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              className="min-h-11"
+              required
+            />
           </Field>
           <Field>
             <SubmitButton />
@@ -93,10 +114,20 @@ export function LoginForm({
       </form>
 
       <div className="flex flex-col gap-6 w-full">
-        <FieldSeparator>Or continue with Google</FieldSeparator>
+        <FieldSeparator>{t('orGoogle')}</FieldSeparator>
         <form action={loginWithGoogleAction} className="w-full">
-          <Button variant="outline" className="w-full" type="submit">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="mr-2 h-4 w-4">
+          <input
+            type="hidden"
+            name="redirectTo"
+            value={redirectTo ? safeAuthReturnPath(redirectTo) : ''}
+          />
+          <Button variant="outline" className="min-h-11 w-full" type="submit">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              className="mr-2 h-4 w-4"
+              aria-hidden="true"
+            >
               <path
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                 fill="#4285F4"
@@ -114,20 +145,23 @@ export function LoginForm({
                 fill="#EA4335"
               />
             </svg>
-            Continue with Google
+            {t('google')}
           </Button>
         </form>
         <FieldDescription className="text-center flex flex-col gap-2">
           <span>
-            Don&apos;t have an account?{' '}
-            <Link href="/signup/business" className="underline underline-offset-4 hover:opacity-80">
-              Sign up as Business
+            {t('noAccount')}{' '}
+            <Link
+              href={buyerAuthHref('/signup', redirectTo)}
+              className="underline underline-offset-4 hover:opacity-80"
+            >
+              {t('createAccount')}
             </Link>
           </span>
           <span>
-            Are you a client?{' '}
-            <Link href="/signup" className="underline underline-offset-4 hover:opacity-80">
-              Register here
+            {t('seller')}{' '}
+            <Link href="/signup/business" className="underline underline-offset-4 hover:opacity-80">
+              {t('businessSignup')}
             </Link>
           </span>
         </FieldDescription>
