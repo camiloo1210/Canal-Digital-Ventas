@@ -20,7 +20,9 @@
     "whatsapp": "WhatsApp Channel",
     "settings": "Settings",
     "help": "Get Help",
-    "search": "Search"
+    "search": "Search",
+    "store": "My store",
+    "customization": "Store customization"
   },
   "Products": {
     "list_title": "Products",
@@ -190,7 +192,16 @@
     "visit_store": "Visit Storefront",
     "recent_purchases": "Recent Purchases",
     "recent_purchases_desc": "Here you can see all orders placed across any tenant store.",
-    "empty_purchases": "You haven't made any purchases yet."
+    "empty_purchases": "You haven't made any purchases yet.",
+    "search_stores_label": "Search stores",
+    "search_stores_placeholder": "Search by store name or URL…",
+    "search_stores_button": "Search",
+    "clear_store_search": "Clear search",
+    "no_matching_stores": "No stores match your search. Try another name or clear the filter.",
+    "store_results": "{count, plural, =0 {No matching stores} one {# store found} other {# stores found}}",
+    "previous_stores": "Previous",
+    "next_stores": "Next",
+    "store_pagination": "Store pages"
   },
   "Orders": {
     "actions": {
@@ -301,5 +312,51 @@
       },
       "body": "{tenantName}: {status}. You can view your order details in your account."
     }
+  },
+  "StoreSettings": {
+    "title": "Store customization",
+    "subtitle": "Give your store its own identity and show your brand to shoppers.",
+    "identity": "Store identity",
+    "identityHelp": "These details appear on your public store.",
+    "name": "Store name",
+    "description": "Description",
+    "descriptionHelp": "Describe your store in up to 255 characters. The name accepts 3 to 100 characters.",
+    "images": "Logo and banner",
+    "imageHelp": "JPG, PNG or WebP images. Maximum 5 MB per image.",
+    "logo": "Logo",
+    "logoHelp": "Recommended: a square image of at least 400 × 400 pixels.",
+    "banner": "Banner",
+    "bannerHelp": "Recommended: a horizontal image of 1500 × 500 pixels.",
+    "removeLogo": "Remove logo",
+    "removeBanner": "Remove banner",
+    "preview": "Preview",
+    "visit": "View store",
+    "previewHelp": "Changes are published when you save.",
+    "descriptionPlaceholder": "Your store description will appear here.",
+    "logoAlt": "Store logo preview",
+    "bannerAlt": "Store banner preview",
+    "save": "Save changes",
+    "saving": "Saving…",
+    "saved": "Your store customization was saved successfully.",
+    "unauthorized": "You must be an owner or administrator of an active store to customize it.",
+    "invalidInput": "Check the form details.",
+    "invalidImage": "Choose valid JPG, PNG or WebP images of up to 5 MB each.",
+    "invalidProfile": "Check the name (3 to 100 characters), slug (3 to 50 lowercase characters, numbers and hyphens) and description (up to 255 characters).",
+    "concurrency": "The store changed since you opened this page. Reload the page before saving again.",
+    "unexpected": "Changes could not be saved. Your entries have been kept so you can try again.",
+    "slug": "Store URL (slug)",
+    "slugHelp": "3 to 50 characters: lowercase letters, numbers and single hyphens. Must be unique.",
+    "slugChangeNotice": "Saving will change the public URL. Links using the previous slug will stop working.",
+    "slugTaken": "This URL already belongs to another store. Choose a different slug."
+  },
+  "NotFound": {
+    "brand": "Canal Digital",
+    "code": "Error 404 · Page not found",
+    "title": "We could not find this page",
+    "description": "The address you are looking for does not exist or is no longer available. The link may have changed, or the address may be incomplete.",
+    "backHome": "Back to home",
+    "hint": "Check the address or return home to find stores and keep browsing.",
+    "backDashboard": "Back to admin dashboard",
+    "dashboardHint": "Return to your dashboard to continue managing your store."
   }
 }
