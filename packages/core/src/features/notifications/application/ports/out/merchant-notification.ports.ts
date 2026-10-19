@@ -2,6 +2,10 @@ import type {
   DeliveryClaim,
   NotificationLocale,
 } from '@/notifications/application/ports/out/notification.ports';
+import type {
+  NotificationOrderDetails,
+  NotificationPresentationCopy,
+} from '@/notifications/application/ports/out/notification-order-details';
 
 export type MerchantNotificationKind = 'new_order' | 'paid' | 'cancelled' | 'low_stock';
 export interface MerchantStockItem {
@@ -16,6 +20,7 @@ export interface MerchantOrderRecipient {
   orderNumber: string;
   tenantName: string;
   stockItems: MerchantStockItem[];
+  order?: NotificationOrderDetails;
 }
 export interface MerchantNotificationReadPort {
   findRecipients(
@@ -47,5 +52,7 @@ export interface MerchantNotificationCopy {
   subjects: Record<MerchantNotificationKind, string>;
   body: string;
   stockLine: string;
+  intros?: Record<MerchantNotificationKind, string>;
+  presentation?: NotificationPresentationCopy;
 }
 export type MerchantNotificationCopies = Record<NotificationLocale, MerchantNotificationCopy>;

@@ -45,6 +45,7 @@ export async function runNotificationWorker(
             AND has_function_privilege(current_user, 'core.claim_notification_delivery(uuid,uuid,uuid,text,uuid)', 'EXECUTE')
             AND has_function_privilege(current_user, 'core.finish_notification_delivery(uuid,uuid,text)', 'EXECUTE')
             AND has_function_privilege(current_user, 'core.read_order_notification(uuid,uuid)', 'EXECUTE')
+            AND has_function_privilege(current_user, 'core.read_order_notification_details(uuid,uuid)', 'EXECUTE')
             AND has_function_privilege(current_user, 'core.read_merchant_order_notification(uuid,uuid,uuid,text)', 'EXECUTE')
             AND has_function_privilege(current_user, 'core.claim_merchant_notification_delivery(uuid,uuid,text,uuid)', 'EXECUTE')
             AND has_function_privilege(current_user, 'core.finish_merchant_notification_delivery(uuid,uuid,text,uuid,text)', 'EXECUTE') AS authorized

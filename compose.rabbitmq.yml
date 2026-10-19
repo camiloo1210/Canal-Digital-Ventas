@@ -105,6 +105,7 @@ services:
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       NOTIFICATION_LOCALE: ${NOTIFICATION_LOCALE:-es}
+      NOTIFICATION_APP_URL: ${NOTIFICATION_APP_URL:-}
 
   payment-inbox:
     <<: *worker

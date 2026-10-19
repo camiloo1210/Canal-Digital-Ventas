@@ -301,7 +301,35 @@
         "low_stock": "Poco stock en {tenantName}"
       },
       "body": "{tenantName}: {status}. Pedido: {orderNumber}. Consulta los detalles en el panel de tu negocio.",
-      "stockLine": "{name} (SKU: {sku}): {stock} unidades disponibles."
+      "stockLine": "{name} (SKU: {sku}): {stock} unidades disponibles.",
+      "intros": {
+        "new_order": "Tu tienda {tenantName} tiene un nuevo pedido. Revisa los productos y los datos de entrega para coordinar los siguientes pasos.",
+        "paid": "Se recibió el pago del pedido {orderNumber}. Revisa el resumen y continúa con la preparación desde tu panel.",
+        "cancelled": "El pedido {orderNumber} fue cancelado. Consulta los detalles en tu panel para revisar la operación.",
+        "low_stock": "Algunos productos de {tenantName} tienen pocas unidades disponibles. Revisa el inventario para planificar su reposición."
+      },
+      "presentation": {
+        "eyebrow": "NOVEDADES DE TU NEGOCIO",
+        "order": "Pedido",
+        "placedOn": "Realizado el",
+        "summary": "Lo que incluye tu pedido",
+        "quantity": "Cantidad",
+        "subtotal": "Subtotal",
+        "tax": "Impuestos",
+        "discount": "Descuento",
+        "shipping": "Envío",
+        "total": "Total",
+        "delivery": "Dirección de entrega",
+        "customer": "Cliente",
+        "viewOrder": "Ver pedido",
+        "visitStore": "Visitar la tienda",
+        "support": "¿Necesitas ayuda? Contacta con la tienda:",
+        "footer": "Aviso operativo de {tenantName}. Gestiona tus pedidos e inventario desde el panel de tu negocio.",
+        "moreItems": "Y {count} productos más. Consulta el pedido para ver el detalle completo.",
+        "stock": "Revisar inventario",
+        "availability": "unidades disponibles",
+        "sku": "SKU"
+      }
     },
     "email": {
       "subjects": {
@@ -312,7 +340,37 @@
         "cancelled": "Compra cancelada: pedido {orderNumber}",
         "paid": "Pago recibido: pedido {orderNumber}"
       },
-      "body": "{tenantName}: {status}. Puedes consultar los detalles de tu pedido en tu cuenta."
+      "body": "{tenantName}: {status}. Puedes consultar los detalles de tu pedido en tu cuenta.",
+      "intros": {
+        "confirmed": "¡Gracias por elegir {tenantName}! Recibimos tu pedido. Aquí tienes el resumen de tu compra y el acceso a sus detalles.",
+        "paid": "Recibimos el pago de tu pedido. Gracias por tu compra en {tenantName}. Te avisaremos cuando haya novedades.",
+        "processing": "En {tenantName} estamos preparando tu pedido con cuidado. Te avisaremos cuando salga de la tienda.",
+        "shipped": "¡Tu pedido ya fue enviado! Puedes consultar su estado y revisar los productos de tu compra en tu cuenta.",
+        "delivered": "Tu pedido fue marcado como entregado. Esperamos que disfrutes tu compra. Si necesitas ayuda, contacta con {tenantName}.",
+        "cancelled": "Tu pedido fue cancelado. Puedes revisar sus detalles en tu cuenta o contactar con {tenantName} si necesitas ayuda."
+      },
+      "presentation": {
+        "eyebrow": "ACTUALIZACIÓN DE TU PEDIDO",
+        "order": "Pedido",
+        "placedOn": "Realizado el",
+        "summary": "Lo que incluye tu pedido",
+        "quantity": "Cantidad",
+        "subtotal": "Subtotal",
+        "tax": "Impuestos",
+        "discount": "Descuento",
+        "shipping": "Envío",
+        "total": "Total",
+        "delivery": "Dirección de entrega",
+        "customer": "Cliente",
+        "viewOrder": "Ver pedido",
+        "visitStore": "Visitar la tienda",
+        "support": "¿Necesitas ayuda? Contacta con la tienda:",
+        "footer": "Recibes este correo por un pedido en {tenantName}. Conserva este mensaje como referencia de tu compra.",
+        "moreItems": "Y {count} productos más. Consulta el pedido para ver el detalle completo.",
+        "stock": "Revisar inventario",
+        "availability": "unidades disponibles",
+        "sku": "SKU"
+      }
     }
   },
   "StoreSettings": {

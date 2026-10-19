@@ -9,6 +9,7 @@ import type {
 } from '@/notifications/application/ports/out/merchant-notification.ports';
 import { MessagingException } from '@/shared/application/exceptions/messaging.exception';
 import { NotificationPermanentException } from '@/notifications/application/exceptions/notification-permanent.exception';
+import { parseNotificationOrder } from '@/notifications/infrastructure/notification-order-projection';
 
 interface MerchantRow {
   user_id: string;
@@ -16,6 +17,7 @@ interface MerchantRow {
   order_number: string;
   tenant_name: string;
   stock_items: unknown;
+  details: unknown;
 }
 
 export class PostgresMerchantNotificationAdapter
@@ -35,13 +37,15 @@ export class PostgresMerchantNotificationAdapter
     try {
       const rows = await this.sql<
         MerchantRow[]
-      >`SELECT * FROM core.read_merchant_order_notification(${messageId}::uuid,${tenantId}::uuid,${orderId}::uuid,${eventType}::text)`;
+      >`SELECT r.*, core.read_order_notification_details(${tenantId}::uuid,${orderId}::uuid) AS details
+        FROM core.read_merchant_order_notification(${messageId}::uuid,${tenantId}::uuid,${orderId}::uuid,${eventType}::text) r`;
       return rows.map((row: MerchantRow): MerchantOrderRecipient => ({
         userId: row.user_id,
         email: row.email,
         orderNumber: row.order_number,
         tenantName: row.tenant_name,
         stockItems: parseStockItems(row.stock_items),
+        order: parseNotificationOrder(row.details),
       }));
     } catch (error: unknown) {
       throw new MessagingException('Unable to read merchant notification recipients', error);

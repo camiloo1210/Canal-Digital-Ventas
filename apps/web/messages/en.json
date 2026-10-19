@@ -299,7 +299,35 @@
         "low_stock": "Low stock in {tenantName}"
       },
       "body": "{tenantName}: {status}. Order: {orderNumber}. Check the details in your business dashboard.",
-      "stockLine": "{name} (SKU: {sku}): {stock} units available."
+      "stockLine": "{name} (SKU: {sku}): {stock} units available.",
+      "intros": {
+        "new_order": "Your store {tenantName} has a new order. Review the products and delivery details to coordinate the next steps.",
+        "paid": "Payment was received for order {orderNumber}. Review the summary and continue preparation from your dashboard.",
+        "cancelled": "Order {orderNumber} was cancelled. Review the transaction details in your dashboard.",
+        "low_stock": "Some products at {tenantName} are running low. Review your inventory to plan replenishment."
+      },
+      "presentation": {
+        "eyebrow": "YOUR BUSINESS UPDATE",
+        "order": "Order",
+        "placedOn": "Placed on",
+        "summary": "Inside your order",
+        "quantity": "Quantity",
+        "subtotal": "Subtotal",
+        "tax": "Tax",
+        "discount": "Discount",
+        "shipping": "Shipping",
+        "total": "Total",
+        "delivery": "Delivery address",
+        "customer": "Customer",
+        "viewOrder": "View order",
+        "visitStore": "Visit the store",
+        "support": "Need help? Contact the store:",
+        "footer": "Operational update for {tenantName}. Manage orders and inventory from your business dashboard.",
+        "moreItems": "And {count} more products. View your order for the full details.",
+        "stock": "Review inventory",
+        "availability": "units available",
+        "sku": "SKU"
+      }
     },
     "email": {
       "subjects": {
@@ -310,7 +338,37 @@
         "cancelled": "Purchase cancelled: order {orderNumber}",
         "paid": "Payment received: order {orderNumber}"
       },
-      "body": "{tenantName}: {status}. You can view your order details in your account."
+      "body": "{tenantName}: {status}. You can view your order details in your account.",
+      "intros": {
+        "confirmed": "Thank you for choosing {tenantName}! We received your order. Here is your purchase summary and access to the details.",
+        "paid": "We received your order payment. Thank you for shopping at {tenantName}. We will keep you updated.",
+        "processing": "At {tenantName}, we are carefully preparing your order. We will let you know when it leaves the store.",
+        "shipped": "Your order has been shipped! Check its status and review your purchase in your account.",
+        "delivered": "Your order was marked as delivered. We hope you enjoy your purchase. Contact {tenantName} if you need any help.",
+        "cancelled": "Your order was cancelled. Review the details in your account or contact {tenantName} if you need help."
+      },
+      "presentation": {
+        "eyebrow": "YOUR ORDER UPDATE",
+        "order": "Order",
+        "placedOn": "Placed on",
+        "summary": "Inside your order",
+        "quantity": "Quantity",
+        "subtotal": "Subtotal",
+        "tax": "Tax",
+        "discount": "Discount",
+        "shipping": "Shipping",
+        "total": "Total",
+        "delivery": "Delivery address",
+        "customer": "Customer",
+        "viewOrder": "View order",
+        "visitStore": "Visit the store",
+        "support": "Need help? Contact the store:",
+        "footer": "You received this email about an order at {tenantName}. Keep this message for your purchase records.",
+        "moreItems": "And {count} more products. View your order for the full details.",
+        "stock": "Review inventory",
+        "availability": "units available",
+        "sku": "SKU"
+      }
     }
   },
   "StoreSettings": {
