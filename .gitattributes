@@ -1,2 +1,5 @@
 # Deployment scripts must remain executable by Bash after checkout on any host.
 apps/worker/docker/*.sh text eol=lf
+
+# Git hooks are POSIX shell scripts, including on Windows.
+.husky/* text eol=lf

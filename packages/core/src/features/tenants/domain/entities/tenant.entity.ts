@@ -146,6 +146,28 @@ export class Tenant {
   }
 
   // Business Actions
+  public customizeStore(
+    name: string,
+    slug: TenantSlug,
+    description: string,
+    logoUrl: string | null,
+    bannerUrl: string | null,
+  ): void {
+    if (logoUrl !== null && logoUrl.length > 1024) {
+      throw new InvalidTenantAttributeException('Tenant logo URL cannot exceed 1024 characters.');
+    }
+    this.updateProfile(
+      TenantName.create(name),
+      slug,
+      this.contactEmail,
+      this.taxId,
+      this.customDomain,
+      logoUrl,
+      description,
+      bannerUrl,
+    );
+  }
+
   public activate(): void {
     if (this.status === TenantStatus.ARCHIVED) {
       throw new InvalidTenantStateException('Cannot activate an archived tenant.');

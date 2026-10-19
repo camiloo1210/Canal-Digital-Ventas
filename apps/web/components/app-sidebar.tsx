@@ -35,6 +35,7 @@ import {
   SearchIcon,
   CommandIcon,
   ChevronRight,
+  Paintbrush,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -58,6 +59,8 @@ type SidebarMessageKey =
   | 'notifications'
   | 'whatsapp'
   | 'settings'
+  | 'store'
+  | 'customization'
   | 'help'
   | 'search';
 
@@ -73,6 +76,10 @@ interface NavigationGroup {
 }
 
 const navigation: NavigationGroup[] = [
+  {
+    label: 'store',
+    items: [{ title: 'customization', href: '/dashboard/store', icon: Paintbrush }],
+  },
   {
     label: 'analytics_dashboard',
     items: [
@@ -216,7 +223,7 @@ export function AppSidebar({
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        {navigation.map((group) => (
+        {navigation.map((group: NavigationGroup): React.JSX.Element => (
           <Collapsible.Root key={group.label} defaultOpen className="group/collapsible">
             <SidebarGroup>
               <SidebarGroupLabel
@@ -230,7 +237,7 @@ export function AppSidebar({
               <Collapsible.Panel>
                 <SidebarGroupContent>
                   <SidebarMenu>
-                    {group.items.map((item) => (
+                    {group.items.map((item: NavigationItem): React.JSX.Element => (
                       <SidebarMenuItem key={item.title}>
                         <SidebarMenuButton render={<Link href={item.href} />}>
                           <item.icon />
@@ -246,7 +253,12 @@ export function AppSidebar({
         ))}
 
         <NavSecondary
-          items={navSecondary.map((item) => ({ ...item, title: t(item.title) }))}
+          items={navSecondary.map(
+            (item: NavSecondaryItem): Omit<NavSecondaryItem, 'title'> & { title: string } => ({
+              ...item,
+              title: t(item.title),
+            }),
+          )}
           className="mt-auto"
         />
       </SidebarContent>

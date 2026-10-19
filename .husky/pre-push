@@ -1,4 +1,4 @@
-npx husky run pre-push
+set -eu
 
 # Ejecutar pruebas antes de subir código
 pnpm test
