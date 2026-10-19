@@ -1,11 +1,10 @@
 import 'server-only';
-import { createClient } from '@/lib/supabase/server';
+import { sql } from '@/lib/postgres/server';
 import {
-  PublicTenantDirectoryReadRepositoryPort,
-  SupabasePublicTenantDirectoryReadAdapter,
+  type PublicTenantDirectorySearchRepositoryPort,
+  PostgresPublicTenantDirectoryReadAdapter,
 } from '@canaldigital/packages/core';
 
-export async function getStoreDirectoryReadRepository(): Promise<PublicTenantDirectoryReadRepositoryPort> {
-  const supabase = await createClient();
-  return new SupabasePublicTenantDirectoryReadAdapter(supabase);
+export async function getStoreDirectoryReadRepository(): Promise<PublicTenantDirectorySearchRepositoryPort> {
+  return new PostgresPublicTenantDirectoryReadAdapter(sql);
 }

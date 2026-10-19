@@ -19,7 +19,11 @@ export default async function BuyerDashboardPage(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }): Promise<React.JSX.Element> {
   const searchParams = await props.searchParams;
-  const page = searchParams.page ? parseInt(searchParams.page as string, 10) : 1;
+  const page = typeof searchParams.page === 'string' ? Number(searchParams.page) : 1;
+  const storeSearch =
+    typeof searchParams.storeSearch === 'string'
+      ? searchParams.storeSearch.trim().slice(0, 100)
+      : '';
 
   const supabase = await createClient();
   const {
@@ -30,7 +34,7 @@ export default async function BuyerDashboardPage(props: {
     redirect('/login');
   }
 
-  const activeTenantsResult = await listActiveTenantsQuery(page, 24);
+  const activeTenantsResult = await listActiveTenantsQuery(page, 24, storeSearch);
   const viewer = await getStoreViewerQuery();
   const t = await getTranslations('Storefront');
   const tb = await getTranslations('BuyerDashboard');
@@ -56,10 +60,20 @@ export default async function BuyerDashboardPage(props: {
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12 w-full">
         <StoreDirectory
           result={activeTenantsResult}
+          query={storeSearch}
           labels={{
             title: tb('available_stores'),
             empty: tb('empty_stores'),
             visit: tb('visit_store'),
+            searchLabel: tb('search_stores_label'),
+            searchPlaceholder: tb('search_stores_placeholder'),
+            searchButton: tb('search_stores_button'),
+            clearSearch: tb('clear_store_search'),
+            noResults: tb('no_matching_stores'),
+            resultCount: tb('store_results', { count: activeTenantsResult.total }),
+            previous: tb('previous_stores'),
+            next: tb('next_stores'),
+            pagination: tb('store_pagination'),
           }}
         />
 

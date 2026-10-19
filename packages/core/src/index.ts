@@ -244,3 +244,13 @@ export {
   runPaymentEvidenceWorker,
   runPaymentRetentionWorker,
 } from '@/payments/infrastructure/payment-evidence-worker';
+export { UpdateTenantBrandingUseCase } from '@/tenants/application/use-cases/update-tenant-branding.use-case';
+export {
+  PostgresTenantBrandingRepository,
+  PostgresTenantBrandingReadRepository,
+} from '@/tenants/infrastructure/repositories/postgres-tenant-branding.repository';
+export type { TenantBrandingReadRepositoryPort } from '@/tenants/application/ports/out/tenant-branding-repository.port';
+export type { TenantBrandingReadModel } from '@/tenants/application/read-models/tenant-branding.read-model';
+export { TenantSlugAlreadyInUseException } from '@/tenants/application/exceptions/tenant-slug-already-in-use.exception';
+export { PostgresPublicTenantDirectoryReadAdapter } from '@/tenants/infrastructure/repositories/postgres-public-tenant-directory-read.adapter';
+export type { PublicTenantDirectorySearchRepositoryPort } from '@/tenants/application/ports/out/public-tenant-directory-read-repository.port';

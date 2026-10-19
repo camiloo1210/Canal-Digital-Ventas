@@ -1,7 +1,9 @@
-# Formatear y verificar código solo en archivos listos para commit
-npx lint-staged
+set -eu
 
-# (Opcional) Verificación de tipos en TypeScript para los workspaces
+# Formatear y verificar código solo en archivos listos para commit
+pnpm exec lint-staged
+
+# Verificación obligatoria de tipos en todos los workspaces
 pnpm --filter "./packages/core" exec tsc --noEmit
 pnpm --filter "./apps/web" exec tsc --noEmit
 pnpm --filter "./apps/worker" exec tsc --noEmit
