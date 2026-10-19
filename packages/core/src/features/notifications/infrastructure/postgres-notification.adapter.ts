@@ -2,6 +2,7 @@ import type postgres from 'postgres';
 import type { IntegrationEvent } from '@/shared/application/ports/out/integration-event-publisher.port';
 import { MessagingException } from '@/shared/application/exceptions/messaging.exception';
 import { NotificationPermanentException } from '@/notifications/application/exceptions/notification-permanent.exception';
+import { parseNotificationOrder } from '@/notifications/infrastructure/notification-order-projection';
 import type {
   DeliveryClaim,
   NotificationDeliveryPort,
@@ -37,11 +38,19 @@ export class PostgresNotificationAdapter
     orderId: string,
   ): Promise<OrderNotificationRecipient | null> {
     try {
-      const [row] = await this.sql<{ email: string; order_number: string; tenant_name: string }[]>`
-        SELECT * FROM core.read_order_notification(${tenantId}::uuid, ${orderId}::uuid)
+      const [row] = await this.sql<
+        { email: string; order_number: string; tenant_name: string; details: unknown }[]
+      >`
+        SELECT r.*, core.read_order_notification_details(${tenantId}::uuid, ${orderId}::uuid) AS details
+        FROM core.read_order_notification(${tenantId}::uuid, ${orderId}::uuid) r
       `;
       return row
-        ? { email: row.email, orderNumber: row.order_number, tenantName: row.tenant_name }
+        ? {
+            email: row.email,
+            orderNumber: row.order_number,
+            tenantName: row.tenant_name,
+            order: parseNotificationOrder(row.details),
+          }
         : null;
     } catch (error: unknown) {
       throw new MessagingException('Unable to read notification recipient', error);

@@ -6,6 +6,7 @@ import type {
   NotificationEmailPort,
 } from '@/notifications/application/ports/out/notification.ports';
 import type { SmtpConfig } from '@/notifications/infrastructure/smtp-config';
+import { renderNotificationEmail } from '@/notifications/infrastructure/notification-email-template';
 import { MessagingException } from '@/shared/application/exceptions/messaging.exception';
 import { NotificationPermanentException } from '@/notifications/application/exceptions/notification-permanent.exception';
 import type {
@@ -54,7 +55,24 @@ export class SmtpNotificationAdapter
       .replaceAll('{orderNumber}', email.orderNumber)
       .replaceAll('{tenantName}', email.tenantName)
       .replaceAll('{status}', subject);
-    await this.sendMessage(email.messageId, email.email, subject, text);
+    const rendered = renderNotificationEmail({
+      ...email,
+      subject,
+      kind: email.type,
+      intro: (copy.intros?.[email.type] ?? text)
+        .replaceAll('{tenantName}', email.tenantName)
+        .replaceAll('{orderNumber}', email.orderNumber),
+      copy: copy.presentation,
+      appUrl: this.config.appUrl,
+    });
+    await this.sendMessage(
+      email.messageId,
+      email.email,
+      subject,
+      email.order ? rendered.text : text,
+      rendered.html,
+      email.tenantName,
+    );
   }
   public async sendMerchant(email: MerchantNotificationEmail): Promise<void> {
     if (!this.merchantCopies)
@@ -75,11 +93,23 @@ export class SmtpNotificationAdapter
           .replaceAll('{stock}', String(item.stock)),
       ),
     ].join('\n');
+    const rendered = renderNotificationEmail({
+      ...email,
+      subject,
+      merchant: true,
+      intro: (copy.intros?.[email.kind] ?? text)
+        .replaceAll('{tenantName}', email.tenantName)
+        .replaceAll('{orderNumber}', email.orderNumber),
+      copy: copy.presentation,
+      appUrl: this.config.appUrl,
+    });
     await this.sendMessage(
       `${email.messageId}.${email.userId}.${email.kind}`,
       email.email,
       subject,
-      text,
+      email.order ? rendered.text : text,
+      rendered.html,
+      email.tenantName,
     );
   }
   private async sendMessage(
@@ -87,15 +117,20 @@ export class SmtpNotificationAdapter
     recipient: string,
     subject: string,
     text: string,
+    html: string,
+    tenantName: string,
   ): Promise<void> {
     try {
       const result = await this.transport.sendMail({
-        from: this.config.from,
+        from: { name: tenantName.replace(/[\r\n]/g, ' ').slice(0, 100), address: this.config.from },
         to: recipient,
         envelope: { from: this.config.from, to: recipient },
         messageId: `<${messageId}@${this.config.from.split('@')[1]}>`,
         subject,
         text,
+        html,
+        disableFileAccess: true,
+        disableUrlAccess: true,
       });
       if (result.rejected.length > 0)
         throw new NotificationPermanentException('SMTP_RECIPIENT_REJECTED');
