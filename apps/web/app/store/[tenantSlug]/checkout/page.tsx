@@ -5,6 +5,7 @@ import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { CheckoutForm } from '@/features/checkout/components/checkout-form';
 import { getTranslations } from 'next-intl/server';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export async function generateMetadata({
   params,
@@ -44,22 +45,20 @@ export default async function CheckoutPage({
   const t = await getTranslations('Storefront.checkout');
 
   return (
-    <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-      <h1 className="text-3xl font-bold tracking-tight mb-8">{t('pageTitle')}</h1>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-        <div>
-          <h2 className="text-xl font-semibold mb-4">{t('billingInfo')}</h2>
-          <p className="text-muted-foreground mb-4">{t('billingInfoDesc')}</p>
-          <div className="bg-secondary/50 p-4 rounded-md">
-            <p className="font-medium">{user.email}</p>
-          </div>
-        </div>
-
-        <div>
-          <CheckoutForm tenantSlug={tenantSlug} />
-        </div>
-      </div>
+    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+      <h1 className="mb-6 text-3xl font-semibold tracking-tight">{t('pageTitle')}</h1>
+      <Card size="sm" className="mb-6">
+        <CardHeader>
+          <CardTitle>
+            <h2>{t('billingInfo')}</h2>
+          </CardTitle>
+          <CardDescription>{t('billingInfoDesc')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="font-medium [overflow-wrap:anywhere]">{user.email}</p>
+        </CardContent>
+      </Card>
+      <CheckoutForm tenantSlug={tenantSlug} />
     </div>
   );
 }
