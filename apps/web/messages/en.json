@@ -162,7 +162,7 @@
       "billingInfo": "Billing Information",
       "billingInfoDesc": "Your digital receipt will be sent to this email.",
       "orderSummary": "Order Summary",
-      "items": "{count} items",
+      "items": "{count, plural, one {# item} other {# items}}",
       "subtotal": "Subtotal",
       "totalsWarning": "* Final pricing and availability are confirmed by the server.",
       "processing": "Processing...",
@@ -173,7 +173,20 @@
       "errorTitle": "Checkout Failed",
       "genericError": "An unexpected error occurred. Please try again.",
       "customerDetails": "Customer Details",
-      "shippingDetails": "Shipping Details"
+      "shippingDetails": "Shipping Details",
+      "fields": {
+        "name": "Full name",
+        "email": "Email",
+        "phone": "Phone",
+        "documentId": "Identity document",
+        "street": "Street address",
+        "city": "City",
+        "state": "State / Province",
+        "zipCode": "Postal code",
+        "country": "Country",
+        "reference": "Reference (optional)"
+      },
+      "lineQuantity": "Quantity: {count}"
     },
     "checkoutErrors": {
       "outOfStock": "One or more items in your cart are out of stock.",
@@ -181,15 +194,100 @@
       "invalidCart": "Your cart is invalid. Please refresh the page.",
       "unauthorized": "You must be logged in to complete checkout.",
       "tenantNotFound": "The store you are trying to buy from is unavailable.",
-      "unexpected": "An unexpected error occurred processing your order."
+      "unexpected": "An unexpected error occurred processing your order.",
+      "invalidInput": "Check the customer and shipping details.",
+      "invalidEmail": "Enter a valid email address.",
+      "invalidField": "Complete this field using up to 500 characters."
     },
-    "cartTaxesNote": "*Taxes and shipping calculated at checkout"
+    "cartTaxesNote": "Availability and the final price are confirmed when your order is placed.",
+    "accessibility": {
+      "language": "Language",
+      "englishLanguage": "Use English",
+      "account": "Open account menu",
+      "skipToContent": "Skip to content"
+    },
+    "pagination": {
+      "label": "Catalog pages",
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page {current} of {total}",
+      "outOfRange": "This page no longer has results"
+    },
+    "resultsCount": "{count, plural, =0 {No products found} one {# product found} other {# products found}}",
+    "cartControls": {
+      "open": "Open cart",
+      "close": "Close cart",
+      "remove": "Remove {name} from cart",
+      "increase": "Increase quantity of {name}",
+      "decrease": "Decrease quantity of {name}",
+      "maximum": "Maximum",
+      "count": "{count, plural, =0 {Your cart is empty} one {# item in cart} other {# items in cart}}"
+    },
+    "loadingProducts": "Loading products",
+    "branding": {
+      "banner": "Cover of {name}",
+      "logo": "Logo of {name}"
+    },
+    "purchase": {
+      "close": "Close dialog",
+      "added": "{name} added. Quantity in cart: {count}.",
+      "stockConfirmation": "Availability and the final price are confirmed when your order is placed.",
+      "chooseVariant": "Variant selection required",
+      "variantHelp": "This product has variants. Variant selection is not yet available in this store."
+    },
+    "empty": {
+      "filteredTitle": "No matching products",
+      "catalogTitle": "No products yet",
+      "searchDescription": "No results for “{query}” with the current filters. Try another search or browse the full catalog.",
+      "categoryDescription": "There are no products in this category with the current filters. You can browse the full catalog.",
+      "catalogDescription": "This store has not published any products yet. Check back later to discover what is new.",
+      "pageDescription": "Return to the first page to browse available products.",
+      "clearFilters": "View all products",
+      "firstPage": "Return to first page"
+    },
+    "auth": {
+      "platform": "Canal Digital",
+      "logo": "Canal Digital logo",
+      "loginTitle": "Log in to your account",
+      "loginDescription": "Enter your email and password to continue.",
+      "signupTitle": "Create your account",
+      "signupDescription": "Sign up to start shopping.",
+      "loggingIn": "Logging in…",
+      "login": "Log in",
+      "creatingAccount": "Creating account…",
+      "createAccount": "Create account",
+      "email": "Email",
+      "emailPlaceholder": "name@example.com",
+      "password": "Password",
+      "orGoogle": "Or continue with Google",
+      "google": "Continue with Google",
+      "businessSignup": "Create a business account",
+      "noAccount": "Don’t have an account?",
+      "buyer": "Want to shop?",
+      "seller": "Want to sell?",
+      "existingAccount": "Already have an account?",
+      "success": "Signed in. Redirecting…",
+      "offlineTitle": "Offline",
+      "offlineDescription": "You need an internet connection to log in.",
+      "confirmEmail": "Check your email to confirm your account. Then log in to continue shopping.",
+      "errors": {
+        "email": "Enter a valid email address.",
+        "passwordRequired": "Enter your password.",
+        "passwordLength": "Your password must have at least 6 characters.",
+        "credentials": "We could not log you in. Check your credentials and confirm your email if needed.",
+        "unexpected": "We could not log you in. Please try again later.",
+        "registration": "We could not create your account. Check your details or log in if you already have an account.",
+        "oauth": "We could not complete sign in. Please try again."
+      }
+    },
+    "storeNotFound": "Store not found",
+    "welcome": "Welcome to {name}"
   },
   "BuyerDashboard": {
     "title": "Buyer Dashboard",
     "available_stores": "Available Stores",
     "empty_stores": "No stores are available at the moment.",
-    "visit_store": "Visit Storefront",
+    "visit_store": "Explore store",
     "recent_purchases": "Recent Purchases",
     "recent_purchases_desc": "Here you can see all orders placed across any tenant store.",
     "empty_purchases": "You haven't made any purchases yet.",
@@ -201,7 +299,33 @@
     "store_results": "{count, plural, =0 {No matching stores} one {# store found} other {# stores found}}",
     "previous_stores": "Previous",
     "next_stores": "Next",
-    "store_pagination": "Store pages"
+    "store_pagination": "Store pages",
+    "navigation": {
+      "label": "Buyer navigation",
+      "stores": "Stores",
+      "purchases": "My purchases"
+    },
+    "directory": {
+      "title": "Find your next store",
+      "description": "Explore their catalogs and choose where to shop.",
+      "allStores": "All stores",
+      "searchTitle": "Search results",
+      "query": "Search: “{query}”",
+      "storeDescription": "Visit to explore their catalog.",
+      "emptyTitle": "More stores are on their way",
+      "emptySearchTitle": "We couldn’t find that store",
+      "outOfRange": "There are no stores on this page",
+      "page": "Page {current} of {total}",
+      "loading": "Finding stores",
+      "errorTitle": "We couldn’t load the stores",
+      "errorDescription": "Please try again in a moment.",
+      "retry": "Try again"
+    },
+    "purchases": {
+      "title": "My purchases",
+      "description": "Track your orders, their status and the details of each purchase.",
+      "emptyDescription": "Explore the stores. After your first purchase, you can track your order here."
+    }
   },
   "Orders": {
     "actions": {

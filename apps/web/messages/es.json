@@ -160,11 +160,11 @@
     "cartCancel": "Cancelar",
     "cartClearAndContinue": "Vaciar y Continuar",
     "checkout": {
-      "pageTitle": "Checkout",
+      "pageTitle": "Finalizar compra",
       "billingInfo": "Información de Facturación",
       "billingInfoDesc": "Tu recibo digital será enviado a este correo.",
       "orderSummary": "Resumen del Pedido",
-      "items": "{count} artículos",
+      "items": "{count, plural, one {# artículo} other {# artículos}}",
       "subtotal": "Subtotal",
       "totalsWarning": "* El precio final y la disponibilidad son confirmados por el servidor.",
       "processing": "Procesando...",
@@ -172,10 +172,23 @@
       "successTitle": "¡Pedido Confirmado!",
       "successMessage": "Tu orden comercial ha sido registrada exitosamente.",
       "continueShopping": "Continuar Comprando",
-      "errorTitle": "Fallo en Checkout",
+      "errorTitle": "No pudimos completar el pedido",
       "genericError": "Ocurrió un error inesperado. Por favor, intenta de nuevo.",
       "customerDetails": "Datos del Cliente",
-      "shippingDetails": "Datos de Envío"
+      "shippingDetails": "Datos de Envío",
+      "fields": {
+        "name": "Nombre completo",
+        "email": "Correo electrónico",
+        "phone": "Teléfono",
+        "documentId": "Documento de identidad",
+        "street": "Calle y número",
+        "city": "Ciudad",
+        "state": "Estado / Provincia",
+        "zipCode": "Código postal",
+        "country": "País",
+        "reference": "Referencia (opcional)"
+      },
+      "lineQuantity": "Cantidad: {count}"
     },
     "checkoutErrors": {
       "outOfStock": "Uno o más productos en tu carrito están agotados.",
@@ -183,15 +196,100 @@
       "invalidCart": "Tu carrito es inválido. Por favor, recarga la página.",
       "unauthorized": "Debes iniciar sesión para completar la compra.",
       "tenantNotFound": "La tienda de la cual intentas comprar no está disponible.",
-      "unexpected": "Ocurrió un error inesperado procesando tu pedido."
+      "unexpected": "Ocurrió un error inesperado procesando tu pedido.",
+      "invalidInput": "Revisa los datos del cliente y de envío.",
+      "invalidEmail": "Introduce un correo electrónico válido.",
+      "invalidField": "Completa este campo con un valor de hasta 500 caracteres."
     },
-    "cartTaxesNote": "*Impuestos y envío calculados al finalizar la compra"
+    "cartTaxesNote": "La disponibilidad y el precio final se confirman al registrar el pedido.",
+    "accessibility": {
+      "language": "Idioma",
+      "englishLanguage": "Usar inglés",
+      "account": "Abrir menú de cuenta",
+      "skipToContent": "Saltar al contenido"
+    },
+    "pagination": {
+      "label": "Páginas del catálogo",
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "page": "Página {current} de {total}",
+      "outOfRange": "Esta página ya no tiene resultados"
+    },
+    "resultsCount": "{count, plural, =0 {No se encontraron productos} one {# producto encontrado} other {# productos encontrados}}",
+    "cartControls": {
+      "open": "Abrir carrito",
+      "close": "Cerrar carrito",
+      "remove": "Eliminar {name} del carrito",
+      "increase": "Aumentar cantidad de {name}",
+      "decrease": "Reducir cantidad de {name}",
+      "maximum": "Máximo",
+      "count": "{count, plural, =0 {El carrito está vacío} one {# artículo en el carrito} other {# artículos en el carrito}}"
+    },
+    "loadingProducts": "Cargando productos",
+    "branding": {
+      "banner": "Portada de {name}",
+      "logo": "Logo de {name}"
+    },
+    "purchase": {
+      "close": "Cerrar diálogo",
+      "added": "{name} añadido. Cantidad en el carrito: {count}.",
+      "stockConfirmation": "La disponibilidad y el precio final se confirman al registrar el pedido.",
+      "chooseVariant": "Requiere elegir una variante",
+      "variantHelp": "Este producto tiene variantes. La selección de variantes aún no está disponible en esta tienda."
+    },
+    "empty": {
+      "filteredTitle": "No encontramos coincidencias",
+      "catalogTitle": "Aún no hay productos",
+      "searchDescription": "No hay resultados para «{query}» con los filtros actuales. Prueba otra búsqueda o consulta todo el catálogo.",
+      "categoryDescription": "No hay productos en esta categoría con los filtros actuales. Puedes consultar todo el catálogo.",
+      "catalogDescription": "Esta tienda todavía no tiene productos publicados. Vuelve más adelante para descubrir las novedades.",
+      "pageDescription": "Puedes volver a la primera página para consultar los productos disponibles.",
+      "clearFilters": "Ver todos los productos",
+      "firstPage": "Volver a la primera página"
+    },
+    "auth": {
+      "platform": "Canal Digital",
+      "logo": "Logo de Canal Digital",
+      "loginTitle": "Inicia sesión en tu cuenta",
+      "loginDescription": "Introduce tu correo y contraseña para continuar.",
+      "signupTitle": "Crea tu cuenta",
+      "signupDescription": "Regístrate para empezar a comprar.",
+      "loggingIn": "Iniciando sesión…",
+      "login": "Iniciar sesión",
+      "creatingAccount": "Creando cuenta…",
+      "createAccount": "Crear cuenta",
+      "email": "Correo electrónico",
+      "emailPlaceholder": "nombre@ejemplo.com",
+      "password": "Contraseña",
+      "orGoogle": "O continúa con Google",
+      "google": "Continuar con Google",
+      "businessSignup": "Crear cuenta de negocio",
+      "noAccount": "¿No tienes una cuenta?",
+      "buyer": "¿Quieres comprar?",
+      "seller": "¿Quieres vender?",
+      "existingAccount": "¿Ya tienes una cuenta?",
+      "success": "Sesión iniciada. Redirigiendo…",
+      "offlineTitle": "Sin conexión",
+      "offlineDescription": "Necesitas conexión a internet para iniciar sesión.",
+      "confirmEmail": "Revisa tu correo para confirmar tu cuenta. Después, inicia sesión para continuar tu compra.",
+      "errors": {
+        "email": "Introduce un correo electrónico válido.",
+        "passwordRequired": "Introduce tu contraseña.",
+        "passwordLength": "La contraseña debe tener al menos 6 caracteres.",
+        "credentials": "No pudimos iniciar sesión. Revisa tus credenciales y confirma tu correo si es necesario.",
+        "unexpected": "No pudimos iniciar sesión. Inténtalo de nuevo más tarde.",
+        "registration": "No pudimos crear tu cuenta. Revisa los datos o inicia sesión si ya tienes una cuenta.",
+        "oauth": "No pudimos completar el acceso. Inténtalo de nuevo."
+      }
+    },
+    "storeNotFound": "Tienda no encontrada",
+    "welcome": "Bienvenido a {name}"
   },
   "BuyerDashboard": {
     "title": "Panel de Comprador",
     "available_stores": "Tiendas Disponibles",
     "empty_stores": "No hay tiendas disponibles en este momento.",
-    "visit_store": "Visitar Tienda",
+    "visit_store": "Explorar tienda",
     "recent_purchases": "Compras Recientes",
     "recent_purchases_desc": "Aquí puedes ver todos los pedidos realizados en cualquier tienda.",
     "empty_purchases": "Aún no has realizado ninguna compra.",
@@ -203,7 +301,33 @@
     "store_results": "{count, plural, =0 {No hay tiendas que coincidan} one {# tienda encontrada} other {# tiendas encontradas}}",
     "previous_stores": "Anterior",
     "next_stores": "Siguiente",
-    "store_pagination": "Páginas de tiendas"
+    "store_pagination": "Páginas de tiendas",
+    "navigation": {
+      "label": "Navegación del comprador",
+      "stores": "Tiendas",
+      "purchases": "Mis compras"
+    },
+    "directory": {
+      "title": "Encuentra tu próxima tienda",
+      "description": "Explora sus catálogos y elige dónde comprar.",
+      "allStores": "Todas las tiendas",
+      "searchTitle": "Resultados de búsqueda",
+      "query": "Búsqueda: «{query}»",
+      "storeDescription": "Entra para conocer su catálogo.",
+      "emptyTitle": "Las próximas tiendas están por llegar",
+      "emptySearchTitle": "No encontramos esa tienda",
+      "outOfRange": "Esta página no tiene tiendas",
+      "page": "Página {current} de {total}",
+      "loading": "Buscando tiendas",
+      "errorTitle": "No pudimos cargar las tiendas",
+      "errorDescription": "Inténtalo de nuevo en unos momentos.",
+      "retry": "Volver a intentar"
+    },
+    "purchases": {
+      "title": "Mis compras",
+      "description": "Consulta tus pedidos, sus estados y los detalles de cada compra.",
+      "emptyDescription": "Explora las tiendas. Cuando hagas tu primera compra, podrás seguir tu pedido aquí."
+    }
   },
   "Orders": {
     "actions": {
