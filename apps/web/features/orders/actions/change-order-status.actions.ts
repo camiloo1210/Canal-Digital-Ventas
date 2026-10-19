@@ -54,6 +54,7 @@ export async function changeOrderStatusAction(
     });
     revalidatePath('/dashboard/orders');
     revalidatePath('/');
+    revalidatePath('/purchases');
     return { success: true, errorCode: null, message: t('updated') };
   } catch (error: unknown) {
     const errorCode: NonNullable<ChangeOrderStatusActionState['errorCode']> =

@@ -65,6 +65,7 @@ export async function cancelOrderAction(
     });
 
     revalidatePath('/');
+    revalidatePath('/purchases');
     revalidatePath('/orders');
 
     return {
