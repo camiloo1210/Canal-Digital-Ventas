@@ -5,7 +5,8 @@ import { PublicTenantDirectoryResult } from '@canaldigital/packages/core';
 export async function listActiveTenantsQuery(
   page: number = 1,
   limit: number = 24,
+  query: string = '',
 ): Promise<PublicTenantDirectoryResult> {
   const repository = await getStoreDirectoryReadRepository();
-  return repository.listActive(page, limit);
+  return repository.searchActive(page, limit, query);
 }

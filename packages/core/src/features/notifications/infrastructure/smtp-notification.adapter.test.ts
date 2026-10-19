@@ -3,6 +3,11 @@ import { SmtpNotificationAdapter } from '@/notifications/infrastructure/smtp-not
 import { loadSmtpConfig } from '@/notifications/infrastructure/smtp-config';
 import type { NotificationCopies } from '@/notifications/application/ports/out/notification.ports';
 import { NotificationPermanentException } from '@/notifications/application/exceptions/notification-permanent.exception';
+import { readNotificationTestMessages } from '@/notifications/infrastructure/notification-test-messages.fixture';
+import type { NotificationOrderDetails } from '@/notifications/application/ports/out/notification-order-details';
+
+const es = readNotificationTestMessages('es');
+const en = readNotificationTestMessages('en');
 
 const smtp = vi.hoisted(
   (): {
@@ -31,6 +36,79 @@ beforeEach((): void => {
 });
 
 describe('Kiroku SMTP relay adaptation', (): void => {
+  it('passes complete HTML and text order content to SMTP without changing its authorized envelope', async (): Promise<void> => {
+    const order: NotificationOrderDetails = {
+      orderId: 'order-1',
+      tenantSlug: 'store',
+      logoUrl: 'https://cdn.example.test/logo.png',
+      contactEmail: 'help@example.test',
+      customerName: 'Ana',
+      createdAt: '2026-10-19T12:00:00Z',
+      currency: 'USD',
+      subtotalCents: 1000,
+      taxAmountCents: 0,
+      discountAmountCents: 0,
+      shippingCostCents: 0,
+      totalAmountCents: 1000,
+      shippingAddress: 'Street 1',
+      items: [
+        {
+          name: 'Paper',
+          sku: 'PAPER',
+          quantity: 1,
+          unitPriceCents: 1000,
+          subtotalCents: 1000,
+          imageUrl: 'https://cdn.example.test/paper.png',
+        },
+      ],
+    };
+    const adapter = new SmtpNotificationAdapter(
+      loadSmtpConfig({
+        SMTP_FROM_EMAIL: 'sales@example.test',
+        NOTIFICATION_APP_URL: 'https://sales.example.test',
+      }),
+      { es: es.Notifications.email, en: en.Notifications.email },
+      { es: es.Notifications.merchant, en: en.Notifications.merchant },
+    );
+    await adapter.send({
+      email: 'buyer@example.test',
+      tenantName: 'Store',
+      orderNumber: 'ORD-1',
+      messageId: 'event-1',
+      type: 'delivered',
+      locale: 'es',
+      order,
+    });
+    expect(smtp.send).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        from: { name: 'Store', address: 'sales@example.test' },
+        envelope: { from: 'sales@example.test', to: 'buyer@example.test' },
+        html: expect.stringContaining('https://cdn.example.test/paper.png'),
+        text: expect.stringContaining('https://sales.example.test/#order-order-1'),
+        disableFileAccess: true,
+        disableUrlAccess: true,
+      }),
+    );
+    await adapter.sendMerchant({
+      email: 'owner@example.test',
+      tenantName: 'Store',
+      orderNumber: 'ORD-1',
+      messageId: 'event-1',
+      userId: 'owner-1',
+      kind: 'low_stock',
+      locale: 'en',
+      order,
+      stockItems: [{ productId: 'product-1', name: 'Paper', sku: 'PAPER', stock: 0 }],
+    });
+    expect(smtp.send).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        to: 'owner@example.test',
+        messageId: '<event-1.owner-1.low_stock@example.test>',
+        html: expect.stringContaining('https://cdn.example.test/logo.png'),
+        text: expect.stringContaining('https://sales.example.test/dashboard/catalog/products'),
+      }),
+    );
+  });
   it('matches STARTTLS, optional authentication and certificate verification', (): void => {
     new SmtpNotificationAdapter(loadSmtpConfig({ SMTP_FROM_EMAIL: 'sales@example.test' }), copies);
     expect(smtp.create).toHaveBeenLastCalledWith(
@@ -91,7 +169,7 @@ describe('Kiroku SMTP relay adaptation', (): void => {
     });
     expect(smtp.send).toHaveBeenLastCalledWith(
       expect.objectContaining({
-        from: 'sales@example.test',
+        from: { name: 'Store', address: 'sales@example.test' },
         to: 'buyer@example.test',
         messageId: '<event-1@example.test>',
         envelope: { from: 'sales@example.test', to: 'buyer@example.test' },

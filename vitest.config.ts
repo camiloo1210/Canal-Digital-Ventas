@@ -12,6 +12,8 @@ export default defineConfig({
       '@/features': path.resolve(__dirname, 'apps/web/features'),
       '@/lib': path.resolve(__dirname, 'apps/web/lib'),
       '@/components': path.resolve(__dirname, 'apps/web/components'),
+      '@/i18n': path.resolve(__dirname, 'apps/web/i18n'),
+      '@/messages': path.resolve(__dirname, 'apps/web/messages'),
       '@/shared': path.resolve(__dirname, 'packages/core/src/features/shared'),
       '@/products': path.resolve(__dirname, 'packages/core/src/features/products'),
       '@/categories': path.resolve(__dirname, 'packages/core/src/features/categories'),

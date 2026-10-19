@@ -20,7 +20,9 @@
     "whatsapp": "Canal WhatsApp",
     "settings": "Configuración",
     "help": "Ayuda",
-    "search": "Buscar"
+    "search": "Buscar",
+    "store": "Mi tienda",
+    "customization": "Personalización de tienda"
   },
   "Products": {
     "list_title": "Productos",
@@ -192,7 +194,16 @@
     "visit_store": "Visitar Tienda",
     "recent_purchases": "Compras Recientes",
     "recent_purchases_desc": "Aquí puedes ver todos los pedidos realizados en cualquier tienda.",
-    "empty_purchases": "Aún no has realizado ninguna compra."
+    "empty_purchases": "Aún no has realizado ninguna compra.",
+    "search_stores_label": "Buscar tiendas",
+    "search_stores_placeholder": "Busca por nombre o dirección de la tienda…",
+    "search_stores_button": "Buscar",
+    "clear_store_search": "Limpiar búsqueda",
+    "no_matching_stores": "No encontramos tiendas con esa búsqueda. Prueba con otro nombre o limpia el filtro.",
+    "store_results": "{count, plural, =0 {No hay tiendas que coincidan} one {# tienda encontrada} other {# tiendas encontradas}}",
+    "previous_stores": "Anterior",
+    "next_stores": "Siguiente",
+    "store_pagination": "Páginas de tiendas"
   },
   "Orders": {
     "actions": {
@@ -290,7 +301,35 @@
         "low_stock": "Poco stock en {tenantName}"
       },
       "body": "{tenantName}: {status}. Pedido: {orderNumber}. Consulta los detalles en el panel de tu negocio.",
-      "stockLine": "{name} (SKU: {sku}): {stock} unidades disponibles."
+      "stockLine": "{name} (SKU: {sku}): {stock} unidades disponibles.",
+      "intros": {
+        "new_order": "Tu tienda {tenantName} tiene un nuevo pedido. Revisa los productos y los datos de entrega para coordinar los siguientes pasos.",
+        "paid": "Se recibió el pago del pedido {orderNumber}. Revisa el resumen y continúa con la preparación desde tu panel.",
+        "cancelled": "El pedido {orderNumber} fue cancelado. Consulta los detalles en tu panel para revisar la operación.",
+        "low_stock": "Algunos productos de {tenantName} tienen pocas unidades disponibles. Revisa el inventario para planificar su reposición."
+      },
+      "presentation": {
+        "eyebrow": "NOVEDADES DE TU NEGOCIO",
+        "order": "Pedido",
+        "placedOn": "Realizado el",
+        "summary": "Lo que incluye tu pedido",
+        "quantity": "Cantidad",
+        "subtotal": "Subtotal",
+        "tax": "Impuestos",
+        "discount": "Descuento",
+        "shipping": "Envío",
+        "total": "Total",
+        "delivery": "Dirección de entrega",
+        "customer": "Cliente",
+        "viewOrder": "Ver pedido",
+        "visitStore": "Visitar la tienda",
+        "support": "¿Necesitas ayuda? Contacta con la tienda:",
+        "footer": "Aviso operativo de {tenantName}. Gestiona tus pedidos e inventario desde el panel de tu negocio.",
+        "moreItems": "Y {count} productos más. Consulta el pedido para ver el detalle completo.",
+        "stock": "Revisar inventario",
+        "availability": "unidades disponibles",
+        "sku": "SKU"
+      }
     },
     "email": {
       "subjects": {
@@ -301,7 +340,83 @@
         "cancelled": "Compra cancelada: pedido {orderNumber}",
         "paid": "Pago recibido: pedido {orderNumber}"
       },
-      "body": "{tenantName}: {status}. Puedes consultar los detalles de tu pedido en tu cuenta."
+      "body": "{tenantName}: {status}. Puedes consultar los detalles de tu pedido en tu cuenta.",
+      "intros": {
+        "confirmed": "¡Gracias por elegir {tenantName}! Recibimos tu pedido. Aquí tienes el resumen de tu compra y el acceso a sus detalles.",
+        "paid": "Recibimos el pago de tu pedido. Gracias por tu compra en {tenantName}. Te avisaremos cuando haya novedades.",
+        "processing": "En {tenantName} estamos preparando tu pedido con cuidado. Te avisaremos cuando salga de la tienda.",
+        "shipped": "¡Tu pedido ya fue enviado! Puedes consultar su estado y revisar los productos de tu compra en tu cuenta.",
+        "delivered": "Tu pedido fue marcado como entregado. Esperamos que disfrutes tu compra. Si necesitas ayuda, contacta con {tenantName}.",
+        "cancelled": "Tu pedido fue cancelado. Puedes revisar sus detalles en tu cuenta o contactar con {tenantName} si necesitas ayuda."
+      },
+      "presentation": {
+        "eyebrow": "ACTUALIZACIÓN DE TU PEDIDO",
+        "order": "Pedido",
+        "placedOn": "Realizado el",
+        "summary": "Lo que incluye tu pedido",
+        "quantity": "Cantidad",
+        "subtotal": "Subtotal",
+        "tax": "Impuestos",
+        "discount": "Descuento",
+        "shipping": "Envío",
+        "total": "Total",
+        "delivery": "Dirección de entrega",
+        "customer": "Cliente",
+        "viewOrder": "Ver pedido",
+        "visitStore": "Visitar la tienda",
+        "support": "¿Necesitas ayuda? Contacta con la tienda:",
+        "footer": "Recibes este correo por un pedido en {tenantName}. Conserva este mensaje como referencia de tu compra.",
+        "moreItems": "Y {count} productos más. Consulta el pedido para ver el detalle completo.",
+        "stock": "Revisar inventario",
+        "availability": "unidades disponibles",
+        "sku": "SKU"
+      }
     }
+  },
+  "StoreSettings": {
+    "title": "Personalización de tienda",
+    "subtitle": "Dale identidad a tu tienda y muestra tu marca a tus compradores.",
+    "identity": "Identidad de la tienda",
+    "identityHelp": "Estos datos aparecen en tu tienda pública.",
+    "name": "Nombre de la tienda",
+    "description": "Descripción",
+    "descriptionHelp": "Describe tu tienda en un máximo de 255 caracteres. El nombre admite entre 3 y 100 caracteres.",
+    "images": "Logo y banner",
+    "imageHelp": "Imágenes JPG, PNG o WebP. Máximo 5 MB por imagen.",
+    "logo": "Logo",
+    "logoHelp": "Recomendado: una imagen cuadrada de al menos 400 × 400 píxeles.",
+    "banner": "Banner",
+    "bannerHelp": "Recomendado: una imagen horizontal de 1500 × 500 píxeles.",
+    "removeLogo": "Quitar logo",
+    "removeBanner": "Quitar banner",
+    "preview": "Vista previa",
+    "visit": "Ver tienda",
+    "previewHelp": "Los cambios se publican al guardar.",
+    "descriptionPlaceholder": "La descripción de tu tienda aparecerá aquí.",
+    "logoAlt": "Vista previa del logo de la tienda",
+    "bannerAlt": "Vista previa del banner de la tienda",
+    "save": "Guardar cambios",
+    "saving": "Guardando…",
+    "saved": "La personalización de tu tienda se guardó correctamente.",
+    "unauthorized": "Necesitas ser propietario o administrador de una tienda activa para personalizarla.",
+    "invalidInput": "Revisa los datos del formulario.",
+    "invalidImage": "Selecciona imágenes JPG, PNG o WebP válidas de hasta 5 MB cada una.",
+    "invalidProfile": "Revisa el nombre (3 a 100 caracteres), el slug (3 a 50 caracteres en minúsculas, números y guiones) y la descripción (máximo 255 caracteres).",
+    "concurrency": "La tienda cambió desde que abriste esta página. Recarga la página antes de volver a guardar.",
+    "unexpected": "No se pudieron guardar los cambios. Tus datos se conservan para que puedas intentarlo de nuevo.",
+    "slug": "Dirección de la tienda (slug)",
+    "slugHelp": "Entre 3 y 50 caracteres: letras minúsculas, números y guiones simples. Debe ser único.",
+    "slugChangeNotice": "Al guardar cambiará la dirección pública. Los enlaces con el slug anterior dejarán de funcionar.",
+    "slugTaken": "Esta dirección ya pertenece a otra tienda. Elige un slug diferente."
+  },
+  "NotFound": {
+    "brand": "Canal Digital",
+    "code": "Error 404 · Página no encontrada",
+    "title": "No encontramos esta página",
+    "description": "La dirección que buscas no existe o ya no está disponible. Puede que el enlace haya cambiado o que la dirección esté incompleta.",
+    "backHome": "Volver al inicio",
+    "hint": "Revisa la dirección o vuelve al inicio para encontrar tiendas y continuar navegando.",
+    "backDashboard": "Volver al panel de administración",
+    "dashboardHint": "Vuelve a tu panel para continuar gestionando tu tienda."
   }
 }
