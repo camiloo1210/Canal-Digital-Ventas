@@ -53,6 +53,7 @@ export async function changeOrderStatusAction(
       authenticatedSellerId: user.id,
     });
     revalidatePath('/dashboard/orders');
+    revalidatePath('/dashboard');
     revalidatePath('/');
     revalidatePath('/purchases');
     return { success: true, errorCode: null, message: t('updated') };
