@@ -1,4 +1,14 @@
 // CATEGORIES EXPORTS
+export type {
+  DashboardOverviewReadModel,
+  DashboardOverviewReadPort,
+} from '@/dashboard/application/ports/out/dashboard-overview-read.port';
+export { PostgresDashboardOverviewReadAdapter } from '@/dashboard/infrastructure/postgres-dashboard-overview-read.adapter';
+export type {
+  ActiveTenantContextReadModel,
+  ActiveTenantContextReadPort,
+} from '@/iam/application/ports/out/active-tenant-context-read.port';
+export { SupabaseActiveTenantContextReadAdapter } from '@/iam/infrastructure/adapters/supabase-active-tenant-context-read.adapter';
 
 // Domain
 export { Category } from '@/categories/domain/entities/category.entity';
@@ -26,7 +36,7 @@ export { ChangeCategoryStatusUseCase } from '@/categories/application/use-cases/
 // Infrastructure
 export { SupabaseCategoryRepository } from '@/categories/infrastructure/repositories/supabase-category.repository';
 export { SupabaseCategoryReadRepository } from '@/categories/infrastructure/repositories/supabase-category-read.repository';
-export type { CategoryReadModel } from '@/categories/infrastructure/repositories/supabase-category-read.repository';
+export type { CategoryReadModel } from '@/categories/application/read-models/category-read.model';
 export { PostgresCategoryRepository } from '@/categories/infrastructure/repositories/postgres-category.repository';
 
 // PRODUCTS EXPORTS
@@ -138,11 +148,12 @@ export type {
 } from '@/shared/application/ports/out/transaction-manager.port';
 export type { DomainEventEnvelope } from '@/shared/application/ports/out/event-bus.port';
 export { SupabaseProductReadRepository } from '@/products/infrastructure/repositories/supabase-product-read.repository';
-export type { ProductReadModel } from '@/products/infrastructure/repositories/supabase-product-read.repository';
+export type { ProductReadModel } from '@/products/application/read-models/product-read.model';
 export { PostgresProductRepository } from '@/products/infrastructure/repositories/postgres-product.repository';
 export { PostgresTransactionManagerAdapter } from '@/shared/infrastructure/adapters/postgres-transaction-manager.adapter';
 export * from '@/shared/infrastructure/adapters/postgres-event-bus.adapter';
 export { createTenantId } from '@/shared/domain/types/tenant-id.type';
+export type { TenantId } from '@/shared/domain/types/tenant-id.type';
 export { createCategoryId } from '@/products/domain/types/category-id.type';
 export type { PublicCategoryReadModel } from '@/categories/application/read-models/public-category-read.model';
 export type { PublicCategoryReadRepositoryPort } from '@/categories/application/ports/out/public-category-read-repository.port';
@@ -255,3 +266,21 @@ export type { TenantBrandingReadModel } from '@/tenants/application/read-models/
 export { TenantSlugAlreadyInUseException } from '@/tenants/application/exceptions/tenant-slug-already-in-use.exception';
 export { PostgresPublicTenantDirectoryReadAdapter } from '@/tenants/infrastructure/repositories/postgres-public-tenant-directory-read.adapter';
 export type { PublicTenantDirectorySearchRepositoryPort } from '@/tenants/application/ports/out/public-tenant-directory-read-repository.port';
+
+export type {
+  CatalogStatus,
+  AdminCatalogQuery,
+  AdminProductCatalogItem,
+  AdminCategoryCatalogItem,
+  AdminCatalogPage,
+  AdminCatalogReadPort,
+} from '@/dashboard/application/ports/out/admin-catalog-read.port';
+export { PostgresAdminCatalogReadAdapter } from '@/dashboard/infrastructure/postgres-admin-catalog-read.adapter';
+
+export type { ProductFormContextReadModel } from '@/dashboard/application/ports/out/admin-catalog-read.port';
+
+export type { ProductReadRepositoryPort } from '@/products/application/ports/out/product-read-repository.port';
+
+export type { CategoryReadRepositoryPort } from '@/categories/application/ports/out/category-read-repository.port';
+
+export type { SellerOrderFilters } from '@/orders/application/read-models/seller-order.read-model';

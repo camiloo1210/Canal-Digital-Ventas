@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import {
   SupabaseProductRepository,
   SupabaseProductReadRepository,
+  type ProductReadRepositoryPort,
   PostgresProductRepository,
   PostgresTransactionManagerAdapter,
   CreateProductUseCase,
@@ -19,7 +20,7 @@ export async function getProductRepository(): Promise<SupabaseProductRepository>
   return new SupabaseProductRepository(supabase);
 }
 
-export async function getProductReadRepository(): Promise<SupabaseProductReadRepository> {
+export async function getProductReadRepository(): Promise<ProductReadRepositoryPort> {
   const supabase = await createClient();
   return new SupabaseProductReadRepository(supabase);
 }
