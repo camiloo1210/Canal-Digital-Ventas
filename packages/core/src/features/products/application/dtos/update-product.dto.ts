@@ -13,4 +13,6 @@ export interface UpdateProductDto {
   stock?: number;
   isVatExempt: boolean;
   seasonIds: string[];
+  imagePath?: string;
+  imageUrl?: string;
 }
