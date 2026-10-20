@@ -1,5 +1,13 @@
-import type { SellerOrderPage } from '@/orders/application/read-models/seller-order.read-model';
+import type {
+  SellerOrderPage,
+  SellerOrderFilters,
+} from '@/orders/application/read-models/seller-order.read-model';
 
 export interface SellerOrderReadRepositoryPort {
-  findBySeller(userId: string, tenantId: string, page: number): Promise<SellerOrderPage>;
+  findBySeller(
+    userId: string,
+    tenantId: string,
+    page: number,
+    filters?: SellerOrderFilters,
+  ): Promise<SellerOrderPage>;
 }
