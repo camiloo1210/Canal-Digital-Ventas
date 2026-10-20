@@ -63,7 +63,7 @@
   --muted-foreground: oklch(0.556 0 0);
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
+  --destructive: oklch(0.53 0.22 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
@@ -127,4 +127,47 @@
   html {
     @apply font-sans;
   }
+}
+
+/* Storefront keyboard focus must remain visible under its sticky header. */
+.storefront :is(a, button, input, [role='switch']):focus-visible,
+:is([data-slot='sheet-content'], [data-slot='dialog-content'], [data-slot='dropdown-menu-content'])
+  :is(a, button, input, [role='switch']):focus-visible {
+  outline: 2px solid var(--foreground);
+  outline-offset: 3px;
+  scroll-margin-block: 5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(
+      .storefront,
+      [data-slot='sheet-content'],
+      [data-slot='dialog-content'],
+      [data-slot='dropdown-menu-content']
+    )
+    *,
+  :is(
+      .storefront,
+      [data-slot='sheet-content'],
+      [data-slot='dialog-content'],
+      [data-slot='dropdown-menu-content']
+    )
+    *::before,
+  :is(
+      .storefront,
+      [data-slot='sheet-content'],
+      [data-slot='dialog-content'],
+      [data-slot='dropdown-menu-content']
+    )
+    *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.buyer-space :is(a, button, input):focus-visible {
+  outline: 2px solid var(--foreground);
+  outline-offset: 3px;
+  scroll-margin-block: 5rem;
 }

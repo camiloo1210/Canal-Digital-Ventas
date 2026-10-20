@@ -4,9 +4,14 @@ import * as React from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 export interface SearchInputProps {
   placeholder?: string;
+  label?: string;
+  inputClassName?: string;
   paramName?: string;
   debounceMs?: number;
   resetPage?: boolean;
@@ -15,12 +20,16 @@ export interface SearchInputProps {
 
 export function SearchInput({
   placeholder = 'Search...',
+  label,
+  inputClassName,
   paramName = 'q',
   debounceMs = 300,
   resetPage = true,
   className = 'flex w-full max-w-md items-center space-x-2',
 }: SearchInputProps): React.JSX.Element {
   const router = useRouter();
+  const t = useTranslations('Storefront');
+  const inputId = React.useId();
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
@@ -72,13 +81,17 @@ export function SearchInput({
 
   return (
     <div className={className}>
+      <Label htmlFor={inputId} className="sr-only">
+        {label ?? placeholder ?? t('searchProducts')}
+      </Label>
       <Input
+        id={inputId}
         type="search"
         name={paramName}
         placeholder={placeholder}
         value={draftValue}
         onChange={(e) => setDraftValue(e.target.value)}
-        className="flex-1"
+        className={cn('flex-1', inputClassName)}
       />
     </div>
   );

@@ -12,7 +12,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOutIcon, LayoutDashboardIcon, CircleUserRoundIcon } from 'lucide-react';
+import {
+  LogOutIcon,
+  LayoutDashboardIcon,
+  LanguagesIcon,
+  LogInIcon,
+  UserPlusIcon,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useTranslations } from 'next-intl';
+import { buyerAuthHref } from '@/features/iam/utils/auth-return-path';
 import { LocaleSwitcher } from '@/components/locale-switcher';
 import { logoutAction } from '@/features/iam/actions/logout.action';
 import { StoreViewer } from '@/features/store/queries/store-viewer.query';
@@ -30,34 +39,40 @@ interface UserNavProps {
 }
 
 export function UserNav({ viewer, redirectTo = '/', labels }: UserNavProps): React.JSX.Element {
+  const t = useTranslations('Storefront.accessibility');
   if (!viewer.isAuthenticated) {
     return (
       <div className="flex items-center gap-2 text-sm font-medium">
         <DropdownMenu>
           <DropdownMenuTrigger
-            render={
-              <button className="flex items-center gap-2 px-2 py-1 outline-none text-muted-foreground hover:text-foreground transition-colors" />
-            }
+            render={<Button variant="ghost" className="size-11" aria-label={t('language')} />}
           >
-            🌐 Lang
+            <LanguagesIcon aria-hidden="true" className="size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56" sideOffset={4}>
             <LocaleSwitcher />
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Link
-          href="/login"
-          className="text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
+        <Button
+          variant="ghost"
+          className="size-11 sm:w-auto"
+          render={<Link href={buyerAuthHref('/login', redirectTo)} />}
+          nativeButton={false}
+          aria-label={labels.login}
         >
-          {labels.login}
-        </Link>
-        <Link
-          href="/register"
-          className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-3 py-1.5 transition-colors"
+          <LogInIcon aria-hidden="true" className="sm:hidden" />
+          <span className="hidden sm:inline">{labels.login}</span>
+        </Button>
+        <Button
+          className="size-11 sm:w-auto"
+          render={<Link href={buyerAuthHref('/signup', redirectTo)} />}
+          nativeButton={false}
+          aria-label={labels.createAccount}
         >
-          {labels.createAccount}
-        </Link>
+          <UserPlusIcon aria-hidden="true" className="sm:hidden" />
+          <span className="hidden sm:inline">{labels.createAccount}</span>
+        </Button>
       </div>
     );
   }
@@ -67,7 +82,7 @@ export function UserNav({ viewer, redirectTo = '/', labels }: UserNavProps): Rea
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
-            <button className="flex items-center gap-2 outline-none rounded-full focus-visible:ring-2 focus-visible:ring-ring ml-2" />
+            <Button variant="ghost" className="size-11 rounded-full" aria-label={t('account')} />
           }
         >
           <Avatar className="size-8 rounded-full border">
@@ -96,12 +111,6 @@ export function UserNav({ viewer, redirectTo = '/', labels }: UserNavProps): Rea
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
-            <DropdownMenuItem
-              render={<Link href="#" className="flex w-full items-center gap-2 cursor-pointer" />}
-            >
-              <CircleUserRoundIcon className="size-4" />
-              <span>{labels.settings}</span>
-            </DropdownMenuItem>
             {viewer.hasDashboardAccess && (
               <DropdownMenuItem
                 render={

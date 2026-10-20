@@ -2,15 +2,11 @@ import { SupabaseClient, Provider } from '@supabase/supabase-js';
 import { AuthPort } from '@/iam/application/ports/out/auth.port';
 import { InvalidCredentialsException } from '@/iam/domain/exceptions/invalid-credentials.exception';
 import { AuthGatewayException } from '@/iam/application/exceptions/auth-gateway.exception';
-import { TenantNotConfiguredException } from '@/iam/application/exceptions/tenant-not-configured.exception';
 
 export class SupabaseAuthAdapter implements AuthPort {
   constructor(private readonly supabase: SupabaseClient) {}
 
-  async signInWithEmail(
-    email: string,
-    password: string,
-  ): Promise<{ userId: string; tenantId: string }> {
+  async signInWithEmail(email: string, password: string): Promise<{ userId: string }> {
     const { data, error } = await this.supabase.auth.signInWithPassword({
       email,
       password,
@@ -30,16 +26,8 @@ export class SupabaseAuthAdapter implements AuthPort {
       throw new AuthGatewayException('No user data returned from Supabase');
     }
 
-    // Assuming tenantId is stored in user_metadata or app_metadata
-    const tenantId = data.user.app_metadata?.app_tenant_id || null;
-
-    if (!tenantId) {
-      throw new TenantNotConfiguredException();
-    }
-
     return {
       userId: data.user.id,
-      tenantId: tenantId,
     };
   }
 

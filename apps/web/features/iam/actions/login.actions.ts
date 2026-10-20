@@ -1,10 +1,12 @@
 'use server';
 
+import { getTranslations } from 'next-intl/server';
 import { z } from 'zod';
 import { getSignInWithEmailUseCase, getGetOAuthSignInUrlUseCase } from '@/features/iam/di/iam.di';
-import { DomainException, ApplicationException } from '@canaldigital/packages/core';
+import { InvalidCredentialsException } from '@canaldigital/packages/core';
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
+import { safeAuthReturnPath, buyerAuthHref } from '@/features/iam/utils/auth-return-path';
 
 export type ActionState = {
   success: boolean;
@@ -22,6 +24,7 @@ export async function loginWithEmailAction(
 ): Promise<ActionState> {
   // TODO: Add rate-limiting here (e.g., via upstash/ratelimit to prevent brute force attacks)
 
+  const t = await getTranslations('Storefront.auth.errors');
   const email = formData.get('email');
   const password = formData.get('password');
 
@@ -31,12 +34,11 @@ export async function loginWithEmailAction(
   if (!validatedFields.success) {
     return {
       success: false,
-      error: validatedFields.error.issues[0]?.message || 'Invalid input provided.',
+      error: t(validatedFields.error.issues[0]?.path[0] === 'email' ? 'email' : 'passwordRequired'),
     };
   }
 
   let success = false;
-  let needsOnboarding = false;
 
   try {
     const useCase = await getSignInWithEmailUseCase();
@@ -48,37 +50,23 @@ export async function loginWithEmailAction(
 
     success = true;
   } catch (error: unknown) {
-    // Return domain specific exceptions with a safe message
-    if (error instanceof DomainException || error instanceof ApplicationException) {
-      if (error.name === 'TenantNotConfiguredException') {
-        needsOnboarding = true;
-      } else {
-        return { success: false, error: (error as Error).message };
-      }
-    } else {
-      // Log unexpected errors internally without leaking stack traces to the client
-      console.error('Unexpected login error:', error);
-
-      return {
-        success: false,
-        error: 'An unexpected error occurred during sign in. Please try again later.',
-      };
+    if (error instanceof InvalidCredentialsException) {
+      return { success: false, error: t('credentials') };
     }
-  }
-
-  if (needsOnboarding) {
-    redirect('/onboarding');
+    console.error('Unexpected login error:', error);
+    return { success: false, error: t('unexpected') };
   }
 
   if (success) {
-    redirect('/dashboard');
+    // With no buyer return, the authenticated login route resolves the role via memberships.
+    redirect(safeAuthReturnPath(formData.get('redirectTo'), '/login'));
   }
 
   return { success: false, error: null };
 }
 
 import { cookies } from 'next/headers';
-import { OAUTH_INTENT_COOKIE } from '@/features/iam/constants';
+import { OAUTH_INTENT_COOKIE, OAUTH_RETURN_COOKIE } from '@/features/iam/constants';
 
 async function setOAuthIntentCookie(intent: 'business' | 'customer'): Promise<void> {
   const cookieStore = await cookies();
@@ -91,8 +79,19 @@ async function setOAuthIntentCookie(intent: 'business' | 'customer'): Promise<vo
   });
 }
 
-export async function loginWithGoogleAction(): Promise<void> {
+export async function loginWithGoogleAction(formData?: FormData): Promise<void> {
   await setOAuthIntentCookie('customer');
+  const returnPath = safeAuthReturnPath(formData?.get('redirectTo'));
+  const cookieStore = await cookies();
+  if (formData?.get('redirectTo'))
+    cookieStore.set(OAUTH_RETURN_COOKIE, returnPath, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 10,
+      path: '/',
+    });
+  else cookieStore.delete(OAUTH_RETURN_COOKIE);
 
   let errorMessage: string | null = null;
   let url: string | null = null;
@@ -116,7 +115,7 @@ export async function loginWithGoogleAction(): Promise<void> {
   }
 
   if (errorMessage || !url) {
-    redirect(`/login?error=${errorMessage || 'unknown'}`);
+    redirect(`${buyerAuthHref('/login', returnPath)}&error=${errorMessage || 'unknown'}`);
   }
 
   redirect(url);
@@ -124,6 +123,7 @@ export async function loginWithGoogleAction(): Promise<void> {
 
 export async function loginBusinessWithGoogleAction(): Promise<void> {
   await setOAuthIntentCookie('business');
+  (await cookies()).delete(OAUTH_RETURN_COOKIE);
 
   let errorMessage: string | null = null;
   let url: string | null = null;

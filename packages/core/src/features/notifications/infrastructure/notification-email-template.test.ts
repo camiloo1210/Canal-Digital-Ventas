@@ -67,7 +67,7 @@ describe('transactional email presentation', (): void => {
         expect(result.html).toContain(`lang="${locale}"`);
         expect(result.html).toContain('https://cdn.example.test/logo.png');
         expect(result.html).toContain('https://cdn.example.test/product.png');
-        expect(result.html).toContain('https://sales.example.test/#order-order-1');
+        expect(result.html).toContain('https://sales.example.test/purchases#order-order-1');
         expect(result.html).toContain('Store &amp; Co');
         expect(result.html).not.toContain('<script>');
         expect(result.html).toContain('&lt;script&gt;');

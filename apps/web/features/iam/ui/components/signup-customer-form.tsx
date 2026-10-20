@@ -12,23 +12,29 @@ import {
   FieldDescription,
   FieldSeparator,
 } from '@/components/ui/field';
+import { useTranslations } from 'next-intl';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useFormStatus } from 'react-dom';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { buyerAuthHref, safeAuthReturnPath } from '@/features/iam/utils/auth-return-path';
 
 function SubmitButton(): React.JSX.Element {
   const { pending } = useFormStatus();
+  const t = useTranslations('Storefront.auth');
   return (
-    <Button type="submit" className="w-full" disabled={pending}>
-      {pending ? 'Creating account...' : 'Create Account'}
+    <Button type="submit" className="min-h-11 w-full" disabled={pending}>
+      {pending ? t('creatingAccount') : t('createAccount')}
     </Button>
   );
 }
 
 export function SignupCustomerForm({
   className,
+  redirectTo = '/',
   ...props
-}: React.ComponentProps<'form'>): React.JSX.Element {
+}: React.ComponentProps<'form'> & { redirectTo?: string }): React.JSX.Element {
+  const t = useTranslations('Storefront.auth');
   const [state, formAction] = useActionState(signupCustomerAction, {
     success: false,
     error: null,
@@ -37,31 +43,40 @@ export function SignupCustomerForm({
   return (
     <div className={cn('flex flex-col gap-6', className)}>
       <form action={formAction} className="flex flex-col gap-6" {...props}>
+        <input type="hidden" name="redirectTo" value={safeAuthReturnPath(redirectTo)} />
         <FieldGroup>
           <div className="flex flex-col items-center gap-1 text-center">
-            <h1 className="text-2xl font-bold">Create an Account</h1>
-            <p className="text-muted-foreground text-sm text-balance">Join to start shopping</p>
+            <h1 className="text-2xl font-bold">{t('signupTitle')}</h1>
+            <p className="text-muted-foreground text-sm text-balance">{t('signupDescription')}</p>
           </div>
           {state.error && (
-            <div className="p-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded-md">
-              {state.error}
-            </div>
+            <Alert variant="destructive" role="alert">
+              <AlertDescription>{state.error}</AlertDescription>
+            </Alert>
           )}
 
           <Field>
-            <FieldLabel htmlFor="email">Email</FieldLabel>
+            <FieldLabel htmlFor="email">{t('email')}</FieldLabel>
             <Input
               id="email"
               name="email"
               type="email"
               autoComplete="email"
               required
-              placeholder="buyer@example.com"
+              placeholder={t('emailPlaceholder')}
             />
           </Field>
           <Field>
-            <FieldLabel htmlFor="password">Password</FieldLabel>
-            <Input id="password" name="password" type="password" required placeholder="********" />
+            <FieldLabel htmlFor="password">{t('password')}</FieldLabel>
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="new-password"
+              className="min-h-11"
+              required
+              placeholder="********"
+            />
           </Field>
 
           <Field>
@@ -71,10 +86,16 @@ export function SignupCustomerForm({
       </form>
 
       <div className="flex flex-col gap-6 w-full">
-        <FieldSeparator>Or sign up with Google</FieldSeparator>
+        <FieldSeparator>{t('orGoogle')}</FieldSeparator>
         <form action={loginWithGoogleAction} className="w-full">
-          <Button variant="outline" className="w-full" type="submit">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="mr-2 h-4 w-4">
+          <input type="hidden" name="redirectTo" value={safeAuthReturnPath(redirectTo)} />
+          <Button variant="outline" className="min-h-11 w-full" type="submit">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              className="mr-2 h-4 w-4"
+              aria-hidden="true"
+            >
               <path
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                 fill="#4285F4"
@@ -92,20 +113,23 @@ export function SignupCustomerForm({
                 fill="#EA4335"
               />
             </svg>
-            Sign up with Google
+            {t('google')}
           </Button>
         </form>
         <FieldDescription className="text-center flex flex-col gap-2">
           <span>
-            Already have an account?{' '}
-            <Link href="/login" className="underline underline-offset-4 hover:opacity-80">
-              Log in
+            {t('existingAccount')}{' '}
+            <Link
+              href={buyerAuthHref('/login', redirectTo)}
+              className="underline underline-offset-4 hover:opacity-80"
+            >
+              {t('login')}
             </Link>
           </span>
           <span>
-            Are you a seller?{' '}
+            {t('seller')}{' '}
             <Link href="/signup/business" className="underline underline-offset-4 hover:opacity-80">
-              Create a business account
+              {t('businessSignup')}
             </Link>
           </span>
         </FieldDescription>
