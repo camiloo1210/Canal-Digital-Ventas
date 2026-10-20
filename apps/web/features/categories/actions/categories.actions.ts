@@ -14,38 +14,31 @@ import {
 } from '@/features/categories/di/categories.di';
 import { getTranslations } from 'next-intl/server';
 
-export interface CategoryFormValues {
-  name: string;
-  description: string;
+import {
+  categoryFormSchema,
+  updateCategoryFormSchema,
+  extractCategoryFormValues,
+  type CategoryActionState,
+  type CategoryFieldErrors,
+} from '@/features/categories/schemas/category-form.schema';
+export type {
+  CategoryFormValues,
+  CategoryActionState,
+  CategoryFieldErrors,
+} from '@/features/categories/schemas/category-form.schema';
+
+function localizeCategoryErrors(
+  error: z.ZodError,
+  t: Awaited<ReturnType<typeof getTranslations>>,
+): CategoryFieldErrors {
+  const errors: CategoryFieldErrors = {};
+  for (const issue of error.issues) {
+    const field = issue.path[0];
+    if (field === 'name' || field === 'description')
+      errors[field] = [...(errors[field] ?? []), t(issue.message)];
+  }
+  return errors;
 }
-
-export type CategoryFieldErrors = Partial<Record<keyof CategoryFormValues, string[]>>;
-
-export interface CategoryActionState {
-  success: boolean;
-  error: string | null;
-  fieldErrors?: CategoryFieldErrors;
-  values?: CategoryFormValues;
-  revision?: number;
-}
-
-function extractCategoryFormValues(formData: FormData): CategoryFormValues {
-  return {
-    name: formData.get('name')?.toString() || '',
-    description: formData.get('description')?.toString() || '',
-  };
-}
-
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-const getCreateCategorySchema = (t: Awaited<ReturnType<typeof getTranslations>>) =>
-  z.object({
-    name: z
-      .string()
-      .max(100, t('validation_name_maxLength'))
-      .refine((val) => val.trim().length > 0, t('validation_name_required'))
-      .transform((val) => val.trim()),
-    description: z.string().max(200, t('validation_description_maxLength')).optional().default(''),
-  });
 
 export async function createCategoryAction(
   prevState: CategoryActionState,
@@ -55,13 +48,13 @@ export async function createCategoryAction(
   const extractedValues = extractCategoryFormValues(formData);
   const revision = (prevState.revision ?? 0) + 1;
 
-  const parsed = getCreateCategorySchema(t).safeParse(extractedValues);
+  const parsed = categoryFormSchema.safeParse(extractedValues);
 
   if (!parsed.success) {
     return {
       error: null,
       success: false,
-      fieldErrors: parsed.error.flatten().fieldErrors,
+      fieldErrors: localizeCategoryErrors(parsed.error, t),
       values: extractedValues,
       revision,
     };
@@ -97,7 +90,10 @@ export async function createCategoryAction(
     isSuccess = true;
   } catch (error: unknown) {
     if (error instanceof DomainException || error instanceof ApplicationException) {
-      if (error.name === 'InvalidCategorySlugException' || error.message.includes('slug')) {
+      if (
+        error.name === 'InvalidCategorySlugException' ||
+        error.name === 'CategorySlugAlreadyExistsException'
+      ) {
         return {
           error: t('errors_slugAlreadyExists'),
           success: false,
@@ -113,24 +109,12 @@ export async function createCategoryAction(
 
   if (isSuccess) {
     revalidatePath('/dashboard/catalog/categories');
+    revalidatePath('/dashboard');
     redirect('/dashboard/catalog/categories');
   }
 
   return { success: false, error: t('errors_unexpected'), values: extractedValues, revision };
 }
-
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-const getUpdateCategorySchema = (t: Awaited<ReturnType<typeof getTranslations>>) =>
-  z.object({
-    categoryId: z.string().uuid(),
-    expectedVersion: z.coerce.number().int().nonnegative(),
-    name: z
-      .string()
-      .max(100, t('validation_name_maxLength'))
-      .refine((val) => val.trim().length > 0, t('validation_name_required'))
-      .transform((val) => val.trim()),
-    description: z.string().max(200, t('validation_description_maxLength')).optional().default(''),
-  });
 
 export async function updateCategoryAction(
   prevState: CategoryActionState,
@@ -144,7 +128,7 @@ export async function updateCategoryAction(
   const categoryId = formData.get('categoryId')?.toString();
   const expectedVersion = formData.get('expectedVersion')?.toString();
 
-  const parsed = getUpdateCategorySchema(t).safeParse({
+  const parsed = updateCategoryFormSchema.safeParse({
     ...extractedValues,
     categoryId,
     expectedVersion,
@@ -161,7 +145,7 @@ export async function updateCategoryAction(
     return {
       error: null,
       success: false,
-      fieldErrors: parsed.error.flatten().fieldErrors,
+      fieldErrors: localizeCategoryErrors(parsed.error, t),
       values: extractedValues,
       revision,
     };
@@ -213,6 +197,7 @@ export async function updateCategoryAction(
 
   if (isSuccess) {
     revalidatePath('/dashboard/catalog/categories');
+    revalidatePath('/dashboard');
     redirect('/dashboard/catalog/categories');
   }
 
@@ -255,6 +240,7 @@ export async function archiveCategoryAction(
 
   if (isSuccess) {
     revalidatePath('/dashboard/catalog/categories');
+    revalidatePath('/dashboard');
     return { success: true, error: null };
   }
 
@@ -297,6 +283,7 @@ export async function unarchiveCategoryAction(
 
   if (isSuccess) {
     revalidatePath('/dashboard/catalog/categories');
+    revalidatePath('/dashboard');
     return { success: true, error: null };
   }
 
