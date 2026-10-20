@@ -2,18 +2,12 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { CategoryRepositoryException } from '@/categories/application/exceptions/category-repository.exception';
 import { PaginationOptions, PaginatedResult } from '@/shared/domain/pagination/pagination';
 import { CategoryFilters } from '@/categories/application/ports/out/category-repository.port';
-import { CategoryStatus } from '@/categories/domain/enums/category-status.enum';
 
-export interface CategoryReadModel {
-  id: string;
-  name: string;
-  description: string;
-  status: CategoryStatus;
-  tenant_id: string;
-  version: number;
-}
+import type { CategoryReadModel } from '@/categories/application/read-models/category-read.model';
+import type { CategoryReadRepositoryPort } from '@/categories/application/ports/out/category-read-repository.port';
+export type { CategoryReadModel } from '@/categories/application/read-models/category-read.model';
 
-export class SupabaseCategoryReadRepository {
+export class SupabaseCategoryReadRepository implements CategoryReadRepositoryPort {
   constructor(
     private readonly supabase: SupabaseClient,
     private readonly isPublicContext: boolean = false,
