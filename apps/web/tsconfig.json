@@ -19,6 +19,7 @@
       }
     ],
     "paths": {
+      "@/dashboard/*": ["../../packages/core/src/features/dashboard/*"],
       "@/*": ["./*"],
       "@/shared/*": ["../../packages/core/src/features/shared/*"],
       "@/products/*": ["../../packages/core/src/features/products/*"],

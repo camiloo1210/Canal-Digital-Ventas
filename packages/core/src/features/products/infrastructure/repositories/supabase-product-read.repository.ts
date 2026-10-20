@@ -2,27 +2,12 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { ProductRepositoryException } from '@/products/application/exceptions/product-repository.exception';
 import { PaginationOptions, PaginatedResult } from '@/shared/domain/pagination/pagination';
 import { ProductFilters } from '@/products/application/ports/out/product-repository.port';
-import { ProductStatus } from '@/products/domain/enums/product-status.enum';
 
-export interface ProductReadModel {
-  id: string;
-  name: string;
-  price_cents: number;
-  cost_cents: number;
-  wholesale_price_cents: number | null;
-  wholesale_min_quantity: number | null;
-  description: string | null;
-  stock: number;
-  category_id: string;
-  sku: string;
-  status: ProductStatus;
-  tenant_id: string;
-  is_vat_exempt: boolean;
-  version: number;
-  image_url: string | null;
-}
+import type { ProductReadModel } from '@/products/application/read-models/product-read.model';
+import type { ProductReadRepositoryPort } from '@/products/application/ports/out/product-read-repository.port';
+export type { ProductReadModel } from '@/products/application/read-models/product-read.model';
 
-export class SupabaseProductReadRepository {
+export class SupabaseProductReadRepository implements ProductReadRepositoryPort {
   constructor(
     private readonly supabase: SupabaseClient,
     private readonly isPublicContext: boolean = false,

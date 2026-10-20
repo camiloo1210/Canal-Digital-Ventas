@@ -10,7 +10,13 @@ import {
   OnboardTenantUseCase,
   LocalEventBus,
   RegisterGlobalIdentityUseCase,
+  SupabaseActiveTenantContextReadAdapter,
+  type ActiveTenantContextReadPort,
 } from '@canaldigital/packages/core';
+
+export async function getActiveTenantContextReadRepository(): Promise<ActiveTenantContextReadPort> {
+  return new SupabaseActiveTenantContextReadAdapter(await createSupabaseServerClient());
+}
 
 export async function getSignInWithEmailUseCase(): Promise<SignInWithEmailUseCase> {
   const supabaseClient = await createSupabaseServerClient();

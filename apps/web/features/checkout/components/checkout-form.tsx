@@ -127,7 +127,7 @@ export function CheckoutForm({ tenantSlug }: { tenantSlug: string }): React.JSX.
   if (state.success)
     return (
       <div className="flex flex-col items-center p-8 text-center space-y-4" role="status">
-        <CheckCircle2 aria-hidden="true" className="size-16 text-primary" />
+        <CheckCircle2 aria-hidden="true" className="size-16 text-success" />
         <h2 className="text-2xl font-bold">{t('successTitle')}</h2>
         <p className="text-muted-foreground">{t('successMessage')}</p>
         <Button nativeButton={false} render={<Link href={`/store/${tenantSlug}`} />}>

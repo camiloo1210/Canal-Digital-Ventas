@@ -12,11 +12,17 @@ export function OrderStatusBadge({ status }: OrderStatusBadgeProps): React.JSX.E
   const normalizedStatus = status.toLowerCase();
 
   switch (normalizedStatus) {
+    case 'pending_payment':
+      return <Badge variant="outline">{t('pending_payment')}</Badge>;
+    case 'refunded':
+      return <Badge variant="outline">{t('refunded')}</Badge>;
+    case 'draft':
+      return <Badge variant="outline">{t('draft')}</Badge>;
     case 'confirmed':
       return (
         <Badge
           variant="secondary"
-          className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200"
+          className="bg-blue-500/10 text-blue-800 dark:text-blue-300 border-blue-500/25"
         >
           {t('confirmed')}
         </Badge>
@@ -25,17 +31,14 @@ export function OrderStatusBadge({ status }: OrderStatusBadgeProps): React.JSX.E
       return (
         <Badge
           variant="secondary"
-          className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-200"
+          className="bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-500/25"
         >
           {t('processing')}
         </Badge>
       );
     case 'paid':
       return (
-        <Badge
-          variant="secondary"
-          className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200"
-        >
+        <Badge variant="secondary" className="bg-success/5 text-success border-success/25">
           {t('paid')}
         </Badge>
       );
@@ -43,23 +46,20 @@ export function OrderStatusBadge({ status }: OrderStatusBadgeProps): React.JSX.E
       return (
         <Badge
           variant="secondary"
-          className="bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-200"
+          className="bg-purple-500/10 text-purple-800 dark:text-purple-300 border-purple-500/25"
         >
           {t('shipped')}
         </Badge>
       );
     case 'delivered':
       return (
-        <Badge
-          variant="secondary"
-          className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-300"
-        >
+        <Badge variant="secondary" className="bg-success/5 text-success border-success/25">
           {t('delivered')}
         </Badge>
       );
     case 'cancelled':
       return <Badge variant="destructive">{t('cancelled')}</Badge>;
     default:
-      return <Badge variant="outline">{status}</Badge>;
+      return <Badge variant="outline">{t('unknown')}</Badge>;
   }
 }
