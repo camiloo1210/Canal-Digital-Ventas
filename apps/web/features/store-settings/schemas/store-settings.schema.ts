@@ -1,9 +1,14 @@
 import { z } from 'zod';
 
 export const storeSettingsSchema = z.object({
-  name: z.string().trim().min(1),
-  slug: z.string().trim().min(1),
-  description: z.string(),
+  name: z.string().trim().min(3).max(100),
+  slug: z
+    .string()
+    .trim()
+    .min(3)
+    .max(50)
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+  description: z.string().max(255),
   version: z
     .string()
     .regex(/^\d+$/)

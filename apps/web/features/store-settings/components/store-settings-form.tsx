@@ -9,17 +9,23 @@ import {
   updateStoreSettingsAction,
   type StoreSettingsState,
 } from '@/features/store-settings/actions/store-settings.actions';
+import {
+  CatalogFormFeedback,
+  useCatalogFormErrors,
+} from '@/features/dashboard/components/catalog-form-feedback';
+import { CatalogFormActions } from '@/features/dashboard/components/catalog-form-actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
+import { FieldError } from '@/components/ui/field';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 interface SelectedImage {
   file: File;
   url: string;
 }
-
 function useSelectedImage(): [SelectedImage | null, (file: File | null) => void] {
   const [selection, setSelection] = useState<SelectedImage | null>(null);
   useEffect(
@@ -30,12 +36,10 @@ function useSelectedImage(): [SelectedImage | null, (file: File | null) => void]
   );
   return [
     selection,
-    (file: File | null): void => {
-      setSelection(file ? { file, url: URL.createObjectURL(file) } : null);
-    },
+    (file: File | null): void =>
+      setSelection(file ? { file, url: URL.createObjectURL(file) } : null),
   ];
 }
-
 function ImagePreview({
   file,
   savedUrl,
@@ -48,17 +52,16 @@ function ImagePreview({
   className: string;
 }): React.JSX.Element | null {
   const src = file?.url ?? savedUrl;
-  if (!src) return null;
-  return (
+  return src ? (
     <Image
       src={src}
       alt={alt}
       fill
       unoptimized={Boolean(file)}
       className={className}
-      sizes="(max-width: 768px) 100vw, 800px"
+      sizes="(max-width: 768px) 100vw, 400px"
     />
-  );
+  ) : null;
 }
 
 export function StoreSettingsForm({
@@ -92,150 +95,251 @@ export function StoreSettingsForm({
     { success: false, message: null },
   );
   const saved = state.saved ?? initial;
-
+  const revision = state.revision ?? 0;
+  const { visibleErrors, clearField } = useCatalogFormErrors(state.fieldErrors, revision);
+  const errorFor = (field: string): string | undefined => visibleErrors[field]?.[0];
   return (
     <form
       action={action}
-      onChange={(): void => setEdited(true)}
-      className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
+      noValidate
+      onReset={(event): void => event.preventDefault()}
+      onChange={(event): void => {
+        setEdited(true);
+        const field = event.target.getAttribute('name') ?? '';
+        clearField(field === 'removeLogo' ? 'logo' : field === 'removeBanner' ? 'banner' : field);
+      }}
+      className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]"
     >
       <input type="hidden" name="version" value={saved.version} />
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('identity')}</CardTitle>
-            <CardDescription>{t('identityHelp')}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="store-name">{t('name')}</Label>
-              <Input
-                id="store-name"
-                name="name"
-                required
-                value={name}
-                onChange={(event): void => setName(event.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="store-slug">{t('slug')}</Label>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">/store/</span>
+      {(Boolean(state.message && !edited) || Object.keys(visibleErrors).length > 0) && (
+        <div className="order-first col-span-full">
+          <CatalogFormFeedback
+            revision={revision}
+            error={!state.success && !edited ? state.message : null}
+            fieldErrors={visibleErrors}
+            targets={{
+              name: 'store-name',
+              slug: 'store-slug',
+              description: 'store-description',
+              logo: 'store-logo',
+              banner: 'store-banner',
+            }}
+            labels={{
+              name: t('name'),
+              slug: t('slug'),
+              description: t('description'),
+              logo: t('logo'),
+              banner: t('banner'),
+            }}
+          />
+          {state.success && !edited && (
+            <p
+              role="status"
+              className="rounded-lg border border-success/30 bg-success/5 p-4 text-sm text-success"
+            >
+              {state.message}
+            </p>
+          )}
+        </div>
+      )}
+      <div className="min-w-0 space-y-6">
+        <fieldset
+          disabled={pending}
+          aria-busy={pending}
+          className="min-w-0 space-y-6 disabled:opacity-70"
+        >
+          <Card className="shadow-none">
+            <CardHeader>
+              <CardTitle>
+                <h2>{t('identity')}</h2>
+              </CardTitle>
+              <CardDescription>{t('identityHelp')}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="store-name">{t('name')}</Label>
                 <Input
-                  id="store-slug"
-                  name="slug"
+                  id="store-name"
+                  name="name"
                   required
-                  value={slug}
-                  aria-describedby="store-slug-help"
-                  autoCapitalize="none"
-                  spellCheck={false}
-                  onChange={(event): void => setSlug(event.target.value)}
+                  value={name}
+                  onChange={(event): void => setName(event.target.value)}
+                  className="min-h-11 scroll-mt-6"
+                  aria-invalid={Boolean(errorFor('name'))}
+                  aria-describedby={errorFor('name') ? 'store-name-error' : 'store-name-help'}
                 />
-              </div>
-              <p id="store-slug-help" className="text-sm text-muted-foreground">
-                {t('slugHelp')}
-              </p>
-              {slug.trim() !== saved.slug && (
-                <p className="text-sm text-amber-700 dark:text-amber-400">
-                  {t('slugChangeNotice')}
+                <p id="store-name-help" className="text-sm text-muted-foreground">
+                  {t('nameHelp')}
                 </p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="store-description">{t('description')}</Label>
-              <Textarea
-                id="store-description"
-                name="description"
-                rows={4}
-                value={description}
-                onChange={(event): void => setDescription(event.target.value)}
-              />
-              <p className="text-sm text-muted-foreground">{t('descriptionHelp')}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('images')}</CardTitle>
-            <CardDescription>{t('imageHelp')}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="store-logo">{t('logo')}</Label>
-              <Input
-                id="store-logo"
-                name="logo"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                disabled={removeLogo || pending}
-                onChange={(event): void => setLogo(event.target.files?.[0] ?? null)}
-              />
-              <p className="text-xs text-muted-foreground">{logo?.file.name ?? t('logoHelp')}</p>
-              <Label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  name="removeLogo"
-                  checked={removeLogo}
-                  onChange={(event): void => setRemoveLogo(event.target.checked)}
+                {errorFor('name') && (
+                  <FieldError id="store-name-error">{errorFor('name')}</FieldError>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="store-slug">{t('slug')}</Label>
+                <div className="flex items-center gap-2">
+                  <span aria-hidden="true" className="text-sm text-muted-foreground">
+                    /store/
+                  </span>
+                  <Input
+                    id="store-slug"
+                    name="slug"
+                    required
+                    value={slug}
+                    aria-invalid={Boolean(errorFor('slug'))}
+                    aria-describedby={
+                      'store-slug-help' + (errorFor('slug') ? ' store-slug-error' : '')
+                    }
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    onChange={(event): void => setSlug(event.target.value)}
+                    className="min-h-11 scroll-mt-6"
+                  />
+                </div>
+                <p id="store-slug-help" className="text-sm text-muted-foreground">
+                  {t('slugHelp')}
+                </p>
+                {slug.trim() !== saved.slug && (
+                  <p role="status" className="text-sm text-amber-800 dark:text-amber-300">
+                    {t('slugChangeNotice')}
+                  </p>
+                )}
+                {errorFor('slug') && (
+                  <FieldError id="store-slug-error">{errorFor('slug')}</FieldError>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="store-description">{t('description')}</Label>
+                <Textarea
+                  id="store-description"
+                  name="description"
+                  rows={4}
+                  value={description}
+                  onChange={(event): void => setDescription(event.target.value)}
+                  aria-invalid={Boolean(errorFor('description'))}
+                  aria-describedby={
+                    'store-description-help' +
+                    (errorFor('description') ? ' store-description-error' : '')
+                  }
+                  className="min-h-28 scroll-mt-6"
                 />
-                {t('removeLogo')}
-              </Label>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="store-banner">{t('banner')}</Label>
-              <Input
-                id="store-banner"
-                name="banner"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                disabled={removeBanner || pending}
-                onChange={(event): void => setBanner(event.target.files?.[0] ?? null)}
-              />
-              <p className="text-xs text-muted-foreground">
-                {banner?.file.name ?? t('bannerHelp')}
-              </p>
-              <Label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  name="removeBanner"
-                  checked={removeBanner}
-                  onChange={(event): void => setRemoveBanner(event.target.checked)}
+                <p id="store-description-help" className="text-sm text-muted-foreground">
+                  {t('descriptionHelp')}
+                </p>
+                {errorFor('description') && (
+                  <FieldError id="store-description-error">{errorFor('description')}</FieldError>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="shadow-none">
+            <CardHeader>
+              <CardTitle>
+                <h2>{t('images')}</h2>
+              </CardTitle>
+              <CardDescription>{t('imageHelp')}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-3">
+                <Label htmlFor="store-logo">{t('logo')}</Label>
+                <Input
+                  id="store-logo"
+                  name="logo"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  disabled={removeLogo || pending}
+                  onChange={(event): void => setLogo(event.target.files?.[0] ?? null)}
+                  aria-invalid={Boolean(errorFor('logo'))}
+                  aria-describedby={
+                    'store-logo-help' + (errorFor('logo') ? ' store-logo-error' : '')
+                  }
+                  className="min-h-11 scroll-mt-6"
                 />
-                {t('removeBanner')}
-              </Label>
-            </div>
-          </CardContent>
-        </Card>
-        {state.message && !edited && (
-          <p
-            role={state.success ? 'status' : 'alert'}
-            className={
-              state.success
-                ? 'text-sm text-emerald-700 dark:text-emerald-400'
-                : 'text-sm text-destructive'
-            }
-          >
-            {state.message}
-          </p>
-        )}
-        <Button type="submit" disabled={pending}>
-          {pending ? t('saving') : t('save')}
-        </Button>
+                <p id="store-logo-help" className="break-words text-sm text-muted-foreground">
+                  {logo?.file.name ?? t('logoHelp')}
+                </p>
+                <div className="flex min-h-11 items-center gap-3">
+                  <Checkbox
+                    id="remove-logo"
+                    name="removeLogo"
+                    value="on"
+                    checked={removeLogo}
+                    onCheckedChange={(checked): void => {
+                      setRemoveLogo(checked);
+                      setEdited(true);
+                      clearField('logo');
+                    }}
+                  />
+                  <Label htmlFor="remove-logo" className="min-h-11 flex-1 cursor-pointer">
+                    {t('removeLogo')}
+                  </Label>
+                </div>
+                {errorFor('logo') && (
+                  <FieldError id="store-logo-error">{errorFor('logo')}</FieldError>
+                )}
+              </div>
+              <div className="space-y-3">
+                <Label htmlFor="store-banner">{t('banner')}</Label>
+                <Input
+                  id="store-banner"
+                  name="banner"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  disabled={removeBanner || pending}
+                  onChange={(event): void => setBanner(event.target.files?.[0] ?? null)}
+                  aria-invalid={Boolean(errorFor('banner'))}
+                  aria-describedby={
+                    'store-banner-help' + (errorFor('banner') ? ' store-banner-error' : '')
+                  }
+                  className="min-h-11 scroll-mt-6"
+                />
+                <p id="store-banner-help" className="break-words text-sm text-muted-foreground">
+                  {banner?.file.name ?? t('bannerHelp')}
+                </p>
+                <div className="flex min-h-11 items-center gap-3">
+                  <Checkbox
+                    id="remove-banner"
+                    name="removeBanner"
+                    value="on"
+                    checked={removeBanner}
+                    onCheckedChange={(checked): void => {
+                      setRemoveBanner(checked);
+                      setEdited(true);
+                      clearField('banner');
+                    }}
+                  />
+                  <Label htmlFor="remove-banner" className="min-h-11 flex-1 cursor-pointer">
+                    {t('removeBanner')}
+                  </Label>
+                </div>
+                {errorFor('banner') && (
+                  <FieldError id="store-banner-error">{errorFor('banner')}</FieldError>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </fieldset>
+        <CatalogFormActions cancelHref="/dashboard" label={t('save')} pendingLabel={t('saving')} />
       </div>
-      <div className="space-y-4 lg:sticky lg:top-6 lg:self-start">
+      <aside
+        id="store-preview"
+        className="order-first min-w-0 space-y-4 xl:order-last xl:sticky xl:top-6"
+      >
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-semibold">{t('preview')}</h2>
           <Button
             variant="outline"
             nativeButton={false}
+            role="link"
+            className="min-h-11"
             render={
-              <Link href={`/store/${saved.slug}`} target="_blank" rel="noopener noreferrer" />
+              <Link href={'/store/' + saved.slug} target="_blank" rel="noopener noreferrer" />
             }
           >
             {t('visit')}
           </Button>
         </div>
-        <Card className="overflow-hidden py-0 gap-0">
+        <Card className="gap-0 overflow-hidden py-0 shadow-none">
           <div className="relative aspect-[3/1] bg-muted">
             <ImagePreview
               file={removeBanner ? null : banner}
@@ -245,7 +349,7 @@ export function StoreSettingsForm({
             />
           </div>
           <CardContent className="relative pt-0 pb-6">
-            <div className="relative -mt-10 mb-4 size-20 overflow-hidden rounded-xl border-4 border-background bg-muted">
+            <div className="relative -mt-8 mb-4 size-16 overflow-hidden rounded-xl border-4 border-background bg-muted">
               <ImagePreview
                 file={removeLogo ? null : logo}
                 savedUrl={removeLogo ? null : saved.logoUrl}
@@ -260,7 +364,7 @@ export function StoreSettingsForm({
           </CardContent>
         </Card>
         <p className="text-sm text-muted-foreground">{t('previewHelp')}</p>
-      </div>
+      </aside>
     </form>
   );
 }
