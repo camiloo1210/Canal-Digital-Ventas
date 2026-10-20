@@ -27,6 +27,7 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-success: var(--success);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -63,7 +64,8 @@
   --muted-foreground: oklch(0.556 0 0);
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
+  --destructive: oklch(0.53 0.22 27.325);
+  --success: oklch(0.527 0.154 150.069);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
@@ -99,6 +101,7 @@
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
+  --success: oklch(0.792 0.209 151.711);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
@@ -127,4 +130,48 @@
   html {
     @apply font-sans;
   }
+}
+
+/* Storefront keyboard focus must remain visible under its sticky header. */
+.storefront :is(a, button, input, [role='switch']):focus-visible,
+:is([data-slot='sheet-content'], [data-slot='dialog-content'], [data-slot='dropdown-menu-content'])
+  :is(a, button, input, [role='switch']):focus-visible {
+  outline: 2px solid var(--foreground);
+  outline-offset: 3px;
+  scroll-margin-block: 5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(
+      .storefront,
+      [data-slot='sheet-content'],
+      [data-slot='dialog-content'],
+      [data-slot='dropdown-menu-content']
+    )
+    *,
+  :is(
+      .storefront,
+      [data-slot='sheet-content'],
+      [data-slot='dialog-content'],
+      [data-slot='dropdown-menu-content']
+    )
+    *::before,
+  :is(
+      .storefront,
+      [data-slot='sheet-content'],
+      [data-slot='dialog-content'],
+      [data-slot='dropdown-menu-content']
+    )
+    *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.buyer-space :is(a, button, input):focus-visible,
+.admin-space :is(a, button, input, textarea, select):focus-visible {
+  outline: 2px solid var(--foreground);
+  outline-offset: 3px;
+  scroll-margin-block: 5rem;
 }

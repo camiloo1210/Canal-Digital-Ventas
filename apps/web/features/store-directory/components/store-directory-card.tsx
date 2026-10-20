@@ -1,72 +1,76 @@
 import * as React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Card } from '@/components/ui/card';
-import { PublicTenantDirectoryItem } from '@canaldigital/packages/core';
+import { ArrowUpRight } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import type { PublicTenantDirectoryItem } from '@canaldigital/packages/core';
+import { cn } from '@/lib/utils';
 
 interface StoreDirectoryCardProps {
   tenant: PublicTenantDirectoryItem;
   visitLabel: string;
+  descriptionFallback: string;
+  prominent?: boolean;
 }
 
 export function StoreDirectoryCard({
   tenant,
   visitLabel,
+  descriptionFallback,
+  prominent = false,
 }: StoreDirectoryCardProps): React.JSX.Element {
   return (
     <Link
       href={`/store/${tenant.slug}`}
-      className="block h-full outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg"
+      className="group block h-full rounded-xl outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-foreground"
     >
-      <Card className="group h-full overflow-hidden transition-shadow shadow-sm hover:shadow-md border-border bg-card flex flex-col relative">
-        {/* Banner */}
-        <div className="relative w-full aspect-[21/9] bg-muted border-b border-border">
-          {tenant.bannerUrl ? (
+      <Card
+        className={cn(
+          'h-full gap-0 overflow-hidden rounded-xl border border-border py-0 ring-0 shadow-none [box-shadow:none] transition-colors hover:border-foreground/30 motion-reduce:transition-none',
+          !prominent && 'bg-muted/25',
+        )}
+      >
+        {prominent && tenant.bannerUrl && (
+          <div className="relative aspect-[21/9] overflow-hidden bg-muted">
             <Image
               src={tenant.bannerUrl}
-              alt={`${tenant.name} banner`}
+              alt=""
               fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              loading="eager"
+              sizes="(min-width: 1200px) 650px, (min-width: 1024px) 56vw, (min-width: 640px) calc(100vw - 48px), calc(100vw - 32px)"
+              className="object-cover"
             />
-          ) : (
-            <div className="w-full h-full opacity-10 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
-          )}
-        </div>
-
-        {/* Logo / Content Area */}
-        <div className="p-4 flex flex-col flex-grow items-center text-center relative">
-          {/* Avatar overlapped */}
-          <div className="relative w-16 h-16 rounded-full border-4 border-card bg-muted shadow-sm flex items-center justify-center -mt-12 mb-3 overflow-hidden z-10 flex-shrink-0">
-            {tenant.logoUrl ? (
-              <Image
-                src={tenant.logoUrl}
-                alt={`${tenant.name} logo`}
-                fill
-                sizes="64px"
-                className="object-cover"
-              />
-            ) : (
-              <span className="text-xl font-bold uppercase text-muted-foreground">
-                {tenant.name.substring(0, 2)}
-              </span>
-            )}
           </div>
-
-          <h3 className="text-lg font-bold text-foreground capitalize line-clamp-1 group-hover:text-primary transition-colors">
-            {tenant.name}
-          </h3>
-
-          {tenant.description && (
-            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{tenant.description}</p>
-          )}
-
-          <div className="mt-auto pt-4">
-            <span className="text-sm font-medium text-primary group-hover:underline">
-              {visitLabel} &rarr;
-            </span>
+        )}
+        <CardContent className={cn('flex h-full flex-col gap-5 p-5 sm:p-6', prominent && 'h-auto')}>
+          <div className="flex min-w-0 items-start gap-4">
+            <div
+              aria-hidden="true"
+              className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted text-lg font-semibold text-foreground"
+            >
+              {tenant.logoUrl ? (
+                <Image src={tenant.logoUrl} alt="" fill sizes="56px" className="object-contain" />
+              ) : (
+                <span>{tenant.name.substring(0, 2).toLocaleUpperCase()}</span>
+              )}
+            </div>
+            <div className="min-w-0 space-y-1.5">
+              <h3 className="text-lg font-semibold leading-snug tracking-tight text-foreground [overflow-wrap:anywhere]">
+                {tenant.name}
+              </h3>
+              <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">
+                {tenant.description || descriptionFallback}
+              </p>
+            </div>
           </div>
-        </div>
+          <span className="mt-auto flex items-center justify-between gap-4 text-sm font-medium text-foreground">
+            {visitLabel}
+            <ArrowUpRight
+              aria-hidden="true"
+              className="size-4 shrink-0 transition-transform motion-safe:group-hover:translate-x-0.5 motion-safe:group-hover:-translate-y-0.5 motion-reduce:transition-none"
+            />
+          </span>
+        </CardContent>
       </Card>
     </Link>
   );

@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation';
 import { getStoreViewerQuery } from '@/features/store/queries/store-viewer.query';
 import { resolveTenantQuery } from '@/features/iam/queries/resolve-tenant.query';
 import { StoreHeader } from '@/features/store/components/store-header';
+import Link from 'next/link';
+import { StorefrontVitals } from '@/features/store/components/storefront-vitals';
 import { getTranslations } from 'next-intl/server';
 
 export async function generateMetadata({
@@ -15,12 +17,15 @@ export async function generateMetadata({
   const tenantContext = await resolveTenantQuery(tenantSlug);
 
   if (!tenantContext) {
-    return { title: 'Store Not Found' };
+    const t = await getTranslations('Storefront');
+    return { title: t('storeNotFound') };
   }
 
   return {
     title: tenantContext.name,
-    description: tenantContext.description || `Welcome to ${tenantContext.name}`,
+    description:
+      tenantContext.description ||
+      (await getTranslations('Storefront'))('welcome', { name: tenantContext.name }),
   };
 }
 
@@ -57,14 +62,23 @@ export default async function StoreLayout({
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="storefront min-h-screen bg-background flex flex-col">
+      <Link
+        href="#storefront-main"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[60] focus:flex focus:min-h-11 focus:items-center focus:rounded-lg focus:bg-primary focus:px-4 focus:text-primary-foreground"
+      >
+        {t('accessibility.skipToContent')}
+      </Link>
+      {process.env.STOREFRONT_DIAGNOSTICS === '1' && <StorefrontVitals />}
       <StoreHeader
         viewer={viewer}
         tenantSlug={tenantSlug}
         tenantName={tenantContext.name}
         labels={labels}
       />
-      <main className="flex-1">{children}</main>
+      <main id="storefront-main" tabIndex={-1} className="flex-1 scroll-mt-20">
+        {children}
+      </main>
     </div>
   );
 }

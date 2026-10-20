@@ -1,11 +1,18 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import type { BuyerOrderReadModel } from '@canaldigital/packages/core';
 import { BuyerOrderCard } from '@/features/orders/components/buyer-order-card';
-import { Card, CardContent } from '@/components/ui/card';
-import { ShoppingBag } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyContent,
+} from '@/components/ui/empty';
 
 interface BuyerOrdersListProps {
   orders: BuyerOrderReadModel[];
@@ -20,14 +27,17 @@ export function BuyerOrdersList({
 
   if (orders.length === 0) {
     return (
-      <Card className="shadow-sm border-border">
-        <CardContent className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground space-y-3">
-          <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-muted-foreground/60">
-            <ShoppingBag className="w-6 h-6" />
-          </div>
-          <p className="text-sm">{tb('empty_purchases')}</p>
-        </CardContent>
-      </Card>
+      <Empty className="min-h-64 rounded-xl border border-dashed bg-muted/20">
+        <EmptyHeader>
+          <EmptyTitle>{tb('empty_purchases')}</EmptyTitle>
+          <EmptyDescription>{tb('purchases.emptyDescription')}</EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent>
+          <Button nativeButton={false} role="link" className="min-h-11" render={<Link href="/" />}>
+            {tb('directory.allStores')}
+          </Button>
+        </EmptyContent>
+      </Empty>
     );
   }
 

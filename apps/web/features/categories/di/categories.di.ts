@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import {
   SupabaseCategoryRepository,
   SupabaseCategoryReadRepository,
+  type CategoryReadRepositoryPort,
   PostgresCategoryRepository,
   CreateCategoryUseCase,
   ChangeCategoryDetailsUseCase,
@@ -18,7 +19,7 @@ export async function getCategoryRepository(): Promise<SupabaseCategoryRepositor
   return new SupabaseCategoryRepository(supabase);
 }
 
-export async function getCategoryReadRepository(): Promise<SupabaseCategoryReadRepository> {
+export async function getCategoryReadRepository(): Promise<CategoryReadRepositoryPort> {
   const supabase = await createClient();
   return new SupabaseCategoryReadRepository(supabase);
 }

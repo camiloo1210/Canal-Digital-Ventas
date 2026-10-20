@@ -2,13 +2,21 @@ import * as React from 'react';
 import { getStoreProductReadRepository } from '@/features/store/di/store.di';
 import { StoreProductGrid } from '@/features/store/components/store-product-grid';
 import { PAGE_SIZE } from '@/features/store/utils/store-filters.parser';
+import { StorePagination } from '@/features/store/components/store-pagination';
+import { getTranslations } from 'next-intl/server';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  STORE_PRODUCT_GRID,
+  STORE_PRODUCT_CARD,
+  STORE_PRODUCT_MEDIA,
+} from '@/features/store/components/store-product-layout';
 
 interface StoreResultsBoundaryProps {
   tenantSlug: string;
   categorySlug?: string;
   q?: string;
   page: number;
-  pageInfoTemplate: string;
 }
 
 export async function StoreResultsBoundary({
@@ -16,9 +24,9 @@ export async function StoreResultsBoundary({
   categorySlug,
   q,
   page,
-  pageInfoTemplate,
 }: StoreResultsBoundaryProps): Promise<React.JSX.Element> {
   const productRepo = await getStoreProductReadRepository();
+  const t = await getTranslations('Storefront');
 
   const productsResult = await productRepo.searchActiveByTenantSlug(
     tenantSlug,
@@ -30,32 +38,49 @@ export async function StoreResultsBoundary({
   );
 
   return (
-    <StoreProductGrid
-      products={productsResult.items}
-      currentPage={productsResult.currentPage}
-      totalPages={productsResult.totalPages}
-      pageInfoTemplate={pageInfoTemplate}
-      tenantSlug={tenantSlug}
-    />
+    <section aria-label={t('allProducts')}>
+      <p className="mb-4 text-sm text-muted-foreground" role="status" aria-live="polite">
+        {t('resultsCount', { count: productsResult.totalItems })}
+      </p>
+      <StoreProductGrid
+        products={productsResult.items}
+        tenantSlug={tenantSlug}
+        q={q}
+        categorySlug={categorySlug}
+        outOfRange={productsResult.totalItems > 0 && productsResult.items.length === 0}
+      />
+      <StorePagination
+        tenantSlug={tenantSlug}
+        q={q}
+        categorySlug={categorySlug}
+        currentPage={productsResult.currentPage}
+        totalPages={productsResult.totalPages}
+      />
+    </section>
   );
 }
 
-export function StoreResultsSkeleton(): React.JSX.Element {
+export function StoreResultsSkeleton({ label }: { label: string }): React.JSX.Element {
   return (
-    <div className="w-full flex flex-col opacity-50 pointer-events-none transition-opacity duration-200">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {[...Array(8)].map((_, i) => (
-          <div
-            key={i}
-            className="flex flex-col border rounded-xl overflow-hidden shadow-sm bg-card"
-          >
-            <div className="aspect-[4/3] bg-muted animate-pulse" />
-            <div className="p-4 flex flex-col gap-3">
-              <div className="h-4 bg-muted animate-pulse rounded w-3/4" />
-              <div className="h-4 bg-muted animate-pulse rounded w-1/2" />
-              <div className="mt-4 h-6 bg-muted animate-pulse rounded w-1/3" />
-            </div>
-          </div>
+    <div role="status" aria-label={label} aria-busy="true" className="w-full">
+      <Skeleton aria-hidden="true" className="mb-4 h-5 w-32 motion-reduce:animate-none" />
+      <div aria-hidden="true" className={STORE_PRODUCT_GRID}>
+        {Array.from({ length: 8 }, (_, i): React.JSX.Element => (
+          <Card key={i} className={STORE_PRODUCT_CARD}>
+            <Skeleton
+              className={`${STORE_PRODUCT_MEDIA} rounded-none motion-reduce:animate-none`}
+            />
+            <CardContent className="flex flex-1 flex-col gap-3 p-(--card-spacing)">
+              <div className="min-h-10 space-y-2">
+                <Skeleton className="h-4 w-3/4 motion-reduce:animate-none" />
+                <Skeleton className="h-4 w-1/2 motion-reduce:animate-none" />
+              </div>
+              <div className="flex min-h-7 flex-wrap items-center justify-between gap-2">
+                <Skeleton className="h-7 w-20 motion-reduce:animate-none" />
+                <Skeleton className="h-5 w-16 motion-reduce:animate-none" />
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
     </div>

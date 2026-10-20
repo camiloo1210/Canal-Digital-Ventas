@@ -84,7 +84,7 @@ describe('Kiroku SMTP relay adaptation', (): void => {
         from: { name: 'Store', address: 'sales@example.test' },
         envelope: { from: 'sales@example.test', to: 'buyer@example.test' },
         html: expect.stringContaining('https://cdn.example.test/paper.png'),
-        text: expect.stringContaining('https://sales.example.test/#order-order-1'),
+        text: expect.stringContaining('https://sales.example.test/purchases#order-order-1'),
         disableFileAccess: true,
         disableUrlAccess: true,
       }),

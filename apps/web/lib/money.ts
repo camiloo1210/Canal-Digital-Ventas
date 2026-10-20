@@ -4,7 +4,11 @@
  * @param currency The ISO 4217 currency code. (e.g., USD)
  * @returns Formatted currency string
  */
-export function formatMoney(minorUnits: number | null | undefined, currency = 'USD'): string {
+export function formatMoney(
+  minorUnits: number | null | undefined,
+  currency = 'USD',
+  locale = 'en-US',
+): string {
   if (
     minorUnits === null ||
     minorUnits === undefined ||
@@ -15,7 +19,7 @@ export function formatMoney(minorUnits: number | null | undefined, currency = 'U
   }
 
   const decimalValue = minorUnits / 100;
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
   }).format(decimalValue);

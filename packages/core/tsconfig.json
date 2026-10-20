@@ -8,6 +8,7 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@/dashboard/*": ["src/features/dashboard/*"],
       "@/shared/*": ["src/features/shared/*"],
       "@/products/*": ["src/features/products/*"],
       "@/categories/*": ["src/features/categories/*"],
