@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -17,14 +18,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
-import {
-  EllipsisVerticalIcon,
-  CircleUserRoundIcon,
-  CreditCardIcon,
-  BellIcon,
-  LogOutIcon,
-  StoreIcon,
-} from 'lucide-react';
+import { EllipsisVerticalIcon, LogOutIcon, StoreIcon } from 'lucide-react';
 import { logoutAction } from '@/features/iam/actions/logout.action';
 import { LocaleSwitcher } from '@/components/locale-switcher';
 
@@ -39,16 +33,24 @@ export function NavUser({
   };
 }): React.JSX.Element {
   const { isMobile } = useSidebar();
+  const t = useTranslations('AdminShell');
+  const initials = user.name.trim().slice(0, 2).toLocaleUpperCase();
   return (
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger
-            render={<SidebarMenuButton size="lg" className="aria-expanded:bg-muted" />}
+            render={
+              <SidebarMenuButton
+                size="lg"
+                aria-label={t('account')}
+                className="min-h-12 aria-expanded:bg-muted"
+              />
+            }
           >
             <Avatar className="size-8 rounded-lg grayscale">
               <AvatarImage src={user.avatar} alt={user.name} />
-              <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+              <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
             </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-medium">{user.name}</span>
@@ -67,7 +69,7 @@ export function NavUser({
                 <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                   <Avatar className="size-8">
                     <AvatarImage src={user.avatar} alt={user.name} />
-                    <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                    <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-medium">{user.name}</span>
@@ -75,21 +77,6 @@ export function NavUser({
                   </div>
                 </div>
               </DropdownMenuLabel>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <CircleUserRoundIcon />
-                Account
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <CreditCardIcon />
-                Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <BellIcon />
-                Notifications
-              </DropdownMenuItem>
             </DropdownMenuGroup>
             {user.tenantSlug && (
               <>
@@ -100,12 +87,13 @@ export function NavUser({
                       <Link
                         href={`/store/${user.tenantSlug}`}
                         target="_blank"
+                        rel="noopener noreferrer"
                         className="flex w-full items-center gap-2 cursor-pointer"
                       />
                     }
                   >
                     <StoreIcon className="size-4" />
-                    <span>View Storefront</span>
+                    <span>{t('viewStore')}</span>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
               </>
@@ -118,7 +106,7 @@ export function NavUser({
                 render={<button type="submit" className="flex w-full items-center gap-2" />}
               >
                 <LogOutIcon />
-                Log out
+                {t('logout')}
               </DropdownMenuItem>
             </form>
           </DropdownMenuContent>
