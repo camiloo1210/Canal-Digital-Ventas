@@ -3,6 +3,7 @@
 import { useActionState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 import {
   changeOrderStatusAction,
   type ChangeOrderStatusActionState,
@@ -28,16 +29,21 @@ export function SellerOrderStatusForm({
       <input type="hidden" name="orderId" value={orderId} />
       <input type="hidden" name="expectedVersion" value={version} />
       <input type="hidden" name="status" value={nextStatus} />
-      <Button type="submit" disabled={pending}>
+      <Button type="submit" disabled={pending} aria-busy={pending} className="min-h-11">
+        {pending && (
+          <Loader2 aria-hidden="true" className="size-4 animate-spin motion-reduce:animate-none" />
+        )}
         {pending ? t('saving') : t(`actions.${nextStatus}`)}
       </Button>
-      <p
-        role={state.success ? 'status' : 'alert'}
-        aria-live="polite"
-        className={state.success ? 'text-sm text-emerald-700' : 'text-sm text-destructive'}
-      >
-        {state.message}
-      </p>
+      {state.message && (
+        <p
+          role={state.success ? 'status' : 'alert'}
+          aria-live="polite"
+          className={state.success ? 'text-sm text-success' : 'text-sm text-destructive'}
+        >
+          {state.message}
+        </p>
+      )}
     </form>
   );
 }

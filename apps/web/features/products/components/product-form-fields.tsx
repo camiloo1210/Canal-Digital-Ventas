@@ -1,434 +1,376 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { AlertCircle } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
+import { ImageIcon } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import type { ProductFormContextReadModel } from '@canaldigital/packages/core';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-  FieldDescription,
-  FieldContent,
-} from '@/components/ui/field';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { useTranslations } from 'next-intl';
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select';
+import {
+  PRODUCT_IMAGE_MIME_EXTENSIONS,
+  PRODUCT_IMAGE_MAX_BYTES,
+  type ProductFormValues,
+  type ProductFieldName,
+} from '@/features/products/schemas/product-form.schema';
 
-export type CategoryOption = {
-  id: string;
-  name: string;
-};
-
+export type CategoryOption = ProductFormContextReadModel['categories'][number];
 interface ProductFormFieldsProps {
-  revision?: number;
-  fieldErrors?: Partial<Record<string, string[]>>;
+  revision: number;
+  fieldErrors: Partial<Record<ProductFieldName, string[]>>;
   categories: CategoryOption[];
-  defaultValues?: {
-    name?: string;
-    sku?: string;
-    price?: number | string;
-    cost?: number | string;
-    wholesalePrice?: number | string | null;
-    wholesaleMinQuantity?: number | string | null;
-    categoryId?: string;
-    description?: string;
-    stock?: number | string;
-    isVatExempt?: boolean | string;
-    imageUrl?: string | null;
-  };
+  defaultValues?: Partial<ProductFormValues>;
+  imageUrl?: string | null;
+  currency: string;
+  clearField: (name: string) => void;
+}
+
+function ProductInput({
+  name,
+  label,
+  value,
+  required,
+  help,
+  inputMode,
+  error,
+  revision,
+  clearField,
+  money = false,
+}: {
+  name: keyof ProductFormValues;
+  label: string;
+  value?: string;
+  required?: boolean;
+  help?: string;
+  inputMode?: 'decimal' | 'numeric';
+  error?: string;
+  revision: number;
+  clearField: (name: string) => void;
+  money?: boolean;
+}): React.JSX.Element {
+  return (
+    <Field data-invalid={Boolean(error)} className="min-w-0">
+      <FieldLabel htmlFor={name}>
+        {label}
+        {required && <span aria-hidden="true">*</span>}
+      </FieldLabel>
+      <Input
+        key={name + revision}
+        id={name}
+        name={name}
+        defaultValue={value ?? ''}
+        required={required}
+        inputMode={inputMode}
+        aria-invalid={Boolean(error)}
+        aria-describedby={
+          [help ? name + '-help' : '', error ? name + '-error' : ''].filter(Boolean).join(' ') ||
+          undefined
+        }
+        className="min-h-11 scroll-mt-6"
+        onChange={(): void => clearField(name)}
+        onBlur={
+          money
+            ? (event): void => {
+                if (/^\d+(\.\d{1,2})?$/.test(event.target.value)) {
+                  const [whole, fraction = ''] = event.target.value.split('.');
+                  event.target.value = whole + '.' + fraction.padEnd(2, '0');
+                }
+              }
+            : undefined
+        }
+      />
+      {help && <FieldDescription id={name + '-help'}>{help}</FieldDescription>}
+      {error && <FieldError id={name + '-error'}>{error}</FieldError>}
+    </Field>
+  );
 }
 
 export function ProductFormFields({
   categories,
   defaultValues,
   fieldErrors,
-  revision = 0,
+  revision,
+  clearField,
+  imageUrl,
+  currency,
 }: ProductFormFieldsProps): React.JSX.Element {
-  const t = useTranslations('Products');
-  const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
-  const [clearedState, setClearedState] = useState({ rev: fieldErrors, fields: new Set<string>() });
-  if (clearedState.rev !== fieldErrors) {
-    setClearedState({ rev: fieldErrors, fields: new Set() });
-  }
-  const clearedFields = clearedState.fields;
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
-  ): void => {
-    const { name } = e.target;
-    if (localErrors[name]) {
-      setLocalErrors((prev) => ({ ...prev, [name]: '' }));
-    }
-    if (!clearedFields.has(name)) {
-      setClearedState((prev) => ({ ...prev, fields: new Set(prev.fields).add(name) }));
-    }
-  };
-
-  const handleSkuBlur = (e: React.FocusEvent<HTMLInputElement>): void => {
-    const { value, name } = e.target;
-    if (!value.trim()) return;
-
-    const stripped = value.trim().replace(/^(?:sku[\s-]*)+/i, '');
-    if (stripped) {
-      e.target.value = `SKU-${stripped.toUpperCase()}`;
-    }
-
-    if (localErrors[name]) {
-      setLocalErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
-    if (fieldErrors?.[name] && !clearedFields.has(name)) {
-      setClearedState((prev) => ({ ...prev, fields: new Set(prev.fields).add(name) }));
-    }
-  };
-
-  const handleMoneyBlur = (e: React.FocusEvent<HTMLInputElement>): void => {
-    const { name, value } = e.target;
-    if (!value.trim()) {
-      setLocalErrors((prev) => ({ ...prev, [name]: '' }));
-      return;
-    }
-    if (/^\d+(\.\d{1,2})?$/.test(value)) {
-      setLocalErrors((prev) => ({ ...prev, [name]: '' }));
-      const parts = value.split('.');
-      const whole = parts[0] || '0';
-      const fraction = (parts[1] || '00').padEnd(2, '0').substring(0, 2);
-      e.target.value = `${whole}.${fraction}`;
-    } else {
-      setLocalErrors((prev) => ({
-        ...prev,
-        [name]: t('error_money_format', { fallback: 'Please enter a valid amount (e.g. 10.99).' }),
-      }));
-    }
-  };
-
-  const handleStockBlur = (e: React.FocusEvent<HTMLInputElement>): void => {
-    const { name, value } = e.target;
-    if (!value) {
-      setLocalErrors((prev) => ({ ...prev, [name]: '' }));
-      return;
-    }
-    if (/^\d+$/.test(value)) {
-      setLocalErrors((prev) => ({ ...prev, [name]: '' }));
-    } else {
-      setLocalErrors((prev) => ({
-        ...prev,
-        [name]: t('error_stock_format', { fallback: 'Stock must be a positive whole number.' }),
-      }));
-    }
-  };
-
-  const getError = (fieldName: string): string | undefined => {
-    if (localErrors[fieldName]) return localErrors[fieldName];
-    if (!clearedFields.has(fieldName)) return fieldErrors?.[fieldName]?.[0];
-    return undefined;
-  };
-
-  const previewUrlRef = useRef<string | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(defaultValues?.imageUrl ?? null);
-
-  useEffect((): (() => void) => {
-    const url = previewUrlRef.current;
-    return (): void => {
-      if (url) URL.revokeObjectURL(url);
-    };
-  }, []);
-
+  const t = useTranslations('CatalogForms');
+  const p = useTranslations('Products');
+  const [previewUrl, setPreviewUrl] = useState<string | null>(imageUrl ?? null);
+  const [filename, setFilename] = useState('');
+  const objectUrlRef = useRef<string | null>(null);
+  useEffect(
+    (): (() => void) => (): void => {
+      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+    },
+    [],
+  );
+  const errorFor = (name: ProductFieldName): string | undefined => fieldErrors[name]?.[0];
+  const common = { revision, clearField };
+  const categoryError = errorFor('categoryId');
+  const items = categories.map((category): { value: string; label: string } => ({
+    value: category.id,
+    label:
+      category.name + (category.status !== 'active' ? ' (' + t('unavailableCategory') + ')' : ''),
+  }));
   return (
-    <FieldGroup className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Información Básica</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Field>
-              <FieldLabel htmlFor="name">{t('form_name')}</FieldLabel>
-              <Input
-                key={`name-${revision}`}
-                id="name"
+    <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_18rem]">
+      <div className="min-w-0 space-y-6">
+        <Card className="shadow-none">
+          <CardHeader>
+            <CardTitle>
+              <h2>{t('basicTitle')}</h2>
+            </CardTitle>
+            <CardDescription>{t('basicDescription')}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              <ProductInput
+                {...common}
                 name="name"
-                defaultValue={defaultValues?.name}
+                label={p('form_name')}
+                value={defaultValues?.name}
                 required
-                placeholder={t('form_name_placeholder')}
-                onChange={handleChange}
+                help={t('productNameHelp')}
+                error={errorFor('name')}
               />
-              {getError('name') && (
-                <div className="mt-1.5 flex items-start gap-1.5 bg-destructive/10 text-destructive text-[0.8rem] px-2.5 py-1.5 rounded-md font-medium border border-destructive/20 animate-in fade-in slide-in-from-top-1">
-                  <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                  <span className="leading-snug break-words mt-[1px]">{getError('name')}</span>
-                </div>
-              )}
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="sku">{t('form_sku')}</FieldLabel>
-              <Input
-                key={`sku-${revision}`}
-                id="sku"
+              <ProductInput
+                {...common}
                 name="sku"
-                defaultValue={defaultValues?.sku}
+                label={p('form_sku')}
+                value={defaultValues?.sku}
                 required
-                placeholder={t('form_sku_placeholder')}
-                onChange={handleChange}
-                onBlur={handleSkuBlur}
+                help={t('skuHelp')}
+                error={errorFor('sku')}
               />
-              {getError('sku') && (
-                <div className="mt-1.5 flex items-start gap-1.5 bg-destructive/10 text-destructive text-[0.8rem] px-2.5 py-1.5 rounded-md font-medium border border-destructive/20 animate-in fade-in slide-in-from-top-1">
-                  <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                  <span className="leading-snug break-words mt-[1px]">{getError('sku')}</span>
-                </div>
-              )}
-            </Field>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Field>
-              <FieldLabel htmlFor="categoryId">{t('form_category')}</FieldLabel>
-              <select
-                key={`categoryId-${revision}`}
-                id="categoryId"
+            </div>
+            <Field data-invalid={Boolean(categoryError)}>
+              <FieldLabel htmlFor="categoryId">
+                {p('form_category')}
+                <span aria-hidden="true">*</span>
+              </FieldLabel>
+              <Select
+                key={'category-' + revision}
                 name="categoryId"
-                defaultValue={defaultValues?.categoryId ?? ''}
                 required
-                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                defaultValue={defaultValues?.categoryId || null}
+                items={items}
+                onValueChange={(): void => clearField('categoryId')}
               >
-                <option value="" disabled>
-                  {t('form_category_placeholder')}
-                </option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-              {getError('categoryId') && (
-                <div className="mt-1.5 flex items-start gap-1.5 bg-destructive/10 text-destructive text-[0.8rem] px-2.5 py-1.5 rounded-md font-medium border border-destructive/20 animate-in fade-in slide-in-from-top-1">
-                  <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                  <span className="leading-snug break-words mt-[1px]">
-                    {getError('categoryId')}
-                  </span>
-                </div>
+                <SelectTrigger
+                  id="categoryId"
+                  className="min-h-11 w-full scroll-mt-6"
+                  aria-invalid={Boolean(categoryError)}
+                  aria-describedby={categoryError ? 'categoryId-error' : 'categoryId-help'}
+                >
+                  <SelectValue placeholder={p('form_category_placeholder')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {items.map((item): React.JSX.Element => (
+                    <SelectItem
+                      key={item.value}
+                      value={item.value}
+                      className="min-h-11 whitespace-normal"
+                    >
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FieldDescription id="categoryId-help">{t('categoryHelp')}</FieldDescription>
+              {categoryError && <FieldError id="categoryId-error">{categoryError}</FieldError>}
+            </Field>
+            <Field data-invalid={Boolean(errorFor('description'))}>
+              <FieldLabel htmlFor="description">
+                {p('form_description')}
+                <span className="font-normal text-muted-foreground">{t('optional')}</span>
+              </FieldLabel>
+              <Textarea
+                key={'description-' + revision}
+                id="description"
+                name="description"
+                defaultValue={defaultValues?.description ?? ''}
+                className="min-h-28 scroll-mt-6"
+                aria-invalid={Boolean(errorFor('description'))}
+                aria-describedby={
+                  'description-help' + (errorFor('description') ? ' description-error' : '')
+                }
+                onChange={(): void => clearField('description')}
+              />
+              <FieldDescription id="description-help">{t('descriptionHelp')}</FieldDescription>
+              {errorFor('description') && (
+                <FieldError id="description-error">{errorFor('description')}</FieldError>
               )}
             </Field>
-          </div>
-
-          <Field>
-            <FieldLabel htmlFor="description">{t('form_description')}</FieldLabel>
-            <Textarea
-              key={`description-${revision}`}
-              id="description"
-              name="description"
-              defaultValue={defaultValues?.description}
-              placeholder={t('form_description_placeholder')}
-              className="min-h-[100px]"
-              onChange={handleChange}
-            />
-            {getError('description') && (
-              <div className="mt-1.5 flex items-start gap-1.5 bg-destructive/10 text-destructive text-[0.8rem] px-2.5 py-1.5 rounded-md font-medium border border-destructive/20 animate-in fade-in slide-in-from-top-1">
-                <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                <span className="leading-snug break-words mt-[1px]">{getError('description')}</span>
-              </div>
-            )}
-          </Field>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Precios y Stock</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Field>
-              <FieldLabel htmlFor="price">{t('form_price')}</FieldLabel>
-              <Input
-                key={`price-${revision}`}
-                id="price"
+          </CardContent>
+        </Card>
+        <Card className="shadow-none">
+          <CardHeader>
+            <CardTitle>
+              <h2>{t('pricingTitle')}</h2>
+            </CardTitle>
+            <CardDescription>{t('currencyHelp', { currency })}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              <ProductInput
+                {...common}
                 name="price"
-                type="text"
-                inputMode="decimal"
-                pattern="^\d*(\.\d{0,2})?$"
-                title="Enter a valid price (e.g. 10.99)"
-                defaultValue={defaultValues?.price ?? ''}
+                label={t('price', { currency })}
+                value={defaultValues?.price}
                 required
-                placeholder="99.99"
-                onBlur={handleMoneyBlur}
-                onChange={handleChange}
+                inputMode="decimal"
+                money
+                help={t('moneyHelp')}
+                error={errorFor('price')}
               />
-              {getError('price') && (
-                <div className="mt-1.5 flex items-start gap-1.5 bg-destructive/10 text-destructive text-[0.8rem] px-2.5 py-1.5 rounded-md font-medium border border-destructive/20 animate-in fade-in slide-in-from-top-1">
-                  <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                  <span className="leading-snug break-words mt-[1px]">{getError('price')}</span>
-                </div>
-              )}
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="cost">{t('form_cost')}</FieldLabel>
-              <Input
-                key={`cost-${revision}`}
-                id="cost"
+              <ProductInput
+                {...common}
                 name="cost"
-                type="text"
-                inputMode="decimal"
-                pattern="^\d*(\.\d{0,2})?$"
-                title="Enter a valid cost (e.g. 50.00)"
-                defaultValue={defaultValues?.cost ?? ''}
+                label={t('cost', { currency })}
+                value={defaultValues?.cost}
                 required
-                placeholder="50.00"
-                onBlur={handleMoneyBlur}
-              />
-              {getError('cost') && (
-                <div className="mt-1.5 flex items-start gap-1.5 bg-destructive/10 text-destructive text-[0.8rem] px-2.5 py-1.5 rounded-md font-medium border border-destructive/20 animate-in fade-in slide-in-from-top-1">
-                  <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                  <span className="leading-snug break-words mt-[1px]">{getError('cost')}</span>
-                </div>
-              )}
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="wholesalePrice">
-                {t('form_wholesale')}{' '}
-                <span className="text-muted-foreground font-normal ml-1">{t('form_optional')}</span>
-              </FieldLabel>
-              <Input
-                key={`wholesalePrice-${revision}`}
-                id="wholesalePrice"
-                name="wholesalePrice"
-                type="text"
                 inputMode="decimal"
-                pattern="^\d*(\.\d{0,2})?$"
-                title="Enter a valid wholesale price (e.g. 75.00)"
-                defaultValue={defaultValues?.wholesalePrice ?? ''}
-                placeholder="75.00"
-                onBlur={handleMoneyBlur}
+                money
+                help={t('costHelp')}
+                error={errorFor('cost')}
               />
-              {getError('wholesalePrice') && (
-                <div className="mt-1.5 flex items-start gap-1.5 bg-destructive/10 text-destructive text-[0.8rem] px-2.5 py-1.5 rounded-md font-medium border border-destructive/20 animate-in fade-in slide-in-from-top-1">
-                  <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                  <span className="leading-snug break-words mt-[1px]">
-                    {getError('wholesalePrice')}
-                  </span>
-                </div>
-              )}
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="wholesaleMinQuantity">
-                {t('form_wholesale_min')}{' '}
-                <span className="text-muted-foreground font-normal ml-1">{t('form_optional')}</span>
-              </FieldLabel>
-              <Input
-                key={`wholesaleMinQuantity-${revision}`}
-                id="wholesaleMinQuantity"
-                name="wholesaleMinQuantity"
-                type="text"
-                inputMode="numeric"
-                pattern="^\d*$"
-                title="Enter minimum quantity"
-                defaultValue={defaultValues?.wholesaleMinQuantity ?? ''}
-                placeholder="10"
-              />
-              {getError('wholesaleMinQuantity') && (
-                <div className="mt-1.5 flex items-start gap-1.5 bg-destructive/10 text-destructive text-[0.8rem] px-2.5 py-1.5 rounded-md font-medium border border-destructive/20 animate-in fade-in slide-in-from-top-1">
-                  <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                  <span className="leading-snug break-words mt-[1px]">
-                    {getError('wholesaleMinQuantity')}
-                  </span>
-                </div>
-              )}
-            </Field>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Field>
-              <FieldLabel htmlFor="stock">{t('form_stock')}</FieldLabel>
-              <Input
-                key={`stock-${revision}`}
-                id="stock"
-                name="stock"
-                type="text"
-                inputMode="numeric"
-                pattern="^\d*$"
-                title="Enter a valid whole number for stock"
-                defaultValue={defaultValues?.stock ?? 0}
-                required
-                onBlur={handleStockBlur}
-                onChange={handleChange}
-              />
-              {getError('stock') && (
-                <div className="mt-1.5 flex items-start gap-1.5 bg-destructive/10 text-destructive text-[0.8rem] px-2.5 py-1.5 rounded-md font-medium border border-destructive/20 animate-in fade-in slide-in-from-top-1">
-                  <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                  <span className="leading-snug break-words mt-[1px]">{getError('stock')}</span>
-                </div>
-              )}
-            </Field>
-
-            <Field orientation="horizontal" className="pt-8">
-              <FieldContent className="items-center flex-row gap-3">
-                <input
-                  type="checkbox"
-                  key={`isVatExempt-${revision}`}
+            </div>
+            <ProductInput
+              {...common}
+              name="stock"
+              label={t('stock')}
+              value={defaultValues?.stock ?? '0'}
+              required
+              inputMode="numeric"
+              help={t('stockHelp')}
+              error={errorFor('stock')}
+            />
+            <Field data-invalid={Boolean(errorFor('isVatExempt'))}>
+              <div className="flex min-h-11 items-center gap-3 rounded-lg border p-3">
+                <Checkbox
+                  key={'vat-' + revision}
                   id="isVatExempt"
                   name="isVatExempt"
+                  value="on"
                   defaultChecked={
-                    defaultValues?.isVatExempt === true ||
-                    defaultValues?.isVatExempt === 'on' ||
-                    defaultValues?.isVatExempt === 'true'
+                    defaultValues?.isVatExempt === 'on' || defaultValues?.isVatExempt === 'true'
                   }
-                  className="w-4 h-4 cursor-pointer accent-primary"
+                  onCheckedChange={(): void => clearField('isVatExempt')}
+                  aria-invalid={Boolean(errorFor('isVatExempt'))}
+                  aria-describedby={errorFor('isVatExempt') ? 'isVatExempt-error' : undefined}
                 />
-                <FieldLabel htmlFor="isVatExempt" className="cursor-pointer">
-                  {t('form_vat')}
+                <FieldLabel htmlFor="isVatExempt" className="min-h-11 flex-1 cursor-pointer">
+                  {p('form_vat')}
                 </FieldLabel>
-              </FieldContent>
-            </Field>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Media</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <Field>
-            <FieldLabel htmlFor="image">
-              {t('form_image')}{' '}
-              <span className="text-muted-foreground font-normal ml-1">{t('form_optional')}</span>
-            </FieldLabel>
-            <div className="flex items-start gap-6">
-              {previewUrl && (
-                <div className="relative w-32 h-32 rounded-md overflow-hidden border border-border shrink-0">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
-                </div>
-              )}
-              <div className="flex-1">
-                <Input
-                  id="image"
-                  name="image"
-                  type="file"
-                  accept="image/*"
-                  className="cursor-pointer"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                    } else {
-                      setPreviewUrl(defaultValues?.imageUrl ?? null);
-                    }
-                  }}
-                />
-                <FieldDescription className="mt-2">{t('form_image_desc')}</FieldDescription>
               </div>
+              {errorFor('isVatExempt') && (
+                <FieldError id="isVatExempt-error">{errorFor('isVatExempt')}</FieldError>
+              )}
+            </Field>
+          </CardContent>
+        </Card>
+        <Card className="shadow-none">
+          <CardHeader>
+            <CardTitle>
+              <h2>{t('wholesaleTitle')}</h2>
+            </CardTitle>
+            <CardDescription>{t('wholesaleHelp')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-6 md:grid-cols-2">
+              <ProductInput
+                {...common}
+                name="wholesalePrice"
+                label={t('wholesalePrice', { currency })}
+                value={defaultValues?.wholesalePrice}
+                inputMode="decimal"
+                money
+                error={errorFor('wholesalePrice')}
+              />
+              <ProductInput
+                {...common}
+                name="wholesaleMinQuantity"
+                label={p('form_wholesale_min')}
+                value={defaultValues?.wholesaleMinQuantity}
+                inputMode="numeric"
+                help={t('wholesaleQuantityHelp')}
+                error={errorFor('wholesaleMinQuantity')}
+              />
             </div>
+          </CardContent>
+        </Card>
+      </div>
+      <Card className="min-w-0 shadow-none">
+        <CardHeader>
+          <CardTitle>
+            <h2>{t('imageTitle')}</h2>
+          </CardTitle>
+          <CardDescription>{t('imageHelp')}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="relative mx-auto flex aspect-square w-full max-w-64 items-center justify-center overflow-hidden rounded-lg border bg-muted/30">
+            {previewUrl ? (
+              <Image
+                src={previewUrl}
+                alt={t('imagePreview')}
+                fill
+                unoptimized
+                sizes="256px"
+                className="object-contain"
+              />
+            ) : (
+              <div className="flex flex-col items-center gap-3 p-4 text-center text-sm text-muted-foreground">
+                <ImageIcon aria-hidden="true" className="size-8" />
+                {t('noImage')}
+              </div>
+            )}
+          </div>
+          <Field data-invalid={Boolean(errorFor('image'))}>
+            <FieldLabel htmlFor="image">
+              {p('form_image')}
+              <span className="font-normal text-muted-foreground">{t('optional')}</span>
+            </FieldLabel>
+            <Input
+              id="image"
+              name="image"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="min-h-11 w-full min-w-0 scroll-mt-6 text-sm"
+              aria-invalid={Boolean(errorFor('image'))}
+              aria-describedby={'image-help' + (errorFor('image') ? ' image-error' : '')}
+              onChange={(event): void => {
+                clearField('image');
+                const file = event.target.files?.[0];
+                if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+                objectUrlRef.current = null;
+                setFilename(file?.name ?? '');
+                if (
+                  file &&
+                  Object.hasOwn(PRODUCT_IMAGE_MIME_EXTENSIONS, file.type) &&
+                  file.size <= PRODUCT_IMAGE_MAX_BYTES
+                ) {
+                  objectUrlRef.current = URL.createObjectURL(file);
+                  setPreviewUrl(objectUrlRef.current);
+                } else setPreviewUrl(imageUrl ?? null);
+              }}
+            />
+            <FieldDescription id="image-help">{t('imageFormats')}</FieldDescription>
+            {filename && <p className="break-all text-xs text-muted-foreground">{filename}</p>}
+            {errorFor('image') && <FieldError id="image-error">{errorFor('image')}</FieldError>}
           </Field>
         </CardContent>
       </Card>
-    </FieldGroup>
+    </div>
   );
 }

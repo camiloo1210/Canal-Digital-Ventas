@@ -2,8 +2,9 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-
-import { NavSecondary } from '@/components/nav-secondary';
+import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { LayoutDashboard, Package, Tags, ShoppingCart, Paintbrush, Store } from 'lucide-react';
 import { NavUser } from '@/components/nav-user';
 import {
   Sidebar,
@@ -16,253 +17,119 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarGroupContent,
+  useSidebar,
 } from '@/components/ui/sidebar';
-import { Collapsible } from '@base-ui/react/collapsible';
 import {
-  LayoutDashboard,
-  TrendingUp,
-  Package,
-  Tags,
-  Archive,
-  ShoppingCart,
-  CreditCard,
-  Users,
-  ShieldCheck,
-  Bell,
-  MessageSquare,
-  Settings2Icon,
-  CircleHelpIcon,
-  SearchIcon,
-  CommandIcon,
-  ChevronRight,
-  Paintbrush,
-} from 'lucide-react';
-import { useTranslations } from 'next-intl';
+  dashboardNavigation,
+  isDashboardDestinationActive,
+} from '@/features/dashboard/navigation/dashboard-navigation';
 
-type SidebarMessageKey =
-  | 'title'
-  | 'subtitle'
-  | 'analytics_dashboard'
-  | 'dashboard'
-  | 'top_products'
-  | 'catalog'
-  | 'products'
-  | 'categories'
-  | 'inventory'
-  | 'sales'
-  | 'orders'
-  | 'payments'
-  | 'crm'
-  | 'users'
-  | 'roles'
-  | 'communications'
-  | 'notifications'
-  | 'whatsapp'
-  | 'settings'
-  | 'store'
-  | 'customization'
-  | 'help'
-  | 'search';
+const icons = {
+  overview: LayoutDashboard,
+  orders: ShoppingCart,
+  products: Package,
+  categories: Tags,
+  store: Paintbrush,
+};
 
-interface NavigationItem {
-  title: SidebarMessageKey;
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
-}
-
-interface NavigationGroup {
-  label: SidebarMessageKey;
-  items: NavigationItem[];
-}
-
-const navigation: NavigationGroup[] = [
-  {
-    label: 'store',
-    items: [{ title: 'customization', href: '/dashboard/store', icon: Paintbrush }],
-  },
-  {
-    label: 'analytics_dashboard',
-    items: [
-      {
-        title: 'dashboard',
-        href: '/dashboard',
-        icon: LayoutDashboard,
-      },
-      {
-        title: 'top_products',
-        href: '/dashboard/analytics/top-products',
-        icon: TrendingUp,
-      },
-    ],
-  },
-  {
-    label: 'catalog',
-    items: [
-      {
-        title: 'products',
-        href: '/dashboard/catalog/products',
-        icon: Package,
-      },
-      {
-        title: 'categories',
-        href: '/dashboard/catalog/categories',
-        icon: Tags,
-      },
-      {
-        title: 'inventory',
-        href: '/dashboard/catalog/inventory',
-        icon: Archive,
-      },
-    ],
-  },
-  {
-    label: 'sales',
-    items: [
-      {
-        title: 'orders',
-        href: '/dashboard/orders',
-        icon: ShoppingCart,
-      },
-      {
-        title: 'payments',
-        href: '/dashboard/payments',
-        icon: CreditCard,
-      },
-    ],
-  },
-  {
-    label: 'crm',
-    items: [
-      {
-        title: 'users',
-        href: '/dashboard/users',
-        icon: Users,
-      },
-      {
-        title: 'roles',
-        href: '/dashboard/users/roles',
-        icon: ShieldCheck,
-      },
-    ],
-  },
-  {
-    label: 'communications',
-    items: [
-      {
-        title: 'notifications',
-        href: '/dashboard/communications/notifications',
-        icon: Bell,
-      },
-      {
-        title: 'whatsapp',
-        href: '/dashboard/communications/whatsapp',
-        icon: MessageSquare,
-      },
-    ],
-  },
-];
-
-interface NavSecondaryItem {
-  title: SidebarMessageKey;
-  url: string;
-  icon: React.ReactNode;
-}
-
-const navSecondary: NavSecondaryItem[] = [
-  {
-    title: 'settings',
-    url: '#',
-    icon: <Settings2Icon />,
-  },
-  {
-    title: 'help',
-    url: '#',
-    icon: <CircleHelpIcon />,
-  },
-  {
-    title: 'search',
-    url: '#',
-    icon: <SearchIcon />,
-  },
-];
-
-type UserProp = {
+interface DashboardSidebarUser {
   name: string;
   email: string;
   avatar: string;
-  role?: string;
-  tenantName?: string;
-  tenantSlug?: string | null;
-};
+  tenantName: string;
+  tenantSlug: string;
+}
 
 export function AppSidebar({
   user,
   ...props
-}: React.ComponentProps<typeof Sidebar> & { user: UserProp }): React.JSX.Element {
-  const t = useTranslations('Sidebar');
+}: React.ComponentProps<typeof Sidebar> & {
+  user: DashboardSidebarUser;
+}): React.JSX.Element {
+  const t = useTranslations('AdminShell');
+  const pathname = usePathname();
+  const { isMobile, setOpenMobile } = useSidebar();
+  const focusAfterNavigation = React.useRef(false);
+  React.useEffect((): (() => void) | undefined => {
+    if (!focusAfterNavigation.current) return;
+    focusAfterNavigation.current = false;
+    const frame = requestAnimationFrame((): void =>
+      document.getElementById('dashboard-main')?.focus(),
+    );
+    return (): void => cancelAnimationFrame(frame);
+  }, [pathname]);
+
+  const closeOnNavigation = (event: React.MouseEvent<HTMLAnchorElement>): void => {
+    if (
+      !isMobile ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey ||
+      event.button !== 0
+    )
+      return;
+    setOpenMobile(false);
+    focusAfterNavigation.current = true;
+    // Clicking the current destination does not change pathname.
+    if (event.currentTarget.pathname === pathname) {
+      focusAfterNavigation.current = false;
+      requestAnimationFrame((): void => document.getElementById('dashboard-main')?.focus());
+    }
+  };
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
-      <SidebarHeader>
+      <SidebarHeader className="p-3 pr-14 md:pr-3">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
-              className="data-[slot=sidebar-menu-button]:p-1.5!"
-              render={<Link href="/dashboard" />}
+              render={<Link href="/dashboard" onClick={closeOnNavigation} />}
             >
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <CommandIcon className="size-4" />
-              </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">{t('title')}</span>
-                <span className="truncate text-xs">{t('subtitle')}</span>
+              <Store aria-hidden="true" className="size-5 shrink-0" />
+              <div className="min-w-0">
+                <p className="truncate font-semibold">{user.tenantName}</p>
+                <p className="text-xs text-muted-foreground">{t('administration')}</p>
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        {navigation.map((group: NavigationGroup): React.JSX.Element => (
-          <Collapsible.Root key={group.label} defaultOpen className="group/collapsible">
-            <SidebarGroup>
-              <SidebarGroupLabel
-                render={
-                  <Collapsible.Trigger className="flex w-full cursor-pointer items-center justify-between hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" />
-                }
-              >
-                {t(group.label)}
-                <ChevronRight className="ml-auto transition-transform duration-200 group-data-[open]/collapsible:rotate-90 group-data-[state=open]/collapsible:rotate-90" />
-              </SidebarGroupLabel>
-              <Collapsible.Panel>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {group.items.map((item: NavigationItem): React.JSX.Element => (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton render={<Link href={item.href} />}>
-                          <item.icon />
-                          <span>{t(item.title)}</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </Collapsible.Panel>
-            </SidebarGroup>
-          </Collapsible.Root>
-        ))}
-
-        <NavSecondary
-          items={navSecondary.map(
-            (item: NavSecondaryItem): Omit<NavSecondaryItem, 'title'> & { title: string } => ({
-              ...item,
-              title: t(item.title),
-            }),
-          )}
-          className="mt-auto"
-        />
+        <nav aria-label={t('navigation')}>
+          <SidebarGroup>
+            <SidebarGroupLabel>{t('workspace')}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {dashboardNavigation.map((item): React.JSX.Element => {
+                  const Icon = icons[item.key];
+                  const active = isDashboardDestinationActive(pathname, item.href);
+                  return (
+                    <SidebarMenuItem key={item.key}>
+                      <SidebarMenuButton
+                        isActive={active}
+                        className="min-h-11 text-sm"
+                        render={
+                          <Link
+                            href={item.href}
+                            onClick={closeOnNavigation}
+                            aria-current={active ? 'page' : undefined}
+                          />
+                        }
+                      >
+                        <Icon aria-hidden="true" />
+                        <span>{t(item.key)}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </nav>
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className="p-3">
         <NavUser user={user} />
       </SidebarFooter>
     </Sidebar>

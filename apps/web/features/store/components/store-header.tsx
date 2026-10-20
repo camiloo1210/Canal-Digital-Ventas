@@ -41,11 +41,11 @@ export function StoreHeader({
   const backHref = isStoreHome ? '/' : storeHref;
   const backLabel = isStoreHome ? labels.backToHome : labels.backToStore;
   return (
-    <AppHeader>
-      <div className="flex items-center gap-2 md:gap-4">
+    <AppHeader contentClassName="mx-auto max-w-7xl">
+      <div className="flex min-w-0 items-center gap-2 md:gap-4">
         <Link
           href={backHref}
-          className="flex items-center justify-center size-8 rounded-full hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+          className="flex shrink-0 items-center justify-center size-11 rounded-full hover:bg-accent text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-2 focus-visible:outline-ring"
           aria-label={backLabel}
           title={backLabel}
         >
@@ -56,13 +56,13 @@ export function StoreHeader({
 
         <Link
           href={`/store/${tenantSlug}`}
-          className="font-bold text-lg md:text-xl capitalize truncate max-w-[200px] sm:max-w-none"
+          className="min-w-0 font-bold text-lg md:text-xl capitalize truncate"
         >
           {tenantName || tenantSlug}
         </Link>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex shrink-0 items-center gap-1 sm:gap-4">
         <CartSheet
           labels={{
             title: labels.cartTitle,
@@ -72,7 +72,7 @@ export function StoreHeader({
             taxesNote: labels.cartTaxesNote,
           }}
         />
-        <UserNav viewer={viewer} redirectTo={`/store/${tenantSlug}`} labels={labels} />
+        <UserNav viewer={viewer} redirectTo={pathname} labels={labels} />
       </div>
     </AppHeader>
   );

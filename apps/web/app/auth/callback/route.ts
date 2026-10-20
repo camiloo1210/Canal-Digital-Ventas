@@ -3,7 +3,8 @@ import { z } from 'zod';
 import { getExchangeOAuthCodeUseCase } from '@/features/iam/di/iam.di';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
-import { OAUTH_INTENT_COOKIE } from '@/features/iam/constants';
+import { OAUTH_INTENT_COOKIE, OAUTH_RETURN_COOKIE } from '@/features/iam/constants';
+import { safeAuthReturnPath, buyerAuthHref } from '@/features/iam/utils/auth-return-path';
 
 const oauthQuerySchema = z.object({
   code: z.string().min(1, 'Authorization code is missing'),
@@ -12,6 +13,10 @@ const oauthQuerySchema = z.object({
 export async function GET(request: Request): Promise<NextResponse> {
   const requestUrl = new URL(request.url);
   const codeParam = requestUrl.searchParams.get('code');
+  const cookieStore = await cookies();
+  const requestedReturn = cookieStore.get(OAUTH_RETURN_COOKIE)?.value;
+  const returnPath = safeAuthReturnPath(requestedReturn);
+  cookieStore.delete(OAUTH_RETURN_COOKIE);
 
   const validation = oauthQuerySchema.safeParse({ code: codeParam });
 
@@ -21,12 +26,13 @@ export async function GET(request: Request): Promise<NextResponse> {
       await useCase.execute(validation.data.code);
     } catch (error) {
       console.error('Error exchanging code:', error);
-      return NextResponse.redirect(`${requestUrl.origin}/login?message=Authentication failed`);
+      return NextResponse.redirect(
+        new URL(`${buyerAuthHref('/login', returnPath)}&error=auth_failed`, requestUrl.origin),
+      );
     }
   }
 
   // Auth is successful (session created), now check Intent
-  const cookieStore = await cookies();
   const intent = cookieStore.get(OAUTH_INTENT_COOKIE)?.value;
 
   // Consume (delete) the intent immediately
@@ -41,7 +47,12 @@ export async function GET(request: Request): Promise<NextResponse> {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.redirect(`${requestUrl.origin}/login?error=auth_session_missing`);
+    return NextResponse.redirect(
+      new URL(
+        `${buyerAuthHref('/login', returnPath)}&error=auth_session_missing`,
+        requestUrl.origin,
+      ),
+    );
   }
 
   // V5: Query tenant_memberships (Single Source of Truth)
@@ -69,10 +80,9 @@ export async function GET(request: Request): Promise<NextResponse> {
   }
 
   if (intent === 'customer') {
-    if (hasTenant) {
-      return NextResponse.redirect(`${requestUrl.origin}/dashboard`);
-    }
-    return NextResponse.redirect(`${requestUrl.origin}/`);
+    return NextResponse.redirect(
+      new URL(requestedReturn ? returnPath : hasTenant ? '/dashboard' : '/', requestUrl.origin),
+    );
   }
 
   // Fallback if no intent (e.g. direct callback navigation)

@@ -22,6 +22,8 @@ import {
 } from '@/features/store-settings/schemas/store-settings.schema';
 
 export interface StoreSettingsState {
+  revision?: number;
+  fieldErrors?: Partial<Record<'name' | 'slug' | 'description' | 'logo' | 'banner', string[]>>;
   success: boolean;
   message: string | null;
   saved?: { slug: string; logoUrl: string | null; bannerUrl: string | null; version: number };
@@ -40,11 +42,16 @@ export async function updateStoreSettingsAction(
   };
   const uploaded: string[] = [];
   let committed = false;
-  const failure = (message: string): StoreSettingsState => ({
+  const failure = (
+    message: string,
+    fieldErrors?: StoreSettingsState['fieldErrors'],
+  ): StoreSettingsState => ({
     ...previous,
     success: false,
     message,
     values,
+    fieldErrors,
+    revision: (previous.revision ?? 0) + 1,
   });
   try {
     const supabase = await createClient();
@@ -64,14 +71,24 @@ export async function updateStoreSettingsAction(
       removeLogo: formData.get('removeLogo') === 'on',
       removeBanner: formData.get('removeBanner') === 'on',
     });
-    if (!parsed.success) return failure(t('invalidInput'));
+    if (!parsed.success) {
+      const fieldErrors: NonNullable<StoreSettingsState['fieldErrors']> = {};
+      for (const issue of parsed.error.issues) {
+        const field = issue.path[0];
+        if (field === 'name' || field === 'slug' || field === 'description')
+          fieldErrors[field] = [t('validation.' + field)];
+      }
+      return failure(t('invalidInput'), fieldErrors);
+    }
     if (parsed.data.version !== current.version) return failure(t('concurrency'));
     const files: Partial<Record<'logo' | 'banner', File>> = {};
     for (const field of ['logo', 'banner'] as const) {
       const file = formData.get(field);
-      if (file !== null && !(file instanceof File)) return failure(t('invalidImage'));
+      if (file !== null && !(file instanceof File))
+        return failure(t('invalidImage'), { [field]: [t('invalidImage')] });
       if (file instanceof File && file.size > 0) {
-        if (!(await isValidBrandingImage(file))) return failure(t('invalidImage'));
+        if (!(await isValidBrandingImage(file)))
+          return failure(t('invalidImage'), { [field]: [t('invalidImage')] });
         files[field] = file;
       }
     }
@@ -114,6 +131,8 @@ export async function updateStoreSettingsAction(
       success: true,
       message: t('saved'),
       values,
+      fieldErrors: undefined,
+      revision: (previous.revision ?? 0) + 1,
       saved: {
         slug: parsed.data.slug,
         logoUrl: logoUrl === undefined ? current.logoUrl : logoUrl,
@@ -138,6 +157,9 @@ export async function updateStoreSettingsAction(
           : error instanceof DomainException
             ? t('invalidProfile')
             : t('unexpected');
-    return { ...previous, success: false, message, values };
+    return failure(
+      message,
+      error instanceof TenantSlugAlreadyInUseException ? { slug: [t('slugTaken')] } : undefined,
+    );
   }
 }

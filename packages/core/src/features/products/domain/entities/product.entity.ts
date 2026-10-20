@@ -9,6 +9,7 @@ import { CategoryId } from '@/products/domain/types/category-id.type';
 import { TenantId } from '@/shared/domain/types/tenant-id.type';
 import { SeasonId } from '@/products/domain/types/season-id.type';
 import { InvalidProductAttributeException } from '@/products/domain/exceptions/invalid-product-attribute.exception';
+import { InvalidWholesaleRulesException } from '@/products/domain/exceptions/invalid-wholesale-rules.exception';
 import { InvalidProductStateException } from '@/products/domain/exceptions/invalid-product-state.exception';
 import { ProductCreatedEvent } from '@/products/domain/events/product-created.event';
 import { ProductArchivedEvent } from '@/products/domain/events/product-archived.event';
@@ -160,12 +161,12 @@ export class Product {
   // Validations
   private static validateWholesaleRules(price: Money, minQuantity: number): void {
     if (price.getValue() === 0 && minQuantity > 0) {
-      throw new InvalidProductAttributeException(
+      throw new InvalidWholesaleRulesException(
         'Wholesale minimum quantity cannot be greater than 0 if there is no wholesale price.',
       );
     }
     if (price.getValue() > 0 && minQuantity < 1) {
-      throw new InvalidProductAttributeException(
+      throw new InvalidWholesaleRulesException(
         'Wholesale minimum quantity must be at least 1 when a wholesale price is set.',
       );
     }

@@ -1,12 +1,13 @@
 'use client';
 
 import * as React from 'react';
-import { useState } from 'react';
 import { useCartStore } from '@/features/cart/store/cart.store';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart } from 'lucide-react';
+import { Check, ShoppingCart } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -19,16 +20,9 @@ interface AddToCartButtonProps {
   name: string;
   price: number;
   imageUrl?: string;
-  maxStock: number;
+  inStock: boolean;
+  hasVariants: boolean;
   tenantSlug: string;
-  labels: {
-    add: string;
-    outOfStock: string;
-    differentStoreTitle: string;
-    differentStoreDesc: string;
-    cancel: string;
-    clearAndContinue: string;
-  };
 }
 
 export function AddToCartButton({
@@ -36,58 +30,80 @@ export function AddToCartButton({
   name,
   price,
   imageUrl,
-  maxStock,
+  inStock,
+  hasVariants,
   tenantSlug,
-  labels,
 }: AddToCartButtonProps): React.JSX.Element {
   const cartStore = useCartStore();
-  const [showDialog, setShowDialog] = useState(false);
-
+  const t = useTranslations('Storefront');
+  const addButtonRef = React.useRef<HTMLButtonElement>(null);
+  const [showDialog, setShowDialog] = React.useState(false);
+  const [added, setAdded] = React.useState(false);
+  const item = cartStore.items.find((entry): boolean => entry.productId === productId);
+  const confirmed = added && cartStore.tenantSlug === tenantSlug && Boolean(item);
+  const add = (): void => {
+    cartStore.addItem({ productId, name, price, imageUrl, quantity: 1 }, tenantSlug);
+    setAdded(true);
+  };
   const handleAdd = (): void => {
     if (cartStore.tenantSlug && cartStore.tenantSlug !== tenantSlug && cartStore.items.length > 0) {
       setShowDialog(true);
       return;
     }
-    cartStore.addItem({ productId, name, price, imageUrl, quantity: 1, maxStock }, tenantSlug);
+    add();
   };
-
   const handleClearAndContinue = (): void => {
     cartStore.clearCart();
-    cartStore.addItem({ productId, name, price, imageUrl, quantity: 1, maxStock }, tenantSlug);
+    add();
     setShowDialog(false);
   };
-
-  if (maxStock <= 0) {
+  if (!inStock || hasVariants) {
     return (
-      <Button disabled variant="secondary" className="w-full">
-        {labels.outOfStock}
-      </Button>
+      <div className="space-y-2">
+        <Button disabled variant="secondary" className="min-h-11 w-full">
+          {t(hasVariants ? 'purchase.chooseVariant' : 'cartOutOfStock')}
+        </Button>
+        {hasVariants && (
+          <p className="text-sm text-muted-foreground">{t('purchase.variantHelp')}</p>
+        )}
+      </div>
     );
   }
-
   return (
-    <>
-      <Button onClick={handleAdd} className="w-full">
-        <ShoppingCart className="mr-2 h-4 w-4" />
-        {labels.add}
-      </Button>
-
+    <div className="space-y-3">
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{labels.differentStoreTitle}</DialogTitle>
-            <DialogDescription>{labels.differentStoreDesc}</DialogDescription>
+        <Button ref={addButtonRef} className="min-h-11 w-full" onClick={handleAdd}>
+          <ShoppingCart aria-hidden="true" />
+          {t('cartAdd')}
+        </Button>
+        <DialogContent finalFocus={addButtonRef} closeLabel={t('purchase.close')}>
+          <DialogHeader className="pr-10">
+            <DialogTitle>{t('cartDifferentStoreTitle')}</DialogTitle>
+            <DialogDescription>{t('cartDifferentStoreDesc')}</DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => setShowDialog(false)}>
-              {labels.cancel}
-            </Button>
-            <Button variant="destructive" onClick={handleClearAndContinue}>
-              {labels.clearAndContinue}
+          <DialogFooter>
+            <DialogClose render={<Button variant="outline" className="min-h-11" />}>
+              {t('cartCancel')}
+            </DialogClose>
+            <Button variant="destructive" className="min-h-11" onClick={handleClearAndContinue}>
+              {t('cartClearAndContinue')}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+      <p
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="flex min-h-5 items-start gap-2 text-sm text-primary"
+      >
+        {confirmed && (
+          <>
+            <Check aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+            {t('purchase.added', { name, count: item?.quantity ?? 0 })}
+          </>
+        )}
+      </p>
+    </div>
   );
 }

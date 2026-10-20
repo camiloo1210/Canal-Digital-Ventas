@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useTranslations } from 'next-intl';
 import { mergeProps } from '@base-ui/react/merge-props';
 import { useRender } from '@base-ui/react/use-render';
 import { cva, type VariantProps } from 'class-variance-authority';
@@ -156,6 +157,7 @@ function Sidebar({
   collapsible?: 'offcanvas' | 'icon' | 'none';
 }) {
   const { isMobile, state, openMobile, setOpenMobile } = useSidebar();
+  const t = useTranslations('AdminShell');
 
   if (collapsible === 'none') {
     return (
@@ -180,7 +182,8 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
+          className="w-(--sidebar-width) max-w-[calc(100vw-2rem)] bg-sidebar p-0 text-sidebar-foreground"
+          closeLabel={t('closeNavigation')}
           style={
             {
               '--sidebar-width': SIDEBAR_WIDTH_MOBILE,
@@ -189,8 +192,8 @@ function Sidebar({
           side={side}
         >
           <SheetHeader className="sr-only">
-            <SheetTitle>Sidebar</SheetTitle>
-            <SheetDescription>Displays the mobile sidebar.</SheetDescription>
+            <SheetTitle>{t('navigation')}</SheetTitle>
+            <SheetDescription>{t('navigationDescription')}</SheetDescription>
           </SheetHeader>
           <div className="flex h-full w-full flex-col">{children}</div>
         </SheetContent>
@@ -246,6 +249,7 @@ function Sidebar({
 
 function SidebarTrigger({ className, onClick, ...props }: React.ComponentProps<typeof Button>) {
   const { toggleSidebar } = useSidebar();
+  const t = useTranslations('AdminShell');
 
   return (
     <Button
@@ -261,22 +265,23 @@ function SidebarTrigger({ className, onClick, ...props }: React.ComponentProps<t
       {...props}
     >
       <PanelLeftIcon />
-      <span className="sr-only">Toggle Sidebar</span>
+      <span className="sr-only">{t('toggleNavigation')}</span>
     </Button>
   );
 }
 
 function SidebarRail({ className, ...props }: React.ComponentProps<'button'>) {
   const { toggleSidebar } = useSidebar();
+  const t = useTranslations('AdminShell');
 
   return (
     <button
       data-sidebar="rail"
       data-slot="sidebar-rail"
-      aria-label="Toggle Sidebar"
+      aria-label={t('toggleNavigation')}
       tabIndex={-1}
       onClick={toggleSidebar}
-      title="Toggle Sidebar"
+      title={t('toggleNavigation')}
       className={cn(
         'absolute inset-y-0 z-20 hidden w-4 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:start-1/2 after:w-[2px] hover:after:bg-sidebar-border sm:flex ltr:-translate-x-1/2 rtl:-translate-x-1/2',
         'in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize',

@@ -1,5 +1,6 @@
 'use server';
 
+import { getTranslations } from 'next-intl/server';
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
 import {
@@ -7,6 +8,8 @@ import {
   getOnboardTenantUseCase,
 } from '@/features/iam/di/iam.di';
 import { DomainException, ApplicationException } from '@canaldigital/packages/core';
+import { buyerAuthHref, safeAuthReturnPath } from '@/features/iam/utils/auth-return-path';
+import { createClient } from '@/lib/supabase/server';
 
 export type ActionState = {
   success: boolean;
@@ -107,13 +110,14 @@ export async function signupCustomerAction(
   prevState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
+  const t = await getTranslations('Storefront.auth.errors');
   const data = Object.fromEntries(formData.entries());
   const validatedFields = customerSignupSchema.safeParse(data);
 
   if (!validatedFields.success) {
     return {
       success: false,
-      error: validatedFields.error.issues[0]?.message || 'Invalid input provided.',
+      error: t(validatedFields.error.issues[0]?.path[0] === 'email' ? 'email' : 'passwordLength'),
     };
   }
 
@@ -124,16 +128,18 @@ export async function signupCustomerAction(
       password: validatedFields.data.password,
     });
   } catch (error: unknown) {
-    if (error instanceof DomainException || error instanceof ApplicationException) {
-      return { success: false, error: (error as Error).message };
-    }
     console.error('Unexpected auth error:', error);
     return {
       success: false,
-      error: 'An unexpected error occurred during registration. Please try again.',
+      error: t('registration'),
     };
   }
 
-  // Success! Send to Storefront (Root)
-  redirect('/');
+  const destination = safeAuthReturnPath(formData.get('redirectTo'));
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  // Email confirmation may be required before a session exists.
+  redirect(user ? destination : `${buyerAuthHref('/login', destination)}&notice=confirmEmail`);
 }

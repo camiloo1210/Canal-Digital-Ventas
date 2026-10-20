@@ -38,17 +38,24 @@ export default async function StorePage(props: {
       : undefined;
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col">
       <StoreProfileHeader
         name={tenantContext.name}
         description={tenantContext.description}
         logoUrl={tenantContext.logoUrl}
         bannerUrl={tenantContext.bannerUrl}
+        labels={{
+          banner: t('branding.banner', { name: tenantContext.name }),
+          logo: t('branding.logo', { name: tenantContext.name }),
+        }}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 w-full flex flex-col">
-        <div className="flex flex-col gap-4 mb-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between">
+        <div className="mb-4 flex flex-col gap-3 border-b pb-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="sr-only text-xl font-semibold tracking-tight sm:not-sr-only">
+              {t('allProducts')}
+            </h2>
             <StoreSearchBar placeholder={t('searchProducts')} />
           </div>
 
@@ -66,7 +73,7 @@ export default async function StorePage(props: {
 
         <div className="flex-1 w-full">
           <Suspense
-            fallback={<StoreResultsSkeleton />}
+            fallback={<StoreResultsSkeleton label={t('loadingProducts')} />}
             key={`${filters.q}-${effectiveCategory}-${filters.page}`}
           >
             <StoreResultsBoundary
@@ -74,7 +81,6 @@ export default async function StorePage(props: {
               categorySlug={effectiveCategory}
               q={filters.q}
               page={filters.page}
-              pageInfoTemplate={t('pageInfo', { current: '{current}', total: '{total}' })}
             />
           </Suspense>
         </div>

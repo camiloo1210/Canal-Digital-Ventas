@@ -17,7 +17,16 @@ export interface SellerOrderReadModel {
 }
 
 export interface SellerOrderPage {
+  readonly authorized: boolean;
+  readonly totalItems: number;
+  readonly totalPages: number;
   readonly items: readonly SellerOrderReadModel[];
   readonly page: number;
   readonly hasNext: boolean;
+}
+
+export interface SellerOrderFilters {
+  readonly query?: string;
+  readonly status?: string;
+  readonly orderId?: string;
 }

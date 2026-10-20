@@ -1,11 +1,12 @@
 import { notFound } from 'next/navigation';
 import { getStoreProductReadRepository } from '@/features/store/di/store.di';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { formatMoney } from '@/lib/money';
 import { StoreProductStockBadge } from '@/features/store/components/store-product-stock-badge';
 import { AddToCartButton } from '@/features/cart/components/add-to-cart-button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default async function ProductDetailPage(props: {
   params: Promise<{ tenantSlug: string; productId: string }>;
@@ -14,6 +15,7 @@ export default async function ProductDetailPage(props: {
   const { tenantSlug, productId } = params;
 
   const t = await getTranslations('Storefront');
+  const locale = await getLocale();
   const repo = await getStoreProductReadRepository();
 
   const product = await repo.findDetail({ tenantSlug, productId });
@@ -24,20 +26,20 @@ export default async function ProductDetailPage(props: {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-16">
-          <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted border">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-12">
+          <div className="relative aspect-[4/3] md:aspect-square rounded-xl overflow-hidden bg-muted border">
             {product.imageUrl ? (
               <Image
                 src={product.imageUrl}
                 alt={product.name}
                 fill
-                priority
+                loading="eager"
                 className="object-cover"
-                sizes="(max-width: 768px) 100vw, 50vw"
+                sizes="(min-width: 1280px) 584px, (min-width: 1024px) calc((100vw - 112px) / 2), (min-width: 768px) calc((100vw - 72px) / 2), (min-width: 640px) calc(100vw - 48px), calc(100vw - 32px)"
               />
             ) : (
-              <div className="flex items-center justify-center w-full h-full text-muted-foreground">
+              <div className="flex items-center justify-center w-full h-full text-foreground">
                 {t('noImage')}
               </div>
             )}
@@ -52,57 +54,51 @@ export default async function ProductDetailPage(props: {
               {product.name}
             </h1>
 
-            <div className="text-4xl font-light text-foreground mb-3">
-              {formatMoney(product.priceCents)}
+            <div className="text-3xl sm:text-4xl font-semibold text-foreground mb-3">
+              {formatMoney(product.priceCents, 'USD', locale)}
             </div>
 
             {product.wholesalePriceCents !== null && product.wholesaleMinQuantity !== null && (
-              <div className="mb-8 flex items-center gap-2">
+              <div className="mb-5 flex items-center gap-2">
                 <Badge variant="secondary" className="text-sm">
                   {t('wholesaleBadge')}
                 </Badge>
                 <span className="text-muted-foreground text-sm font-medium">
-                  {formatMoney(product.wholesalePriceCents)} ({t('wholesaleMin')}:{' '}
+                  {formatMoney(product.wholesalePriceCents, 'USD', locale)} ({t('wholesaleMin')}:{' '}
                   {product.wholesaleMinQuantity})
                 </span>
               </div>
             )}
 
-            {!product.wholesalePriceCents && <div className="mb-8" />}
-
-            <div className="border border-border rounded-xl p-6 mb-8 bg-card shadow-sm">
-              <h2 className="text-lg font-medium mb-4">
-                {t('aboutThisProduct', { fallback: 'About this product' })}
-              </h2>
-              <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                {product.description || t('noDescription')}
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-6 pt-4">
-              <div className="flex flex-col items-start gap-4">
-                <h3 className="font-medium text-foreground">
-                  {t('availability', { fallback: 'Availability' })}
-                </h3>
+            <div className="mb-6 space-y-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-sm text-muted-foreground">{t('availability')}</span>
                 <StoreProductStockBadge availability={product.stockAvailability} />
               </div>
               <AddToCartButton
+                key={product.id}
                 productId={product.id}
                 name={product.name}
                 price={product.priceCents / 100}
                 imageUrl={product.imageUrl ?? undefined}
-                maxStock={product.inStock ? 9999 : 0}
+                inStock={product.inStock}
+                hasVariants={product.hasVariants}
                 tenantSlug={tenantSlug}
-                labels={{
-                  add: t('cartAdd'),
-                  outOfStock: t('cartOutOfStock'),
-                  differentStoreTitle: t('cartDifferentStoreTitle'),
-                  differentStoreDesc: t('cartDifferentStoreDesc'),
-                  cancel: t('cartCancel'),
-                  clearAndContinue: t('cartClearAndContinue'),
-                }}
               />
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                {t('purchase.stockConfirmation')}
+              </p>
             </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  <h2>{t('aboutThisProduct')}</h2>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-muted-foreground whitespace-pre-wrap leading-relaxed [overflow-wrap:anywhere]">
+                {product.description || t('noDescription')}
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

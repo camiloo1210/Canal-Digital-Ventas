@@ -1,45 +1,47 @@
-import { ChartAreaInteractive } from '@/components/chart-area-interactive';
-import { DataTable } from '@/components/data-table';
-import { SectionCards } from '@/components/section-cards';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { CreateCategoryForm } from '@/features/dashboard/ui/components/create-category-form';
-import data from '@/app/(dashboard)/dashboard/data.json';
-
+import * as React from 'react';
+import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 import { PageHeader } from '@/components/page-header';
+import { Button } from '@/components/ui/button';
+import { getDashboardContextQuery } from '@/features/dashboard/queries/dashboard-context.query';
+import {
+  DashboardOverviewResults,
+  DashboardOverviewSkeleton,
+} from '@/features/dashboard/components/dashboard-overview-results';
 
-export default async function DashboardPage(): Promise<React.JSX.Element> {
-  // CQRS-lite: Directly query the repositories for the dashboard view
-  // const categoryRepo = await getCategoryRepository()
-  // const productRepo = await getProductRepository()
+export async function generateMetadata(): Promise<{ title: string }> {
+  const t = await getTranslations('AdminOverview');
+  return { title: t('metadata') };
+}
 
+export default async function DashboardPage(): Promise<React.JSX.Element | null> {
+  const context = await getDashboardContextQuery();
+  if (context.tenant.status !== 'ready') return null;
+  const t = await getTranslations('AdminOverview');
   return (
     <div className="flex flex-1 flex-col">
-      <div className="@container/main flex flex-1 flex-col gap-2">
-        <PageHeader breadcrumbs={[{ label: 'Dashboard', href: null }]} />
-        <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-          <SectionCards />
-
-          <div className="px-4 lg:px-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <ChartAreaInteractive />
-            </div>
-
-            {/* Dashboard Mutation Form (Quick Action) */}
-            <Card className="flex flex-col h-full">
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-                <CardDescription>
-                  Create a new category directly from the dashboard.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex-1">
-                <CreateCategoryForm />
-              </CardContent>
-            </Card>
+      <PageHeader breadcrumbs={[{ label: t('title'), href: null }]} />
+      <div className="space-y-6 px-4 py-6 lg:px-6 lg:py-8">
+        <header className="flex flex-wrap items-start justify-between gap-4">
+          <div className="space-y-2">
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-[2rem]">{t('title')}</h1>
+            <p className="text-base leading-relaxed text-muted-foreground">
+              {t('description', { store: context.tenant.tenantName })}
+            </p>
           </div>
-
-          <DataTable data={data} />
-        </div>
+          <Button
+            nativeButton={false}
+            role="link"
+            variant="outline"
+            className="min-h-11"
+            render={<Link href={'/store/' + context.tenant.tenantSlug} />}
+          >
+            {t('viewStore')}
+          </Button>
+        </header>
+        <React.Suspense fallback={<DashboardOverviewSkeleton label={t('loading')} />}>
+          <DashboardOverviewResults userId={context.userId} tenantId={context.tenant.tenantId} />
+        </React.Suspense>
       </div>
     </div>
   );

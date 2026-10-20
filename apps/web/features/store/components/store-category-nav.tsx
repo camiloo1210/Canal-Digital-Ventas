@@ -1,6 +1,8 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { PublicCategoryReadModel } from '@canaldigital/packages/core';
+import { buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface StoreCategoryNavProps {
   categories: PublicCategoryReadModel[];
@@ -30,29 +32,28 @@ export function StoreCategoryNav({
   };
 
   return (
-    <nav className="w-full mb-6" aria-label={labels.categories}>
+    <nav className="min-w-0 w-full" aria-label={labels.categories}>
       <h2 className="sr-only">{labels.categories}</h2>
 
       {categories.length === 0 ? (
         <p className="text-muted-foreground text-sm">{labels.noCategories}</p>
       ) : (
-        <ul className="flex items-center gap-2 overflow-x-auto pb-2">
+        <ul className="-m-1 flex items-center gap-2 overflow-x-auto overscroll-x-contain p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <li className="flex-shrink-0">
             <Link
               href={buildHref()}
               scroll={false}
               aria-current={!currentCategorySlug ? 'page' : undefined}
-              className={`block px-4 py-2 rounded-full text-sm font-medium transition-colors border ${
-                !currentCategorySlug
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-background text-foreground border-input hover:bg-accent hover:text-accent-foreground'
-              }`}
+              className={cn(
+                buttonVariants({ variant: !currentCategorySlug ? 'default' : 'outline' }),
+                'min-h-11 rounded-full px-4',
+              )}
             >
               {labels.allProducts}
             </Link>
           </li>
 
-          {categories.map((category) => {
+          {categories.map((category): React.JSX.Element => {
             const isActive = category.slug === currentCategorySlug;
 
             return (
@@ -61,11 +62,10 @@ export function StoreCategoryNav({
                   href={buildHref(isActive ? undefined : category.slug)}
                   scroll={false}
                   aria-current={isActive ? 'page' : undefined}
-                  className={`block px-4 py-2 rounded-full text-sm font-medium transition-colors border ${
-                    isActive
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'bg-background text-foreground border-input hover:bg-accent hover:text-accent-foreground'
-                  }`}
+                  className={cn(
+                    buttonVariants({ variant: isActive ? 'default' : 'outline' }),
+                    'min-h-11 rounded-full px-4',
+                  )}
                 >
                   {category.name}
                 </Link>

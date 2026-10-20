@@ -7,7 +7,6 @@ export interface CartItem {
   price: number;
   imageUrl?: string;
   quantity: number;
-  maxStock: number;
 }
 
 export interface CartState {
@@ -22,7 +21,7 @@ export interface CartState {
 
 export const useCartStore = create<CartState>()(
   persist(
-    (set, get) => ({
+    (set, get): CartState => ({
       tenantSlug: null,
       items: [],
 
@@ -31,46 +30,47 @@ export const useCartStore = create<CartState>()(
       },
 
       addItem: (item: CartItem, newTenantSlug: string): void => {
+        if (!Number.isSafeInteger(item.quantity) || item.quantity < 1) return;
         const currentTenant = get().tenantSlug;
         const currentItems = get().items;
 
         if (!currentTenant || currentTenant !== newTenantSlug) {
           set({
             tenantSlug: newTenantSlug,
-            items: [{ ...item, quantity: Math.min(item.quantity, item.maxStock) }],
+            items: [{ ...item, quantity: item.quantity }],
           });
           return;
         }
 
-        const existingItem = currentItems.find((i) => i.productId === item.productId);
+        const existingItem = currentItems.find((i): boolean => i.productId === item.productId);
 
+        if (existingItem && !Number.isSafeInteger(existingItem.quantity + item.quantity)) return;
         if (existingItem) {
           set({
-            items: currentItems.map((i) =>
+            items: currentItems.map((i): CartItem =>
               i.productId === item.productId
-                ? { ...i, quantity: Math.min(i.quantity + item.quantity, i.maxStock) }
+                ? { ...item, quantity: i.quantity + item.quantity }
                 : i,
             ),
           });
         } else {
           set({
-            items: [...currentItems, { ...item, quantity: Math.min(item.quantity, item.maxStock) }],
+            items: [...currentItems, { ...item, quantity: item.quantity }],
           });
         }
       },
 
       removeItem: (productId: string): void => {
-        set((state) => ({
-          items: state.items.filter((i) => i.productId !== productId),
+        set((state): Partial<CartState> => ({
+          items: state.items.filter((i): boolean => i.productId !== productId),
         }));
       },
 
       updateQuantity: (productId: string, quantity: number): void => {
-        set((state) => ({
-          items: state.items.map((i) =>
-            i.productId === productId
-              ? { ...i, quantity: Math.min(Math.max(1, quantity), i.maxStock) }
-              : i,
+        if (!Number.isSafeInteger(quantity)) return;
+        set((state): Partial<CartState> => ({
+          items: state.items.map((i): CartItem =>
+            i.productId === productId ? { ...i, quantity: Math.max(1, quantity) } : i,
           ),
         }));
       },
@@ -81,7 +81,7 @@ export const useCartStore = create<CartState>()(
     }),
     {
       name: 'canal-digital-cart',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage((): Storage => localStorage),
     },
   ),
 );
