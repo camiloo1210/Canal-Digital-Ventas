@@ -17,6 +17,10 @@ import { PostgresMerchantNotificationAdapter } from '@/notifications/infrastruct
 import { DeliverMerchantNotificationsUseCase } from '@/notifications/application/deliver-merchant-notifications.use-case';
 import { DeliverOrderNotificationsUseCase } from '@/notifications/application/deliver-order-notifications.use-case';
 import type { MerchantNotificationCopies } from '@/notifications/application/ports/out/merchant-notification.ports';
+import { DeliverKiviOrderNotificationUseCase } from '@/kivi/application/use-cases/deliver-kivi-order-notification.use-case';
+import { PostgresKiviOrderNotificationAdapter } from '@/kivi/infrastructure/postgres-kivi-order-notification.adapter';
+import { HttpKiviOrderNotificationGateway } from '@/kivi/infrastructure/http-kivi-order-notification.gateway';
+import type { KiviTokenCipherPort } from '@/kivi/application/ports/out/kivi-token-cipher.port';
 
 export async function runNotificationWorker(
   config: MessagingWorkerConfig,
@@ -26,6 +30,7 @@ export async function runNotificationWorker(
   signal: AbortSignal,
   logger: OutboxWorkerLogger,
   onReady: (ready: boolean) => void = (): void => {},
+  kiviCipher?: KiviTokenCipherPort,
 ): Promise<void> {
   const sql = postgres(config.databaseUrl, {
     max: 1,
@@ -39,7 +44,13 @@ export async function runNotificationWorker(
       let connection: ChannelModel | undefined;
       let channel: ConfirmChannel | undefined;
       try {
-        await email.verify();
+        if (kiviCipher) {
+          await email.verify().catch((): void => {
+            logger.error('SMTP probe failed; Kivi deliveries remain available');
+          });
+        } else {
+          await email.verify();
+        }
         const [database] = await sql<{ authorized: boolean }[]>`
           SELECT pg_catalog.pg_has_role(session_user, 'notification_worker_role', 'MEMBER')
             AND has_function_privilege(current_user, 'core.claim_notification_delivery(uuid,uuid,uuid,text,uuid)', 'EXECUTE')
@@ -52,6 +63,14 @@ export async function runNotificationWorker(
         `;
         if (!database?.authorized)
           throw new MessagingException('Notification database access is unavailable');
+        if (kiviCipher) {
+          const [kiviAccess] = await sql<{ authorized: boolean }[]>`
+            SELECT has_function_privilege(current_user, 'core.read_kivi_order_notification(uuid,uuid,uuid,text)', 'EXECUTE')
+              AND has_function_privilege(current_user, 'core.prepare_kivi_order_notification(uuid,uuid,uuid,text,text,smallint)', 'EXECUTE') AS authorized
+          `;
+          if (!kiviAccess?.authorized)
+            throw new MessagingException('Kivi notification database access is unavailable');
+        }
         connection = await amqp.connect(config.rabbitMqUrl, { timeout: 10_000 });
         connection.on('error', (): void => {});
         channel = await connection.createConfirmChannel();
@@ -76,7 +95,17 @@ export async function runNotificationWorker(
           email,
           smtp.locale,
         );
-        const useCase = new DeliverOrderNotificationsUseCase([buyer, merchant]);
+        const kivi = kiviCipher
+          ? new DeliverKiviOrderNotificationUseCase(
+              new PostgresKiviOrderNotificationAdapter(sql, kiviCipher),
+              new HttpKiviOrderNotificationGateway(),
+            )
+          : null;
+        const useCase = new DeliverOrderNotificationsUseCase([
+          buyer,
+          merchant,
+          ...(kivi ? [kivi] : []),
+        ]);
         const activeChannel = channel;
         let pending: Promise<void> = Promise.resolve();
         let stop: () => void = (): void => {};
@@ -107,7 +136,7 @@ export async function runNotificationWorker(
             },
             { noAck: false },
           );
-          logger.info('Notification consumer connected; SMTP verified');
+          logger.info('Notification consumer connected');
           onReady(true);
           await stopped;
           await channel.cancel(consumer.consumerTag).catch((): void => {});
