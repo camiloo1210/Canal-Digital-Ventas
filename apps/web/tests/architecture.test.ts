@@ -1,4 +1,4 @@
-import { test, expect } from 'vitest';
+import { beforeAll, describe, test, expect } from 'vitest';
 import { readdirSync, readFileSync } from 'node:fs';
 import * as path from 'node:path';
 import { primaryAdapterViolations, restrictedCoreExports } from '@/tests/primary-adapter-policy';
@@ -11,12 +11,14 @@ function webFiles(directory: string): string[] {
   });
 }
 
-test('web delivery uses server-only DI and serializable presentation models', (): void => {
-  const restricted = restrictedCoreExports();
-  const violations = webFiles(path.resolve(__dirname, '..')).flatMap((file): string[] =>
-    primaryAdapterViolations(file, readFileSync(file, 'utf8'), restricted).map(
-      (violation): string => `${file}: ${violation}`,
-    ),
-  );
-  expect(violations).toEqual([]);
+describe('web delivery uses server-only DI and serializable presentation models', (): void => {
+  let restricted: ReadonlySet<string>;
+
+  beforeAll((): void => {
+    restricted = restrictedCoreExports();
+  }, 20000);
+
+  test.each(webFiles(path.resolve(__dirname, '..')))('%s', (file: string): void => {
+    expect(primaryAdapterViolations(file, readFileSync(file, 'utf8'), restricted)).toEqual([]);
+  });
 });

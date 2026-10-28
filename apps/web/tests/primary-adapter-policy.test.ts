@@ -1,13 +1,18 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { primaryAdapterViolations, restrictedCoreExports } from '@/tests/primary-adapter-policy';
 
 const restricted = new Set(['PostgresProductRepository', 'CancelOrderUseCase', 'Product']);
 
 describe('primary adapter architecture enforcement', (): void => {
+  let actual: ReadonlySet<string>;
+
+  beforeAll((): void => {
+    actual = restrictedCoreExports();
+  }, 20000);
+
   it.each(['PostgresEventBusAdapter', 'CategorySlug', 'SupabasePublicTenantDirectoryReadAdapter'])(
     'checks the actual wildcard export %s under an import alias',
     (exportName: string): void => {
-      const actual = restrictedCoreExports();
       expect(actual.has(exportName)).toBe(true);
       expect(
         primaryAdapterViolations(

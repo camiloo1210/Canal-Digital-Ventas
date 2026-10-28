@@ -6,10 +6,15 @@ export function restrictedCoreExports(): ReadonlySet<string> {
   const repositoryRoot = path.resolve(__dirname, '../../..');
   const configPath = path.join(repositoryRoot, 'packages/core/tsconfig.json');
   const config = ts.readConfigFile(configPath, ts.sys.readFile);
-  const { options } = ts.parseJsonConfigFileContent(
-    config.config,
-    ts.sys,
+  const { options } = ts.convertCompilerOptionsFromJson(
+    config.config.compilerOptions,
     path.dirname(configPath),
+  );
+  const resolutionCache = ts.createModuleResolutionCache(
+    repositoryRoot,
+    (fileName: string): string =>
+      ts.sys.useCaseSensitiveFileNames ? fileName : fileName.toLowerCase(),
+    options,
   );
   const cache = new Map<string, Map<string, boolean>>();
 
@@ -61,6 +66,7 @@ export function restrictedCoreExports(): ReadonlySet<string> {
         file,
         options,
         ts.sys,
+        resolutionCache,
       ).resolvedModule;
       if (!resolved) continue;
       const exported = exportsOf(resolved.resolvedFileName);
