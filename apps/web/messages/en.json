@@ -67,7 +67,8 @@
     "categoryDescription": "Create categories to help buyers find your products.",
     "createCategory": "Create category",
     "demoTitle": "Example overview",
-    "demoDescription": "The metrics, chart and table in this view are a demonstration and do not represent your store activity."
+    "demoDescription": "The metrics, chart and table in this view are a demonstration and do not represent your store activity.",
+    "integrations": "Integrations"
   },
   "Sidebar": {
     "title": "Canal Digital",
@@ -806,5 +807,70 @@
     "errorDescription": "Please try again or return to your store overview.",
     "retry": "Try again",
     "back": "Go to overview"
+  },
+  "KiviConnection": {
+    "title": "Kivi integration",
+    "subtitle": "Connect your store to Kivi to keep your catalog in sync, with nothing technical to set up.",
+    "notConnectedTitle": "Connect your store to Kivi",
+    "notConnectedHelp": "All you need is a pairing code generated in Kivi.",
+    "steps": {
+      "one": "In Kivi: Integrations → Connect application → Generate code.",
+      "two": "Copy the code (it starts with kvp_).",
+      "three": "Paste it here and press Connect. It works once and expires soon."
+    },
+    "code": "Pairing code",
+    "codeHelp": "Starts with kvp_. Do not paste any connection token here.",
+    "connect": "Connect",
+    "connecting": "Connecting…",
+    "ownerOnly": "Only the store owner can manage this connection.",
+    "status": "Status",
+    "lastSync": "Last full sync",
+    "never": "Not synced yet",
+    "states": {
+      "pending": {
+        "title": "Connecting",
+        "badge": "Initial load in progress",
+        "help": "Your store is connected. We are sending your catalog to Kivi; this can take a few minutes."
+      },
+      "active": {
+        "title": "Connected",
+        "badge": "Connected",
+        "help": "Your catalog is kept in sync automatically."
+      },
+      "needs_reconcile": {
+        "title": "Needs attention",
+        "badge": "Sync pending",
+        "help": "Your catalog may be out of date in Kivi. Press Sync now to bring it up to date."
+      }
+    },
+    "legacyNote": "This connection uses a token configured manually on the server. Disconnect it and connect again with a code to manage it from here.",
+    "syncNow": "Sync now",
+    "syncing": "Requesting…",
+    "syncNowHelp": "The sync runs in the background on the next cycle.",
+    "disconnect": "Disconnect",
+    "disconnectTitle": "Disconnect from Kivi?",
+    "disconnectConfirm": "We will stop syncing your catalog and revoke access in Kivi. You can connect again with a new code.",
+    "disconnectAction": "Yes, disconnect",
+    "disconnecting": "Disconnecting…",
+    "cancel": "Cancel",
+    "paired": "Store connected. The initial catalog load will start shortly.",
+    "unlinked": "Your store was disconnected from Kivi.",
+    "syncRequested": "Sync requested. It will run on the next cycle.",
+    "unauthorized": "Sign in with an active store to manage the integration.",
+    "forbidden": "Only the store owner can manage the Kivi connection.",
+    "notLinked": "The store has no Kivi connection.",
+    "invalidInput": "Check the pairing code.",
+    "unexpected": "The action could not be completed. Please try again.",
+    "errors": {
+      "invalidOrExpired": "The code is not valid or has expired. Generate a new one in Kivi and try again.",
+      "rateLimited": "Too many attempts. Wait a few minutes before trying again.",
+      "unavailable": "We could not reach Kivi. Please try again in a few minutes.",
+      "notConfigured": "The Kivi integration is not available on this platform yet. Contact support."
+    },
+    "validation": {
+      "codeRequired": "Enter the pairing code.",
+      "codeFormat": "The code must start with kvp_. Copy it in full from Kivi.",
+      "codeIsToken": "That looks like a connection token (kc_). Paste the pairing code (kvp_) generated in Kivi here."
+    }
   }
 }

@@ -67,7 +67,8 @@
     "categoryDescription": "Crea categorías para que tus compradores encuentren tus productos.",
     "createCategory": "Crear categoría",
     "demoTitle": "Resumen de ejemplo",
-    "demoDescription": "Las métricas, el gráfico y la tabla de esta vista son una demostración y no representan la actividad de tu tienda."
+    "demoDescription": "Las métricas, el gráfico y la tabla de esta vista son una demostración y no representan la actividad de tu tienda.",
+    "integrations": "Integraciones"
   },
   "Sidebar": {
     "title": "Canal Digital",
@@ -808,5 +809,70 @@
     "errorDescription": "Vuelve a intentarlo o regresa al resumen de tu tienda.",
     "retry": "Reintentar",
     "back": "Ir al resumen"
+  },
+  "KiviConnection": {
+    "title": "Integración con Kivi",
+    "subtitle": "Conecta tu tienda con Kivi para mantener tu catálogo sincronizado, sin configurar nada técnico.",
+    "notConnectedTitle": "Conecta tu tienda con Kivi",
+    "notConnectedHelp": "Solo necesitas un código de vinculación generado en Kivi.",
+    "steps": {
+      "one": "En Kivi: Integraciones → Conectar aplicación → Generar código.",
+      "two": "Copia el código (empieza por kvp_).",
+      "three": "Pégalo aquí y pulsa Conectar. Es de un solo uso y caduca pronto."
+    },
+    "code": "Código de vinculación",
+    "codeHelp": "Empieza por kvp_. No pegues aquí ningún token de conexión.",
+    "connect": "Conectar",
+    "connecting": "Conectando…",
+    "ownerOnly": "Solo el propietario de la tienda puede gestionar esta conexión.",
+    "status": "Estado",
+    "lastSync": "Última sincronización completa",
+    "never": "Aún no se ha sincronizado",
+    "states": {
+      "pending": {
+        "title": "Conectando",
+        "badge": "Carga inicial en curso",
+        "help": "La tienda está conectada. Estamos enviando tu catálogo a Kivi; puede tardar unos minutos."
+      },
+      "active": {
+        "title": "Conectada",
+        "badge": "Conectada",
+        "help": "Tu catálogo se mantiene sincronizado automáticamente."
+      },
+      "needs_reconcile": {
+        "title": "Necesita atención",
+        "badge": "Sincronización pendiente",
+        "help": "Tu catálogo puede estar desactualizado en Kivi. Pulsa Sincronizar ahora para ponerlo al día."
+      }
+    },
+    "legacyNote": "Esta conexión usa un token configurado manualmente en el servidor. Desconéctala y vuelve a conectar con un código para gestionarla desde aquí.",
+    "syncNow": "Sincronizar ahora",
+    "syncing": "Solicitando…",
+    "syncNowHelp": "La sincronización se ejecuta en segundo plano en el próximo ciclo.",
+    "disconnect": "Desconectar",
+    "disconnectTitle": "¿Desconectar de Kivi?",
+    "disconnectConfirm": "Dejaremos de sincronizar tu catálogo y revocaremos el acceso en Kivi. Podrás conectar de nuevo con un código nuevo.",
+    "disconnectAction": "Sí, desconectar",
+    "disconnecting": "Desconectando…",
+    "cancel": "Cancelar",
+    "paired": "Tienda conectada. La carga inicial del catálogo comenzará en breve.",
+    "unlinked": "Tu tienda se desconectó de Kivi.",
+    "syncRequested": "Sincronización solicitada. Se procesará en el próximo ciclo.",
+    "unauthorized": "Debes iniciar sesión con una tienda activa para gestionar la integración.",
+    "forbidden": "Solo el propietario de la tienda puede gestionar la conexión con Kivi.",
+    "notLinked": "La tienda no tiene una conexión con Kivi.",
+    "invalidInput": "Revisa el código de vinculación.",
+    "unexpected": "No se pudo completar la acción. Inténtalo de nuevo.",
+    "errors": {
+      "invalidOrExpired": "El código no es válido o ya caducó. Genera uno nuevo en Kivi e inténtalo otra vez.",
+      "rateLimited": "Demasiados intentos. Espera unos minutos antes de volver a intentarlo.",
+      "unavailable": "No pudimos comunicarnos con Kivi. Inténtalo de nuevo en unos minutos.",
+      "notConfigured": "La integración con Kivi aún no está disponible en esta plataforma. Contacta a soporte."
+    },
+    "validation": {
+      "codeRequired": "Ingresa el código de vinculación.",
+      "codeFormat": "El código debe empezar por kvp_. Cópialo completo desde Kivi.",
+      "codeIsToken": "Eso parece un token de conexión (kc_). Pega aquí el código de vinculación (kvp_) generado en Kivi."
+    }
   }
 }

@@ -2,9 +2,11 @@ import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ORDER_NOTIFICATION_EVENT_TYPES } from '@/notifications/application/notification-events';
+import { KIVI_PRODUCT_EVENT_TYPES } from '@/kivi/application/kivi-events';
 
 const BASELINE_VERSION = '20261014000000';
 const SEED_TABLES: Readonly<Record<string, readonly string[]>> = {
+  '20261020000000_kivi_connections.sql': ['core.outbox_relay_routes'],
   '20261019000000_store_branding_storage.sql': ['storage.buckets'],
   '20261018183618_seller_order_delivery_notifications.sql': ['core.outbox_relay_routes'],
   '20261015000000_rabbitmq_outbox_relay.sql': [
@@ -258,7 +260,7 @@ describe('pending migrations (static checks)', (): void => {
     expect(all.search(/outbox_relay_routes/)).toBeGreaterThanOrEqual(creation);
   });
 
-  it('seeds exactly the order notification routes for outbox_worker_role', (): void => {
+  it('seeds exactly the order notification routes for outbox_worker_role and the Kivi product routes', (): void => {
     const seeded: string[] = [];
     for (const migration of pending) {
       const topLevel = withoutDollarQuotedBlocks(migration.sql);
@@ -274,7 +276,11 @@ describe('pending migrations (static checks)', (): void => {
     const expected = ORDER_NOTIFICATION_EVENT_TYPES.map(
       (eventType: string): string => `outbox_worker_role/Order/${eventType}`,
     );
-    expect([...seeded].sort()).toEqual([...expected].sort());
+    const kivi = KIVI_PRODUCT_EVENT_TYPES.map(
+      (eventType: string): string => `kivi_sync_worker_role/Product/${eventType}`,
+    );
+    expect([...seeded].sort()).toEqual([...expected, ...kivi].sort());
     expect(expected).toHaveLength(6);
+    expect(kivi).toHaveLength(5);
   });
 });

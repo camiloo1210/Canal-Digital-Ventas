@@ -1,4 +1,4 @@
-x-worker: &worker # Built once from this repository; shared by all nine worker services.
+x-worker: &worker # Built once from this repository; shared by all ten worker services.
   image: canaldigital-messaging-worker:local
   pull_policy: never
   init: true
@@ -170,6 +170,23 @@ services:
     command: ['src/payment-retention.ts']
     environment:
       PAYMENT_RETENTION_DATABASE_URL: ${PAYMENT_RETENTION_DATABASE_URL:?Configure PAYMENT_RETENTION_DATABASE_URL}
+
+  kivi-sync:
+    <<: *worker
+    command: ['src/kivi-sync.ts']
+    # LEGACY: stores linked before pairing keep an optional KIVI_CONNECTION_TOKEN_<NAME> in this
+    # git-ignored file. Stores paired from the dashboard need no per-store variable: their token
+    # is stored encrypted and decrypted with KIVI_TOKEN_ENCRYPTION_KEY below.
+    env_file:
+      - path: ./apps/worker/kivi-connections.env
+        required: false
+    environment:
+      WORKER_HEALTH_PORT: '8081'
+      KIVI_SYNC_DATABASE_URL: ${KIVI_SYNC_DATABASE_URL:?Configure KIVI_SYNC_DATABASE_URL}
+      KIVI_TOKEN_ENCRYPTION_KEY: ${KIVI_TOKEN_ENCRYPTION_KEY:?Configure KIVI_TOKEN_ENCRYPTION_KEY (base64, 32 bytes; same as the web app)}
+      KIVI_POLL_INTERVAL_MS: ${KIVI_POLL_INTERVAL_MS:-1000}
+      KIVI_RECONCILE_INTERVAL_MS: ${KIVI_RECONCILE_INTERVAL_MS:-21600000}
+      KIVI_RETRY_INTERVAL_MS: ${KIVI_RETRY_INTERVAL_MS:-300000}
 
 volumes:
   rabbitmq-data:

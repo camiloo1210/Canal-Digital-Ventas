@@ -10,6 +10,7 @@ export default defineConfig({
       '@/categories': path.resolve(__dirname, '../../packages/core/src/features/categories'),
       '@/products': path.resolve(__dirname, '../../packages/core/src/features/products'),
       '@/shared': path.resolve(__dirname, '../../packages/core/src/shared'),
+      '@/kivi': path.resolve(__dirname, '../../packages/core/src/features/kivi'),
       '@/tenants': path.resolve(__dirname, '../../packages/core/src/features/tenants'),
       '@/iam': path.resolve(__dirname, '../../packages/core/src/features/iam'),
     },
