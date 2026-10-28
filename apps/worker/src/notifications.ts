@@ -2,6 +2,7 @@ import {
   loadMessagingWorkerConfig,
   loadSmtpConfig,
   runNotificationWorker,
+  loadKiviTokenCipher,
 } from '@canaldigital/packages/core';
 import es from '@/messages/es.json';
 import en from '@/messages/en.json';
@@ -28,6 +29,9 @@ async function main(): Promise<void> {
       controller.signal,
       console,
       health.setReady,
+      process.env.KIVI_NOTIFICATIONS_ENABLED === 'true'
+        ? loadKiviTokenCipher(process.env)
+        : undefined,
     );
   } finally {
     process.removeListener('SIGINT', stop);
