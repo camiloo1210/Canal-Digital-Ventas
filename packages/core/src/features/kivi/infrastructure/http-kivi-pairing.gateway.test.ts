@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { HttpKiviPairingGateway } from '@/kivi/infrastructure/http-kivi-pairing.gateway';
 import { KiviPairingException } from '@/kivi/application/exceptions/kivi-pairing.exception';
 import { KiviBaseUrl } from '@/kivi/domain/value-objects/kivi-base-url.vo';
@@ -156,5 +156,64 @@ describe('HttpKiviPairingGateway.revokeSelf', (): void => {
     const error = await failureOf(gateway.revokeSelf({ ...target, baseUrl: 'http://10.0.0.1' }));
     expect(error.failure).toBe('unavailable');
     expect(calls).toHaveLength(0);
+  });
+});
+
+describe('pairing diagnostics', (): void => {
+  it('correlates timeouts without logging credentials or vendor messages', async (): Promise<void> => {
+    const log = vi.spyOn(console, 'warn').mockImplementation((): void => undefined);
+    try {
+      const { gateway, calls } = build(
+        (call): Promise<Response> =>
+          new Promise((_resolve, reject): void => {
+            call.init.signal?.addEventListener('abort', (): void =>
+              reject(new Error(CODE + TOKEN)),
+            );
+          }),
+        { timeoutMs: 5 },
+      );
+      expect((await failureOf(gateway.exchange(request))).failure).toBe('unavailable');
+      const headers = calls[0].init.headers as Record<string, string>;
+      expect(headers['X-Request-ID']).toMatch(/^[0-9a-f-]{36}$/);
+      expect(log).toHaveBeenCalledWith(
+        '[Kivi] Request failed',
+        expect.objectContaining({
+          requestId: headers['X-Request-ID'],
+          outcome: 'timeout',
+          elapsedMs: expect.any(Number),
+        }),
+      );
+      const output = JSON.stringify(log.mock.calls);
+      for (const secret of [
+        CODE,
+        TOKEN,
+        request.externalTenantId,
+        request.name,
+        'api.kivi.example',
+      ]) {
+        expect(output).not.toContain(secret);
+      }
+    } finally {
+      log.mockRestore();
+    }
+  });
+
+  it('records HTTP status without response secrets', async (): Promise<void> => {
+    const log = vi.spyOn(console, 'info').mockImplementation((): void => undefined);
+    try {
+      const { gateway } = build((): Response => json(503, { detail: TOKEN }));
+      await failureOf(gateway.exchange(request));
+      expect(log).toHaveBeenCalledWith(
+        '[Kivi] Response received',
+        expect.objectContaining({
+          status: 503,
+          elapsedMs: expect.any(Number),
+          requestId: expect.any(String),
+        }),
+      );
+      expect(JSON.stringify(log.mock.calls)).not.toContain(TOKEN);
+    } finally {
+      log.mockRestore();
+    }
   });
 });
