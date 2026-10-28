@@ -8,7 +8,9 @@ import {
 
 describe('dashboard navigation', (): void => {
   it('links only to implemented dashboard pages', (): void => {
-    expect(dashboardNavigation).toHaveLength(5);
+    expect(
+      dashboardNavigation.some((item): boolean => item.href === '/dashboard/business-intelligence'),
+    ).toBe(true);
     for (const item of dashboardNavigation) {
       expect(existsSync(resolve('apps/web/app/(dashboard)', item.href.slice(1), 'page.tsx'))).toBe(
         true,

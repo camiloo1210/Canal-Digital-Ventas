@@ -5,6 +5,7 @@ import { AppHeader } from '@/components/app-header';
 import { UserNav } from '@/features/iam/components/user-nav';
 import type { StoreViewer } from '@/features/store/queries/store-viewer.query';
 import { cn } from '@/lib/utils';
+import { BuyerKiviWidget } from '@/features/store-directory/components/buyer-kivi-widget';
 
 interface BuyerShellProps {
   children: React.ReactNode;
@@ -70,6 +71,7 @@ export async function BuyerShell({
       >
         {children}
       </main>
+      <BuyerKiviWidget />
     </div>
   );
 }
