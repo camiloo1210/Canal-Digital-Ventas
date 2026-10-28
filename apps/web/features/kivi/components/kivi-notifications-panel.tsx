@@ -19,10 +19,12 @@ export function KiviNotificationsPanel({
   settings,
   available,
   workerEnabled,
+  channel,
 }: {
   settings: KiviNotificationSettings | null;
   available: boolean;
   workerEnabled: boolean;
+  channel: 'connected' | 'disconnected' | 'unavailable';
 }): React.JSX.Element {
   const t = useTranslations('KiviMessaging');
   const [state, action, pending] = useActionState(configureKiviNotificationsAction, INITIAL);
@@ -35,6 +37,16 @@ export function KiviNotificationsPanel({
     },
   );
   const [edited, setEdited] = useState<KiviNotificationsActionState | null>(null);
+  // Readiness comes from the saved remote settings and the checked channel, not from the form draft.
+  const status = !available
+    ? 'statusUnavailable'
+    : !workerEnabled
+      ? 'workerDisabled'
+      : !settings || (!settings.whatsappEnabled && !settings.widgetEnabled)
+        ? 'statusNoChannels'
+        : settings.whatsappEnabled && channel !== 'connected'
+          ? 'statusNeedsWhatsApp'
+          : 'statusReady';
   return (
     <Card className="shadow-none">
       <CardHeader>
@@ -42,8 +54,8 @@ export function KiviNotificationsPanel({
           <CardTitle>
             <h2>{t('automationTitle')}</h2>
           </CardTitle>
-          <Badge variant="secondary">
-            {workerEnabled ? t('workerEnabled') : t('workerDisabled')}
+          <Badge variant={status === 'statusReady' ? 'default' : 'secondary'} data-status={status}>
+            {t(status)}
           </Badge>
         </div>
         <CardDescription>{t('automationHelp')}</CardDescription>

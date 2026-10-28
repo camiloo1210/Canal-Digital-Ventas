@@ -46,6 +46,7 @@ export default async function IntegrationsPage(): Promise<React.JSX.Element> {
             settings={messaging.settings}
             available={messaging.settings !== null}
             workerEnabled={process.env.KIVI_NOTIFICATIONS_ENABLED === 'true'}
+            channel={messaging.channel}
           />
         </NextIntlClientProvider>
       </div>
