@@ -1,80 +1,22 @@
 import { test, expect } from 'vitest';
-import * as fs from 'fs';
-import * as path from 'path';
+import { readdirSync, readFileSync } from 'node:fs';
+import * as path from 'node:path';
+import { primaryAdapterViolations, restrictedCoreExports } from '@/tests/primary-adapter-policy';
 
-/**
- * Recurses through Web app directory to find all TypeScript files.
- */
-function getWebFiles(dirPath: string, arrayOfFiles: string[] = []): string[] {
-  const files = fs.readdirSync(dirPath);
-  for (const file of files) {
-    if (file === 'node_modules' || file === '.next' || file === 'tests') continue;
-    const fullPath = path.join(dirPath, file);
-    if (fs.statSync(fullPath).isDirectory()) {
-      arrayOfFiles = getWebFiles(fullPath, arrayOfFiles);
-    } else {
-      if (file.endsWith('.ts') || file.endsWith('.tsx')) {
-        arrayOfFiles.push(fullPath);
-      }
-    }
-  }
-  return arrayOfFiles;
+function webFiles(directory: string): string[] {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry): string[] => {
+    if (['node_modules', '.next', 'tests'].includes(entry.name)) return [];
+    const fullPath = path.join(directory, entry.name);
+    return entry.isDirectory() ? webFiles(fullPath) : /\.tsx?$/.test(entry.name) ? [fullPath] : [];
+  });
 }
 
-test('Frontend Primary Adapter Architectural Constraint', () => {
-  const webDir = path.resolve(__dirname, '..');
-  const files = getWebFiles(webDir);
-
-  for (const file of files) {
-    const content = fs.readFileSync(file, 'utf-8');
-
-    // Rule: UI Pages/Actions cannot instantiate Infrastructure Repositories or Use Cases using 'new' bypassing the DI container.
-    // Exceptions allowed: ONLY within explicit '.di.ts' and specific configuration files
-    if (
-      content.includes('new Supabase') &&
-      !file.includes('.di.ts') &&
-      !file.includes('supabase/server.ts') &&
-      !file.includes('lib/storage')
-    ) {
-      expect.fail(
-        `File ${file} instantiated an infrastructure resource directly! Must use DI container.`,
-      );
-    }
-
-    // Rule: DI files must be strictly server-only
-    if (file.includes('.di.ts') && !content.includes("import 'server-only'")) {
-      expect.fail(
-        `DI container ${file} must include "import 'server-only';" to prevent leakage to client components.`,
-      );
-    }
-
-    // Rule: UI cannot import internal transaction managers
-    if (content.match(/import.*TransactionManager/)) {
-      expect.fail(
-        `File ${file} imported TransactionManager. UI must rely strictly on UseCases/Ports.`,
-      );
-    }
-
-    // Rule: UI Components cannot import Domain Entities directly. They must be mapped to View Models
-    // (We permit type imports if necessary for bounds, but typically discourage standard entity importing)
-    if (file.includes('/components/') && content.match(/from.*\/domain\/entities/)) {
-      expect.fail(
-        `Component ${file} imported a Domain Entity directly. Ensure View Models are used for presentation.`,
-      );
-    }
-
-    // Rule: UI Components cannot import from infrastructure directly
-    if (file.includes('/components/') && content.match(/from.*\/infrastructure/)) {
-      expect.fail(
-        `Component ${file} imported infrastructure directly! Components are pure rendering modules.`,
-      );
-    }
-
-    // Rule: Server Actions cannot utilize direct database instances
-    if (file.includes('.actions.ts') && content.match(/this\.supabase\./)) {
-      expect.fail(
-        `Server Action ${file} attempted direct database queries. Must rely on Core Use Cases.`,
-      );
-    }
-  }
+test('web delivery uses server-only DI and serializable presentation models', (): void => {
+  const restricted = restrictedCoreExports();
+  const violations = webFiles(path.resolve(__dirname, '..')).flatMap((file): string[] =>
+    primaryAdapterViolations(file, readFileSync(file, 'utf8'), restricted).map(
+      (violation): string => `${file}: ${violation}`,
+    ),
+  );
+  expect(violations).toEqual([]);
 });

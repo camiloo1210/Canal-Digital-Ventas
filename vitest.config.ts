@@ -9,6 +9,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@/scripts': path.resolve(__dirname, 'packages/core/scripts'),
+      '@/tests': path.resolve(__dirname, 'apps/web/tests'),
       '@/dashboard': path.resolve(__dirname, 'packages/core/src/features/dashboard'),
       '@/app': path.resolve(__dirname, 'apps/web/app'),
       '@/features': path.resolve(__dirname, 'apps/web/features'),

@@ -35,7 +35,7 @@ const eslintConfig = defineConfig([
           patterns: [
             {
               group: ['./**', '../**', '.', '..'],
-              message: 'Utiliza un alias @/ o el nombre público del paquete; no imports relativos.',
+              message: 'Use an @/ alias or the public package name instead of relative imports.',
             },
           ],
         },
@@ -44,11 +44,11 @@ const eslintConfig = defineConfig([
         'error',
         {
           selector: 'ImportExpression[source.value=/^\\./]',
-          message: 'Utiliza un alias @/ o el nombre público del paquete en imports dinámicos.',
+          message: 'Use an @/ alias or the public package name for dynamic imports.',
         },
         {
           selector: 'CallExpression[callee.name="require"] > Literal.arguments[value=/^\\./]',
-          message: 'Utiliza un alias @/ o el nombre público del paquete; no rutas relativas.',
+          message: 'Use an @/ alias or the public package name instead of relative paths.',
         },
       ],
       'boundaries/dependencies': [
@@ -62,14 +62,13 @@ const eslintConfig = defineConfig([
                 { to: { element: { type: 'application' } } },
                 { to: { element: { type: 'infrastructure' } } },
               ],
-              message:
-                'El dominio es el core puro del negocio. No puede depender de Application ni de Infrastructure.',
+              message: 'Domain code must not depend on Application or Infrastructure.',
             },
             {
               from: { element: { type: 'application' } },
               disallow: [{ to: { element: { type: 'infrastructure' } } }],
               message:
-                'Los Casos de Uso (Application) no pueden depender de la implementación técnica (Infrastructure).',
+                'Application use cases must depend on ports instead of Infrastructure implementations.',
             },
             {
               from: { element: { type: 'feature' } },
@@ -84,9 +83,49 @@ const eslintConfig = defineConfig([
                 },
               ],
               message:
-                'Un feature no puede importar directamente nada de otro feature. Utiliza shared o Eventos.',
+                'Features must communicate through shared contracts or events instead of direct feature imports.',
             },
           ],
+        },
+      ],
+    },
+  },
+  {
+    files: [
+      'packages/core/src/features/kivi/**/*.ts',
+      'packages/core/src/features/dashboard/domain/**/*.ts',
+      'packages/core/src/features/dashboard/infrastructure/*business-intelligence*.ts',
+      'apps/web/features/kivi/**/*.{ts,tsx}',
+      'apps/web/features/dashboard/**/*business-intelligence*.{ts,tsx}',
+      'apps/web/tests/*business-intelligence*.{ts,tsx}',
+      'apps/web/tests/kivi*.ts',
+      'apps/worker/src/kivi-sync.ts',
+      'apps/worker/docker/verify.mjs',
+    ],
+    rules: {
+      '@typescript-eslint/explicit-function-return-type': [
+        'error',
+        {
+          allowExpressions: false,
+          allowTypedFunctionExpressions: false,
+          allowHigherOrderFunctions: false,
+          allowDirectConstAssertionInArrowFunctions: false,
+        },
+      ],
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'ImportExpression[source.value=/^\\./]',
+          message: 'Use an absolute alias for dynamic imports.',
+        },
+        {
+          selector: 'CallExpression[callee.name="require"] > Literal.arguments[value=/^\\./]',
+          message: 'Use an absolute alias for module imports.',
+        },
+        {
+          selector:
+            'ThrowStatement > NewExpression[callee.name=/^(Error|TypeError|RangeError|SyntaxError|ReferenceError|EvalError|URIError|AggregateError)$/]',
+          message: 'Throw a custom exception instead of a generic built-in error.',
         },
       ],
     },
@@ -111,6 +150,7 @@ const eslintConfig = defineConfig([
     'apps/web/.next/**',
     'out/**',
     'build/**',
+    '.local/**',
     '**/next-env.d.ts',
   ]),
 ]);
