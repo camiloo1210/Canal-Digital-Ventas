@@ -1,4 +1,125 @@
 {
+  "BusinessIntelligence": {
+    "title": "Business Intelligence",
+    "metadata": "Inteligencia de negocio | Canal Digital",
+    "eyebrow": "Decide con datos",
+    "description": "Entiende qué vendes, cuánto te deja y qué conviene reponer.",
+    "filters": "Configurar análisis y reposición",
+    "period": "Período de análisis",
+    "days": "Últimos {count} días",
+    "leadTime": "Plazo de entrega (días)",
+    "targetCoverage": "Cobertura objetivo (días)",
+    "apply": "Aplicar período",
+    "periodHelp": "Días completos en UTC, sin incluir hoy. Ventas comparadas con el período anterior de igual duración. El inventario refleja las existencias actuales.",
+    "metrics": "Indicadores del negocio",
+    "revenue": "Ventas netas",
+    "profit": "Beneficio estimado",
+    "margin": "Margen estimado",
+    "restock": "Productos por reponer",
+    "profitHelp": "Estimación con costos actuales, sin gastos operativos.",
+    "marginHelp": "Beneficio estimado sobre ventas netas.",
+    "restockHelp": "Sin stock o con cobertura de hasta {count} días.",
+    "noComparison": "Sin base de comparación",
+    "comparison": "{percent} frente al período anterior",
+    "unavailable": "No disponible",
+    "ordersCount": "{count, plural, one {# pedido pagado} other {# pedidos pagados}}",
+    "unitsCount": "{count, plural, one {# unidad vendida} other {# unidades vendidas}}",
+    "inventoryValue": "Inventario simple a costo actual: {value}",
+    "trend": "Cómo evolucionan tus ventas",
+    "trendHelp": "Compara ventas, beneficio estimado o unidades entre períodos.",
+    "viewDaily": "Explorar datos diarios",
+    "date": "Fecha (UTC)",
+    "noSalesTitle": "Sin ventas en este período",
+    "noSalesHelp": "No hay pedidos pagados elegibles. Prueba un período más amplio; no se inventan ventas ni tendencias.",
+    "priorities": "Qué conviene atender ahora",
+    "prioritiesHelp": "Primero los agotados; después, los productos que antes se quedarán sin existencias.",
+    "noPriorities": "No hay alertas de reposición para productos simples en este escenario.",
+    "noDemand": "Sin demanda observada para estimar cobertura",
+    "coverageHelp": "Cobertura aproximada: {count} días",
+    "buyUnits": "Reposición sugerida: {count} unidades",
+    "reviewDemand": "Valida la demanda antes de comprar",
+    "morePriorities": "{count} productos adicionales en la tabla. Filtra por señal para revisarlos.",
+    "productsTitle": "Conoce el rendimiento de cada producto",
+    "productsHelp": "Separa las decisiones comerciales del control de existencias. Busca y ordena para explorar el detalle.",
+    "search": "Buscar producto, SKU o categoría",
+    "signal": "Señal",
+    "all": "Todas las señales",
+    "sort": "Ordenar por",
+    "results": "{count, plural, one {# producto encontrado} other {# productos encontrados}}",
+    "product": "Producto",
+    "units": "Unidades",
+    "stock": "Stock",
+    "coverage": "Cobertura",
+    "suggested": "Reponer",
+    "daysShort": "{count} d",
+    "noProducts": "Aún no hay productos. Crea tu catálogo para empezar a analizarlo.",
+    "noMatches": "Ningún producto coincide con los filtros.",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "page": "Página {current} de {total}",
+    "sorts": {
+      "revenue": "Mayores ventas",
+      "units": "Más vendidos",
+      "profit": "Mayor beneficio",
+      "coverage": "Menor cobertura",
+      "lowestProfit": "Menor beneficio"
+    },
+    "signals": {
+      "outOfStock": "Agotado",
+      "restock": "Reponer pronto",
+      "noSales": "Sin ventas",
+      "lowMargin": "Margen bajo",
+      "healthy": "Con movimiento",
+      "inactive": "Inactivo / archivado",
+      "variants": "Revisar variantes"
+    },
+    "methodology": "Cómo calculamos los indicadores",
+    "methodologyHelp": "Los supuestos son visibles para que decidas con contexto.",
+    "revenueMethod": "Solo pedidos pagados, en preparación, enviados o entregados, según su fecha de creación. Se excluyen pendientes, cancelados y reembolsados. Ventas netas = subtotales de productos menos descuentos, distribuidos proporcionalmente en unidades monetarias enteras; sin impuestos ni envío. El descuento se aplica primero a productos hasta agotar su subtotal; cualquier exceso corresponde a impuestos o envío y se excluye.",
+    "costMethod": "El beneficio y el margen son estimaciones con los costos actuales del catálogo: no hay costos históricos en los pedidos. No equivalen a utilidad contable ni incluyen comisiones o gastos operativos. El costo registrado en cero se utiliza como cero.",
+    "restockMethod": "Cobertura = stock / demanda media diaria, redondeada hacia abajo. Se alerta al agotarse o cubrir como máximo el plazo de entrega. Reposición = demanda del mayor entre cobertura objetivo y plazo de entrega, redondeada hacia arriba, menos stock. Sin ventas no se recomienda una cantidad. La estimación no incluye compras en tránsito, estacionalidad ni tiempo sin existencias.",
+    "signalsMethod": "La señal prioriza agotados, reposición, falta de ventas y después margen inferior al 20 %. La tabla permite ordenar por beneficio para identificar pérdidas. Productos inactivos o archivados conservan sus ventas, pero no generan recomendaciones de compra.",
+    "variantsMethod": "Los productos con variantes mantienen sus ventas y margen estimado con el costo del producto base. Su stock, cobertura y reposición requieren revisar las variantes y no se estiman con el stock base. Se excluyen del valor del inventario simple.",
+    "updated": "Datos consultados: {date} UTC.",
+    "loading": "Cargando inteligencia de negocio",
+    "errorTitle": "No pudimos cargar el análisis",
+    "errorHelp": "Ocurrió un problema al consultar los datos. Inténtalo de nuevo.",
+    "accessTitle": "Análisis no disponible",
+    "accessHelp": "Necesitas una membresía activa de propietario o administrador en esta tienda.",
+    "retry": "Reintentar",
+    "filterHint": "Elige un período. Ajusta la reposición solo cuando necesites cambiar tus supuestos.",
+    "updating": "Actualizando…",
+    "restockSettings": "Ajustes de reposición",
+    "scenarioSummary": "Entrega: {lead} días · Objetivo: {coverage} días",
+    "leadHelp": "¿Cuántos días tarda en llegar un pedido de tu proveedor?",
+    "coverageSettingHelp": "¿Para cuántos días de venta quieres tener existencias?",
+    "chartMetric": "Indicador del gráfico",
+    "chartMetrics": {
+      "revenue": "Ventas",
+      "profit": "Beneficio",
+      "units": "Unidades"
+    },
+    "legend": "Leyenda del gráfico",
+    "currentPeriod": "Período actual",
+    "previousPeriod": "Período anterior",
+    "comparisonHelp": "Barras: cada día del período actual. Línea discontinua: día equivalente del período anterior. Consulta los valores exactos al interactuar o en la tabla.",
+    "rankingTitle": "Productos que impulsan tus ventas",
+    "rankingHelp": "Los 5 primeros, ordenados por ventas o unidades.",
+    "rankingMetric": "Orden del ranking",
+    "rankingEmpty": "Cuando tengas ventas aparecerán aquí tus productos destacados.",
+    "rankingSalesUnit": "Importes en {currency}, después de descuentos.",
+    "rankingUnitsUnit": "Número de unidades vendidas.",
+    "rankingDetails": "Ver nombres y valores completos",
+    "appliedPeriod": "Del {from} al {to}",
+    "completeDays": "Días completos · UTC · Sin incluir hoy",
+    "viewPriorities": "Ver qué reponer",
+    "priorityCount": "{count, plural, =0 {Sin alertas} one {# producto por revisar} other {# productos por revisar}}",
+    "reviewProduct": "Revisar producto",
+    "catalogView": "Vista del catálogo",
+    "performanceView": "Rendimiento",
+    "inventoryView": "Inventario",
+    "inventoryViewHelp": "Cobertura y reposición estimadas con los ajustes seleccionados. Revisa las variantes por separado."
+  },
   "AdminOverview": {
     "title": "Resumen",
     "metadata": "Resumen de tu tienda | Canal Digital",
@@ -68,7 +189,8 @@
     "createCategory": "Crear categoría",
     "demoTitle": "Resumen de ejemplo",
     "demoDescription": "Las métricas, el gráfico y la tabla de esta vista son una demostración y no representan la actividad de tu tienda.",
-    "integrations": "Integraciones"
+    "integrations": "Integraciones",
+    "businessIntelligence": "Business Intelligence"
   },
   "Sidebar": {
     "title": "Canal Digital",
@@ -614,6 +736,71 @@
       "description": "La descripción no debe superar los 255 caracteres."
     }
   },
+  "KiviConnection": {
+    "title": "Integración con Kivi",
+    "subtitle": "Conecta tu tienda con Kivi para mantener tu catálogo sincronizado, sin configurar nada técnico.",
+    "notConnectedTitle": "Conecta tu tienda con Kivi",
+    "notConnectedHelp": "Solo necesitas un código de vinculación generado en Kivi.",
+    "steps": {
+      "one": "En Kivi: Integraciones → Conectar aplicación → Generar código.",
+      "two": "Copia el código (empieza por kvp_).",
+      "three": "Pégalo aquí y pulsa Conectar. Es de un solo uso y caduca pronto."
+    },
+    "code": "Código de vinculación",
+    "codeHelp": "Empieza por kvp_. No pegues aquí ningún token de conexión.",
+    "connect": "Conectar",
+    "connecting": "Conectando…",
+    "ownerOnly": "Solo el propietario de la tienda puede gestionar esta conexión.",
+    "status": "Estado",
+    "lastSync": "Última sincronización completa",
+    "never": "Aún no se ha sincronizado",
+    "states": {
+      "pending": {
+        "title": "Conectando",
+        "badge": "Carga inicial en curso",
+        "help": "La tienda está conectada. Estamos enviando tu catálogo a Kivi; puede tardar unos minutos."
+      },
+      "active": {
+        "title": "Conectada",
+        "badge": "Conectada",
+        "help": "Tu catálogo se mantiene sincronizado automáticamente."
+      },
+      "needs_reconcile": {
+        "title": "Necesita atención",
+        "badge": "Sincronización pendiente",
+        "help": "Tu catálogo puede estar desactualizado en Kivi. Pulsa Sincronizar ahora para ponerlo al día."
+      }
+    },
+    "legacyNote": "Esta conexión usa un token configurado manualmente en el servidor. Desconéctala y vuelve a conectar con un código para gestionarla desde aquí.",
+    "syncNow": "Sincronizar ahora",
+    "syncing": "Solicitando…",
+    "syncNowHelp": "La sincronización se ejecuta en segundo plano en el próximo ciclo.",
+    "disconnect": "Desconectar",
+    "disconnectTitle": "¿Desconectar de Kivi?",
+    "disconnectConfirm": "Dejaremos de sincronizar tu catálogo y revocaremos el acceso en Kivi. Podrás conectar de nuevo con un código nuevo.",
+    "disconnectAction": "Sí, desconectar",
+    "disconnecting": "Desconectando…",
+    "cancel": "Cancelar",
+    "paired": "Tienda conectada. La carga inicial del catálogo comenzará en breve.",
+    "unlinked": "Tu tienda se desconectó de Kivi.",
+    "syncRequested": "Sincronización solicitada. Se procesará en el próximo ciclo.",
+    "unauthorized": "Debes iniciar sesión con una tienda activa para gestionar la integración.",
+    "forbidden": "Solo el propietario de la tienda puede gestionar la conexión con Kivi.",
+    "notLinked": "La tienda no tiene una conexión con Kivi.",
+    "invalidInput": "Revisa el código de vinculación.",
+    "unexpected": "No se pudo completar la acción. Inténtalo de nuevo.",
+    "errors": {
+      "invalidOrExpired": "El código no es válido o ya caducó. Genera uno nuevo en Kivi e inténtalo otra vez.",
+      "rateLimited": "Demasiados intentos. Espera unos minutos antes de volver a intentarlo.",
+      "unavailable": "No pudimos comunicarnos con Kivi. Inténtalo de nuevo en unos minutos.",
+      "notConfigured": "La integración con Kivi aún no está disponible en esta plataforma. Contacta a soporte."
+    },
+    "validation": {
+      "codeRequired": "Ingresa el código de vinculación.",
+      "codeFormat": "El código debe empezar por kvp_. Cópialo completo desde Kivi.",
+      "codeIsToken": "Eso parece un token de conexión (kc_). Pega aquí el código de vinculación (kvp_) generado en Kivi."
+    }
+  },
   "NotFound": {
     "brand": "Canal Digital",
     "code": "Error 404 · Página no encontrada",
@@ -809,70 +996,5 @@
     "errorDescription": "Vuelve a intentarlo o regresa al resumen de tu tienda.",
     "retry": "Reintentar",
     "back": "Ir al resumen"
-  },
-  "KiviConnection": {
-    "title": "Integración con Kivi",
-    "subtitle": "Conecta tu tienda con Kivi para mantener tu catálogo sincronizado, sin configurar nada técnico.",
-    "notConnectedTitle": "Conecta tu tienda con Kivi",
-    "notConnectedHelp": "Solo necesitas un código de vinculación generado en Kivi.",
-    "steps": {
-      "one": "En Kivi: Integraciones → Conectar aplicación → Generar código.",
-      "two": "Copia el código (empieza por kvp_).",
-      "three": "Pégalo aquí y pulsa Conectar. Es de un solo uso y caduca pronto."
-    },
-    "code": "Código de vinculación",
-    "codeHelp": "Empieza por kvp_. No pegues aquí ningún token de conexión.",
-    "connect": "Conectar",
-    "connecting": "Conectando…",
-    "ownerOnly": "Solo el propietario de la tienda puede gestionar esta conexión.",
-    "status": "Estado",
-    "lastSync": "Última sincronización completa",
-    "never": "Aún no se ha sincronizado",
-    "states": {
-      "pending": {
-        "title": "Conectando",
-        "badge": "Carga inicial en curso",
-        "help": "La tienda está conectada. Estamos enviando tu catálogo a Kivi; puede tardar unos minutos."
-      },
-      "active": {
-        "title": "Conectada",
-        "badge": "Conectada",
-        "help": "Tu catálogo se mantiene sincronizado automáticamente."
-      },
-      "needs_reconcile": {
-        "title": "Necesita atención",
-        "badge": "Sincronización pendiente",
-        "help": "Tu catálogo puede estar desactualizado en Kivi. Pulsa Sincronizar ahora para ponerlo al día."
-      }
-    },
-    "legacyNote": "Esta conexión usa un token configurado manualmente en el servidor. Desconéctala y vuelve a conectar con un código para gestionarla desde aquí.",
-    "syncNow": "Sincronizar ahora",
-    "syncing": "Solicitando…",
-    "syncNowHelp": "La sincronización se ejecuta en segundo plano en el próximo ciclo.",
-    "disconnect": "Desconectar",
-    "disconnectTitle": "¿Desconectar de Kivi?",
-    "disconnectConfirm": "Dejaremos de sincronizar tu catálogo y revocaremos el acceso en Kivi. Podrás conectar de nuevo con un código nuevo.",
-    "disconnectAction": "Sí, desconectar",
-    "disconnecting": "Desconectando…",
-    "cancel": "Cancelar",
-    "paired": "Tienda conectada. La carga inicial del catálogo comenzará en breve.",
-    "unlinked": "Tu tienda se desconectó de Kivi.",
-    "syncRequested": "Sincronización solicitada. Se procesará en el próximo ciclo.",
-    "unauthorized": "Debes iniciar sesión con una tienda activa para gestionar la integración.",
-    "forbidden": "Solo el propietario de la tienda puede gestionar la conexión con Kivi.",
-    "notLinked": "La tienda no tiene una conexión con Kivi.",
-    "invalidInput": "Revisa el código de vinculación.",
-    "unexpected": "No se pudo completar la acción. Inténtalo de nuevo.",
-    "errors": {
-      "invalidOrExpired": "El código no es válido o ya caducó. Genera uno nuevo en Kivi e inténtalo otra vez.",
-      "rateLimited": "Demasiados intentos. Espera unos minutos antes de volver a intentarlo.",
-      "unavailable": "No pudimos comunicarnos con Kivi. Inténtalo de nuevo en unos minutos.",
-      "notConfigured": "La integración con Kivi aún no está disponible en esta plataforma. Contacta a soporte."
-    },
-    "validation": {
-      "codeRequired": "Ingresa el código de vinculación.",
-      "codeFormat": "El código debe empezar por kvp_. Cópialo completo desde Kivi.",
-      "codeIsToken": "Eso parece un token de conexión (kc_). Pega aquí el código de vinculación (kvp_) generado en Kivi."
-    }
   }
 }

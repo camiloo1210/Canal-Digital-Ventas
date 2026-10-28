@@ -320,3 +320,11 @@ export { PostgresKiviConnectionReadRepository } from '@/kivi/infrastructure/post
 export { PostgresKiviConnectionRepository } from '@/kivi/infrastructure/postgres-kivi-connection.repository';
 export { loadKiviSyncWorkerConfig } from '@/kivi/infrastructure/kivi-sync-worker-config';
 export { runKiviSyncWorker } from '@/kivi/infrastructure/kivi-sync-worker';
+export type {
+  BusinessIntelligenceReport,
+  IntelligenceQuery,
+  IntelligenceProductResult,
+  IntelligenceSignal,
+} from '@/dashboard/domain/business-intelligence';
+export type { BusinessIntelligenceReadPort } from '@/dashboard/application/ports/out/business-intelligence-read.port';
+export { PostgresBusinessIntelligenceReadAdapter } from '@/dashboard/infrastructure/postgres-business-intelligence-read.adapter';
