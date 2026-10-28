@@ -7,6 +7,8 @@ import { resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+class MessagingVerificationException extends Error {}
+
 const root = fileURLToPath(new URL('../../../', import.meta.url));
 const compose = ['compose', '--env-file', 'apps/worker/.env', '-f', 'compose.rabbitmq.yml'];
 const suffix = randomUUID();
@@ -31,7 +33,9 @@ function run(args, required = true, timeout = 30000) {
   const result = spawnSync('docker', args, { cwd: root, encoding: 'utf8', timeout, shell: false });
   if (required && (result.error || result.status !== 0)) {
     // No vendor payloads or container environment are printed.
-    throw new Error(`Docker ${args[0]} ${args[1] ?? ''} failed during isolated verification.`);
+    throw new MessagingVerificationException(
+      `Docker ${args[0]} ${args[1] ?? ''} failed during isolated verification.`,
+    );
   }
   return result;
 }
@@ -42,7 +46,7 @@ function snapshot() {
     .stdout.trim()
     .split(/\s+/)
     .filter(Boolean);
-  assert.equal(ids.length, 10, 'Start all ten services before verification');
+  assert.equal(ids.length, 11, 'Start all eleven services before verification');
   return run(['inspect', '--format', inspection, ...ids])
     .stdout.trim()
     .split('\n')
@@ -154,7 +158,7 @@ async function main() {
     );
     total += container.memory;
   }
-  assert.equal(total, 3072 * mib);
+  assert.equal(total, 3328 * mib);
   const image = before.find((container) => container.service === 'outbox-worker').image;
   const rabbitImage = before.find((container) => container.service === 'rabbitmq').image;
   evidence.checks.effectiveLimits = {
@@ -163,7 +167,7 @@ async function main() {
     swap: 0,
     publicPorts: 0,
   };
-  console.log('PASS: effective limits of all ten running services');
+  console.log('PASS: effective limits of all eleven running services');
 
   if (process.argv.includes('--build')) {
     const { build } = await import(

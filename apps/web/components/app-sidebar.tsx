@@ -4,7 +4,16 @@ import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { LayoutDashboard, Package, Tags, ShoppingCart, Paintbrush, Store } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Package,
+  Tags,
+  ShoppingCart,
+  Paintbrush,
+  Plug,
+  Store,
+  ChartNoAxesCombined,
+} from 'lucide-react';
 import { NavUser } from '@/components/nav-user';
 import {
   Sidebar,
@@ -26,10 +35,12 @@ import {
 
 const icons = {
   overview: LayoutDashboard,
+  businessIntelligence: ChartNoAxesCombined,
   orders: ShoppingCart,
   products: Package,
   categories: Tags,
   store: Paintbrush,
+  integrations: Plug,
 };
 
 interface DashboardSidebarUser {
