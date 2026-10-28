@@ -1044,6 +1044,10 @@
     "notificationScope": "This link cannot send notifications. In Kivi, generate a new code with messaging enabled and link this store again.",
     "notificationUnavailable": "Settings could not be loaded. Check the connection and that Kivi is updated. If linked without messaging, generate a new code with that option.",
     "workerEnabled": "Enabled in configuration",
+    "statusReady": "Working",
+    "statusNoChannels": "No channels enabled",
+    "statusNeedsWhatsApp": "WhatsApp not connected",
+    "statusUnavailable": "Status not checked",
     "workerDisabled": "Activation pending",
     "workerHelp": "The operator must enable Kivi notification processing before notifications can be sent. Saving these preferences does not enable the processor.",
     "eventHelp": "Includes confirmed, paid, processing, shipped, delivered and cancelled orders. Widget notifications appear in history when the customer checks it again."

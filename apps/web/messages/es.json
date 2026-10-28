@@ -1046,6 +1046,10 @@
     "notificationScope": "Esta vinculación no permite enviar avisos. En Kivi, genera un nuevo código con la opción de mensajería y vuelve a vincular esta tienda.",
     "notificationUnavailable": "No se pudieron consultar los ajustes. Comprueba la conexión y que Kivi esté actualizado. Si vinculaste sin mensajería, genera un nuevo código con esa opción.",
     "workerEnabled": "Habilitado por configuración",
+    "statusReady": "Funcional",
+    "statusNoChannels": "Sin canales activos",
+    "statusNeedsWhatsApp": "Falta conectar WhatsApp",
+    "statusUnavailable": "Estado sin consultar",
     "workerDisabled": "Activación pendiente",
     "workerHelp": "El operador debe habilitar el procesador de notificaciones de Kivi antes de enviar avisos. Guardar estas preferencias no lo activa.",
     "eventHelp": "Incluye pedidos confirmados, pagados, en preparación, en envío, entregados y cancelados. Los avisos del widget aparecen en el historial cuando el cliente lo consulta de nuevo."
