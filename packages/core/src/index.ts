@@ -284,3 +284,47 @@ export type { ProductReadRepositoryPort } from '@/products/application/ports/out
 export type { CategoryReadRepositoryPort } from '@/categories/application/ports/out/category-read-repository.port';
 
 export type { SellerOrderFilters } from '@/orders/application/read-models/seller-order.read-model';
+
+// Kivi connector: store <-> Kivi link use cases (web) and the catalog sync worker.
+export { LinkStoreToKiviUseCase } from '@/kivi/application/use-cases/link-store-to-kivi.use-case';
+export { UnlinkStoreFromKiviUseCase } from '@/kivi/application/use-cases/unlink-store-from-kivi.use-case';
+export { PairStoreWithKiviUseCase } from '@/kivi/application/use-cases/pair-store-with-kivi.use-case';
+export type { UnlinkStoreFromKiviDependencies } from '@/kivi/application/use-cases/unlink-store-from-kivi.use-case';
+export { InvalidKiviPairingCodeException } from '@/kivi/application/exceptions/invalid-kivi-pairing-code.exception';
+export {
+  KiviPairingException,
+  type KiviPairingFailure,
+} from '@/kivi/application/exceptions/kivi-pairing.exception';
+export { KiviConfigurationException } from '@/kivi/infrastructure/kivi-configuration.exception';
+export { HttpKiviPairingGateway } from '@/kivi/infrastructure/http-kivi-pairing.gateway';
+export {
+  loadKiviPlatformConfig,
+  type KiviPlatformConfig,
+} from '@/kivi/infrastructure/kivi-platform-config';
+export type {
+  LinkStoreToKiviDto,
+  PairStoreWithKiviDto,
+  UnlinkStoreFromKiviDto,
+} from '@/kivi/application/dtos/kivi-connection.dto';
+export type { KiviConnectionRepositoryPort } from '@/kivi/application/ports/out/kivi-connection-repository.port';
+export { KiviLinkForbiddenException } from '@/kivi/application/exceptions/kivi-link-forbidden.exception';
+export { KiviConnectionNotFoundException } from '@/kivi/application/exceptions/kivi-connection-not-found.exception';
+export { InvalidKiviConnectionException } from '@/kivi/domain/exceptions/invalid-kivi-connection.exception';
+export { RequestKiviSyncUseCase } from '@/kivi/application/use-cases/request-kivi-sync.use-case';
+export type { RequestKiviSyncDto } from '@/kivi/application/dtos/kivi-connection.dto';
+export type {
+  KiviConnectionReadModel,
+  KiviConnectionReadRepositoryPort,
+} from '@/kivi/application/ports/out/kivi-connection-read.port';
+export { PostgresKiviConnectionReadRepository } from '@/kivi/infrastructure/postgres-kivi-connection-read.repository';
+export { PostgresKiviConnectionRepository } from '@/kivi/infrastructure/postgres-kivi-connection.repository';
+export { loadKiviSyncWorkerConfig } from '@/kivi/infrastructure/kivi-sync-worker-config';
+export { runKiviSyncWorker } from '@/kivi/infrastructure/kivi-sync-worker';
+export type {
+  BusinessIntelligenceReport,
+  IntelligenceQuery,
+  IntelligenceProductResult,
+  IntelligenceSignal,
+} from '@/dashboard/domain/business-intelligence';
+export type { BusinessIntelligenceReadPort } from '@/dashboard/application/ports/out/business-intelligence-read.port';
+export { PostgresBusinessIntelligenceReadAdapter } from '@/dashboard/infrastructure/postgres-business-intelligence-read.adapter';

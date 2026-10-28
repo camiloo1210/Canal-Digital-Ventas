@@ -8,6 +8,7 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@/scripts/*": ["scripts/*"],
       "@/dashboard/*": ["src/features/dashboard/*"],
       "@/shared/*": ["src/features/shared/*"],
       "@/products/*": ["src/features/products/*"],
@@ -19,7 +20,8 @@
       "@/tenants/*": ["src/features/tenants/*"],
       "@/iam/*": ["src/features/iam/*"],
       "@/sales/*": ["src/features/sales/*"],
-      "@/notifications/*": ["src/features/notifications/*"]
+      "@/notifications/*": ["src/features/notifications/*"],
+      "@/kivi/*": ["src/features/kivi/*"]
     },
     "types": ["node"]
   }

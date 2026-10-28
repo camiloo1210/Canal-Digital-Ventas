@@ -16,6 +16,7 @@
       "@/iam/*": ["src/features/iam/*"],
       "@/sales/*": ["src/features/sales/*"],
       "@/notifications/*": ["src/features/notifications/*"],
+      "@/kivi/*": ["src/features/kivi/*"],
       "@/messages/*": ["../../apps/web/messages/*"],
       "@/worker/*": ["../../apps/worker/src/*"]
     },

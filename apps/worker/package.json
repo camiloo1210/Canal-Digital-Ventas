@@ -9,6 +9,7 @@
     "start": "tsx --tsconfig tsconfig.json src/main.ts",
     "notifications": "tsx --tsconfig tsconfig.json src/notifications.ts",
     "notifications:preview": "tsx --tsconfig tsconfig.json src/preview-notifications.ts",
+    "kivi-sync": "tsx --tsconfig tsconfig.json src/kivi-sync.ts",
     "payments": "tsx --tsconfig tsconfig.json src/payments.ts",
     "payment-orders": "tsx --tsconfig tsconfig.json src/payment-orders.ts",
     "payment-relay": "tsx --tsconfig tsconfig.json src/payment-relay.ts",

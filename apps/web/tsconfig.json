@@ -29,7 +29,8 @@
       "@/iam/*": ["../../packages/core/src/features/iam/*"],
       "@/tenants/*": ["../../packages/core/src/features/tenants/*"],
       "@/sales/*": ["../../packages/core/src/features/sales/*"],
-      "@/notifications/*": ["../../packages/core/src/features/notifications/*"]
+      "@/notifications/*": ["../../packages/core/src/features/notifications/*"],
+      "@/kivi/*": ["../../packages/core/src/features/kivi/*"]
     }
   },
   "include": [

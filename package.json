@@ -8,12 +8,14 @@
     "test": "vitest run --passWithNoTests",
     "worker:outbox": "pnpm --filter @canaldigital/worker start",
     "worker:notifications": "pnpm --filter @canaldigital/worker notifications",
+    "worker:kivi-sync": "pnpm --filter @canaldigital/worker kivi-sync",
     "messaging:build": "node apps/worker/docker/messaging.mjs build",
     "messaging:up": "node apps/worker/docker/messaging.mjs up",
     "messaging:verify": "node apps/worker/docker/verify.mjs",
     "messaging:logs": "docker compose --env-file apps/worker/.env -f compose.rabbitmq.yml logs -f",
     "messaging:down": "docker compose --env-file apps/worker/.env -f compose.rabbitmq.yml down",
-    "commit": "cz"
+    "commit": "cz",
+    "kivi:provision-login": "node packages/core/scripts/provision-kivi-sync-login.mjs"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
