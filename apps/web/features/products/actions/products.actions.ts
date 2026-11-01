@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { invalidateActiveTenantCatalog } from '@/features/store/utils/catalog-invalidation';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { DomainException, ApplicationException } from '@canaldigital/packages/core';
@@ -143,6 +144,7 @@ async function saveProduct(
     } else {
       await getCreateProductUseCase().execute({ ...dto, id: crypto.randomUUID() });
     }
+    await invalidateActiveTenantCatalog(user.id);
   } catch (error: unknown) {
     return { ...rejected, ...productFailure(error, t) };
   }
@@ -177,6 +179,7 @@ async function changeProductArchive(id: string, restore: boolean): Promise<Actio
     if (!tenantId) return { success: false, error: t('tenantUnavailable') };
     const useCase = restore ? getUnarchiveProductUseCase() : getArchiveProductUseCase();
     await useCase.execute({ id, tenantId });
+    await invalidateActiveTenantCatalog(user.id);
   } catch (error: unknown) {
     return { success: false, error: productFailure(error, t).error };
   }

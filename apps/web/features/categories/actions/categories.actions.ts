@@ -2,6 +2,7 @@
 
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
+import { invalidateActiveTenantCatalog } from '@/features/store/utils/catalog-invalidation';
 import { DomainException, ApplicationException } from '@canaldigital/packages/core';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
@@ -87,6 +88,7 @@ export async function createCategoryAction(
       status: 'active',
     });
 
+    await invalidateActiveTenantCatalog(user.id);
     isSuccess = true;
   } catch (error: unknown) {
     if (error instanceof DomainException || error instanceof ApplicationException) {
@@ -178,6 +180,7 @@ export async function updateCategoryAction(
       description: parsed.data.description,
     });
 
+    await invalidateActiveTenantCatalog(user.id);
     isSuccess = true;
   } catch (error: unknown) {
     if (error instanceof DomainException || error instanceof ApplicationException) {
@@ -232,6 +235,7 @@ export async function archiveCategoryAction(
       tenantId,
     });
 
+    await invalidateActiveTenantCatalog(user.id);
     isSuccess = true;
   } catch (error: unknown) {
     console.error('Critical Server Exception:', error);
@@ -275,6 +279,7 @@ export async function unarchiveCategoryAction(
       tenantId,
     });
 
+    await invalidateActiveTenantCatalog(user.id);
     isSuccess = true;
   } catch (error: unknown) {
     console.error('Critical Server Exception:', error);

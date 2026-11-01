@@ -139,13 +139,17 @@ export class HttpKiviCatalogGateway implements KiviCatalogGatewayPort {
     return new KiviGatewayException(failure, status, retryAfterMs);
   }
 
-  private async request(
+  protected async request(
     target: KiviTarget,
-    method: 'GET' | 'PUT' | 'DELETE',
+    method: 'GET' | 'PUT' | 'DELETE' | 'POST',
     path: string,
     body?: unknown,
     notFoundIsNull: boolean = false,
   ): Promise<unknown> {
+    if (
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(target.connectionId)
+    )
+      throw this.fail('rejected', 0);
     let origin: string;
     try {
       origin = KiviBaseUrl.from(target.baseUrl, this.urlOptions).getValue();

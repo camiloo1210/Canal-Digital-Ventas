@@ -2,6 +2,7 @@
 
 import { getTranslations } from 'next-intl/server';
 import { z } from 'zod';
+import { authenticationLimitMessage } from '@/lib/security/authentication-rate-limit';
 import { getSignInWithEmailUseCase, getGetOAuthSignInUrlUseCase } from '@/features/iam/di/iam.di';
 import { InvalidCredentialsException } from '@canaldigital/packages/core';
 import { redirect } from 'next/navigation';
@@ -22,7 +23,8 @@ export async function loginWithEmailAction(
   prevState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  // TODO: Add rate-limiting here (e.g., via upstash/ratelimit to prevent brute force attacks)
+  const limitMessage = await authenticationLimitMessage();
+  if (limitMessage) return { success: false, error: limitMessage };
 
   const t = await getTranslations('Storefront.auth.errors');
   const email = formData.get('email');
@@ -80,8 +82,11 @@ async function setOAuthIntentCookie(intent: 'business' | 'customer'): Promise<vo
 }
 
 export async function loginWithGoogleAction(formData?: FormData): Promise<void> {
-  await setOAuthIntentCookie('customer');
   const returnPath = safeAuthReturnPath(formData?.get('redirectTo'));
+  if (await authenticationLimitMessage()) {
+    redirect(`${buyerAuthHref('/login', returnPath)}&error=rate_limited`);
+  }
+  await setOAuthIntentCookie('customer');
   const cookieStore = await cookies();
   if (formData?.get('redirectTo'))
     cookieStore.set(OAUTH_RETURN_COOKIE, returnPath, {
@@ -122,6 +127,7 @@ export async function loginWithGoogleAction(formData?: FormData): Promise<void> 
 }
 
 export async function loginBusinessWithGoogleAction(): Promise<void> {
+  if (await authenticationLimitMessage()) redirect('/signup/business?error=rate_limited');
   await setOAuthIntentCookie('business');
   (await cookies()).delete(OAUTH_RETURN_COOKIE);
 

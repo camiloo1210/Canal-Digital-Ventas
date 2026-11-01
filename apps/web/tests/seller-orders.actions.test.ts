@@ -10,10 +10,14 @@ import {
   OptimisticConcurrencyException,
 } from '@canaldigital/packages/core';
 
+import { invalidateActiveTenantCatalog } from '@/features/store/utils/catalog-invalidation';
 vi.mock('next-intl/server', (): object => ({
   getTranslations: vi.fn().mockResolvedValue((key: string): string => key),
 }));
 vi.mock('next/cache', (): object => ({ revalidatePath: vi.fn() }));
+vi.mock('@/features/store/utils/catalog-invalidation', (): object => ({
+  invalidateActiveTenantCatalog: vi.fn(),
+}));
 vi.mock('@/lib/supabase/server', (): object => ({ createClient: vi.fn() }));
 vi.mock('@/features/iam/queries/active-tenant.query', (): object => ({
   getActiveTenantQuery: vi.fn(),
@@ -69,6 +73,7 @@ describe('seller order status action security', (): void => {
     data.set('authenticatedSellerId', crypto.randomUUID());
     const result = await changeOrderStatusAction({ success: false, errorCode: null }, data);
     expect(result.success).toBe(true);
+    expect(invalidateActiveTenantCatalog).toHaveBeenCalledWith(actor);
     expect(execute).toHaveBeenCalledWith({
       orderId,
       status: 'processing',

@@ -5,6 +5,7 @@ import { getOnboardTenantUseCase } from '@/features/iam/di/iam.di';
 import { DomainException, ApplicationException } from '@canaldigital/packages/core';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { authenticationLimitMessage } from '@/lib/security/authentication-rate-limit';
 
 export type ActionState = {
   success: boolean;
@@ -26,6 +27,9 @@ export async function onboardBusinessAction(
   prevState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
+  const limitMessage = await authenticationLimitMessage();
+  if (limitMessage) return { success: false, error: limitMessage };
+
   // 1. Zod parses ONLY form data (name, store, etc.).
   const parsed = onboardingSchema.safeParse(Object.fromEntries(formData));
 

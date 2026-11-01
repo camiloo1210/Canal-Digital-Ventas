@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { lookup } from 'node:dns/promises';
 import type { KiviTarget } from '@/kivi/application/ports/out/kivi-catalog-gateway.port';
 import type {
@@ -107,6 +108,8 @@ export class HttpKiviPairingGateway implements KiviPairingGatewayPort {
     }
     await this.assertPublicHost(origin);
 
+    const requestId = randomUUID();
+    const startedAt = performance.now();
     const abort = new AbortController();
     const timer = setTimeout((): void => abort.abort(), this.timeoutMs);
     try {
@@ -118,16 +121,27 @@ export class HttpKiviPairingGateway implements KiviPairingGatewayPort {
         signal: abort.signal,
         headers: {
           Accept: 'application/json',
+          'X-Request-ID': requestId,
           ...(options.body === undefined ? {} : { 'Content-Type': 'application/json' }),
           ...(options.bearer === undefined ? {} : { Authorization: `Bearer ${options.bearer}` }),
         },
         ...(options.body === undefined ? {} : { body: JSON.stringify(options.body) }),
       });
+      console.info('[Kivi] Response received', {
+        requestId,
+        status: response.status,
+        elapsedMs: Math.round(performance.now() - startedAt),
+      });
       if (!response.ok) throw new KiviPairingException(this.classify(response.status));
       return response;
     } catch (error: unknown) {
       if (error instanceof KiviPairingException) throw error;
-      // Network failure, abort (timeout) or blocked redirect.
+      // Deliberately omit exception messages/causes: vendors may echo credentials.
+      console.warn('[Kivi] Request failed', {
+        requestId,
+        elapsedMs: Math.round(performance.now() - startedAt),
+        outcome: abort.signal.aborted ? 'timeout' : 'network_or_redirect',
+      });
       throw new KiviPairingException('unavailable');
     } finally {
       clearTimeout(timer);

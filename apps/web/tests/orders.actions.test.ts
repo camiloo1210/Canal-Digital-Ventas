@@ -2,6 +2,7 @@ import { test, expect, vi, describe, beforeEach } from 'vitest';
 import { cancelOrderAction } from '@/features/orders/actions/cancel-order.actions';
 import { ordersDi } from '@/features/orders/di/orders.di';
 import * as supabaseServer from '@/lib/supabase/server';
+import { invalidateBuyerOrderCatalog } from '@/features/orders/utils/invalidate-order-catalog';
 
 vi.mock('next-intl/server', () => ({
   getTranslations: vi.fn().mockResolvedValue((key: string): string => key),
@@ -13,6 +14,10 @@ vi.mock('next/cache', () => ({
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
+}));
+
+vi.mock('@/features/orders/utils/invalidate-order-catalog', () => ({
+  invalidateBuyerOrderCatalog: vi.fn(),
 }));
 
 vi.mock('@/features/orders/di/orders.di', () => ({
@@ -87,6 +92,7 @@ describe('cancelOrderAction Security & Error Mapping', () => {
 
     expect(result.success).toBe(true);
     expect(result.errorCode).toBeNull();
+    expect(invalidateBuyerOrderCatalog).toHaveBeenCalledWith('buyer-auth-uuid', validOrderId);
     expect(mockExecute).toHaveBeenCalledTimes(1);
     expect(mockExecute).toHaveBeenCalledWith({
       orderId: validOrderId,
