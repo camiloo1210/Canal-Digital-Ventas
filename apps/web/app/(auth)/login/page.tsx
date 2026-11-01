@@ -8,12 +8,15 @@ export default async function LoginPage(props: {
 }): Promise<React.JSX.Element> {
   const searchParams = await props.searchParams;
   const t = await getTranslations('Storefront.auth');
+  const security = await getTranslations('Security');
   const message =
-    searchParams.error || searchParams.message
-      ? t('errors.oauth')
-      : searchParams.notice === 'confirmEmail'
-        ? t('confirmEmail')
-        : undefined;
+    searchParams.error === 'rate_limited'
+      ? security('rateLimited')
+      : searchParams.error || searchParams.message
+        ? t('errors.oauth')
+        : searchParams.notice === 'confirmEmail'
+          ? t('confirmEmail')
+          : undefined;
 
   return (
     <div className="grid min-h-svh lg:grid-cols-2">

@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { invalidateActiveTenantCatalog } from '@/features/store/utils/catalog-invalidation';
 import { getTranslations } from 'next-intl/server';
 import {
   DomainException,
@@ -52,6 +53,7 @@ export async function changeOrderStatusAction(
       tenantId,
       authenticatedSellerId: user.id,
     });
+    await invalidateActiveTenantCatalog(user.id);
     revalidatePath('/dashboard/orders');
     revalidatePath('/dashboard');
     revalidatePath('/');

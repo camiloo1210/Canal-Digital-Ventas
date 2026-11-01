@@ -125,16 +125,20 @@ export function KiviNotificationsPanel({
             </div>
             <div className="space-y-2">
               <Label htmlFor="notification-language">{t('templateLanguage')}</Label>
-              <select
+              <Input
                 id="notification-language"
                 name="language"
                 value={values.language}
                 onChange={(event): void => setValues({ ...values, language: event.target.value })}
-                className="min-h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
-              >
-                <option value="es">{t('spanish')}</option>
-                <option value="en">{t('english')}</option>
-              </select>
+                className="min-h-11"
+                maxLength={5}
+                autoComplete="off"
+                spellCheck={false}
+                aria-describedby="notification-language-help"
+              />
+              <p id="notification-language-help" className="text-sm text-muted-foreground">
+                {t('templateLanguageHelp')}
+              </p>
             </div>
             <Button type="submit" className="min-h-11">
               {pending ? t('working') : t('saveSettings')}

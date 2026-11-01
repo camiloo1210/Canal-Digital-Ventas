@@ -133,6 +133,7 @@ export type {
   PublicProductReadModel,
   PublicStockAvailability,
 } from '@/products/application/read-models/public-product-read.model';
+export type { PublicProductDetailReadModel } from '@/products/application/read-models/public-product-detail-read.model';
 export type {
   PublicProductFilters,
   PublicProductReadRepositoryPort,
@@ -314,5 +315,6 @@ export { HttpKiviNotificationSettingsGateway } from '@/kivi/infrastructure/http-
 export type {
   KiviMessagingReadPort,
   KiviMessagingStatus,
+  KiviDeliverySummary,
   KiviNotificationSettings,
 } from '@/kivi/application/ports/out/kivi-messaging.port';

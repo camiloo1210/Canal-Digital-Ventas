@@ -1,6 +1,7 @@
 'use server';
 
 import { z } from 'zod';
+import { authenticationLimitMessage } from '@/lib/security/authentication-rate-limit';
 import { redirect } from 'next/navigation';
 import { getRegisterGlobalIdentityUseCase } from '@/features/iam/di/iam.di';
 import { DomainException, ApplicationException } from '@canaldigital/packages/core';
@@ -15,6 +16,8 @@ export async function signupClientAction(
   prevState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
+  const limitMessage = await authenticationLimitMessage();
+  if (limitMessage) return { success: false, error: limitMessage };
   const email = formData.get('email');
   const password = formData.get('password');
   const tenantSlug = formData.get('tenantSlug'); // Optional: Which store they came from

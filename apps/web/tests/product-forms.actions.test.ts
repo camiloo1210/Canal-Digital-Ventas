@@ -33,6 +33,9 @@ vi.mock('@/features/iam/queries/active-tenant.query', (): object => ({
   getActiveTenantQuery: mocks.tenant,
 }));
 vi.mock('next/cache', (): object => ({ revalidatePath: vi.fn() }));
+vi.mock('@/features/store/utils/catalog-invalidation', (): object => ({
+  invalidateActiveTenantCatalog: vi.fn(),
+}));
 vi.mock('next/navigation', (): object => ({
   redirect: (): never => {
     throw new Error('NEXT_REDIRECT');

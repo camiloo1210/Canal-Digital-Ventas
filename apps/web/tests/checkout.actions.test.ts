@@ -3,6 +3,7 @@ import { submitCheckoutAction } from '@/features/checkout/actions/checkout.actio
 import { checkoutFields } from '@/features/checkout/schemas/checkout.schema';
 import { createClient } from '@/lib/supabase/server';
 import { checkoutDi } from '@/features/checkout/di/checkout.di';
+import { invalidatePublicCatalog } from '@/lib/cache/public-catalog-cache';
 
 vi.mock('next-intl/server', (): object => ({
   getTranslations: vi.fn().mockResolvedValue((key: string): string => key),
@@ -10,6 +11,9 @@ vi.mock('next-intl/server', (): object => ({
 vi.mock('@/lib/supabase/server', (): object => ({ createClient: vi.fn() }));
 vi.mock('@/features/checkout/di/checkout.di', (): object => ({
   checkoutDi: { resolveGenerateCommercialOrderUseCase: vi.fn() },
+}));
+vi.mock('@/lib/cache/public-catalog-cache', (): object => ({
+  invalidatePublicCatalog: vi.fn(),
 }));
 const execute = vi.fn();
 const buyerId = crypto.randomUUID();
@@ -84,6 +88,7 @@ describe('checkout adapter validation and retention', (): void => {
     const result = await submitCheckoutAction('store', { success: false, errorCode: null }, data);
     expect(result.success).toBe(true);
     expect(result.values).toBeUndefined();
+    expect(invalidatePublicCatalog).toHaveBeenCalledWith('store');
     expect(execute).toHaveBeenCalledWith({
       buyerId,
       tenantSlug: 'store',

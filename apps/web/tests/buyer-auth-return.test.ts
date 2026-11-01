@@ -1,3 +1,4 @@
+vi.mock('server-only', (): object => ({}));
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { loginWithEmailAction, loginWithGoogleAction } from '@/features/iam/actions/login.actions';
 import { GET } from '@/app/auth/callback/route';

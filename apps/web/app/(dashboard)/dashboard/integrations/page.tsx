@@ -8,6 +8,7 @@ import {
 import { KiviConnectionPanel } from '@/features/kivi/components/kivi-connection-panel';
 import { KiviWhatsAppPanel } from '@/features/kivi/components/kivi-whatsapp-panel';
 import { KiviNotificationsPanel } from '@/features/kivi/components/kivi-notifications-panel';
+import { KiviDeliveriesPanel } from '@/features/kivi/components/kivi-deliveries-panel';
 import type { KiviMessagingStatus } from '@canaldigital/packages/core';
 import { PageHeader } from '@/components/page-header';
 
@@ -17,7 +18,7 @@ export default async function IntegrationsPage(): Promise<React.JSX.Element> {
   const { userId, tenantId } = await requireDashboardTenant();
   // Owner-only projection: null both when unlinked and when the user is not an owner.
   const connection = await getKiviConnectionReadRepository().findForOwner(userId, tenantId);
-  let messaging: KiviMessagingStatus = { channel: 'unavailable', settings: null };
+  let messaging: KiviMessagingStatus = { channel: 'unavailable', settings: null, deliveries: null };
   if (connection) {
     try {
       messaging = await getKiviMessagingReadRepository().findForOwner(userId, tenantId);
@@ -48,6 +49,7 @@ export default async function IntegrationsPage(): Promise<React.JSX.Element> {
             workerEnabled={process.env.KIVI_NOTIFICATIONS_ENABLED === 'true'}
             channel={messaging.channel}
           />
+          <KiviDeliveriesPanel deliveries={messaging.deliveries} />
         </NextIntlClientProvider>
       </div>
     </div>
