@@ -2,6 +2,7 @@
 
 import { getTranslations } from 'next-intl/server';
 import { z } from 'zod';
+import { authenticationLimitMessage } from '@/lib/security/authentication-rate-limit';
 import { redirect } from 'next/navigation';
 import {
   getRegisterGlobalIdentityUseCase,
@@ -29,6 +30,8 @@ export async function signupBusinessAction(
   prevState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
+  const limitMessage = await authenticationLimitMessage();
+  if (limitMessage) return { success: false, error: limitMessage };
   const data = Object.fromEntries(formData.entries());
   const validatedFields = signupSchema.safeParse(data);
 
@@ -110,6 +113,8 @@ export async function signupCustomerAction(
   prevState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
+  const limitMessage = await authenticationLimitMessage();
+  if (limitMessage) return { success: false, error: limitMessage };
   const t = await getTranslations('Storefront.auth.errors');
   const data = Object.fromEntries(formData.entries());
   const validatedFields = customerSignupSchema.safeParse(data);
