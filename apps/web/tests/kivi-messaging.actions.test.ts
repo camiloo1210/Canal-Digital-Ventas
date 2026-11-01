@@ -119,6 +119,31 @@ describe('Kivi messaging action boundary', (): void => {
     }
     expect(execute).not.toHaveBeenCalled();
   });
+  it.each(['es_CO', 'es_MX', 'en_US', 'en_GB'])(
+    'preserves the exact approved template locale %s',
+    async (language: string): Promise<void> => {
+      const result = await configureKiviNotificationsAction(
+        initial,
+        form({ whatsappEnabled: 'on', templateName: 'order_update', language }),
+      );
+      expect(result.success).toBe(true);
+      expect(execute).toHaveBeenCalledWith(expect.objectContaining({ language }));
+    },
+  );
+  it.each(['fr_FR', 'es-co', 'en_US\n', 'en_US<script>'])(
+    'rejects unsupported or malformed locale %s',
+    async (language: string): Promise<void> => {
+      expect(
+        (
+          await configureKiviNotificationsAction(
+            initial,
+            form({ templateName: 'order_update', language }),
+          )
+        ).success,
+      ).toBe(false);
+      expect(execute).not.toHaveBeenCalled();
+    },
+  );
   it('maps a removed notification connection to the localized recovery message', async (): Promise<void> => {
     execute.mockRejectedValue(new KiviConnectionNotFoundException());
     expect(
