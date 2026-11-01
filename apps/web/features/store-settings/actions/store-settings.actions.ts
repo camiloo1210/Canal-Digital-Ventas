@@ -2,6 +2,7 @@
 
 import { getTranslations } from 'next-intl/server';
 import { revalidatePath } from 'next/cache';
+import { invalidatePublicCatalog } from '@/lib/cache/public-catalog-cache';
 import {
   DomainException,
   OptimisticConcurrencyException,
@@ -116,6 +117,11 @@ export async function updateStoreSettingsAction(
     });
     committed = true;
     try {
+      await Promise.all(
+        [...new Set([current.slug, parsed.data.slug])].map((slug: string): Promise<void> =>
+          invalidatePublicCatalog(slug),
+        ),
+      );
       revalidatePath('/dashboard/store');
       revalidatePath(`/store/${current.slug}`, 'layout');
       if (parsed.data.slug !== current.slug) revalidatePath(`/store/${parsed.data.slug}`, 'layout');

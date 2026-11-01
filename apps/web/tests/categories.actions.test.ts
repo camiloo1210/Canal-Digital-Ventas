@@ -35,6 +35,9 @@ vi.mock('@canaldigital/packages/core', () => {
 });
 
 vi.mock('server-only', () => ({}));
+vi.mock('@/features/store/utils/catalog-invalidation', () => ({
+  invalidateActiveTenantCatalog: vi.fn(),
+}));
 vi.mock('@/lib/infrastructure/event-bus/in-memory-event.bus', () => ({
   InMemoryEventBus: vi.fn(),
 }));
