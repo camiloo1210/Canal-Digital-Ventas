@@ -16,6 +16,9 @@ vi.mock('next-intl/server', (): object => ({
   getTranslations: vi.fn().mockResolvedValue((key: string): string => key),
 }));
 vi.mock('next/cache', (): object => ({ revalidatePath: vi.fn() }));
+vi.mock('@/lib/cache/public-catalog-cache', (): object => ({
+  invalidatePublicCatalog: vi.fn(),
+}));
 vi.mock('@/lib/supabase/server', (): object => ({ createClient: vi.fn() }));
 vi.mock('@/features/iam/queries/active-tenant.query', (): object => ({
   getActiveTenantQuery: vi.fn(),

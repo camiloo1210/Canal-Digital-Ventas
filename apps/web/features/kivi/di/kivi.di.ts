@@ -1,6 +1,16 @@
 import 'server-only';
 import { sql } from '@/lib/postgres/server';
 import {
+  ConfigureKiviWhatsAppUseCase,
+  ConfigureKiviNotificationsUseCase,
+  KiviMessagingReadRepository,
+  HttpKiviNotificationSettingsGateway,
+  type KiviMessagingReadPort,
+  PostgresKiviStoreWidgetReadRepository,
+  type KiviStoreWidgetReadPort,
+  HttpKiviWhatsAppGateway,
+  KiviCredentialResolver,
+  EnvKiviSecretResolver,
   HttpKiviPairingGateway,
   KiviPairingException,
   PairStoreWithKiviUseCase,
@@ -14,11 +24,46 @@ import {
   type UnlinkStoreFromKiviDependencies,
 } from '@canaldigital/packages/core';
 
-/**
- * Loopback Kivi targets are a development convenience. The platform config rejects the flag in
- * production; reading rows must keep working even if the operator left it set, so the row
- * policy stays conservative.
- */
+export function getKiviStoreWidgetReadRepository(): KiviStoreWidgetReadPort {
+  const platform = loadKiviPlatformConfig(process.env);
+  return new PostgresKiviStoreWidgetReadRepository(
+    sql,
+    platform.cipher,
+    new HttpKiviNotificationSettingsGateway({ urlOptions: platform.urlOptions, timeoutMs: 1500 }),
+  );
+}
+
+export function getConfigureKiviWhatsAppUseCase(): ConfigureKiviWhatsAppUseCase {
+  const platform = loadKiviPlatformConfig(process.env);
+  return new ConfigureKiviWhatsAppUseCase(
+    new PostgresKiviConnectionRepository(platform.urlOptions),
+    new PostgresTransactionManagerAdapter(sql),
+    new KiviCredentialResolver(platform.cipher, new EnvKiviSecretResolver(process.env)),
+    new HttpKiviWhatsAppGateway({ urlOptions: platform.urlOptions }),
+  );
+}
+
+export function getConfigureKiviNotificationsUseCase(): ConfigureKiviNotificationsUseCase {
+  const platform = loadKiviPlatformConfig(process.env);
+  return new ConfigureKiviNotificationsUseCase(
+    new PostgresKiviConnectionRepository(platform.urlOptions),
+    new PostgresTransactionManagerAdapter(sql),
+    new KiviCredentialResolver(platform.cipher, new EnvKiviSecretResolver(process.env)),
+    new HttpKiviNotificationSettingsGateway({ urlOptions: platform.urlOptions }),
+  );
+}
+
+export function getKiviMessagingReadRepository(): KiviMessagingReadPort {
+  const platform = loadKiviPlatformConfig(process.env);
+  return new KiviMessagingReadRepository(
+    new PostgresKiviConnectionRepository(platform.urlOptions),
+    new PostgresTransactionManagerAdapter(sql),
+    new KiviCredentialResolver(platform.cipher, new EnvKiviSecretResolver(process.env)),
+    new HttpKiviNotificationSettingsGateway({ urlOptions: platform.urlOptions }),
+  );
+}
+
+// Keep local unlinking available when platform configuration is incomplete.
 function rowUrlOptions(): { allowLocalDevelopment: boolean } {
   return {
     allowLocalDevelopment:
@@ -30,7 +75,6 @@ export function getKiviConnectionReadRepository(): KiviConnectionReadRepositoryP
   return new PostgresKiviConnectionReadRepository(sql);
 }
 
-/** Throws KiviConfigurationException (fail closed) when KIVI_BASE_URL or the key are missing. */
 export function getPairStoreWithKiviUseCase(): PairStoreWithKiviUseCase {
   const platform = loadKiviPlatformConfig(process.env);
   return new PairStoreWithKiviUseCase(
@@ -42,10 +86,7 @@ export function getPairStoreWithKiviUseCase(): PairStoreWithKiviUseCase {
   );
 }
 
-/**
- * Disconnecting must work even when the platform configuration is incomplete: in that case the
- * remote revoke is skipped (it is best effort anyway) and the local unlink still wipes the token.
- */
+// Remote revocation is best effort; local unlinking must still erase the token.
 function revocationDependencies(): UnlinkStoreFromKiviDependencies {
   const logger = { warn: (message: string): void => console.warn(`[Kivi] ${message}`) };
   try {

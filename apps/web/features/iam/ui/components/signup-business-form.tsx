@@ -27,8 +27,9 @@ function SubmitButton(): React.JSX.Element {
 
 export function SignupBusinessForm({
   className,
+  notice,
   ...props
-}: React.ComponentProps<'form'>): React.JSX.Element {
+}: React.ComponentProps<'form'> & { notice?: string }): React.JSX.Element {
   const [state, formAction] = useActionState(signupBusinessAction, {
     success: false,
     error: null,
@@ -65,9 +66,9 @@ export function SignupBusinessForm({
               Create an owner account and set up your B2B store
             </p>
           </div>
-          {state.error && (
+          {(state.error ?? notice) && (
             <div className="p-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded-md">
-              {state.error}
+              {state.error ?? notice}
             </div>
           )}
 

@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { getTranslations } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
 import { ordersDi } from '@/features/orders/di/orders.di';
+import { invalidateBuyerOrderCatalog } from '@/features/orders/utils/invalidate-order-catalog';
 
 export type CancelOrderErrorCode =
   | 'UNAUTHORIZED'
@@ -63,6 +64,7 @@ export async function cancelOrderAction(
       orderId,
       authenticatedBuyerId: user.id,
     });
+    await invalidateBuyerOrderCatalog(user.id, orderId);
 
     revalidatePath('/');
     revalidatePath('/purchases');
