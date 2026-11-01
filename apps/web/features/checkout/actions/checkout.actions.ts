@@ -2,6 +2,7 @@
 
 import { getTranslations } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
+import { invalidatePublicCatalog } from '@/lib/cache/public-catalog-cache';
 import { checkoutDi } from '@/features/checkout/di/checkout.di';
 import {
   checkoutFields,
@@ -82,6 +83,7 @@ export async function submitCheckoutAction(
         reference: data['shipping.reference'] || undefined,
       },
     });
+    await invalidatePublicCatalog(tenantSlug);
     return { success: true, errorCode: null };
   } catch (error: unknown) {
     console.error('Checkout error:', error);
