@@ -1,4 +1,8 @@
 {
+  "Security": {
+    "rateLimited": "Demasiadas solicitudes. Espera antes de volver a intentarlo.",
+    "unavailable": "El servicio no está disponible temporalmente. Inténtalo de nuevo en unos momentos."
+  },
   "BusinessIntelligence": {
     "title": "Business Intelligence",
     "metadata": "Inteligencia de negocio | Canal Digital",
