@@ -30,6 +30,60 @@ function options(
 }
 
 describe('Kivi messaging HTTP contracts', (): void => {
+  it('allowlists delivery summaries and discards sensitive remote extras', async (): Promise<void> => {
+    const opts = options([
+      {
+        event_id: event.messageId,
+        channel: 'whatsapp',
+        status: 'failed',
+        updated_at: '2026-10-30T10:00:00Z',
+        phone: 'private',
+        token: 'secret',
+      },
+    ]);
+    const result = await new HttpKiviNotificationSettingsGateway(opts).readDeliveries(target);
+    expect(result).toEqual([
+      {
+        eventId: event.messageId,
+        channel: 'whatsapp',
+        status: 'failed',
+        updatedAt: '2026-10-30T10:00:00Z',
+      },
+    ]);
+  });
+  it.each([
+    [{ event_id: event.messageId, channel: 'email', status: 'sent', updated_at: event.occurredAt }],
+    [
+      {
+        event_id: event.messageId,
+        channel: 'whatsapp',
+        status: 'secret-error',
+        updated_at: event.occurredAt,
+      },
+    ],
+    [{ event_id: event.messageId, channel: 'whatsapp', status: 'sent', updated_at: 'invalid' }],
+    Array.from({ length: 11 }, (): object => ({
+      event_id: event.messageId,
+      channel: 'whatsapp',
+      status: 'sent',
+      updated_at: event.occurredAt,
+    })),
+  ])('rejects malformed or unbounded receipt summaries', async (body: unknown): Promise<void> => {
+    await expect(
+      new HttpKiviNotificationSettingsGateway(options(body)).readDeliveries(target),
+    ).rejects.toMatchObject({ failure: 'transient' });
+  });
+  it('reads a regional Meta locale without replacing it with a base language', async (): Promise<void> => {
+    const settings = await new HttpKiviNotificationSettingsGateway(
+      options({
+        whatsapp_enabled: true,
+        widget_enabled: false,
+        template_name: 'order_update',
+        language: 'en_US',
+      }),
+    ).readSettings(target);
+    expect(settings.language).toBe('en_US');
+  });
   it('allowlists validation metadata and masks provider secrets and errors', async (): Promise<void> => {
     const result = await new HttpKiviWhatsAppGateway(
       options({ valid: true, phone_display: '+593', verified_name: 'Store', token: 'leaked' }),

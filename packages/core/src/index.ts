@@ -315,5 +315,6 @@ export { HttpKiviNotificationSettingsGateway } from '@/kivi/infrastructure/http-
 export type {
   KiviMessagingReadPort,
   KiviMessagingStatus,
+  KiviDeliverySummary,
   KiviNotificationSettings,
 } from '@/kivi/application/ports/out/kivi-messaging.port';

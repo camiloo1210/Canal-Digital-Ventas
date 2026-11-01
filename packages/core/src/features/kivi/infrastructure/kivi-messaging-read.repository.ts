@@ -23,9 +23,10 @@ export class KiviMessagingReadRepository implements KiviMessagingReadPort {
       userId,
       tenantId,
     );
-    const [channel, settings] = await Promise.allSettled([
+    const [channel, settings, deliveries] = await Promise.allSettled([
       this.gateway.readChannel(target),
       this.gateway.readSettings(target),
+      this.gateway.readDeliveries(target),
     ]);
     return {
       channel:
@@ -35,6 +36,7 @@ export class KiviMessagingReadRepository implements KiviMessagingReadPort {
             : 'disconnected'
           : 'unavailable',
       settings: settings.status === 'fulfilled' ? settings.value : null,
+      deliveries: deliveries.status === 'fulfilled' ? deliveries.value : null,
     };
   }
 }

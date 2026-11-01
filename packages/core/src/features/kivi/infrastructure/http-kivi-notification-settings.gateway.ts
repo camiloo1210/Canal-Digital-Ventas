@@ -3,6 +3,7 @@ import type { KiviTarget } from '@/kivi/application/ports/out/kivi-catalog-gatew
 import type {
   KiviNotificationSettings,
   KiviNotificationSettingsGatewayPort,
+  KiviDeliverySummary,
 } from '@/kivi/application/ports/out/kivi-messaging.port';
 import { KiviGatewayException } from '@/kivi/application/exceptions/kivi-gateway.exception';
 import type { KiviStoreWidget } from '@/kivi/application/ports/out/kivi-store-widget-read.port';
@@ -11,6 +12,38 @@ export class HttpKiviNotificationSettingsGateway
   extends HttpKiviCatalogGateway
   implements KiviNotificationSettingsGatewayPort
 {
+  public async readDeliveries(target: KiviTarget): Promise<KiviDeliverySummary[]> {
+    const body = await this.request(target, 'GET', '/notifications/deliveries');
+    if (!Array.isArray(body) || body.length > 10) throw new KiviGatewayException('transient', 200);
+    return body.map((row: unknown): KiviDeliverySummary => {
+      if (
+        typeof row !== 'object' ||
+        row === null ||
+        !('event_id' in row) ||
+        typeof row.event_id !== 'string' ||
+        !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(row.event_id) ||
+        !('channel' in row) ||
+        (row.channel !== 'whatsapp' && row.channel !== 'widget') ||
+        !('status' in row) ||
+        (row.status !== 'pending' &&
+          row.status !== 'sending' &&
+          row.status !== 'sent' &&
+          row.status !== 'failed' &&
+          row.status !== 'unknown' &&
+          row.status !== 'skipped') ||
+        !('updated_at' in row) ||
+        typeof row.updated_at !== 'string' ||
+        !Number.isFinite(Date.parse(row.updated_at))
+      )
+        throw new KiviGatewayException('transient', 200);
+      return {
+        eventId: row.event_id,
+        channel: row.channel,
+        status: row.status,
+        updatedAt: row.updated_at,
+      };
+    });
+  }
   public async readWidget(target: KiviTarget): Promise<KiviStoreWidget | null> {
     const body = await this.request(target, 'GET', '/widget');
     if (
@@ -54,7 +87,8 @@ export class HttpKiviNotificationSettingsGateway
       typeof body.template_name !== 'string' ||
       !/^[a-z][a-z0-9_]{0,99}$/.test(body.template_name) ||
       !('language' in body) ||
-      (body.language !== 'es' && body.language !== 'en')
+      typeof body.language !== 'string' ||
+      !/^(?:es|en)(?:_[A-Z]{2})?(?![\s\S])/.test(body.language)
     )
       throw new KiviGatewayException('transient', 200);
     return {
