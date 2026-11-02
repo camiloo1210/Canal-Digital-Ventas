@@ -7,6 +7,7 @@ export const PRODUCT_IMAGE_MIME_EXTENSIONS = {
   'image/webp': 'webp',
 } as const;
 export const PRODUCT_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+export const PRODUCT_IMAGE_MAX_COUNT = 8;
 
 const decimalPattern = /^\d+(\.\d{1,2})?$/;
 const decimalString = z
@@ -49,13 +50,17 @@ export const productFormSchema = z.object({
     .enum(['', 'on', 'true', 'false'], { message: 'booleanFormat' })
     .transform((value): boolean => value === 'on' || value === 'true'),
   image: z
-    .instanceof(File, { message: 'imageFormat' })
-    .refine(
-      (file): boolean => Object.hasOwn(PRODUCT_IMAGE_MIME_EXTENSIONS, file.type),
-      'imageFormat',
+    .array(
+      z
+        .instanceof(File, { message: 'imageFormat' })
+        .refine(
+          (file): boolean => Object.hasOwn(PRODUCT_IMAGE_MIME_EXTENSIONS, file.type),
+          'imageFormat',
+        )
+        .refine((file): boolean => file.size <= PRODUCT_IMAGE_MAX_BYTES, 'imageSize'),
     )
-    .refine((file): boolean => file.size <= PRODUCT_IMAGE_MAX_BYTES, 'imageSize')
-    .optional(),
+    .max(PRODUCT_IMAGE_MAX_COUNT, 'imageCount'),
+  existingImages: z.array(z.string().url('imageFormat')).max(PRODUCT_IMAGE_MAX_COUNT, 'imageCount'),
 });
 
 export const updateProductFormSchema = productFormSchema.extend({
@@ -87,6 +92,7 @@ export interface ProductEditValues extends ProductFormValues {
   id: string;
   version: number;
   imageUrl: string | null;
+  galleryUrls: string[];
 }
 
 export function readFormString(formData: FormData, name: string): string {

@@ -5,6 +5,7 @@ import {
   createProductAction,
   updateProductAction,
 } from '@/features/products/actions/products.actions';
+import { InvalidProductAttributeException } from '@/products/domain/exceptions/invalid-product-attribute.exception';
 import { InvalidWholesaleRulesException } from '@/products/domain/exceptions/invalid-wholesale-rules.exception';
 import { OptimisticConcurrencyException } from '@/shared/application/exceptions/optimistic-concurrency.exception';
 
@@ -15,7 +16,13 @@ const mocks = vi.hoisted(
     upload: ReturnType<typeof vi.fn>;
     user: ReturnType<typeof vi.fn>;
     tenant: ReturnType<typeof vi.fn>;
-  } => ({ create: vi.fn(), update: vi.fn(), upload: vi.fn(), user: vi.fn(), tenant: vi.fn() }),
+  } => ({
+    create: vi.fn(),
+    update: vi.fn(),
+    upload: vi.fn(),
+    user: vi.fn(),
+    tenant: vi.fn(),
+  }),
 );
 vi.mock('next-intl/server', (): object => ({
   getTranslations: async (): Promise<ReturnType<typeof createTranslator>> =>
@@ -146,8 +153,7 @@ describe('product form delivery', (): void => {
     );
     expect(mocks.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        imageUrl: 'https://example.test/product.png',
-        imagePath: 'https://example.test/product.png',
+        gallery: { retainedUrls: null, addedUrls: ['https://example.test/product.png'] },
         wholesaleMinQuantity: 37,
       }),
     );
@@ -167,5 +173,40 @@ describe('product form delivery', (): void => {
     expect(mocks.update).not.toHaveBeenCalled();
     expect(mocks.create).not.toHaveBeenCalled();
     expect(mocks.upload).not.toHaveBeenCalled();
+  });
+  it('forwards the retained and newly uploaded images to the use case without deciding ownership', async (): Promise<void> => {
+    const data = form();
+    data.set('galleryManaged', '1');
+    data.append('existingImages', 'https://example.test/b.png');
+    for (let i = 0; i < 2; i += 1)
+      data.append('image', new File(['x'], `f${i}.png`, { type: 'image/png' }));
+    await expect(updateProductAction(initial, data)).rejects.toThrow('NEXT_REDIRECT');
+    expect(mocks.upload).toHaveBeenCalledTimes(2);
+    expect(mocks.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        gallery: {
+          retainedUrls: ['https://example.test/b.png'],
+          addedUrls: expect.arrayContaining([expect.any(String)]),
+        },
+      }),
+    );
+  });
+  it('maps the domain image-limit rejection to the image field', async (): Promise<void> => {
+    mocks.update.mockRejectedValue(
+      new InvalidProductAttributeException('A product cannot have more than 8 images.'),
+    );
+    const result = await updateProductAction(initial, form());
+    expect(result.fieldErrors?.image?.[0]).toContain('8');
+  });
+  it('creates a product with several uploaded images', async (): Promise<void> => {
+    const data = form();
+    data.delete('productId');
+    data.delete('expectedVersion');
+    for (let i = 0; i < 2; i += 1)
+      data.append('image', new File(['x'], `f${i}.png`, { type: 'image/png' }));
+    await expect(createProductAction(initial, data)).rejects.toThrow('NEXT_REDIRECT');
+    expect(mocks.create).toHaveBeenCalledWith(
+      expect.objectContaining({ galleryUrls: expect.arrayContaining([expect.any(String)]) }),
+    );
   });
 });

@@ -3,22 +3,37 @@ import { useCartStore, type CartItem } from '@/features/cart/store/cart.store';
 
 const item: CartItem = { productId: 'product', name: 'Product', price: 15, quantity: 1 };
 
-describe('public cart without an invented inventory ceiling', (): void => {
+describe('public cart capped by available units', (): void => {
   beforeEach((): void => {
     useCartStore.setState({ tenantSlug: null, items: [] });
   });
 
-  it('ignores legacy stock guesses and refreshes product display data when adding again', (): void => {
-    const legacy = { ...item, quantity: 2, maxStock: 2 };
-    useCartStore.setState({ tenantSlug: 'shop', items: [legacy] });
-    useCartStore.getState().addItem({ ...item, name: 'Updated product', price: 16 }, 'shop');
+  it('never lets repeated adds exceed the available units and refreshes display data', (): void => {
+    const capped = { ...item, maxQuantity: 3 };
+    for (let i = 0; i < 5; i += 1) useCartStore.getState().addItem(capped, 'shop');
+    expect(useCartStore.getState().items[0]?.quantity).toBe(3);
+    useCartStore.getState().addItem({ ...capped, name: 'Updated', price: 16 }, 'shop');
     expect(useCartStore.getState().items).toEqual([
-      { ...item, name: 'Updated product', price: 16, quantity: 3 },
+      { ...capped, name: 'Updated', price: 16, quantity: 3 },
     ]);
   });
 
-  it('lets the server confirm inventory rather than clamping to a persisted guess', (): void => {
-    useCartStore.setState({ tenantSlug: 'shop', items: [{ ...item, maxStock: 1 } as CartItem] });
+  it('clamps manual quantity changes to the stored available units', (): void => {
+    useCartStore.setState({
+      tenantSlug: 'shop',
+      items: [{ ...item, quantity: 1, maxQuantity: 4 }],
+    });
+    useCartStore.getState().updateQuantity(item.productId, 99);
+    expect(useCartStore.getState().items[0]?.quantity).toBe(4);
+  });
+
+  it('does not add a product with zero available units', (): void => {
+    useCartStore.getState().addItem({ ...item, maxQuantity: 0 }, 'shop');
+    expect(useCartStore.getState().items).toEqual([]);
+  });
+
+  it('keeps legacy items without a ceiling unlimited until the product is viewed again', (): void => {
+    useCartStore.setState({ tenantSlug: 'shop', items: [{ ...item, quantity: 2 }] });
     useCartStore.getState().updateQuantity(item.productId, 5);
     expect(useCartStore.getState().items[0]?.quantity).toBe(5);
   });

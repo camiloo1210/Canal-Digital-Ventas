@@ -16,4 +16,5 @@ export interface ProductReadModel {
   is_vat_exempt: boolean;
   version: number;
   image_url: string | null;
+  gallery_urls?: string[] | null;
 }

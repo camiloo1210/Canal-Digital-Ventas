@@ -57,7 +57,9 @@ export class CreateProductUseCase {
           dto.wholesaleMinQuantity !== undefined ? dto.wholesaleMinQuantity : null,
         );
 
-        if (imageUrl) {
+        if (dto.galleryUrls !== undefined && dto.galleryUrls.length > 0) {
+          newProduct.updateGallery(dto.galleryUrls);
+        } else if (imageUrl) {
           newProduct.updateImages(imagePath, imageUrl);
         }
 

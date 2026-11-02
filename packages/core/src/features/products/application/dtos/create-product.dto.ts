@@ -14,4 +14,5 @@ export interface CreateProductDto {
   isVatExempt: boolean;
   imagePath?: string | null;
   imageUrl?: string | null;
+  galleryUrls?: string[];
 }

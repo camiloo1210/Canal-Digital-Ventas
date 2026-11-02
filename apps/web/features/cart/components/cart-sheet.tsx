@@ -158,7 +158,10 @@ export function CartSheet({ labels }: CartSheetProps): React.JSX.Element | null 
                           onClick={(): void =>
                             cartStore.updateQuantity(item.productId, item.quantity + 1)
                           }
-                          disabled={!Number.isSafeInteger(item.quantity + 1)}
+                          disabled={
+                            !Number.isSafeInteger(item.quantity + 1) ||
+                            (item.maxQuantity !== undefined && item.quantity >= item.maxQuantity)
+                          }
                         >
                           <Plus className="h-3 w-3" />
                         </Button>

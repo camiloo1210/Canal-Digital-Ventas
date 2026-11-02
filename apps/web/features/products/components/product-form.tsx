@@ -87,7 +87,8 @@ export function ProductForm({
           categories={categories}
           currency={currency}
           defaultValues={state.values ?? product}
-          imageUrl={product?.imageUrl}
+          galleryUrls={product?.galleryUrls}
+          managed={Boolean(product)}
           revision={revision}
           fieldErrors={visibleErrors}
           clearField={clearField}
