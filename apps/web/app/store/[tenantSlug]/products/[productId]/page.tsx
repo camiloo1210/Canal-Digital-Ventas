@@ -1,10 +1,14 @@
 import { notFound } from 'next/navigation';
-import { getStoreProductReadRepository } from '@/features/store/di/store.di';
+import {
+  getStoreProductReadRepository,
+  getStorePurchaseInfoReadRepository,
+} from '@/features/store/di/store.di';
 import { getLocale, getTranslations } from 'next-intl/server';
-import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { formatMoney } from '@/lib/money';
 import { StoreProductStockBadge } from '@/features/store/components/store-product-stock-badge';
+import { ProductImageCarousel } from '@/features/store/components/product-image-carousel';
+import { getStoreViewerQuery } from '@/features/store/queries/store-viewer.query';
 import { AddToCartButton } from '@/features/cart/components/add-to-cart-button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -18,31 +22,35 @@ export default async function ProductDetailPage(props: {
   const locale = await getLocale();
   const repo = await getStoreProductReadRepository();
 
-  const product = await repo.findDetail({ tenantSlug, productId });
+  const [viewer, product, purchaseInfo] = await Promise.all([
+    getStoreViewerQuery(),
+    repo.findDetail({ tenantSlug, productId }),
+    getStorePurchaseInfoReadRepository()
+      .findActive({ tenantSlug, productId })
+      .catch((error: unknown): null => {
+        console.error('[StorefrontProduct] purchase info unavailable', error);
+        return null;
+      }),
+  ]);
 
   if (!product) {
     notFound();
   }
 
+  const galleryImages =
+    purchaseInfo && purchaseInfo.galleryUrls.length > 0
+      ? purchaseInfo.galleryUrls
+      : product.imageUrl
+        ? [product.imageUrl]
+        : [];
+  const maxQuantity = purchaseInfo?.availableQuantity ?? 0;
+
   return (
     <div className="flex flex-col min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 w-full">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-12">
-          <div className="relative aspect-[4/3] md:aspect-square rounded-xl overflow-hidden bg-muted border">
-            {product.imageUrl ? (
-              <Image
-                src={product.imageUrl}
-                alt={product.name}
-                fill
-                loading="eager"
-                className="object-cover"
-                sizes="(min-width: 1280px) 584px, (min-width: 1024px) calc((100vw - 112px) / 2), (min-width: 768px) calc((100vw - 72px) / 2), (min-width: 640px) calc(100vw - 48px), calc(100vw - 32px)"
-              />
-            ) : (
-              <div className="flex items-center justify-center w-full h-full text-foreground">
-                {t('noImage')}
-              </div>
-            )}
+          <div className="min-w-0">
+            <ProductImageCarousel images={galleryImages} alt={product.name} />
           </div>
 
           <div className="flex flex-col justify-start">
@@ -74,6 +82,11 @@ export default async function ProductDetailPage(props: {
               <div className="flex flex-wrap items-center gap-3">
                 <span className="text-sm text-muted-foreground">{t('availability')}</span>
                 <StoreProductStockBadge availability={product.stockAvailability} />
+                {viewer.isAuthenticated && purchaseInfo && (
+                  <span className="text-sm font-medium text-foreground">
+                    {t('purchase.limited', { count: maxQuantity })}
+                  </span>
+                )}
               </div>
               <AddToCartButton
                 key={product.id}
@@ -82,6 +95,8 @@ export default async function ProductDetailPage(props: {
                 price={product.priceCents / 100}
                 imageUrl={product.imageUrl ?? undefined}
                 inStock={product.inStock}
+                maxQuantity={maxQuantity}
+                showExactStock={viewer.isAuthenticated}
                 hasVariants={product.hasVariants}
                 tenantSlug={tenantSlug}
               />
