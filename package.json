@@ -9,6 +9,7 @@
     "worker:outbox": "pnpm --filter @canaldigital/worker start",
     "worker:notifications": "pnpm --filter @canaldigital/worker notifications",
     "worker:kivi-sync": "pnpm --filter @canaldigital/worker kivi-sync",
+    "worker:cart-retention": "pnpm --filter @canaldigital/worker cart-retention",
     "messaging:build": "node apps/worker/docker/messaging.mjs build",
     "messaging:up": "node apps/worker/docker/messaging.mjs up",
     "messaging:verify": "node apps/worker/docker/verify.mjs",
