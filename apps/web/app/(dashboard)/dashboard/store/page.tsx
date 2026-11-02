@@ -1,8 +1,10 @@
 import { requireDashboardTenant } from '@/features/dashboard/queries/dashboard-context.query';
+import { headers } from 'next/headers';
 import { getMessages, getTranslations } from 'next-intl/server';
 import { NextIntlClientProvider } from 'next-intl';
 import { getStoreSettingsReadRepository } from '@/features/store-settings/di/store-settings.di';
 import { StoreSettingsForm } from '@/features/store-settings/components/store-settings-form';
+import { PublicStoreLink } from '@/features/store-settings/components/public-store-link';
 import { PageHeader } from '@/components/page-header';
 
 export default async function StoreSettingsPage(): Promise<React.JSX.Element> {
@@ -10,6 +12,12 @@ export default async function StoreSettingsPage(): Promise<React.JSX.Element> {
   const messages = await getMessages();
   const { userId, tenantId } = await requireDashboardTenant();
   const settings = await getStoreSettingsReadRepository().findForManager(userId, tenantId);
+
+  const requestHeaders = await headers();
+  const host = requestHeaders.get('x-forwarded-host') ?? requestHeaders.get('host');
+  const protocol =
+    requestHeaders.get('x-forwarded-proto') ?? (host?.startsWith('localhost') ? 'http' : 'https');
+  const publicUrl = settings && host ? `${protocol}://${host}/store/${settings.slug}` : null;
 
   return (
     <div className="flex flex-1 flex-col">
@@ -26,6 +34,7 @@ export default async function StoreSettingsPage(): Promise<React.JSX.Element> {
               CatalogForms: messages.CatalogForms,
             }}
           >
+            {publicUrl && <PublicStoreLink url={publicUrl} />}
             <StoreSettingsForm initial={settings} />
           </NextIntlClientProvider>
         ) : (
