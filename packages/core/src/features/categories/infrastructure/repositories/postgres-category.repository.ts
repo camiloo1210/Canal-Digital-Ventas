@@ -101,6 +101,26 @@ export class PostgresCategoryRepository implements CategoryRepositoryPort {
     }
   }
 
+  async countProductsInCategory(
+    id: CategoryId,
+    tenantId: TenantId,
+    tx?: TransactionContext,
+  ): Promise<number> {
+    try {
+      return await this.executeSql(tx, async (conn): Promise<number> => {
+        const rows = await conn<{ total: number }[]>`
+          SELECT count(*)::int AS total
+          FROM catalog.products
+          WHERE category_id = ${id} AND tenant_id = ${tenantId} AND status <> 'archived'
+        `;
+        return rows[0]?.total ?? 0;
+      });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      throw new CategoryRepositoryException(`Failed to count category products: ${message}`, error);
+    }
+  }
+
   async searchByFilters(): Promise<PaginatedResult<Category>> {
     throw new CategoryRepositoryException(
       'Method searchByFilters not implemented in write repository. Use ReadRepository.',

@@ -3,6 +3,7 @@ import { CategoryRepositoryPort } from '@/categories/application/ports/out/categ
 import { EventBusPort } from '@/shared/application/ports/out/event-bus.port';
 import { ArchiveCategoryDto } from '@/categories/application/dtos/archive-category.dto';
 import { CategoryNotFoundException } from '@/categories/application/exceptions/category-not-found.exception';
+import { CategoryHasProductsException } from '@/categories/application/exceptions/category-has-products.exception';
 import { CategoryId } from '@/categories/domain/types/category-id.type';
 
 import { createCategoryId } from '@/categories/domain/types/category-id.type';
@@ -26,6 +27,15 @@ export class ArchiveCategoryUseCase {
 
         if (!category) {
           throw new CategoryNotFoundException(dto.id);
+        }
+
+        const productCount = await this.categoryRepository.countProductsInCategory(
+          categoryId,
+          tenantId,
+          tx,
+        );
+        if (productCount > 0) {
+          throw new CategoryHasProductsException(dto.id, productCount);
         }
 
         category.archive();
