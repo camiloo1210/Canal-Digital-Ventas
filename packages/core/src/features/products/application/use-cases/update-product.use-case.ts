@@ -59,7 +59,9 @@ export class UpdateProductUseCase {
         product.changePricing(price, cost);
         product.changeWholesaleRules(wholesalePrice, wholesaleMinQuantity);
 
-        if (dto.imagePath !== undefined && dto.imageUrl !== undefined) {
+        if (dto.gallery !== undefined) {
+          product.changeGallery(dto.gallery.retainedUrls, dto.gallery.addedUrls);
+        } else if (dto.imagePath !== undefined && dto.imageUrl !== undefined) {
           product.updateImages(dto.imagePath, dto.imageUrl);
         }
 

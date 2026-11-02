@@ -27,6 +27,7 @@ export interface DbProductRow {
   season_ids: string[];
   image_path: string | null;
   image_url: string | null;
+  gallery_urls: string[];
   has_variants: boolean;
   is_vat_exempt: boolean;
   version: number;
