@@ -21,6 +21,8 @@ interface AddToCartButtonProps {
   price: number;
   imageUrl?: string;
   inStock: boolean;
+  maxQuantity: number;
+  showExactStock: boolean;
   hasVariants: boolean;
   tenantSlug: string;
 }
@@ -31,6 +33,8 @@ export function AddToCartButton({
   price,
   imageUrl,
   inStock,
+  maxQuantity,
+  showExactStock,
   hasVariants,
   tenantSlug,
 }: AddToCartButtonProps): React.JSX.Element {
@@ -41,8 +45,10 @@ export function AddToCartButton({
   const [added, setAdded] = React.useState(false);
   const item = cartStore.items.find((entry): boolean => entry.productId === productId);
   const confirmed = added && cartStore.tenantSlug === tenantSlug && Boolean(item);
+  const inCartQuantity = cartStore.tenantSlug === tenantSlug ? (item?.quantity ?? 0) : 0;
+  const limitReached = inCartQuantity >= maxQuantity;
   const add = (): void => {
-    cartStore.addItem({ productId, name, price, imageUrl, quantity: 1 }, tenantSlug);
+    cartStore.addItem({ productId, name, price, imageUrl, quantity: 1, maxQuantity }, tenantSlug);
     setAdded(true);
   };
   const handleAdd = (): void => {
@@ -72,9 +78,14 @@ export function AddToCartButton({
   return (
     <div className="space-y-3">
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <Button ref={addButtonRef} className="min-h-11 w-full" onClick={handleAdd}>
+        <Button
+          ref={addButtonRef}
+          className="min-h-11 w-full"
+          onClick={handleAdd}
+          disabled={limitReached}
+        >
           <ShoppingCart aria-hidden="true" />
-          {t('cartAdd')}
+          {t(limitReached ? 'cartMaxReached' : 'cartAdd')}
         </Button>
         <DialogContent finalFocus={addButtonRef} closeLabel={t('purchase.close')}>
           <DialogHeader className="pr-10">
@@ -97,12 +108,16 @@ export function AddToCartButton({
         aria-atomic="true"
         className="flex min-h-5 items-start gap-2 text-sm text-primary"
       >
-        {confirmed && (
-          <>
-            <Check aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-            {t('purchase.added', { name, count: item?.quantity ?? 0 })}
-          </>
-        )}
+        {limitReached && inCartQuantity > 0
+          ? t(showExactStock ? 'purchase.maxReached' : 'purchase.maxReachedPublic', {
+              count: maxQuantity,
+            })
+          : confirmed && (
+              <>
+                <Check aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+                {t('purchase.added', { name, count: item?.quantity ?? 0 })}
+              </>
+            )}
       </p>
     </div>
   );

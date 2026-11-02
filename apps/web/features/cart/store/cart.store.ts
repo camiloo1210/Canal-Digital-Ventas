@@ -7,6 +7,14 @@ export interface CartItem {
   price: number;
   imageUrl?: string;
   quantity: number;
+  /** Units available when the product was last viewed. The server re-checks at checkout. */
+  maxQuantity?: number;
+}
+
+function capQuantity(quantity: number, maxQuantity: number | undefined): number {
+  if (maxQuantity === undefined) return quantity;
+  if (!Number.isSafeInteger(maxQuantity) || maxQuantity < 0) return quantity;
+  return Math.min(quantity, maxQuantity);
 }
 
 export interface CartState {
@@ -35,9 +43,11 @@ export const useCartStore = create<CartState>()(
         const currentItems = get().items;
 
         if (!currentTenant || currentTenant !== newTenantSlug) {
+          const quantity = capQuantity(item.quantity, item.maxQuantity);
+          if (quantity < 1) return;
           set({
             tenantSlug: newTenantSlug,
-            items: [{ ...item, quantity: item.quantity }],
+            items: [{ ...item, quantity }],
           });
           return;
         }
@@ -46,16 +56,19 @@ export const useCartStore = create<CartState>()(
 
         if (existingItem && !Number.isSafeInteger(existingItem.quantity + item.quantity)) return;
         if (existingItem) {
+          const quantity = capQuantity(existingItem.quantity + item.quantity, item.maxQuantity);
           set({
             items: currentItems.map((i): CartItem =>
               i.productId === item.productId
-                ? { ...item, quantity: i.quantity + item.quantity }
+                ? { ...item, quantity: item.maxQuantity === 0 ? i.quantity : Math.max(1, quantity) }
                 : i,
             ),
           });
         } else {
+          const quantity = capQuantity(item.quantity, item.maxQuantity);
+          if (quantity < 1) return;
           set({
-            items: [...currentItems, { ...item, quantity: item.quantity }],
+            items: [...currentItems, { ...item, quantity }],
           });
         }
       },
@@ -70,7 +83,15 @@ export const useCartStore = create<CartState>()(
         if (!Number.isSafeInteger(quantity)) return;
         set((state): Partial<CartState> => ({
           items: state.items.map((i): CartItem =>
-            i.productId === productId ? { ...i, quantity: Math.max(1, quantity) } : i,
+            i.productId === productId
+              ? {
+                  ...i,
+                  quantity:
+                    i.maxQuantity === 0
+                      ? i.quantity
+                      : Math.max(1, capQuantity(quantity, i.maxQuantity)),
+                }
+              : i,
           ),
         }));
       },
