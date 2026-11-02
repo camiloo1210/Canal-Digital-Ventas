@@ -46,6 +46,12 @@ export default async function EditProductPage({
     stock: String(productData.stock),
     isVatExempt: productData.is_vat_exempt ? 'on' : '',
     imageUrl: productData.image_url,
+    galleryUrls:
+      productData.gallery_urls && productData.gallery_urls.length > 0
+        ? productData.gallery_urls
+        : productData.image_url
+          ? [productData.image_url]
+          : [],
   };
   return (
     <CatalogFormPage

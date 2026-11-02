@@ -15,4 +15,9 @@ export interface UpdateProductDto {
   seasonIds: string[];
   imagePath?: string;
   imageUrl?: string;
+  gallery?: {
+    /** URLs the seller wants to keep; null keeps the current gallery untouched. */
+    retainedUrls: string[] | null;
+    addedUrls: string[];
+  };
 }

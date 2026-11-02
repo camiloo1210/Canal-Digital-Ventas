@@ -57,6 +57,9 @@ export class HttpKiviPairingGateway implements KiviPairingGatewayPort {
         code: request.code,
         external_tenant_id: request.externalTenantId,
         name: request.name,
+        ...(request.orderLookup === undefined
+          ? {}
+          : { order_lookup: { url: request.orderLookup.url, key: request.orderLookup.key } }),
       },
     });
     let record: Record<string, unknown>;

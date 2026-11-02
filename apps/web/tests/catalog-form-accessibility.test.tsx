@@ -1,12 +1,16 @@
 import * as React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { NextIntlClientProvider } from 'next-intl';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import es from '@/messages/es.json';
 import en from '@/messages/en.json';
 import { ProductFormFields } from '@/features/products/components/product-form-fields';
 import { CategoryFormFields } from '@/features/categories/components/category-form-fields';
 import { CatalogFormFeedback } from '@/features/dashboard/components/catalog-form-feedback';
+
+vi.mock('@/features/products/actions/product-image-uploads.actions', (): object => ({
+  createProductImageUploadsAction: vi.fn(),
+}));
 
 function render(children: React.ReactNode): string {
   return renderToStaticMarkup(
@@ -23,6 +27,7 @@ describe('catalog form accessibility', (): void => {
         <ProductFormFields
           categories={[]}
           currency="USD"
+          managed={false}
           defaultValues={{ wholesaleMinQuantity: '37' }}
           fieldErrors={{ price: [en.CatalogForms.moneyFormat] }}
           revision={1}
@@ -40,6 +45,7 @@ describe('catalog form accessibility', (): void => {
       <ProductFormFields
         categories={[]}
         currency="EUR"
+        managed={false}
         defaultValues={{ wholesaleMinQuantity: '37', sku: 'ABC123', price: '12abc' }}
         fieldErrors={{ price: ['Importe inválido'], image: ['Imagen inválida'] }}
         revision={1}
@@ -52,6 +58,7 @@ describe('catalog form accessibility', (): void => {
     expect(html).toContain('id="price-error"');
     expect(html).toContain('aria-describedby="image-help image-error"');
     expect(html).toContain('accept="image/jpeg,image/png,image/webp"');
+    expect(html).not.toContain('name="image"');
     expect(html).not.toContain('SVG');
     expect(html).toContain('EUR');
     expect(html).toContain('value="ABC123"');

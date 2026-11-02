@@ -19,8 +19,11 @@ import {
   updateProductFormSchema,
   extractProductFormValues,
   readFormString,
+  uploadedImagePathsSchema,
+  PRODUCT_IMAGE_MAX_BYTES,
   PRODUCT_IMAGE_MIME_EXTENSIONS,
   type ProductActionState,
+  type ProductFormValues,
   type ProductFieldName,
 } from '@/features/products/schemas/product-form.schema';
 
@@ -58,12 +61,23 @@ function productFailure(
       case 'ProductNotFoundException':
         return { error: t('productUnavailable') };
       case 'InvalidProductAttributeException':
+        return error.message.includes('images')
+          ? { error: t('fixErrors'), fieldErrors: { image: [t('imageCount')] } }
+          : { error: t('invalidProduct') };
       case 'InvalidProductStateException':
         return { error: t('invalidProduct') };
     }
   }
   console.error('[ProductForm]', error);
   return { error: t('unexpected') };
+}
+
+function imageRejection(
+  rejected: { success: false; values: ProductFormValues; revision: number },
+  t: Translator,
+  key: string,
+): ProductActionState {
+  return { ...rejected, error: t('fixErrors'), fieldErrors: { image: [t(key)] } };
 }
 
 async function saveProduct(
@@ -75,10 +89,14 @@ async function saveProduct(
   const values = extractProductFormValues(formData);
   const revision = (prevState.revision ?? 0) + 1;
   const rejected = { success: false, values, revision } as const;
-  const image = formData.get('image');
   const input = {
     ...values,
-    image: image instanceof File && image.size === 0 ? undefined : (image ?? undefined),
+    uploadedImagePaths: formData
+      .getAll('uploadedImagePaths')
+      .filter((entry): entry is string => typeof entry === 'string' && entry !== ''),
+    existingImages: formData
+      .getAll('existingImages')
+      .filter((entry): entry is string => typeof entry === 'string' && entry !== ''),
     productId: readFormString(formData, 'productId'),
     expectedVersion: readFormString(formData, 'expectedVersion'),
   };
@@ -88,7 +106,9 @@ async function saveProduct(
   if (!parsed.success) {
     const fieldErrors: Partial<Record<ProductFieldName, string[]>> = {};
     for (const issue of parsed.error.issues) {
-      const field = String(issue.path[0]);
+      const rawField = String(issue.path[0]);
+      const field =
+        rawField === 'existingImages' || rawField === 'uploadedImagePaths' ? 'image' : rawField;
       if (field === 'productId' || field === 'expectedVersion')
         return { ...rejected, error: t('invalidRequest') };
       const name = field as ProductFieldName;
@@ -104,14 +124,23 @@ async function saveProduct(
     if (!user) return { ...rejected, error: t('unauthorized') };
     const tenantId = await getActiveTenantQuery(user.id);
     if (!tenantId) return { ...rejected, error: t('tenantUnavailable') };
-    let imageUrl: string | undefined;
-    if (parsed.data.image) {
-      const extension =
-        PRODUCT_IMAGE_MIME_EXTENSIONS[
-          parsed.data.image.type as keyof typeof PRODUCT_IMAGE_MIME_EXTENSIONS
-        ];
-      const objectKey = `${tenantId}/${crypto.randomUUID()}.${extension}`;
-      imageUrl = await getStorageAdapter().uploadImage(parsed.data.image, objectKey);
+    const pathsCheck = uploadedImagePathsSchema(tenantId).safeParse(parsed.data.uploadedImagePaths);
+    if (!pathsCheck.success) {
+      return imageRejection(rejected, t, pathsCheck.error.issues[0]?.message ?? 'imageFormat');
+    }
+    const storage = getStorageAdapter();
+    const uploadedImages: string[] = [];
+    for (const path of pathsCheck.data) {
+      const info = await storage.objectInfo(path);
+      if (!info.exists) return imageRejection(rejected, t, 'imageUploadMissing');
+      if (info.size !== null && info.size > PRODUCT_IMAGE_MAX_BYTES)
+        return imageRejection(rejected, t, 'imageSize');
+      if (
+        info.contentType !== null &&
+        !Object.hasOwn(PRODUCT_IMAGE_MIME_EXTENSIONS, info.contentType)
+      )
+        return imageRejection(rejected, t, 'imageFormat');
+      uploadedImages.push(await storage.publicUrl(path));
     }
     const dto = {
       tenantId,
@@ -126,7 +155,7 @@ async function saveProduct(
       stock: parsed.data.stock,
       seasonIds: [],
       isVatExempt: parsed.data.isVatExempt,
-      ...(imageUrl ? { imagePath: imageUrl, imageUrl } : {}),
+      ...(!editing && uploadedImages.length > 0 ? { galleryUrls: uploadedImages } : {}),
     };
     if (editing) {
       if (
@@ -140,6 +169,10 @@ async function saveProduct(
         ...dto,
         productId: parsed.data.productId,
         expectedVersion: parsed.data.expectedVersion,
+        gallery: {
+          retainedUrls: formData.get('galleryManaged') === '1' ? parsed.data.existingImages : null,
+          addedUrls: uploadedImages,
+        },
       });
     } else {
       await getCreateProductUseCase().execute({ ...dto, id: crypto.randomUUID() });

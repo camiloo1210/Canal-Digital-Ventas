@@ -3,6 +3,7 @@
 import { getTranslations } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
 import { invalidatePublicCatalog } from '@/lib/cache/public-catalog-cache';
+import { cartDi } from '@/features/cart/di/cart.di';
 import { checkoutDi } from '@/features/checkout/di/checkout.di';
 import {
   checkoutFields,
@@ -14,6 +15,17 @@ import {
 } from '@/features/checkout/schemas/checkout.schema';
 
 export type { CheckoutActionState } from '@/features/checkout/schemas/checkout.schema';
+
+/** Best-effort: the order already exists, so a cart failure must never fail the checkout. */
+async function completeServerCart(tenantSlug: string, userId: string): Promise<void> {
+  try {
+    const tenantId = await cartDi.resolveActiveTenantId(tenantSlug);
+    if (!tenantId) return;
+    await cartDi.resolveCompleteBuyerCartUseCase().execute({ userId, tenantId });
+  } catch (error: unknown) {
+    console.error('Cart completion failed:', error instanceof Error ? error.name : 'unknown');
+  }
+}
 
 export async function submitCheckoutAction(
   tenantSlug: string,
@@ -84,6 +96,7 @@ export async function submitCheckoutAction(
       },
     });
     await invalidatePublicCatalog(tenantSlug);
+    await completeServerCart(tenantSlug, user.id);
     return { success: true, errorCode: null };
   } catch (error: unknown) {
     console.error('Checkout error:', error);

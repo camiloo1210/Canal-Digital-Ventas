@@ -10,10 +10,14 @@ export function CatalogFormActions({
   cancelHref,
   label,
   pendingLabel,
+  blocked = false,
+  blockedMessage,
 }: {
   cancelHref: string;
   label: string;
   pendingLabel: string;
+  blocked?: boolean;
+  blockedMessage?: string;
 }): React.JSX.Element {
   const { pending } = useFormStatus();
   const t = useTranslations('CatalogForms');
@@ -31,8 +35,8 @@ export function CatalogFormActions({
       </Button>
       <Button
         type="submit"
-        disabled={pending}
-        aria-busy={pending}
+        disabled={pending || blocked}
+        aria-busy={pending || blocked}
         className="min-h-11 flex-1 sm:flex-none"
       >
         {pending ? (
@@ -42,6 +46,11 @@ export function CatalogFormActions({
         )}
         {pending ? pendingLabel : label}
       </Button>
+      {blocked && blockedMessage && (
+        <p role="status" className="w-full text-right text-xs text-muted-foreground">
+          {blockedMessage}
+        </p>
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useTranslations, useFormatter } from 'next-intl';
 import type { KiviConnectionReadModel } from '@canaldigital/packages/core';
 import {
@@ -99,6 +100,33 @@ function SyncNowForm(): React.JSX.Element {
       </Button>
       <Feedback state={state} />
     </form>
+  );
+}
+
+const REFRESH_EVERY_MS = 3000;
+const STALLED_AFTER_SECONDS = 90;
+
+/** Refreshes the page while a sync is queued so the status flips to "connected" by itself. */
+function SyncProgress(): React.JSX.Element {
+  const t = useTranslations('KiviConnection');
+  const router = useRouter();
+  const [seconds, setSeconds] = useState(0);
+  useEffect((): (() => void) => {
+    const timer = setInterval((): void => {
+      setSeconds((current): number => current + REFRESH_EVERY_MS / 1000);
+      router.refresh();
+    }, REFRESH_EVERY_MS);
+    return (): void => clearInterval(timer);
+  }, [router]);
+  const stalled = seconds >= STALLED_AFTER_SECONDS;
+  return (
+    <p
+      role="status"
+      aria-live="polite"
+      className={stalled ? 'text-sm text-destructive' : 'text-sm text-muted-foreground'}
+    >
+      {stalled ? t('syncStalled') : t('syncQueued')}
+    </p>
   );
 }
 
@@ -207,6 +235,7 @@ function Connected({ connection }: { connection: KiviConnectionReadModel }): Rea
           {status !== 'pending' && <SyncNowForm />}
           <DisconnectDialog />
         </div>
+        {status !== 'active' && <SyncProgress />}
         {status !== 'pending' && (
           <p className="text-sm text-muted-foreground">{t('syncNowHelp')}</p>
         )}

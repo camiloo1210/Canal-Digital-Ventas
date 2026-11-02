@@ -19,6 +19,13 @@ export interface CategoryRepositoryPort {
 
   findById(id: CategoryId, tenantId: TenantId, tx?: TransactionContext): Promise<Category | null>;
 
+  /** Products of the category that are not archived. */
+  countProductsInCategory(
+    id: CategoryId,
+    tenantId: TenantId,
+    tx?: TransactionContext,
+  ): Promise<number>;
+
   findAll(tenantId: TenantId, pagination?: PaginationOptions): Promise<PaginatedResult<Category>>;
 
   searchByFilters(

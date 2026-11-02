@@ -7,6 +7,7 @@ import {
 } from '@/features/kivi/actions/kivi-connection.actions';
 import {
   getPairStoreWithKiviUseCase,
+  getRegisterKiviToolsUseCase,
   getRequestKiviSyncUseCase,
   getUnlinkStoreFromKiviUseCase,
 } from '@/features/kivi/di/kivi.di';
@@ -24,6 +25,11 @@ import {
 vi.mock('next-intl/server', (): object => ({
   getTranslations: vi.fn().mockResolvedValue((key: string): string => key),
 }));
+vi.mock('next/headers', (): object => ({
+  headers: vi
+    .fn()
+    .mockResolvedValue(new Headers({ host: 'shop.example.com', 'x-forwarded-proto': 'https' })),
+}));
 vi.mock('next/cache', (): object => ({ revalidatePath: vi.fn() }));
 vi.mock('@/lib/supabase/server', (): object => ({ createClient: vi.fn() }));
 vi.mock('@/features/iam/queries/active-tenant.query', (): object => ({
@@ -33,6 +39,7 @@ vi.mock('@/features/kivi/di/kivi.di', (): object => ({
   getPairStoreWithKiviUseCase: vi.fn(),
   getUnlinkStoreFromKiviUseCase: vi.fn(),
   getRequestKiviSyncUseCase: vi.fn(),
+  getRegisterKiviToolsUseCase: vi.fn(),
 }));
 
 const actor = crypto.randomUUID();
@@ -43,6 +50,7 @@ const initial: KiviConnectionActionState = { success: false, message: null };
 const pair = vi.fn();
 const unlink = vi.fn();
 const sync = vi.fn();
+const registerTools = vi.fn();
 
 function pairForm(overrides: Record<string, string> = {}): FormData {
   const data = new FormData();
@@ -69,6 +77,10 @@ describe('Kivi connection actions', (): void => {
     vi.mocked(getUnlinkStoreFromKiviUseCase).mockReturnValue({
       execute: unlink,
     } as unknown as ReturnType<typeof getUnlinkStoreFromKiviUseCase>);
+    registerTools.mockReset().mockResolvedValue('registered');
+    vi.mocked(getRegisterKiviToolsUseCase).mockReturnValue({
+      execute: registerTools,
+    } as unknown as ReturnType<typeof getRegisterKiviToolsUseCase>);
     vi.mocked(getRequestKiviSyncUseCase).mockReturnValue({
       execute: sync,
     } as unknown as ReturnType<typeof getRequestKiviSyncUseCase>);
@@ -79,7 +91,12 @@ describe('Kivi connection actions', (): void => {
       const data = pairForm({ tenantId: crypto.randomUUID(), userId: crypto.randomUUID() });
       const result = await pairKiviAction(initial, data);
       expect(result.success).toBe(true);
-      expect(pair).toHaveBeenCalledWith({ userId: actor, tenantId: activeTenant, code: CODE });
+      expect(pair).toHaveBeenCalledWith({
+        userId: actor,
+        tenantId: activeTenant,
+        code: CODE,
+        publicOrigin: 'https://shop.example.com',
+      });
       expect(revalidatePath).toHaveBeenCalledWith('/dashboard/integrations');
       expect(JSON.stringify(result)).not.toContain(CODE);
     });
@@ -118,6 +135,18 @@ describe('Kivi connection actions', (): void => {
       ]) {
         expect(result).toMatchObject({ success: false, errorCode: 'FORBIDDEN' });
       }
+    });
+
+    it('sync now also refreshes the assistant tools for the session tenant and never fails because of them', async (): Promise<void> => {
+      registerTools.mockRejectedValueOnce(new Error('boom'));
+      const failing = await requestKiviSyncAction(initial, new FormData());
+      expect(failing).toMatchObject({ success: true });
+      registerTools.mockResolvedValue('registered');
+      const result = await requestKiviSyncAction(initial, new FormData());
+      expect(result).toMatchObject({ success: true });
+      expect(registerTools).toHaveBeenLastCalledWith(
+        expect.objectContaining({ userId: actor, tenantId: activeTenant }),
+      );
     });
 
     it('never acts on another tenant: unlink and sync always target the session tenant', async (): Promise<void> => {
