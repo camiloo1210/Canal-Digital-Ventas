@@ -30,6 +30,7 @@ interface ProductFormFieldsProps {
   managed: boolean;
   currency: string;
   clearField: (name: string) => void;
+  onUploadingChange?: (uploading: boolean) => void;
 }
 
 function ProductInput({
@@ -101,6 +102,7 @@ export function ProductFormFields({
   galleryUrls,
   managed,
   currency,
+  onUploadingChange,
 }: ProductFormFieldsProps): React.JSX.Element {
   const t = useTranslations('CatalogForms');
   const p = useTranslations('Products');
@@ -313,6 +315,7 @@ export function ProductFormFields({
             managed={managed}
             error={errorFor('image')}
             clearField={clearField}
+            onUploadingChange={onUploadingChange}
           />
         </CardContent>
       </Card>

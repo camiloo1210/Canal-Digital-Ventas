@@ -23,7 +23,7 @@ import { Button } from '@/components/ui/button';
 import { useTranslations } from 'next-intl';
 import { buyerAuthHref } from '@/features/iam/utils/auth-return-path';
 import { LocaleSwitcher } from '@/components/locale-switcher';
-import { logoutAction } from '@/features/iam/actions/logout.action';
+import { LogoutForm } from '@/features/iam/components/logout-form';
 import { StoreViewer } from '@/features/store/queries/store-viewer.query';
 
 interface UserNavProps {
@@ -129,7 +129,7 @@ export function UserNav({ viewer, redirectTo = '/', labels }: UserNavProps): Rea
           <LocaleSwitcher />
 
           <DropdownMenuSeparator />
-          <form action={logoutAction} className="w-full">
+          <LogoutForm className="w-full">
             <input type="hidden" name="redirectTo" value={redirectTo} />
             <DropdownMenuItem
               nativeButton
@@ -140,7 +140,7 @@ export function UserNav({ viewer, redirectTo = '/', labels }: UserNavProps): Rea
               <LogOutIcon className="size-4" />
               <span>{labels.logout}</span>
             </DropdownMenuItem>
-          </form>
+          </LogoutForm>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

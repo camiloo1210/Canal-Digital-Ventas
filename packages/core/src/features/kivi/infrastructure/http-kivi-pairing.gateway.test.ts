@@ -79,6 +79,23 @@ describe('HttpKiviPairingGateway.exchange', (): void => {
     expect(headers.Authorization).toBeUndefined();
   });
 
+  it('sends order_lookup only when provided', async (): Promise<void> => {
+    const ok = (): Response =>
+      json(201, { connection_id: CONNECTION, token: TOKEN, scopes: [], expires_at: null });
+    const without = build(ok);
+    await without.gateway.exchange(request);
+    expect(JSON.parse(String(without.calls[0].init.body))).not.toHaveProperty('order_lookup');
+    const withLookup = build(ok);
+    await withLookup.gateway.exchange({
+      ...request,
+      orderLookup: { url: 'https://canal.example/api/kivi/order-lookup', key: 'a'.repeat(64) },
+    });
+    expect(JSON.parse(String(withLookup.calls[0].init.body)).order_lookup).toEqual({
+      url: 'https://canal.example/api/kivi/order-lookup',
+      key: 'a'.repeat(64),
+    });
+  });
+
   it('classifies failures without leaking code, token, URL or body', async (): Promise<void> => {
     const cases: Array<[Response, string]> = [
       [json(400, { detail: 'invalid_or_expired_code' }), 'invalid_or_expired_code'],

@@ -19,7 +19,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { EllipsisVerticalIcon, LogOutIcon, StoreIcon } from 'lucide-react';
-import { logoutAction } from '@/features/iam/actions/logout.action';
+import { LogoutForm } from '@/features/iam/components/logout-form';
 import { LocaleSwitcher } from '@/components/locale-switcher';
 
 export function NavUser({
@@ -100,7 +100,7 @@ export function NavUser({
             )}
             <LocaleSwitcher />
             <DropdownMenuSeparator />
-            <form action={logoutAction} className="w-full">
+            <LogoutForm className="w-full">
               <DropdownMenuItem
                 nativeButton
                 render={<button type="submit" className="flex w-full items-center gap-2" />}
@@ -108,7 +108,7 @@ export function NavUser({
                 <LogOutIcon />
                 {t('logout')}
               </DropdownMenuItem>
-            </form>
+            </LogoutForm>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

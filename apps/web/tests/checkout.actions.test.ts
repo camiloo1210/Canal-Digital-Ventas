@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { submitCheckoutAction } from '@/features/checkout/actions/checkout.actions';
 import { checkoutFields } from '@/features/checkout/schemas/checkout.schema';
 import { createClient } from '@/lib/supabase/server';
+import { cartDi } from '@/features/cart/di/cart.di';
 import { checkoutDi } from '@/features/checkout/di/checkout.di';
 import { invalidatePublicCatalog } from '@/lib/cache/public-catalog-cache';
 
@@ -12,10 +13,15 @@ vi.mock('@/lib/supabase/server', (): object => ({ createClient: vi.fn() }));
 vi.mock('@/features/checkout/di/checkout.di', (): object => ({
   checkoutDi: { resolveGenerateCommercialOrderUseCase: vi.fn() },
 }));
+vi.mock('@/features/cart/di/cart.di', (): object => ({
+  cartDi: { resolveActiveTenantId: vi.fn(), resolveCompleteBuyerCartUseCase: vi.fn() },
+}));
 vi.mock('@/lib/cache/public-catalog-cache', (): object => ({
   invalidatePublicCatalog: vi.fn(),
 }));
 const execute = vi.fn();
+const completeCart = vi.fn();
+const tenantId = crypto.randomUUID();
 const buyerId = crypto.randomUUID();
 const productId = crypto.randomUUID();
 function form(): FormData {
@@ -29,6 +35,11 @@ describe('checkout adapter validation and retention', (): void => {
   beforeEach((): void => {
     vi.clearAllMocks();
     execute.mockReset().mockResolvedValue(undefined);
+    completeCart.mockReset().mockResolvedValue(undefined);
+    vi.mocked(cartDi.resolveActiveTenantId).mockResolvedValue(tenantId);
+    vi.mocked(cartDi.resolveCompleteBuyerCartUseCase).mockReturnValue({
+      execute: completeCart,
+    } as unknown as ReturnType<typeof cartDi.resolveCompleteBuyerCartUseCase>);
     vi.mocked(createClient).mockResolvedValue({
       auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: buyerId } } }) },
     } as unknown as Awaited<ReturnType<typeof createClient>>);
@@ -108,5 +119,26 @@ describe('checkout adapter validation and retention', (): void => {
         reference: 'Kept value',
       },
     });
+  });
+  it('completes the server cart with the session user and resolved tenant after the order', async (): Promise<void> => {
+    const data = form();
+    data.set('userId', 'attacker');
+    const result = await submitCheckoutAction('store', { success: false, errorCode: null }, data);
+    expect(result.success).toBe(true);
+    expect(cartDi.resolveActiveTenantId).toHaveBeenCalledWith('store');
+    expect(completeCart).toHaveBeenCalledWith({ userId: buyerId, tenantId });
+  });
+  it('never fails the order when completing the cart throws', async (): Promise<void> => {
+    completeCart.mockRejectedValue(new Error('cart db down'));
+    const result = await submitCheckoutAction('store', { success: false, errorCode: null }, form());
+    expect(result.success).toBe(true);
+    vi.mocked(cartDi.resolveActiveTenantId).mockRejectedValue(new Error('tenant lookup down'));
+    const again = await submitCheckoutAction('store', { success: false, errorCode: null }, form());
+    expect(again.success).toBe(true);
+  });
+  it('does not touch the cart when the order fails', async (): Promise<void> => {
+    execute.mockRejectedValue(new Error('boom'));
+    await submitCheckoutAction('store', { success: false, errorCode: null }, form());
+    expect(completeCart).not.toHaveBeenCalled();
   });
 });

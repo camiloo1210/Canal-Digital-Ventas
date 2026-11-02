@@ -83,13 +83,15 @@ function gateway(
 }
 
 const baseUrl = KiviBaseUrl.from('https://api.kivi.example');
-const dto = { userId: OWNER, tenantId: TENANT, code: CODE };
+const dto = { userId: OWNER, tenantId: TENANT, code: CODE, publicOrigin: null };
+const KEY = 'f'.repeat(64);
+const derive = (): string => KEY;
 
 describe('PairStoreWithKiviUseCase', (): void => {
   it('exchanges the code with the store tenant id and name, encrypts the token and persists pending', async (): Promise<void> => {
     const repo = new MemoryRepo(OWNER);
     const gw = gateway();
-    await new PairStoreWithKiviUseCase(repo, tx, gw, cipher, baseUrl).execute(dto);
+    await new PairStoreWithKiviUseCase(repo, tx, gw, cipher, baseUrl, derive).execute(dto);
     expect(gw.exchanged).toEqual([{ code: CODE, externalTenantId: TENANT, name: 'Tienda Demo' }]);
     expect(repo.saved?.getStatus()).toBe('pending');
     expect(repo.saved?.getConnectionId()).toBe(KIVI_CONNECTION);
@@ -100,6 +102,53 @@ describe('PairStoreWithKiviUseCase', (): void => {
     expect(JSON.stringify(stored)).not.toContain(TOKEN);
   });
 
+  it('sends orderLookup for a public https origin', async (): Promise<void> => {
+    const gw = gateway();
+    await new PairStoreWithKiviUseCase(
+      new MemoryRepo(OWNER),
+      tx,
+      gw,
+      cipher,
+      baseUrl,
+      derive,
+    ).execute({ ...dto, publicOrigin: 'https://shop.example.com' });
+    expect(gw.exchanged[0].orderLookup).toEqual({
+      url: 'https://shop.example.com/api/kivi/order-lookup',
+      key: KEY,
+    });
+  });
+
+  it('omits orderLookup for http, localhost, private, credentialed or path origins', async (): Promise<void> => {
+    const origins = [
+      null,
+      'http://shop.example.com',
+      'https://localhost',
+      'https://localhost:3000',
+      'https://app.localhost',
+      'https://intranet',
+      'https://10.0.0.5',
+      'https://192.168.1.2',
+      'https://127.0.0.1',
+      'https://[::1]',
+      'https://shop.example.com/store',
+      'https://shop.example.com?x=1',
+      'https://user:pw@shop.example.com',
+      'not a url',
+    ];
+    for (const publicOrigin of origins) {
+      const gw = gateway();
+      await new PairStoreWithKiviUseCase(
+        new MemoryRepo(OWNER),
+        tx,
+        gw,
+        cipher,
+        baseUrl,
+        derive,
+      ).execute({ ...dto, publicOrigin });
+      expect(gw.exchanged[0], String(publicOrigin)).not.toHaveProperty('orderLookup');
+    }
+  });
+
   it('returns nothing, so the token can never reach a caller', async (): Promise<void> => {
     const result = await new PairStoreWithKiviUseCase(
       new MemoryRepo(OWNER),
@@ -107,6 +156,7 @@ describe('PairStoreWithKiviUseCase', (): void => {
       gateway(),
       cipher,
       baseUrl,
+      derive,
     ).execute(dto);
     expect(result).toBeUndefined();
   });
@@ -114,7 +164,7 @@ describe('PairStoreWithKiviUseCase', (): void => {
   it('trims the code and rejects malformed codes and raw tokens before any network call', async (): Promise<void> => {
     const repo = new MemoryRepo(OWNER);
     const gw = gateway();
-    const useCase = new PairStoreWithKiviUseCase(repo, tx, gw, cipher, baseUrl);
+    const useCase = new PairStoreWithKiviUseCase(repo, tx, gw, cipher, baseUrl, derive);
     for (const code of [
       '',
       'kvp_',
@@ -136,7 +186,7 @@ describe('PairStoreWithKiviUseCase', (): void => {
     const repo = new MemoryRepo('someone-else');
     const gw = gateway();
     await expect(
-      new PairStoreWithKiviUseCase(repo, tx, gw, cipher, baseUrl).execute(dto),
+      new PairStoreWithKiviUseCase(repo, tx, gw, cipher, baseUrl, derive).execute(dto),
     ).rejects.toBeInstanceOf(KiviLinkForbiddenException);
     expect(gw.exchanged).toHaveLength(0);
     expect(repo.saved).toBeNull();
@@ -150,7 +200,7 @@ describe('PairStoreWithKiviUseCase', (): void => {
       },
     });
     await expect(
-      new PairStoreWithKiviUseCase(repo, tx, gw, cipher, baseUrl).execute(dto),
+      new PairStoreWithKiviUseCase(repo, tx, gw, cipher, baseUrl, derive).execute(dto),
     ).rejects.toMatchObject({ failure: 'invalid_or_expired_code' });
     expect(repo.saves).toBe(0);
   });
@@ -158,7 +208,7 @@ describe('PairStoreWithKiviUseCase', (): void => {
 
 describe('UnlinkStoreFromKiviUseCase with a paired connection', (): void => {
   async function paired(repo: MemoryRepo): Promise<void> {
-    await new PairStoreWithKiviUseCase(repo, tx, gateway(), cipher, baseUrl).execute(dto);
+    await new PairStoreWithKiviUseCase(repo, tx, gateway(), cipher, baseUrl, derive).execute(dto);
   }
 
   it('revokes the token at Kivi and wipes the ciphertext', async (): Promise<void> => {
@@ -233,5 +283,45 @@ describe('UnlinkStoreFromKiviUseCase with a paired connection', (): void => {
         tenantId: TENANT,
       }),
     ).rejects.toBeInstanceOf(KiviConnectionNotFoundException);
+  });
+
+  it('registers connection tools after saving, and never fails the pairing if that throws', async (): Promise<void> => {
+    const repo = new MemoryRepo(OWNER);
+    const execute = vi.fn(async (): Promise<never> => {
+      expect(repo.saved).not.toBeNull();
+      throw new KiviPortProbeException('registrar down');
+    });
+    await expect(
+      new PairStoreWithKiviUseCase(repo, tx, gateway(), cipher, baseUrl, derive, {
+        execute,
+      }).execute({
+        ...dto,
+        publicOrigin: 'https://shop.example.com',
+      }),
+    ).resolves.toBeUndefined();
+    expect(execute).toHaveBeenCalledWith({
+      userId: OWNER,
+      tenantId: TENANT,
+      publicOrigin: 'https://shop.example.com',
+    });
+  });
+
+  it('does not register tools when the pairing itself fails', async (): Promise<void> => {
+    const execute = vi.fn(async (): Promise<'registered'> => 'registered');
+    await expect(
+      new PairStoreWithKiviUseCase(
+        new MemoryRepo(OWNER),
+        tx,
+        gateway({
+          exchange: async (): Promise<never> =>
+            Promise.reject(new KiviPairingException('unavailable')),
+        }),
+        cipher,
+        baseUrl,
+        derive,
+        { execute },
+      ).execute(dto),
+    ).rejects.toBeInstanceOf(KiviPairingException);
+    expect(execute).not.toHaveBeenCalled();
   });
 });

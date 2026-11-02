@@ -74,9 +74,22 @@ describe('loadKiviSyncWorkerConfig', (): void => {
     ).toThrow('KIVI_TOKEN_ENCRYPTION_KEY');
   });
 
+  it('looks for due work every 2 seconds by default and bounds the interval', (): void => {
+    expect(loadKiviSyncWorkerConfig(base).cycleIntervalMs).toBe(2000);
+    expect(
+      loadKiviSyncWorkerConfig({ ...base, KIVI_CYCLE_INTERVAL_MS: '500' }).cycleIntervalMs,
+    ).toBe(500);
+    for (const value of ['499', '60001', '1.5', 'abc']) {
+      expect((): KiviSyncWorkerConfig =>
+        loadKiviSyncWorkerConfig({ ...base, KIVI_CYCLE_INTERVAL_MS: value }),
+      ).toThrow('KIVI_CYCLE_INTERVAL_MS');
+    }
+  });
+
   it('applies safe defaults', (): void => {
     expect(loadKiviSyncWorkerConfig(base)).toMatchObject({
       pollIntervalMs: 1000,
+      cycleIntervalMs: 2000,
       reconcileIntervalMs: 6 * 3_600_000,
       allowLocalDevelopment: false,
     });
@@ -140,6 +153,8 @@ describe('PostgresKiviSyncStoreAdapter', (): void => {
           tenant_id: 't',
           name: 'Cafe',
           price_cents: 350,
+          wholesale_price_cents: 275,
+          wholesale_min_quantity: 12,
           description: null,
           stock: 2,
           status: 'active',
@@ -151,7 +166,14 @@ describe('PostgresKiviSyncStoreAdapter', (): void => {
     const connection = await store.findConnection('11111111-1111-4111-8111-111111111111');
     expect(connection?.getStatus()).toBe('needs_reconcile');
     const found = await store.findProduct('t', 'p1');
-    expect(found).toMatchObject({ id: 'p1', priceCents: 350, version: 3, status: 'active' });
+    expect(found).toMatchObject({
+      id: 'p1',
+      priceCents: 350,
+      wholesalePriceCents: 275,
+      wholesaleMinQuantity: 12,
+      version: 3,
+      status: 'active',
+    });
     expect(connection?.getSecretRef()).toBeNull();
     expect(connection?.getEncryptedToken()).toEqual({ ciphertext: 'v1.aaaa.bbbb', keyVersion: 1 });
     expect(queries[0]).toContain('core.kivi_sync_get_connection_v3');

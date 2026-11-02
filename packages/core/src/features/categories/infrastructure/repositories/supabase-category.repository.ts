@@ -148,6 +148,24 @@ export class SupabaseCategoryRepository implements CategoryRepositoryPort {
     }
   }
 
+  async countProductsInCategory(id: CategoryId, tenantId: TenantId): Promise<number> {
+    const { count, error } = await this.supabase
+      .schema('catalog')
+      .from('products')
+      .select('id', { count: 'exact', head: true })
+      .eq('category_id', id)
+      .eq('tenant_id', tenantId)
+      .neq('status', 'archived');
+
+    if (error) {
+      throw new CategoryRepositoryException(
+        `Failed to count category products: ${error.message}`,
+        error,
+      );
+    }
+    return count ?? 0;
+  }
+
   async deleteById(id: CategoryId, tenantId: TenantId): Promise<void> {
     const { error } = await this.supabase
       .schema('catalog')

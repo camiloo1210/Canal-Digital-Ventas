@@ -63,3 +63,33 @@ Operators can inspect `connection_order_deliveries` through administrative acces
 - An independent review reported seven significant findings corrected. A local component preview with synthetic data covered loading, rejection, input retention, confirmation, and mobile sizing.
 
 These are historical implementation notes, not additional checks executed by the current source audit. Deployment acceptance still requires real RabbitMQ, a Meta test number, and the correct tenant widget and origin. No real message delivery or production activation is reported.
+
+## Order lookup for Kivi (HU-16)
+
+Kivi answers "where is my order?" by calling `POST /api/kivi/order-lookup` on Canal Digital. Nothing is copied or stored in Kivi: each call reads the live order status.
+
+- Request: JSON `{"tenantId": uuid, "phone": "digits only, 8-15, no +", "orderNumber": string|null}` (`tenantId` is the Canal store id Canal already sends to Kivi as `external_tenant_id`), at most 2 KB (413 otherwise), with headers `X-Kivi-Timestamp` (unix seconds) and `X-Kivi-Signature` (lowercase hex).
+- Signature: `keyBytes = HMAC_SHA256(masterBytes, "kivi-order-lookup:v1:" + tenantId)` where `masterBytes` is the base64-decoded `KIVI_TOKEN_ENCRYPTION_KEY`; `signature = hex(HMAC_SHA256(keyBytes, timestamp + "." + rawBody))`. Timestamps more than 300 seconds from server time are rejected. Verification happens before any database access (tenant read from the raw body); every authentication failure returns 401 `{"error":"unauthorized"}`. If `KIVI_TOKEN_ENCRYPTION_KEY` is unusable the endpoint returns 503 `{"error":"unavailable"}`.
+- Response 200: `{"orders":[{"orderNumber","status","updatedAt"}]}`, newest first, at most 5, excluding `draft`. The store must have a non-unlinked row in `core.kivi_connections`; otherwise the list is empty. Customer data, items, totals and addresses are never returned. Responses use `Cache-Control: no-store`; logs never contain the phone number.
+
+### Automatic setup (nothing to configure)
+
+The store owner configures nothing. During the pairing exchange (`POST /pairing/exchange`) Canal sends Kivi an optional `order_lookup` object: `{"url": "https://<canal-origin>/api/kivi/order-lookup", "key": "<64 hex>"}`. The key is the hex of `keyBytes` above (Kivi signs with the hex-decoded bytes). It is sent only when the request origin is a bare public https origin (no path, query or credentials; not localhost or a private address); in local development pairing still works without it.
+
+- Prerequisites: the existing `KIVI_TOKEN_ENCRYPTION_KEY` and a public https domain.
+- Stores paired before this change must re-pair once (new Kivi pairing code) to enable order lookup.
+- Re-running pairing re-registers the URL and key automatically.
+
+### How Kivi uses it
+
+Kivi's `get_order_status` tool calls this endpoint live when a contact with a verified WhatsApp number asks about an order. Kivi stores no copy of Canal Digital orders. Calls use a 2.5-second timeout, a per-connection concurrency limit, a circuit breaker and a 20-second cache. If Canal Digital is unavailable the assistant says it cannot check right now instead of guessing. A widget visitor without a verified phone gets "no order found".
+
+## Connection tools for Kivi
+
+Besides order lookup, Canal Digital registers its own read-only lookup tools with Kivi, which calls them live during a conversation. Nothing is copied into Kivi.
+
+- Registration: `PUT {kiviBaseUrl}/api/v1/connections/{connectionId}/tools` (bearer `kc_` token, scope `tools:write`) with `{"base_url": "<canal-origin>/api/kivi/tools", "key": "<64 hex>", "tools": [...]}`. It is a full replace and idempotent. A 403/404 from Kivi (scope or feature missing) is treated as "not available", never as an error.
+- Automatic: it runs right after a successful pairing, using the public https origin of the pairing request (same origin rule as order lookup: bare public https only). It is best effort and can never make pairing fail. The sync worker has no request origin and nothing new is stored, so there is no background re-registration: to re-register (new tools, new origin, or a store paired before this change), unlink and re-pair once with a new Kivi pairing code. Stores paired before Kivi added the `tools:write` scope need that one-time re-pair to obtain the new scope.
+- Calls: `POST /api/kivi/tools/{toolName}` with JSON `{"tenantId","tool","arguments","contact"?}`, at most 4 KiB (413). Signature as for order lookup but with the context string `kivi-tools:v1:` + tenantId (`keyBytes = HMAC_SHA256(masterBytes, "kivi-tools:v1:" + tenantId)`; `X-Kivi-Signature = hex(HMAC_SHA256(keyBytes, timestamp + "." + rawBody))`, window 300 s). Verified before any database access; auth failures return 401 `{"error":"unauthorized"}`, an unusable master key 503, invalid arguments 400, an unknown tool 404 `{"error":"unknown_tool"}`. Responses use `Cache-Control: no-store`; logs hold the error class only, never phone numbers or arguments.
+- Tool catalog (`packages/core/src/features/kivi/application/kivi-tool-catalog.ts`): `get_product_details` (`query`, string, required, max 100; no contact phone; 30 s cache). It searches active or out-of-stock products by name (substring) or SKU (exact or prefix), at most 5, and returns `{"products":[{"name","sku","category","price","currency","wholesale_price","wholesale_min_quantity","availability"}]}`.
+- Privacy rule: tools never return exact stock numbers, costs or internal ids. `availability` uses the storefront thresholds: `available` (stock above 20), `low_stock` (1 to 20), `out_of_stock` (0).

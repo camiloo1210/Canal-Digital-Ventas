@@ -25,13 +25,42 @@ export interface CartState {
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
+  /** Last server cart version known for the synchronised (authenticated) cart. */
+  serverVersion: number | null;
+  hydration: CartHydrationStatus;
+  setServerVersion: (version: number | null) => void;
+  setHydration: (status: CartHydrationStatus) => void;
+  /** Replaces the local cart with the normalised server cart without clearing the tenant guard. */
+  replaceFromServer: (tenantSlug: string, items: CartItem[], version: number) => void;
+  /** Forgets the cart on this browser (sign-out on a shared computer). The server copy is kept. */
+  resetForSignOut: () => void;
 }
+
+export type CartHydrationStatus = 'idle' | 'loading' | 'ready' | 'failed';
 
 export const useCartStore = create<CartState>()(
   persist(
     (set, get): CartState => ({
       tenantSlug: null,
       items: [],
+      serverVersion: null,
+      hydration: 'idle',
+
+      setServerVersion: (version: number | null): void => {
+        set({ serverVersion: version });
+      },
+
+      setHydration: (status: CartHydrationStatus): void => {
+        set({ hydration: status });
+      },
+
+      replaceFromServer: (tenantSlug: string, items: CartItem[], version: number): void => {
+        set({ tenantSlug, items, serverVersion: version });
+      },
+
+      resetForSignOut: (): void => {
+        set({ tenantSlug: null, items: [], serverVersion: null, hydration: 'idle' });
+      },
 
       setTenant: (tenantSlug: string): void => {
         set({ tenantSlug });
@@ -103,6 +132,10 @@ export const useCartStore = create<CartState>()(
     {
       name: 'canal-digital-cart',
       storage: createJSONStorage((): Storage => localStorage),
+      partialize: (state): Pick<CartState, 'tenantSlug' | 'items'> => ({
+        tenantSlug: state.tenantSlug,
+        items: state.items,
+      }),
     },
   ),
 );

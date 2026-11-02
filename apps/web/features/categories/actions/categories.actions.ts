@@ -238,6 +238,9 @@ export async function archiveCategoryAction(
     await invalidateActiveTenantCatalog(user.id);
     isSuccess = true;
   } catch (error: unknown) {
+    if (error instanceof Error && error.name === 'CategoryHasProductsException') {
+      return { error: t('errors_categoryHasProducts'), success: false };
+    }
     console.error('Critical Server Exception:', error);
     return { error: t('errors_unexpected'), success: false };
   }

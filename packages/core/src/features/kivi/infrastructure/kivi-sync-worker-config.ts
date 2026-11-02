@@ -4,6 +4,8 @@ import { loadKiviTokenCipher } from '@/kivi/infrastructure/aes-gcm-kivi-token.ci
 export interface KiviSyncWorkerConfig {
   databaseUrl: string;
   pollIntervalMs: number;
+  /** How often the worker looks for connections due for an initial load or reconcile. */
+  cycleIntervalMs: number;
   reconcileIntervalMs: number;
   retryIntervalMs: number;
   allowLocalDevelopment: boolean;
@@ -44,6 +46,8 @@ export function loadKiviSyncWorkerConfig(
   return {
     databaseUrl,
     pollIntervalMs: boundedInteger(env, 'KIVI_POLL_INTERVAL_MS', 1000, 1, 60_000),
+    // "Sync now" is picked up at the next look: keep it short so owners see it start in seconds.
+    cycleIntervalMs: boundedInteger(env, 'KIVI_CYCLE_INTERVAL_MS', 2000, 500, 60_000),
     reconcileIntervalMs: boundedInteger(
       env,
       'KIVI_RECONCILE_INTERVAL_MS',
