@@ -1,4 +1,6 @@
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
 import {
   getStoreProductReadRepository,
   getStorePurchaseInfoReadRepository,
@@ -10,7 +12,6 @@ import { StoreProductStockBadge } from '@/features/store/components/store-produc
 import { ProductImageCarousel } from '@/features/store/components/product-image-carousel';
 import { getStoreViewerQuery } from '@/features/store/queries/store-viewer.query';
 import { AddToCartButton } from '@/features/cart/components/add-to-cart-button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default async function ProductDetailPage(props: {
   params: Promise<{ tenantSlug: string; productId: string }>;
@@ -46,48 +47,61 @@ export default async function ProductDetailPage(props: {
   const maxQuantity = purchaseInfo?.availableQuantity ?? 0;
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 w-full">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-12">
-          <div className="min-w-0">
+    <div className="flex min-h-screen flex-col">
+      <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
+        <Link
+          href={`/store/${tenantSlug}`}
+          className="mb-5 inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        >
+          <ArrowLeft aria-hidden="true" className="size-4" />
+          {t('backToProducts')}
+        </Link>
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:gap-14">
+          <div className="min-w-0 md:sticky md:top-6 md:self-start">
             <ProductImageCarousel images={galleryImages} alt={product.name} />
           </div>
 
-          <div className="flex flex-col justify-start">
-            {product.sku && (
-              <span className="text-xs text-muted-foreground mb-2">{product.sku}</span>
-            )}
+          <div className="flex min-w-0 flex-col gap-6">
+            <header className="space-y-3">
+              {product.sku && (
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  {t('sku')}: {product.sku}
+                </p>
+              )}
+              <h1 className="text-balance text-2xl font-semibold leading-tight text-foreground [overflow-wrap:anywhere] sm:text-3xl lg:text-4xl">
+                {product.name}
+              </h1>
+            </header>
 
-            <h1 className="text-2xl sm:text-3xl font-semibold text-foreground mb-4">
-              {product.name}
-            </h1>
-
-            <div className="text-3xl sm:text-4xl font-semibold text-foreground mb-3">
-              {formatMoney(product.priceCents, 'USD', locale)}
-            </div>
-
-            {product.wholesalePriceCents !== null && product.wholesaleMinQuantity !== null && (
-              <div className="mb-5 flex items-center gap-2">
-                <Badge variant="secondary" className="text-sm">
-                  {t('wholesaleBadge')}
-                </Badge>
-                <span className="text-muted-foreground text-sm font-medium">
-                  {formatMoney(product.wholesalePriceCents, 'USD', locale)} ({t('wholesaleMin')}:{' '}
-                  {product.wholesaleMinQuantity})
-                </span>
+            <section
+              aria-label={t('availability')}
+              className="space-y-5 rounded-xl border bg-card p-5 shadow-sm sm:p-6"
+            >
+              <div className="space-y-2">
+                <p className="text-3xl font-semibold tabular-nums text-foreground sm:text-4xl">
+                  {formatMoney(product.priceCents, 'USD', locale)}
+                </p>
+                {product.wholesalePriceCents !== null && product.wholesaleMinQuantity !== null && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="secondary">{t('wholesaleBadge')}</Badge>
+                    <span className="text-sm font-medium tabular-nums text-muted-foreground">
+                      {formatMoney(product.wholesalePriceCents, 'USD', locale)} ({t('wholesaleMin')}
+                      : {product.wholesaleMinQuantity})
+                    </span>
+                  </div>
+                )}
               </div>
-            )}
 
-            <div className="mb-6 space-y-4">
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3 border-t pt-4">
                 <span className="text-sm text-muted-foreground">{t('availability')}</span>
                 <StoreProductStockBadge availability={product.stockAvailability} />
                 {viewer.isAuthenticated && purchaseInfo && (
-                  <span className="text-sm font-medium text-foreground">
+                  <span className="text-sm font-medium tabular-nums text-foreground">
                     {t('purchase.limited', { count: maxQuantity })}
                   </span>
                 )}
               </div>
+
               <AddToCartButton
                 key={product.id}
                 productId={product.id}
@@ -100,20 +114,17 @@ export default async function ProductDetailPage(props: {
                 hasVariants={product.hasVariants}
                 tenantSlug={tenantSlug}
               />
-              <p className="text-sm leading-relaxed text-muted-foreground">
+              <p className="text-xs leading-relaxed text-muted-foreground">
                 {t('purchase.stockConfirmation')}
               </p>
-            </div>
-            <Card>
-              <CardHeader>
-                <CardTitle>
-                  <h2>{t('aboutThisProduct')}</h2>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-muted-foreground whitespace-pre-wrap leading-relaxed [overflow-wrap:anywhere]">
+            </section>
+
+            <section className="space-y-3">
+              <h2 className="text-base font-semibold text-foreground">{t('aboutThisProduct')}</h2>
+              <p className="max-w-prose whitespace-pre-wrap leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">
                 {product.description || t('noDescription')}
-              </CardContent>
-            </Card>
+              </p>
+            </section>
           </div>
         </div>
       </div>
