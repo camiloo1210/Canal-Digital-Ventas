@@ -6,7 +6,7 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { getDashboardContextQuery } from '@/features/dashboard/queries/dashboard-context.query';
-import { logoutAction } from '@/features/iam/actions/logout.action';
+import { LogoutForm } from '@/features/iam/components/logout-form';
 
 export default async function DashboardLayout({
   children,
@@ -28,11 +28,11 @@ export default async function DashboardLayout({
           <Button nativeButton={false} render={<Link href="/" />}>
             {t('backToStores')}
           </Button>
-          <form action={logoutAction}>
+          <LogoutForm>
             <Button variant="outline" type="submit">
               {t('logout')}
             </Button>
-          </form>
+          </LogoutForm>
         </div>
       </main>
     );
