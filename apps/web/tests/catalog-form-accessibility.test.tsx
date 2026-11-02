@@ -23,6 +23,7 @@ describe('catalog form accessibility', (): void => {
         <ProductFormFields
           categories={[]}
           currency="USD"
+          managed={false}
           defaultValues={{ wholesaleMinQuantity: '37' }}
           fieldErrors={{ price: [en.CatalogForms.moneyFormat] }}
           revision={1}
@@ -40,6 +41,7 @@ describe('catalog form accessibility', (): void => {
       <ProductFormFields
         categories={[]}
         currency="EUR"
+        managed={false}
         defaultValues={{ wholesaleMinQuantity: '37', sku: 'ABC123', price: '12abc' }}
         fieldErrors={{ price: ['Importe inválido'], image: ['Imagen inválida'] }}
         revision={1}

@@ -1,8 +1,5 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
-import { ImageIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ProductFormContextReadModel } from '@canaldigital/packages/core';
 import { Input } from '@/components/ui/input';
@@ -17,9 +14,8 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select';
+import { ProductGalleryField } from '@/features/products/components/product-gallery-field';
 import {
-  PRODUCT_IMAGE_MIME_EXTENSIONS,
-  PRODUCT_IMAGE_MAX_BYTES,
   type ProductFormValues,
   type ProductFieldName,
 } from '@/features/products/schemas/product-form.schema';
@@ -30,7 +26,8 @@ interface ProductFormFieldsProps {
   fieldErrors: Partial<Record<ProductFieldName, string[]>>;
   categories: CategoryOption[];
   defaultValues?: Partial<ProductFormValues>;
-  imageUrl?: string | null;
+  galleryUrls?: string[];
+  managed: boolean;
   currency: string;
   clearField: (name: string) => void;
 }
@@ -101,20 +98,12 @@ export function ProductFormFields({
   fieldErrors,
   revision,
   clearField,
-  imageUrl,
+  galleryUrls,
+  managed,
   currency,
 }: ProductFormFieldsProps): React.JSX.Element {
   const t = useTranslations('CatalogForms');
   const p = useTranslations('Products');
-  const [previewUrl, setPreviewUrl] = useState<string | null>(imageUrl ?? null);
-  const [filename, setFilename] = useState('');
-  const objectUrlRef = useRef<string | null>(null);
-  useEffect(
-    (): (() => void) => (): void => {
-      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
-    },
-    [],
-  );
   const errorFor = (name: ProductFieldName): string | undefined => fieldErrors[name]?.[0];
   const common = { revision, clearField };
   const categoryError = errorFor('categoryId');
@@ -318,57 +307,13 @@ export function ProductFormFields({
           </CardTitle>
           <CardDescription>{t('imageHelp')}</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="relative mx-auto flex aspect-square w-full max-w-64 items-center justify-center overflow-hidden rounded-lg border bg-muted/30">
-            {previewUrl ? (
-              <Image
-                src={previewUrl}
-                alt={t('imagePreview')}
-                fill
-                unoptimized
-                sizes="256px"
-                className="object-contain"
-              />
-            ) : (
-              <div className="flex flex-col items-center gap-3 p-4 text-center text-sm text-muted-foreground">
-                <ImageIcon aria-hidden="true" className="size-8" />
-                {t('noImage')}
-              </div>
-            )}
-          </div>
-          <Field data-invalid={Boolean(errorFor('image'))}>
-            <FieldLabel htmlFor="image">
-              {p('form_image')}
-              <span className="font-normal text-muted-foreground">{t('optional')}</span>
-            </FieldLabel>
-            <Input
-              id="image"
-              name="image"
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              className="min-h-11 w-full min-w-0 scroll-mt-6 text-sm"
-              aria-invalid={Boolean(errorFor('image'))}
-              aria-describedby={'image-help' + (errorFor('image') ? ' image-error' : '')}
-              onChange={(event): void => {
-                clearField('image');
-                const file = event.target.files?.[0];
-                if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
-                objectUrlRef.current = null;
-                setFilename(file?.name ?? '');
-                if (
-                  file &&
-                  Object.hasOwn(PRODUCT_IMAGE_MIME_EXTENSIONS, file.type) &&
-                  file.size <= PRODUCT_IMAGE_MAX_BYTES
-                ) {
-                  objectUrlRef.current = URL.createObjectURL(file);
-                  setPreviewUrl(objectUrlRef.current);
-                } else setPreviewUrl(imageUrl ?? null);
-              }}
-            />
-            <FieldDescription id="image-help">{t('imageFormats')}</FieldDescription>
-            {filename && <p className="break-all text-xs text-muted-foreground">{filename}</p>}
-            {errorFor('image') && <FieldError id="image-error">{errorFor('image')}</FieldError>}
-          </Field>
+        <CardContent>
+          <ProductGalleryField
+            initialUrls={galleryUrls ?? []}
+            managed={managed}
+            error={errorFor('image')}
+            clearField={clearField}
+          />
         </CardContent>
       </Card>
     </div>
