@@ -140,6 +140,9 @@ export type {
 } from '@/products/application/ports/out/public-product-read-repository.port';
 export { SupabasePublicCategoryReadRepository } from '@/categories/infrastructure/repositories/supabase-public-category-read.repository';
 export { SupabasePublicProductReadRepository } from '@/products/infrastructure/repositories/supabase-public-product-read.repository';
+export type { PublicProductPurchaseInfoReadModel } from '@/products/application/read-models/public-product-purchase-info.model';
+export type { PublicProductPurchaseInfoReadRepositoryPort } from '@/products/application/ports/out/public-product-purchase-info-read-repository.port';
+export { PostgresPublicProductPurchaseInfoReadRepository } from '@/products/infrastructure/repositories/postgres-public-product-purchase-info-read.repository';
 export * from '@/categories/domain/value-objects/category-slug.vo';
 
 export type { PublicTenantReadModel } from '@/tenants/application/read-models/public-tenant-read.model';

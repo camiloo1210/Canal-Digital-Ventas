@@ -1,5 +1,6 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
+import { sql } from '@/lib/postgres/server';
 import {
   CachedPublicCategoryReadRepository,
   CachedPublicProductReadRepository,
@@ -9,6 +10,8 @@ import {
   SupabasePublicCategoryReadRepository,
   SupabasePublicProductReadRepository,
   SupabasePublicTenantReadAdapter,
+  PostgresPublicProductPurchaseInfoReadRepository,
+  type PublicProductPurchaseInfoReadRepositoryPort,
   PublicCategoryReadRepositoryPort,
   PublicProductReadRepositoryPort,
   PublicTenantReadRepositoryPort,
@@ -27,4 +30,8 @@ export async function getStoreCategoryReadRepository(): Promise<PublicCategoryRe
 export async function getStoreProductReadRepository(): Promise<PublicProductReadRepositoryPort> {
   const supabase = await createClient();
   return new CachedPublicProductReadRepository(new SupabasePublicProductReadRepository(supabase));
+}
+
+export function getStorePurchaseInfoReadRepository(): PublicProductPurchaseInfoReadRepositoryPort {
+  return new PostgresPublicProductPurchaseInfoReadRepository(sql);
 }
