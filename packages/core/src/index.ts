@@ -306,7 +306,10 @@ export { KiviCredentialResolver } from '@/kivi/infrastructure/kivi-credential.re
 export { EnvKiviSecretResolver } from '@/kivi/infrastructure/env-kivi-secret.resolver';
 export { KiviGatewayException } from '@/kivi/application/exceptions/kivi-gateway.exception';
 export type { KiviWhatsAppResult } from '@/kivi/application/ports/out/kivi-whatsapp-gateway.port';
-export { loadKiviTokenCipher } from '@/kivi/infrastructure/aes-gcm-kivi-token.cipher';
+export {
+  decodeKiviTokenEncryptionKey,
+  loadKiviTokenCipher,
+} from '@/kivi/infrastructure/aes-gcm-kivi-token.cipher';
 export { PostgresKiviStoreWidgetReadRepository } from '@/kivi/infrastructure/postgres-kivi-store-widget-read.repository';
 export type {
   KiviStoreWidget,
@@ -321,3 +324,54 @@ export type {
   KiviDeliverySummary,
   KiviNotificationSettings,
 } from '@/kivi/application/ports/out/kivi-messaging.port';
+
+// Kivi order lookup (HU-16): signed, read-only endpoint for "where is my order?".
+export { PostgresKiviOrderLookupReadRepository } from '@/kivi/infrastructure/postgres-kivi-order-lookup-read.repository';
+export { KiviOrderLookupReadException } from '@/kivi/infrastructure/kivi-order-lookup-read.exception';
+export {
+  deriveKiviOrderLookupKey,
+  signKiviOrderLookup,
+  verifyKiviOrderLookupSignature,
+  type KiviOrderLookupSignatureInput,
+} from '@/kivi/infrastructure/kivi-order-lookup-signature';
+export type {
+  KiviOrderLookupItem,
+  KiviOrderLookupQuery,
+  KiviOrderLookupReadPort,
+} from '@/kivi/application/ports/out/kivi-order-lookup-read.port';
+
+// Kivi connection tools: live, read-only lookups Kivi calls on behalf of the chatbot.
+export {
+  deriveKiviToolsKey,
+  signKiviTools,
+  verifyKiviToolsSignature,
+  type KiviToolsSignatureInput,
+} from '@/kivi/infrastructure/kivi-tools-signature';
+export {
+  KIVI_TOOL_CATALOG,
+  KIVI_TOOLS_PATH,
+  GET_PRODUCT_DETAILS_TOOL,
+  type KiviToolDefinition,
+  type KiviToolParameter,
+} from '@/kivi/application/kivi-tool-catalog';
+export { publicHttpsOrigin } from '@/kivi/application/kivi-public-origin';
+export { HttpKiviToolsGateway } from '@/kivi/infrastructure/http-kivi-tools.gateway';
+export type {
+  KiviToolsGatewayPort,
+  KiviToolsRegistration,
+  KiviToolsRegistrationResult,
+} from '@/kivi/application/ports/out/kivi-tools-gateway.port';
+export {
+  RegisterKiviToolsUseCase,
+  type KiviToolsRegistrar,
+  type RegisterKiviToolsDto,
+  type RegisterKiviToolsOutcome,
+} from '@/kivi/application/use-cases/register-kivi-tools.use-case';
+export { PostgresKiviProductLookupReadRepository } from '@/kivi/infrastructure/postgres-kivi-product-lookup-read.repository';
+export { KiviProductLookupReadException } from '@/kivi/infrastructure/kivi-product-lookup-read.exception';
+export type {
+  KiviProductAvailability,
+  KiviProductLookupItem,
+  KiviProductLookupQuery,
+  KiviProductLookupReadPort,
+} from '@/kivi/application/ports/out/kivi-product-lookup-read.port';

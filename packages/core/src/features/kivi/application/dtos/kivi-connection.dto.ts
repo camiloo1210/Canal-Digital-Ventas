@@ -12,6 +12,11 @@ export interface PairStoreWithKiviDto {
   tenantId: string;
   /** One-time `kvp_...` pairing code generated in Kivi. Never persisted. */
   code: string;
+  /**
+   * Bare public https origin of this deployment (e.g. https://shop.example), or null when unknown.
+   * Used only to hand Kivi the order-lookup URL and key; ignored when not a public https origin.
+   */
+  publicOrigin: string | null;
 }
 
 export interface RequestKiviSyncDto {

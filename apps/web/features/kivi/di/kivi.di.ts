@@ -7,6 +7,8 @@ import {
   HttpKiviNotificationSettingsGateway,
   type KiviMessagingReadPort,
   PostgresKiviStoreWidgetReadRepository,
+  PostgresKiviOrderLookupReadRepository,
+  type KiviOrderLookupReadPort,
   type KiviStoreWidgetReadPort,
   HttpKiviWhatsAppGateway,
   KiviCredentialResolver,
@@ -20,6 +22,14 @@ import {
   RequestKiviSyncUseCase,
   UnlinkStoreFromKiviUseCase,
   loadKiviPlatformConfig,
+  decodeKiviTokenEncryptionKey,
+  KiviConfigurationException,
+  deriveKiviOrderLookupKey,
+  deriveKiviToolsKey,
+  HttpKiviToolsGateway,
+  RegisterKiviToolsUseCase,
+  PostgresKiviProductLookupReadRepository,
+  type KiviProductLookupReadPort,
   type KiviConnectionReadRepositoryPort,
   type UnlinkStoreFromKiviDependencies,
 } from '@canaldigital/packages/core';
@@ -75,6 +85,23 @@ export function getKiviConnectionReadRepository(): KiviConnectionReadRepositoryP
   return new PostgresKiviConnectionReadRepository(sql);
 }
 
+function masterKeyOrThrow(): Buffer {
+  const master = decodeKiviTokenEncryptionKey(process.env.KIVI_TOKEN_ENCRYPTION_KEY);
+  if (master === null) throw new KiviConfigurationException('KIVI_TOKEN_ENCRYPTION_KEY');
+  return master;
+}
+
+export function getRegisterKiviToolsUseCase(): RegisterKiviToolsUseCase {
+  const platform = loadKiviPlatformConfig(process.env);
+  return new RegisterKiviToolsUseCase(
+    new PostgresKiviConnectionRepository(platform.urlOptions),
+    new PostgresTransactionManagerAdapter(sql),
+    new KiviCredentialResolver(platform.cipher, new EnvKiviSecretResolver(process.env)),
+    new HttpKiviToolsGateway({ urlOptions: platform.urlOptions }),
+    (tenantId: string): string => deriveKiviToolsKey(masterKeyOrThrow(), tenantId),
+  );
+}
+
 export function getPairStoreWithKiviUseCase(): PairStoreWithKiviUseCase {
   const platform = loadKiviPlatformConfig(process.env);
   return new PairStoreWithKiviUseCase(
@@ -83,6 +110,12 @@ export function getPairStoreWithKiviUseCase(): PairStoreWithKiviUseCase {
     new HttpKiviPairingGateway({ baseUrl: platform.baseUrl, urlOptions: platform.urlOptions }),
     platform.cipher,
     platform.baseUrl,
+    (tenantId: string): string => {
+      const master = decodeKiviTokenEncryptionKey(process.env.KIVI_TOKEN_ENCRYPTION_KEY);
+      if (master === null) throw new KiviConfigurationException('KIVI_TOKEN_ENCRYPTION_KEY');
+      return deriveKiviOrderLookupKey(master, tenantId);
+    },
+    getRegisterKiviToolsUseCase(),
   );
 }
 
@@ -131,4 +164,12 @@ export function getRequestKiviSyncUseCase(): RequestKiviSyncUseCase {
     new PostgresKiviConnectionRepository(rowUrlOptions()),
     new PostgresTransactionManagerAdapter(sql),
   );
+}
+
+export function getKiviOrderLookupReadRepository(): KiviOrderLookupReadPort {
+  return new PostgresKiviOrderLookupReadRepository(sql);
+}
+
+export function getKiviProductLookupReadRepository(): KiviProductLookupReadPort {
+  return new PostgresKiviProductLookupReadRepository(sql);
 }
