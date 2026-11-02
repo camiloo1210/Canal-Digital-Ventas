@@ -6,6 +6,10 @@ export interface KiviSourceProduct {
   tenantId: string;
   name: string;
   priceCents: number;
+  /** Per-unit wholesale price in cents; 0 when the product has no wholesale offer. */
+  wholesalePriceCents: number;
+  /** Minimum units for the wholesale price; 0 when there is no offer. */
+  wholesaleMinQuantity: number;
   description: string | null;
   stock: number;
   status: 'active' | 'inactive' | 'out_of_stock' | 'archived';

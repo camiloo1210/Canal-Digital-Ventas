@@ -19,6 +19,8 @@ const payload: KiviProductPayload = {
   version: 3,
   name: 'Cafe',
   price: '3.50',
+  wholesale_price: null,
+  wholesale_min_quantity: null,
   currency: 'USD',
   description: null,
   is_available: true,

@@ -23,8 +23,6 @@ export interface KiviSyncWorkerLogger {
   error(message: string): void;
 }
 
-const SCHEDULER_TICK_MS = 30_000;
-
 /**
  * Worker composition root: relays Product outbox events to Kivi (complete only on confirmed
  * acceptance) and periodically runs initial loads and reconciliations. Log lines are static
@@ -74,7 +72,7 @@ export async function runKiviSyncWorker(
         failures = 0;
         onReady(true);
         if (Date.now() >= nextCycleAt) {
-          nextCycleAt = Date.now() + SCHEDULER_TICK_MS;
+          nextCycleAt = Date.now() + config.cycleIntervalMs;
           const result = await cycle.execute(new Date());
           if (result.deadEventFlags > 0) {
             logger.warn(
