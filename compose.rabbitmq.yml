@@ -1,4 +1,4 @@
-x-worker: &worker # Built once from this repository; shared by all ten worker services.
+x-worker: &worker # Built once from this repository; shared by all eleven worker services.
   image: canaldigital-messaging-worker:local
   pull_policy: never
   init: true
@@ -187,8 +187,16 @@ services:
       KIVI_SYNC_DATABASE_URL: ${KIVI_SYNC_DATABASE_URL:?Configure KIVI_SYNC_DATABASE_URL}
       KIVI_TOKEN_ENCRYPTION_KEY: ${KIVI_TOKEN_ENCRYPTION_KEY:?Configure KIVI_TOKEN_ENCRYPTION_KEY (base64, 32 bytes; same as the web app)}
       KIVI_POLL_INTERVAL_MS: ${KIVI_POLL_INTERVAL_MS:-1000}
+      KIVI_CYCLE_INTERVAL_MS: ${KIVI_CYCLE_INTERVAL_MS:-2000}
       KIVI_RECONCILE_INTERVAL_MS: ${KIVI_RECONCILE_INTERVAL_MS:-21600000}
       KIVI_RETRY_INTERVAL_MS: ${KIVI_RETRY_INTERVAL_MS:-300000}
+
+  cart-retention:
+    <<: *worker
+    command: ['src/cart-retention.ts']
+    environment:
+      WORKER_HEALTH_PORT: '8081'
+      CART_RETENTION_DATABASE_URL: ${CART_RETENTION_DATABASE_URL:?Configure CART_RETENTION_DATABASE_URL}
 
 volumes:
   rabbitmq-data:
