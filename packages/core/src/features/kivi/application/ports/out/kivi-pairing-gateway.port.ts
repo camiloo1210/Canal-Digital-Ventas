@@ -7,6 +7,8 @@ export interface KiviPairingExchangeRequest {
   externalTenantId: string;
   /** Human-readable store name. */
   name: string;
+  /** Optional order-lookup registration. `key` is secret: never log it. */
+  orderLookup?: { url: string; key: string };
 }
 
 export interface KiviPairingExchangeResult {

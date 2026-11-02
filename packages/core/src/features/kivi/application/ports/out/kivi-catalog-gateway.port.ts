@@ -10,6 +10,9 @@ export interface KiviProductPayload {
   name: string;
   /** Decimal string, e.g. "3.50". */
   price: string;
+  /** Decimal string of the per-unit wholesale price, or null when there is no offer. */
+  wholesale_price: string | null;
+  wholesale_min_quantity: number | null;
   currency: string;
   description: string | null;
   is_available: boolean;

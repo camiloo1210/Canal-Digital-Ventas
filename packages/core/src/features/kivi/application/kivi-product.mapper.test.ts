@@ -7,6 +7,8 @@ const product: KiviSourceProduct = {
   tenantId: 't1',
   name: 'Cafe',
   priceCents: 350,
+  wholesalePriceCents: 0,
+  wholesaleMinQuantity: 0,
   description: 'Del dia',
   stock: 4,
   status: 'active',
@@ -31,6 +33,25 @@ describe('kivi product mapping', (): void => {
     expect(toKiviProductPayload(product).price).toBe('3.50');
     expect(toKiviProductPayload({ ...product, priceCents: 5 }).price).toBe('0.05');
     expect(toKiviProductPayload({ ...product, priceCents: 1000000 }).price).toBe('10000.00');
+  });
+
+  it('sends the wholesale offer as an exact decimal and minimum quantity', (): void => {
+    const offer = toKiviProductPayload({
+      ...product,
+      wholesalePriceCents: 275,
+      wholesaleMinQuantity: 12,
+    });
+    expect(offer).toMatchObject({ wholesale_price: '2.75', wholesale_min_quantity: 12 });
+  });
+
+  it('sends explicit nulls when there is no complete wholesale offer so Kivi clears it', (): void => {
+    expect(toKiviProductPayload(product)).toMatchObject({
+      wholesale_price: null,
+      wholesale_min_quantity: null,
+    });
+    expect(
+      toKiviProductPayload({ ...product, wholesalePriceCents: 275, wholesaleMinQuantity: 0 }),
+    ).toMatchObject({ wholesale_price: null, wholesale_min_quantity: null });
   });
 
   it('derives availability from status and stock', (): void => {

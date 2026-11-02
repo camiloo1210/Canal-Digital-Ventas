@@ -11,18 +11,21 @@ export function kiviVersionOf(product: KiviSourceProduct): number {
   return product.version + 1 + (product.kiviVersionOffset ?? 0);
 }
 
-function toDecimal(cents: number): string {
+export function centsToDecimalString(cents: number): string {
   const whole = Math.trunc(cents / 100);
   const fraction = String(cents % 100).padStart(2, '0');
   return `${whole}.${fraction}`;
 }
 
 export function toKiviProductPayload(product: KiviSourceProduct): KiviProductPayload {
+  const hasWholesale = product.wholesalePriceCents > 0 && product.wholesaleMinQuantity >= 1;
   const available = product.status === 'active' || product.status === 'out_of_stock';
   return {
     version: kiviVersionOf(product),
     name: product.name,
-    price: toDecimal(product.priceCents),
+    price: centsToDecimalString(product.priceCents),
+    wholesale_price: hasWholesale ? centsToDecimalString(product.wholesalePriceCents) : null,
+    wholesale_min_quantity: hasWholesale ? product.wholesaleMinQuantity : null,
     currency: CURRENCY,
     description: product.description,
     is_available: available,

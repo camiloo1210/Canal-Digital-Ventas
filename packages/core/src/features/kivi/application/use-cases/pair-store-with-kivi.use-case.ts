@@ -7,9 +7,12 @@ import { KiviLinkForbiddenException } from '@/kivi/application/exceptions/kivi-l
 import { InvalidKiviPairingCodeException } from '@/kivi/application/exceptions/invalid-kivi-pairing-code.exception';
 import { KiviConnection } from '@/kivi/domain/entities/kivi-connection.entity';
 import { InvalidKiviConnectionException } from '@/kivi/domain/exceptions/invalid-kivi-connection.exception';
+import { publicHttpsOrigin } from '@/kivi/application/kivi-public-origin';
+import type { KiviToolsRegistrar } from '@/kivi/application/use-cases/register-kivi-tools.use-case';
 import type { KiviBaseUrl } from '@/kivi/domain/value-objects/kivi-base-url.vo';
 
 const PAIRING_CODE = /^kvp_[A-Za-z0-9_-]{8,200}$/;
+const ORDER_LOOKUP_PATH = '/api/kivi/order-lookup';
 
 /**
  * Connects a store to Kivi with a one-time pairing code. The owner never handles a token: the
@@ -23,6 +26,10 @@ export class PairStoreWithKiviUseCase {
     private readonly gateway: KiviPairingGatewayPort,
     private readonly cipher: KiviTokenCipherPort,
     private readonly baseUrl: KiviBaseUrl,
+    /** Derives the per-store order-lookup key (hex). Its result is secret. */
+    private readonly deriveOrderLookupKey: (tenantId: string) => string,
+    /** Optional, non-fatal: registers connection tools right after pairing. */
+    private readonly toolsRegistrar?: KiviToolsRegistrar,
   ) {}
 
   public async execute(dto: PairStoreWithKiviDto): Promise<void> {
@@ -38,10 +45,19 @@ export class PairStoreWithKiviUseCase {
       return name;
     }, context);
 
+    const origin = publicHttpsOrigin(dto.publicOrigin);
     const issued = await this.gateway.exchange({
       code,
       externalTenantId: dto.tenantId,
       name: storeName,
+      ...(origin === null
+        ? {}
+        : {
+            orderLookup: {
+              url: `${origin}${ORDER_LOOKUP_PATH}`,
+              key: this.deriveOrderLookupKey(dto.tenantId),
+            },
+          }),
     });
     const connection = KiviConnection.pair({
       tenantId: dto.tenantId,
@@ -54,6 +70,17 @@ export class PairStoreWithKiviUseCase {
       await this.assertOwner(dto, tx);
       await this.repository.save(connection, tx);
     }, context);
+
+    // A missing tools scope or an outage must never undo the pairing.
+    try {
+      await this.toolsRegistrar?.execute({
+        userId: dto.userId,
+        tenantId: dto.tenantId,
+        publicOrigin: dto.publicOrigin,
+      });
+    } catch {
+      // Intentionally ignored: registration is best effort (re-pair retries it).
+    }
   }
 
   private async assertOwner(

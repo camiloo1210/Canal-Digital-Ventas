@@ -13,6 +13,14 @@ const TAG_BYTES = 16;
 const KEY_BYTES = 32;
 const BASE64 = /^[A-Za-z0-9+/]+={0,2}$/;
 
+/** Base64 -> 32 key bytes, or null when malformed. Never echoes the input. */
+export function decodeKiviTokenEncryptionKey(keyBase64: string | undefined): Buffer | null {
+  const trimmed = (keyBase64 ?? '').trim();
+  if (!BASE64.test(trimmed)) return null;
+  const key = Buffer.from(trimmed, 'base64');
+  return key.length === KEY_BYTES ? key : null;
+}
+
 /**
  * AES-256-GCM with a random 96-bit IV per message. Envelope: `v1.<iv>.<ciphertext||tag>`
  * (base64url). The tenant id is the AAD, so an envelope moved to another tenant's row fails
@@ -22,9 +30,8 @@ export class AesGcmKiviTokenCipher implements KiviTokenCipherPort {
   private readonly key: Buffer;
 
   public constructor(keyBase64: string) {
-    const trimmed = keyBase64.trim();
-    const key = BASE64.test(trimmed) ? Buffer.from(trimmed, 'base64') : Buffer.alloc(0);
-    if (key.length !== KEY_BYTES) {
+    const key = decodeKiviTokenEncryptionKey(keyBase64);
+    if (key === null) {
       throw new KiviConfigurationException(
         'KIVI_TOKEN_ENCRYPTION_KEY must be a base64-encoded 32-byte key',
       );

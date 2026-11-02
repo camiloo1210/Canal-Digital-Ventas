@@ -17,6 +17,7 @@
     "payment-reconciliation": "tsx --tsconfig tsconfig.json src/payment-reconciliation.ts",
     "payment-egress": "tsx --tsconfig tsconfig.json src/payment-egress.ts",
     "payment-retention": "tsx --tsconfig tsconfig.json src/payment-retention.ts",
+    "cart-retention": "tsx --tsconfig tsconfig.json src/cart-retention.ts",
     "check": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {

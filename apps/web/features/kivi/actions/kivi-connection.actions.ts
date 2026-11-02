@@ -1,5 +1,6 @@
 'use server';
 
+import { headers } from 'next/headers';
 import { getTranslations } from 'next-intl/server';
 import { revalidatePath } from 'next/cache';
 import {
@@ -13,6 +14,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getActiveTenantQuery } from '@/features/iam/queries/active-tenant.query';
 import {
   getPairStoreWithKiviUseCase,
+  getRegisterKiviToolsUseCase,
   getRequestKiviSyncUseCase,
   getUnlinkStoreFromKiviUseCase,
 } from '@/features/kivi/di/kivi.di';
@@ -121,6 +123,19 @@ function mapError(
   return failure(previous, 'UNEXPECTED', t('unexpected'));
 }
 
+/** Client-facing origin of this request, or null when the host is unknown. */
+async function requestPublicOrigin(): Promise<string | null> {
+  const requestHeaders = await headers();
+  // Proxies may send comma-separated lists; the first value is the client-facing one.
+  const host = (requestHeaders.get('x-forwarded-host') ?? requestHeaders.get('host'))
+    ?.split(',')[0]
+    ?.trim();
+  const protocol =
+    requestHeaders.get('x-forwarded-proto')?.split(',')[0]?.trim() ??
+    (host?.startsWith('localhost') ? 'http' : 'https');
+  return host ? `${protocol}://${host}` : null;
+}
+
 export async function pairKiviAction(
   previous: KiviConnectionActionState,
   formData: FormData,
@@ -136,7 +151,11 @@ export async function pairKiviAction(
         fieldErrors: { code: [t(`validation.${message}`)] },
       });
     }
-    await getPairStoreWithKiviUseCase().execute({ ...actor, code: parsed.data.code });
+    await getPairStoreWithKiviUseCase().execute({
+      ...actor,
+      code: parsed.data.code,
+      publicOrigin: await requestPublicOrigin(),
+    });
     refresh();
     return succeeded(previous, t('paired'));
   } catch (error: unknown) {
@@ -171,6 +190,15 @@ export async function requestKiviSyncAction(
     const actor = await resolveActor();
     if (!actor) return failure(previous, 'UNAUTHORIZED', t('unauthorized'));
     await getRequestKiviSyncUseCase().execute(actor);
+    // Keeps the assistant's tools current without re-pairing. Never fails the sync request.
+    try {
+      await getRegisterKiviToolsUseCase().execute({
+        ...actor,
+        publicOrigin: await requestPublicOrigin(),
+      });
+    } catch {
+      // Tools are optional; the catalog sync was already requested.
+    }
     refresh();
     return succeeded(previous, t('syncRequested'));
   } catch (error: unknown) {

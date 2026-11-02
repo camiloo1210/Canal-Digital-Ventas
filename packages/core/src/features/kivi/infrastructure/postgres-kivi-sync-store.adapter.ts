@@ -34,6 +34,8 @@ interface ProductRow {
   status: KiviSourceProduct['status'];
   version: number;
   kivi_version_offset: number;
+  wholesale_price_cents: number;
+  wholesale_min_quantity: number;
 }
 
 export class KiviSyncStoreException extends InfrastructureException {
@@ -127,7 +129,7 @@ export class PostgresKiviSyncStoreAdapter implements KiviSyncStorePort {
       (): Promise<ProductRow[]> =>
         this.sql<
           ProductRow[]
-        >`SELECT * FROM core.kivi_sync_get_product_with_offset(${tenantId}::uuid, ${productId}::uuid)`,
+        >`SELECT * FROM core.kivi_sync_get_product_with_offset_v2(${tenantId}::uuid, ${productId}::uuid)`,
       'Unable to load the product',
     );
     return rows[0] ? this.toProduct(rows[0]) : null;
@@ -142,7 +144,7 @@ export class PostgresKiviSyncStoreAdapter implements KiviSyncStorePort {
       (): Promise<ProductRow[]> =>
         this.sql<
           ProductRow[]
-        >`SELECT * FROM core.kivi_sync_list_products_with_offset(${tenantId}::uuid, ${afterId}::uuid, ${limit}::integer)`,
+        >`SELECT * FROM core.kivi_sync_list_products_with_offset_v2(${tenantId}::uuid, ${afterId}::uuid, ${limit}::integer)`,
       'Unable to list products',
     );
     return rows.map((row): KiviSourceProduct => this.toProduct(row));
@@ -177,6 +179,8 @@ export class PostgresKiviSyncStoreAdapter implements KiviSyncStorePort {
       tenantId: row.tenant_id,
       name: row.name,
       priceCents: row.price_cents,
+      wholesalePriceCents: row.wholesale_price_cents,
+      wholesaleMinQuantity: row.wholesale_min_quantity,
       description: row.description,
       stock: row.stock,
       status: row.status,

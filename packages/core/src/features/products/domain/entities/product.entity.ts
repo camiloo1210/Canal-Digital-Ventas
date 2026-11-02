@@ -34,6 +34,7 @@ export interface ProductProps {
   seasonIds: SeasonId[];
   imagePath: string | null;
   imageUrl: string | null;
+  galleryUrls: string[];
   hasVariants: boolean;
   variants: ProductVariant[];
   isVatExempt: boolean;
@@ -42,6 +43,8 @@ export interface ProductProps {
 }
 
 export class Product {
+  public static readonly MAX_GALLERY_IMAGES = 8;
+
   private readonly _domainEvents: DomainEvent[] = [];
 
   private constructor(
@@ -61,6 +64,7 @@ export class Product {
     private seasonIds: SeasonId[],
     private imagePath: string | null,
     private imageUrl: string | null,
+    private galleryUrls: string[],
     private hasVariants: boolean,
     private variants: ProductVariant[],
     private isVatExempt: boolean,
@@ -121,6 +125,7 @@ export class Product {
       seasonIds,
       imagePath,
       null,
+      [],
       hasVariants,
       variants,
       isVatExempt,
@@ -150,6 +155,7 @@ export class Product {
       props.seasonIds,
       props.imagePath,
       props.imageUrl,
+      [...props.galleryUrls],
       props.hasVariants,
       props.variants,
       props.isVatExempt,
@@ -319,6 +325,35 @@ export class Product {
     this.updateUpdatedAt();
   }
 
+  public updateGallery(urls: string[]): void {
+    if (urls.length > Product.MAX_GALLERY_IMAGES) {
+      throw new InvalidProductAttributeException(
+        `A product cannot have more than ${Product.MAX_GALLERY_IMAGES} images.`,
+      );
+    }
+    if (new Set(urls).size !== urls.length || urls.some((url): boolean => url.trim() === '')) {
+      throw new InvalidProductAttributeException('Product images must be unique and non-empty.');
+    }
+    this.galleryUrls = [...urls];
+    this.imageUrl = urls[0] ?? null;
+    this.imagePath = urls[0] ?? null;
+    this.updateUpdatedAt();
+  }
+
+  /**
+   * Reconciles the gallery from a seller edit. `retainedUrls` is what the client claims to keep;
+   * only URLs that already belong to this product survive (anti-forgery). `null` keeps everything.
+   */
+  public changeGallery(retainedUrls: string[] | null, addedUrls: string[]): void {
+    const current =
+      this.galleryUrls.length > 0 ? this.galleryUrls : this.imageUrl ? [this.imageUrl] : [];
+    const kept =
+      retainedUrls === null
+        ? current
+        : retainedUrls.filter((url): boolean => current.includes(url));
+    this.updateGallery([...kept, ...addedUrls]);
+  }
+
   public setVariants(variants: ProductVariant[]): void {
     this.variants = variants;
     this.hasVariants = variants.length > 0;
@@ -384,6 +419,9 @@ export class Product {
   }
   public getImageUrl(): string | null {
     return this.imageUrl;
+  }
+  public getGalleryUrls(): string[] {
+    return [...this.galleryUrls];
   }
   public getHasVariants(): boolean {
     return this.hasVariants;

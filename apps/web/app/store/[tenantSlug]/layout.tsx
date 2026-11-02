@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { StorefrontVitals } from '@/features/store/components/storefront-vitals';
 import { getTranslations } from 'next-intl/server';
 import { BuyerKiviWidget } from '@/features/store-directory/components/buyer-kivi-widget';
+import { CartSyncProvider } from '@/features/cart/components/cart-sync-provider';
 import { getKiviStoreWidgetReadRepository } from '@/features/kivi/di/kivi.di';
 
 export async function generateMetadata({
@@ -88,6 +89,7 @@ export default async function StoreLayout({
       <main id="storefront-main" tabIndex={-1} className="flex-1 scroll-mt-20">
         {children}
       </main>
+      <CartSyncProvider tenantSlug={tenantSlug} isAuthenticated={viewer.isAuthenticated} />
       <BuyerKiviWidget widgetKey={widgetKey} />
     </div>
   );

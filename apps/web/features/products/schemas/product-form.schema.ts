@@ -7,6 +7,28 @@ export const PRODUCT_IMAGE_MIME_EXTENSIONS = {
   'image/webp': 'webp',
 } as const;
 export const PRODUCT_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+export const PRODUCT_IMAGE_MAX_COUNT = 8;
+export const PRODUCT_IMAGE_BUCKET = 'products';
+
+const OBJECT_NAME_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(jpg|png|webp)$/;
+
+/** Validates storage object keys previously issued for the session tenant. */
+export function uploadedImagePathsSchema(tenantId: string): z.ZodType<string[]> {
+  const prefix = tenantId + '/';
+  return z
+    .array(
+      z
+        .string()
+        .refine(
+          (path): boolean =>
+            path.startsWith(prefix) && OBJECT_NAME_PATTERN.test(path.slice(prefix.length)),
+          'imageFormat',
+        ),
+    )
+    .max(PRODUCT_IMAGE_MAX_COUNT, 'imageCount')
+    .refine((paths): boolean => new Set(paths).size === paths.length, 'imageFormat');
+}
 
 const decimalPattern = /^\d+(\.\d{1,2})?$/;
 const decimalString = z
@@ -48,14 +70,8 @@ export const productFormSchema = z.object({
   isVatExempt: z
     .enum(['', 'on', 'true', 'false'], { message: 'booleanFormat' })
     .transform((value): boolean => value === 'on' || value === 'true'),
-  image: z
-    .instanceof(File, { message: 'imageFormat' })
-    .refine(
-      (file): boolean => Object.hasOwn(PRODUCT_IMAGE_MIME_EXTENSIONS, file.type),
-      'imageFormat',
-    )
-    .refine((file): boolean => file.size <= PRODUCT_IMAGE_MAX_BYTES, 'imageSize')
-    .optional(),
+  uploadedImagePaths: z.array(z.string()).max(PRODUCT_IMAGE_MAX_COUNT, 'imageCount'),
+  existingImages: z.array(z.string().url('imageFormat')).max(PRODUCT_IMAGE_MAX_COUNT, 'imageCount'),
 });
 
 export const updateProductFormSchema = productFormSchema.extend({
@@ -87,6 +103,7 @@ export interface ProductEditValues extends ProductFormValues {
   id: string;
   version: number;
   imageUrl: string | null;
+  galleryUrls: string[];
 }
 
 export function readFormString(formData: FormData, name: string): string {
