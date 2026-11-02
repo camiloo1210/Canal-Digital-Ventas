@@ -19,8 +19,11 @@ import {
   updateProductFormSchema,
   extractProductFormValues,
   readFormString,
+  uploadedImagePathsSchema,
+  PRODUCT_IMAGE_MAX_BYTES,
   PRODUCT_IMAGE_MIME_EXTENSIONS,
   type ProductActionState,
+  type ProductFormValues,
   type ProductFieldName,
 } from '@/features/products/schemas/product-form.schema';
 
@@ -69,6 +72,14 @@ function productFailure(
   return { error: t('unexpected') };
 }
 
+function imageRejection(
+  rejected: { success: false; values: ProductFormValues; revision: number },
+  t: Translator,
+  key: string,
+): ProductActionState {
+  return { ...rejected, error: t('fixErrors'), fieldErrors: { image: [t(key)] } };
+}
+
 async function saveProduct(
   prevState: ProductActionState,
   formData: FormData,
@@ -80,9 +91,9 @@ async function saveProduct(
   const rejected = { success: false, values, revision } as const;
   const input = {
     ...values,
-    image: formData
-      .getAll('image')
-      .filter((entry): boolean => !(entry instanceof File && entry.size === 0)),
+    uploadedImagePaths: formData
+      .getAll('uploadedImagePaths')
+      .filter((entry): entry is string => typeof entry === 'string' && entry !== ''),
     existingImages: formData
       .getAll('existingImages')
       .filter((entry): entry is string => typeof entry === 'string' && entry !== ''),
@@ -96,7 +107,8 @@ async function saveProduct(
     const fieldErrors: Partial<Record<ProductFieldName, string[]>> = {};
     for (const issue of parsed.error.issues) {
       const rawField = String(issue.path[0]);
-      const field = rawField === 'existingImages' ? 'image' : rawField;
+      const field =
+        rawField === 'existingImages' || rawField === 'uploadedImagePaths' ? 'image' : rawField;
       if (field === 'productId' || field === 'expectedVersion')
         return { ...rejected, error: t('invalidRequest') };
       const name = field as ProductFieldName;
@@ -112,12 +124,23 @@ async function saveProduct(
     if (!user) return { ...rejected, error: t('unauthorized') };
     const tenantId = await getActiveTenantQuery(user.id);
     if (!tenantId) return { ...rejected, error: t('tenantUnavailable') };
+    const pathsCheck = uploadedImagePathsSchema(tenantId).safeParse(parsed.data.uploadedImagePaths);
+    if (!pathsCheck.success) {
+      return imageRejection(rejected, t, pathsCheck.error.issues[0]?.message ?? 'imageFormat');
+    }
+    const storage = getStorageAdapter();
     const uploadedImages: string[] = [];
-    for (const file of parsed.data.image) {
-      const extension =
-        PRODUCT_IMAGE_MIME_EXTENSIONS[file.type as keyof typeof PRODUCT_IMAGE_MIME_EXTENSIONS];
-      const objectKey = `${tenantId}/${crypto.randomUUID()}.${extension}`;
-      uploadedImages.push(await getStorageAdapter().uploadImage(file, objectKey));
+    for (const path of pathsCheck.data) {
+      const info = await storage.objectInfo(path);
+      if (!info.exists) return imageRejection(rejected, t, 'imageUploadMissing');
+      if (info.size !== null && info.size > PRODUCT_IMAGE_MAX_BYTES)
+        return imageRejection(rejected, t, 'imageSize');
+      if (
+        info.contentType !== null &&
+        !Object.hasOwn(PRODUCT_IMAGE_MIME_EXTENSIONS, info.contentType)
+      )
+        return imageRejection(rejected, t, 'imageFormat');
+      uploadedImages.push(await storage.publicUrl(path));
     }
     const dto = {
       tenantId,

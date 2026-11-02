@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import {
@@ -36,6 +36,12 @@ export function ProductForm({
     product ? updateProductAction : createProductAction,
     initialState,
   );
+  const [uploading, setUploading] = useState(false);
+  const uploadingRef = useRef(false);
+  const handleUploadingChange = (value: boolean): void => {
+    uploadingRef.current = value;
+    setUploading(value);
+  };
   const t = useTranslations('CatalogForms');
   const p = useTranslations('Products');
   const revision = state.revision ?? 0;
@@ -64,6 +70,11 @@ export function ProductForm({
       className="space-y-6"
       onReset={(event): void => event.preventDefault()}
       onSubmit={(event): void => {
+        if (uploadingRef.current) {
+          event.preventDefault();
+          toast.error(t('saveBlockedWhileUploading'));
+          return;
+        }
         if (!navigator.onLine) {
           event.preventDefault();
           toast.error(p('offline_error'));
@@ -92,12 +103,15 @@ export function ProductForm({
           revision={revision}
           fieldErrors={visibleErrors}
           clearField={clearField}
+          onUploadingChange={handleUploadingChange}
         />
       </fieldset>
       <CatalogFormActions
         cancelHref="/dashboard/catalog/products"
         label={t(product ? 'saveChanges' : 'createProduct')}
         pendingLabel={t('saving')}
+        blocked={uploading}
+        blockedMessage={t('saveBlockedWhileUploading')}
       />
     </form>
   );
