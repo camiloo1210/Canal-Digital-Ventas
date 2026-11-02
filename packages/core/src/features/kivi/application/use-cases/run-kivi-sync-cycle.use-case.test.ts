@@ -53,6 +53,7 @@ function harness(
         sent: number;
         deleted: number;
         diverged: number;
+        divergedProductIds: string[];
         divergencesResolved: number;
         unmappedKiviProducts: number;
       }> => {
@@ -61,7 +62,8 @@ function harness(
         return {
           sent: 0,
           deleted: 0,
-          diverged: 0,
+          diverged: resolved > 0 ? 1 : 0,
+          divergedProductIds: resolved > 0 ? ['product-1'] : [],
           divergencesResolved: resolved,
           unmappedKiviProducts: 0,
         };
@@ -81,6 +83,7 @@ describe('RunKiviSyncCycleUseCase', (): void => {
       failures: 0,
       deadEventFlags: 0,
       divergencesResolved: 0,
+      divergedProductIds: [],
     });
     expect(pending.initial).toEqual([TENANT]);
     const flagged = harness([connection('needs_reconcile')]);
@@ -90,6 +93,7 @@ describe('RunKiviSyncCycleUseCase', (): void => {
       failures: 0,
       deadEventFlags: 0,
       divergencesResolved: 0,
+      divergedProductIds: [],
     });
     expect(flagged.reconciled).toEqual([TENANT]);
   });
@@ -115,6 +119,11 @@ describe('RunKiviSyncCycleUseCase', (): void => {
     expect((await h.useCase.execute(T0)).divergencesResolved).toBe(3);
   });
 
+  it('reports which products Kivi still rejects so operators can find them', async (): Promise<void> => {
+    const h = harness([connection('needs_reconcile')], false, 0, 3);
+    expect((await h.useCase.execute(T0)).divergedProductIds).toEqual(['product-1']);
+  });
+
   it('counts a failing store without aborting the cycle or throwing', async (): Promise<void> => {
     const h = harness([connection('pending')], true);
     expect(await h.useCase.execute(T0)).toEqual({
@@ -123,6 +132,7 @@ describe('RunKiviSyncCycleUseCase', (): void => {
       failures: 1,
       deadEventFlags: 0,
       divergencesResolved: 0,
+      divergedProductIds: [],
     });
   });
 });

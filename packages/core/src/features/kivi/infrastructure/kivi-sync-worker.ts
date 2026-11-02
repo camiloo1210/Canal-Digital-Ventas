@@ -84,6 +84,11 @@ export async function runKiviSyncWorker(
               `Kivi sync: Kivi was ahead of Canal; products re-based from Canal=${result.divergencesResolved}`,
             );
           }
+          if (result.divergedProductIds.length > 0) {
+            logger.warn(
+              `Kivi sync: Kivi rejected products with a conflict; store stays pending. Canal product ids: ${result.divergedProductIds.join(', ')}`,
+            );
+          }
           if (result.initialLoads + result.reconciles + result.failures > 0) {
             logger.info(
               `Kivi sync cycle: initialLoads=${result.initialLoads} reconciles=${result.reconciles} failures=${result.failures}`,

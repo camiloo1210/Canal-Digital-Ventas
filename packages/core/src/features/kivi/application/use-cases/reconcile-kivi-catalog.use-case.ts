@@ -16,6 +16,8 @@ export interface ReconcileResult {
   deleted: number;
   /** Products Kivi still rejects with a version conflict after a re-base; retried later. */
   diverged: number;
+  /** Canal ids of the products behind `diverged` (capped), so operators can tell which one fails. */
+  divergedProductIds: string[];
   /** Products Kivi held at a newer version, re-based above it with Canal as source of truth. */
   divergencesResolved: number;
   /** Kivi catalog entries with no Canal mapping (e.g. created in the Kivi dashboard); reported only. */
@@ -51,6 +53,7 @@ export class ReconcileKiviCatalogUseCase {
       sent: 0,
       deleted: 0,
       diverged: 0,
+      divergedProductIds: [],
       divergencesResolved: 0,
       unmappedKiviProducts: 0,
     };
@@ -69,7 +72,7 @@ export class ReconcileKiviCatalogUseCase {
         if (product.status === 'archived') {
           if (!identity || identity.deleted) continue;
           const outcome = await this.send(tenantId, target, product, kiviAhead ? identity : null);
-          if (outcome === 'conflict') result.diverged++;
+          if (outcome === 'conflict') this.recordDivergence(result, product.id);
           else if (kiviAhead) result.divergencesResolved++;
           else result.deleted++;
           continue;
@@ -77,7 +80,7 @@ export class ReconcileKiviCatalogUseCase {
 
         if (identity && !identity.deleted && identity.version === version) continue;
         const outcome = await this.send(tenantId, target, product, kiviAhead ? identity : null);
-        if (outcome === 'conflict') result.diverged++;
+        if (outcome === 'conflict') this.recordDivergence(result, product.id);
         else if (kiviAhead) result.divergencesResolved++;
         else result.sent++;
       }
@@ -92,6 +95,11 @@ export class ReconcileKiviCatalogUseCase {
     else connection.flagNeedsReconcile();
     await this.store.saveConnectionState(connection);
     return result;
+  }
+
+  private recordDivergence(result: ReconcileResult, productId: string): void {
+    result.diverged++;
+    if (result.divergedProductIds.length < 10) result.divergedProductIds.push(productId);
   }
 
   /** Sends the product; when Kivi is ahead, first persists a re-based version above Kivi's. */

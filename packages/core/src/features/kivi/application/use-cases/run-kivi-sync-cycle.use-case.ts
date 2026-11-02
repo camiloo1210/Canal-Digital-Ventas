@@ -17,6 +17,8 @@ export interface KiviSyncCycleResult {
   deadEventFlags: number;
   /** Products re-based above a newer Kivi version during reconciliation. */
   divergencesResolved: number;
+  /** Canal ids of products Kivi still rejects after a reconcile (capped), for operator logs. */
+  divergedProductIds: string[];
 }
 
 /** One scheduler tick: initial loads for new links, periodic/flagged reconciliations. */
@@ -49,6 +51,7 @@ export class RunKiviSyncCycleUseCase {
       failures: 0,
       deadEventFlags,
       divergencesResolved: 0,
+      divergedProductIds: [],
     };
     for (const connection of due) {
       const tenantId = connection.getTenantId();
@@ -60,6 +63,7 @@ export class RunKiviSyncCycleUseCase {
           const reconciled = await this.reconcile.execute(tenantId, now);
           result.reconciles++;
           result.divergencesResolved += reconciled.divergencesResolved;
+          result.divergedProductIds.push(...reconciled.divergedProductIds);
         }
       } catch {
         // Per-store isolation; the error carries no secrets and the store is retried later.
