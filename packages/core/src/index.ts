@@ -375,3 +375,43 @@ export type {
   KiviProductLookupQuery,
   KiviProductLookupReadPort,
 } from '@/kivi/application/ports/out/kivi-product-lookup-read.port';
+export {
+  BUYER_CART_TTL_DAYS,
+  MAX_CART_LINES,
+  MAX_LINE_QUANTITY,
+} from '@/carts/domain/policies/buyer-cart-limits';
+export type {
+  BuyerCartItemInputDto,
+  GetBuyerCartDto,
+  SyncBuyerCartDto,
+  MergeBuyerCartDto,
+  CompleteBuyerCartDto,
+} from '@/carts/application/dtos/buyer-cart.dto';
+export type {
+  BuyerCartItemReadModel,
+  BuyerCartReadModel,
+  BuyerCartDropReason,
+  BuyerCartDroppedItem,
+  BuyerCartSyncResult,
+} from '@/carts/application/read-models/buyer-cart.read-model';
+export type {
+  BuyerCartRepositoryPort,
+  BuyerCartRecord,
+  BuyerCartStoredLine,
+} from '@/carts/application/ports/out/buyer-cart-repository.port';
+export type {
+  BuyerCartCatalogReadPort,
+  BuyerCartCatalogProduct,
+} from '@/carts/application/ports/out/buyer-cart-catalog-read.port';
+export { CartVersionConflictException } from '@/carts/application/exceptions/cart-version-conflict.exception';
+export { BuyerCartStoreNotFoundException } from '@/carts/application/exceptions/buyer-cart-store-not-found.exception';
+export { InvalidBuyerCartInputException } from '@/carts/application/exceptions/invalid-buyer-cart-input.exception';
+export { BuyerCartRepositoryException } from '@/carts/application/exceptions/buyer-cart-repository.exception';
+export { GetBuyerCartUseCase } from '@/carts/application/use-cases/get-buyer-cart.use-case';
+export { SyncBuyerCartUseCase } from '@/carts/application/use-cases/sync-buyer-cart.use-case';
+export { MergeBuyerCartUseCase } from '@/carts/application/use-cases/merge-buyer-cart.use-case';
+export { CompleteBuyerCartUseCase } from '@/carts/application/use-cases/complete-buyer-cart.use-case';
+export { PostgresBuyerCartRepository } from '@/carts/infrastructure/postgres/postgres-buyer-cart.repository';
+export { PostgresBuyerCartCatalogReadRepository } from '@/carts/infrastructure/postgres/postgres-buyer-cart-catalog-read.repository';
+export { loadCartRetentionWorkerConfig } from '@/carts/infrastructure/cart-retention-worker-config';
+export { runCartRetentionWorker } from '@/carts/infrastructure/cart-retention-worker';
