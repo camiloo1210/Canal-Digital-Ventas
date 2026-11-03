@@ -51,10 +51,37 @@ describe('PostgresKiviOrderLookupReadRepository', (): void => {
     expect(calls[0].text).toContain('k.tenant_id =');
     expect(calls[1].values).toContain(TENANT);
     expect(calls[1].values).toContain('573001112233');
-    expect(calls[1].values).toContain('ord-1');
+    expect(calls[1].values).toContain('ord1');
     expect(calls[1].text).not.toContain('573001112233');
     expect(calls[1].text).toContain("o.status <> 'draft'");
     expect(calls[1].text).toContain('LIMIT 5');
+  });
+
+  it('looks an order up by an unguessable reference alone, ignoring separators and case', async (): Promise<void> => {
+    const { sql, calls } = fakeSql([
+      [{ tenant_id: TENANT }],
+      [{ order_number: 'ORD-K7M3-9QXD-4TWB', status: 'paid', updated_at: '2026-10-01T10:00:00Z' }],
+    ]);
+    const repo = new PostgresKiviOrderLookupReadRepository(sql);
+    const result = await repo.findLatestOrders({
+      tenantId: TENANT,
+      phone: null,
+      orderNumber: '#ord k7m3-9qxd 4twb',
+    });
+    expect(result).toHaveLength(1);
+    expect(calls[1].values).toContain('ordk7m39qxd4twb');
+    expect(calls[1].values).toContain(null);
+  });
+
+  it('never answers an anonymous lookup for a guessable or missing reference', async (): Promise<void> => {
+    for (const orderNumber of ['ORD-268738', null, '1', 'ORD-K7M3-9QXD']) {
+      const { sql, calls } = fakeSql([[{ tenant_id: TENANT }], [{ order_number: 'ORD-268738' }]]);
+      const repo = new PostgresKiviOrderLookupReadRepository(sql);
+      await expect(
+        repo.findLatestOrders({ tenantId: TENANT, phone: null, orderNumber }),
+      ).resolves.toEqual([]);
+      expect(calls).toHaveLength(1); // only the connection check, never the orders table
+    }
   });
 
   it('translates driver failures without leaking them', async (): Promise<void> => {

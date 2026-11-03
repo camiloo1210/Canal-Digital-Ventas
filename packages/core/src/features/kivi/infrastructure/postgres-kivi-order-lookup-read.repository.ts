@@ -4,6 +4,10 @@ import type {
   KiviOrderLookupQuery,
   KiviOrderLookupReadPort,
 } from '@/kivi/application/ports/out/kivi-order-lookup-read.port';
+import {
+  isUnguessableOrderNumber,
+  normalizeOrderNumber,
+} from '@/orders/domain/value-objects/order-number.vo';
 import { KiviOrderLookupReadException } from '@/kivi/infrastructure/kivi-order-lookup-read.exception';
 
 interface OrderRow {
@@ -12,9 +16,9 @@ interface OrderRow {
   updated_at: Date | string;
 }
 
-function normalizeOrderNumber(value: string | null): string | null {
+function reference(value: string | null): string | null {
   if (value === null) return null;
-  const normalized = value.replace(/[#\s]/g, '').toLowerCase();
+  const normalized = normalizeOrderNumber(value);
   return normalized.length > 0 ? normalized : null;
 }
 
@@ -29,17 +33,24 @@ export class PostgresKiviOrderLookupReadRepository implements KiviOrderLookupRea
         WHERE k.tenant_id = ${query.tenantId} AND k.status <> 'unlinked'
       `;
       if (!connection) return [];
-      const orderNumber = normalizeOrderNumber(query.orderNumber);
+      const orderNumber = reference(query.orderNumber);
+      // Anonymous lookups (no verified phone) need an unguessable reference: the reference is the secret.
+      if (
+        query.phone === null &&
+        (orderNumber === null || !isUnguessableOrderNumber(orderNumber))
+      ) {
+        return [];
+      }
       const rows = await this.sql<OrderRow[]>`
         SELECT o.order_number, o.status, o.updated_at
         FROM sales.orders o
         JOIN sales.customers c ON c.id = o.customer_id AND c.tenant_id = o.tenant_id
         WHERE o.tenant_id = ${connection.tenant_id}
           AND o.status <> 'draft'
-          AND regexp_replace(c.phone, '[^0-9]', '', 'g') = ${query.phone}
+          AND (${query.phone}::text IS NULL OR regexp_replace(c.phone, '[^0-9]', '', 'g') = ${query.phone}::text)
           AND (
             ${orderNumber}::text IS NULL
-            OR lower(regexp_replace(o.order_number, '[#[:space:]]', '', 'g')) = ${orderNumber}::text
+            OR lower(regexp_replace(o.order_number, '[#[:space:]-]', '', 'g')) = ${orderNumber}::text
           )
         ORDER BY o.updated_at DESC
         LIMIT 5

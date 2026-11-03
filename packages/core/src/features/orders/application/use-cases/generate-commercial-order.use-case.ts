@@ -1,4 +1,5 @@
 import { OrderRepositoryPort } from '@/orders/application/ports/out/order-repository.port';
+import { generateOrderNumber } from '@/orders/domain/value-objects/order-number.vo';
 import { StoreCustomerRepositoryPort } from '@/sales/application/ports/out/store-customer-repository.port';
 import { OrderTenantRepositoryPort } from '@/orders/application/ports/out/order-tenant-repository.port';
 import { TenantNotAvailableException } from '@/orders/application/exceptions/tenant-not-available.exception';
@@ -137,7 +138,7 @@ export class GenerateCommercialOrderUseCase {
         const shippingAddress = customerAddress;
 
         const orderId = createOrderId(crypto.randomUUID());
-        const orderNumber = `ORD-${Date.now().toString().slice(-6)}`;
+        const orderNumber = generateOrderNumber();
 
         const order = Order.create(
           orderId,
