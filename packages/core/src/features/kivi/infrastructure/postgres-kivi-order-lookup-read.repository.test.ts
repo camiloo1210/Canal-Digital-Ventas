@@ -4,6 +4,7 @@ import { PostgresKiviOrderLookupReadRepository } from '@/kivi/infrastructure/pos
 import { KiviOrderLookupReadException } from '@/kivi/infrastructure/kivi-order-lookup-read.exception';
 
 const TENANT = '11111111-1111-4111-8111-111111111111';
+const ORDER_ID = '33333333-3333-4333-8333-333333333333';
 
 interface Call {
   text: string;
@@ -33,10 +34,42 @@ describe('PostgresKiviOrderLookupReadRepository', (): void => {
     expect(calls).toHaveLength(1);
   });
 
-  it('parameterizes every input and maps rows', async (): Promise<void> => {
+  it('parameterizes every input and maps rows with their contents', async (): Promise<void> => {
     const { sql, calls } = fakeSql([
       [{ tenant_id: TENANT }],
-      [{ order_number: 'ORD-1', status: 'shipped', updated_at: new Date('2026-10-01T10:00:00Z') }],
+      [
+        {
+          id: ORDER_ID,
+          order_number: 'ORD-1',
+          status: 'shipped',
+          updated_at: new Date('2026-10-01T10:00:00Z'),
+          created_at: new Date('2026-09-30T08:00:00Z'),
+          total_amount_cents: 3650,
+        },
+      ],
+      [
+        {
+          order_id: ORDER_ID,
+          product_name: 'Test 3',
+          quantity: 2,
+          unit_price_cents: 1200,
+          image_url: 'https://cdn.example.test/a.jpg',
+        },
+        {
+          order_id: ORDER_ID,
+          product_name: 'mixwell',
+          quantity: 1,
+          unit_price_cents: 1250,
+          image_url: null,
+        },
+        {
+          order_id: 'other-order',
+          product_name: 'not mine',
+          quantity: 1,
+          unit_price_cents: 100,
+          image_url: null,
+        },
+      ],
     ]);
     const repo = new PostgresKiviOrderLookupReadRepository(sql);
     const result = await repo.findLatestOrders({
@@ -45,7 +78,23 @@ describe('PostgresKiviOrderLookupReadRepository', (): void => {
       orderNumber: ' #Ord-1 ',
     });
     expect(result).toEqual([
-      { orderNumber: 'ORD-1', status: 'shipped', updatedAt: '2026-10-01T10:00:00.000Z' },
+      {
+        orderNumber: 'ORD-1',
+        status: 'shipped',
+        updatedAt: '2026-10-01T10:00:00.000Z',
+        createdAt: '2026-09-30T08:00:00.000Z',
+        currency: 'USD',
+        total: '36.50',
+        items: [
+          {
+            name: 'Test 3',
+            quantity: 2,
+            unitPrice: '12.00',
+            imageUrl: 'https://cdn.example.test/a.jpg',
+          },
+          { name: 'mixwell', quantity: 1, unitPrice: '12.50', imageUrl: null },
+        ],
+      },
     ]);
     expect(calls[0].values).toEqual([TENANT]);
     expect(calls[0].text).toContain('k.tenant_id =');
@@ -55,12 +104,67 @@ describe('PostgresKiviOrderLookupReadRepository', (): void => {
     expect(calls[1].text).not.toContain('573001112233');
     expect(calls[1].text).toContain("o.status <> 'draft'");
     expect(calls[1].text).toContain('LIMIT 5');
+    expect(calls[2].values).toContainEqual([ORDER_ID]);
+    // Nothing about who bought it or where it goes is ever selected.
+    const selected = [calls[1], calls[2]]
+      .map((call): string => call.text.split('FROM')[0])
+      .join(' ');
+    expect(selected).not.toMatch(/phone|email|shipping_address|payment|customer/i);
+  });
+
+  it('shares only plain public https photos', async (): Promise<void> => {
+    const row = {
+      id: ORDER_ID,
+      order_number: 'ORD-K7M3-9QXD-4TWB',
+      status: 'paid',
+      updated_at: '2026-10-01T10:00:00Z',
+      created_at: '2026-10-01T09:00:00Z',
+      total_amount_cents: 100,
+    };
+    const bad = [
+      'http://cdn.example.test/a.jpg',
+      'javascript:alert(1)',
+      'https://cdn.example.test/a b.jpg',
+      `https://cdn.example.test/${'a'.repeat(2100)}`,
+    ];
+    const { sql } = fakeSql([
+      [{ tenant_id: TENANT }],
+      [row],
+      bad.map((image_url): Record<string, unknown> => ({
+        order_id: ORDER_ID,
+        product_name: 'p',
+        quantity: 1,
+        unit_price_cents: 100,
+        image_url,
+      })),
+    ]);
+    const repo = new PostgresKiviOrderLookupReadRepository(sql);
+    const [order] = await repo.findLatestOrders({
+      tenantId: TENANT,
+      phone: null,
+      orderNumber: row.order_number,
+    });
+    expect(order.items.map((line): string | null => line.imageUrl)).toEqual([
+      null,
+      null,
+      null,
+      null,
+    ]);
   });
 
   it('looks an order up by an unguessable reference alone, ignoring separators and case', async (): Promise<void> => {
     const { sql, calls } = fakeSql([
       [{ tenant_id: TENANT }],
-      [{ order_number: 'ORD-K7M3-9QXD-4TWB', status: 'paid', updated_at: '2026-10-01T10:00:00Z' }],
+      [
+        {
+          id: ORDER_ID,
+          order_number: 'ORD-K7M3-9QXD-4TWB',
+          status: 'paid',
+          updated_at: '2026-10-01T10:00:00Z',
+          created_at: '2026-10-01T09:00:00Z',
+          total_amount_cents: 100,
+        },
+      ],
     ]);
     const repo = new PostgresKiviOrderLookupReadRepository(sql);
     const result = await repo.findLatestOrders({
