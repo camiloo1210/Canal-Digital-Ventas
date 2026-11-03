@@ -325,6 +325,24 @@ export type {
   KiviNotificationSettings,
 } from '@/kivi/application/ports/out/kivi-messaging.port';
 
+// Kivi knowledge base (HU-17): documents published as RAG sources for the chatbot.
+export {
+  ConfigureKiviKnowledgeUseCase,
+  KIVI_KNOWLEDGE_KIND,
+  KIVI_KNOWLEDGE_MAX_DOCUMENTS,
+  kiviKnowledgeDisplayName,
+  kiviKnowledgeDocumentId,
+  type ConfigureKiviKnowledgeDto,
+} from '@/kivi/application/use-cases/configure-kivi-knowledge.use-case';
+export { KiviKnowledgeLimitException } from '@/kivi/application/exceptions/kivi-knowledge-limit.exception';
+export { HttpKiviKnowledgeGateway } from '@/kivi/infrastructure/http-kivi-knowledge.gateway';
+export { KiviKnowledgeReadRepository } from '@/kivi/infrastructure/kivi-knowledge-read.repository';
+export type {
+  KiviKnowledgeReadPort,
+  KiviKnowledgeResource,
+  KiviKnowledgeStatus,
+} from '@/kivi/application/ports/out/kivi-knowledge-gateway.port';
+
 // Kivi order lookup (HU-16): signed, read-only endpoint for "where is my order?".
 export { PostgresKiviOrderLookupReadRepository } from '@/kivi/infrastructure/postgres-kivi-order-lookup-read.repository';
 export { KiviOrderLookupReadException } from '@/kivi/infrastructure/kivi-order-lookup-read.exception';

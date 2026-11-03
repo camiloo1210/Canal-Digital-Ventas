@@ -3,8 +3,17 @@ import { NextIntlClientProvider } from 'next-intl';
 import { requireDashboardTenant } from '@/features/dashboard/queries/dashboard-context.query';
 import {
   getKiviConnectionReadRepository,
+  getKiviKnowledgeReadRepository,
   getKiviMessagingReadRepository,
 } from '@/features/kivi/di/kivi.di';
+import {
+  KIVI_KNOWLEDGE_MAX_DOCUMENTS,
+  kiviKnowledgeDisplayName,
+} from '@canaldigital/packages/core';
+import {
+  KiviKnowledgePanel,
+  type KiviKnowledgeDocumentView,
+} from '@/features/kivi/components/kivi-knowledge-panel';
 import { KiviConnectionPanel } from '@/features/kivi/components/kivi-connection-panel';
 import { KiviWhatsAppPanel } from '@/features/kivi/components/kivi-whatsapp-panel';
 import { KiviNotificationsPanel } from '@/features/kivi/components/kivi-notifications-panel';
@@ -27,6 +36,29 @@ export default async function IntegrationsPage(): Promise<React.JSX.Element> {
     }
   }
 
+  let knowledge: KiviKnowledgeDocumentView[] = [];
+  let knowledgeAvailable = false;
+  if (connection) {
+    try {
+      knowledge = (await getKiviKnowledgeReadRepository().findForOwner(userId, tenantId)).flatMap(
+        (resource): KiviKnowledgeDocumentView[] =>
+          resource.status === 'deleted'
+            ? []
+            : [
+                {
+                  externalId: resource.externalId,
+                  name: kiviKnowledgeDisplayName(resource.externalId),
+                  status: resource.status,
+                  updatedAt: resource.updatedAt,
+                },
+              ],
+      );
+      knowledgeAvailable = true;
+    } catch {
+      /* Uploads stay available; the list reports that Kivi could not be queried. */
+    }
+  }
+
   return (
     <div className="flex flex-1 flex-col">
       <PageHeader breadcrumbs={[{ label: t('title'), href: null }]} />
@@ -39,9 +71,16 @@ export default async function IntegrationsPage(): Promise<React.JSX.Element> {
           messages={{
             KiviConnection: messages.KiviConnection,
             KiviMessaging: messages.KiviMessaging,
+            KiviKnowledge: messages.KiviKnowledge,
           }}
         >
           <KiviConnectionPanel connection={connection} />
+          <KiviKnowledgePanel
+            linked={connection !== null}
+            documents={knowledge}
+            available={knowledgeAvailable}
+            maxDocuments={KIVI_KNOWLEDGE_MAX_DOCUMENTS}
+          />
           <KiviWhatsAppPanel linked={connection !== null} channel={messaging.channel} />
           <KiviNotificationsPanel
             settings={messaging.settings}
