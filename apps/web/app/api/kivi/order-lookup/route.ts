@@ -12,7 +12,11 @@ const HEADERS = { 'Cache-Control': 'no-store' } as const;
 
 const BodySchema = z.object({
   tenantId: z.string().uuid(),
-  phone: z.string().regex(/^[1-9][0-9]{7,14}$/),
+  // Null when the asker is not verified: only an unguessable order reference is then accepted.
+  phone: z
+    .string()
+    .regex(/^[1-9][0-9]{7,14}$/)
+    .nullable(),
   orderNumber: z
     .string()
     .max(100)
