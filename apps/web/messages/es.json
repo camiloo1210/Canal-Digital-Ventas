@@ -1235,8 +1235,7 @@
         "orders": "Pedidos",
         "catalog": "Catálogo",
         "reports": "Reportes",
-        "store": "Tienda",
-        "integrations": "Integraciones"
+        "store": "Tienda"
       },
       "items": {
         "VIEW_ORDERS": {
@@ -1262,10 +1261,6 @@
         "MANAGE_STORE": {
           "label": "Gestionar tienda",
           "help": "Editar nombre, imágenes y datos públicos de la tienda."
-        },
-        "MANAGE_INTEGRATIONS": {
-          "label": "Gestionar integraciones",
-          "help": "Conectar y configurar Kivi y WhatsApp."
         },
         "MANAGE_INVENTORY": {
           "label": "Gestionar inventario",
