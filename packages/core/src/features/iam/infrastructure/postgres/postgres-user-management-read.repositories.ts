@@ -53,9 +53,10 @@ export class PostgresTenantRoleReadRepository implements TenantRoleReadPort {
           name: string;
           permissions: string[];
           member_count: number;
+          is_system: boolean;
           created_at: Date;
         }>
-      >`SELECT r.id, r.name, r.permissions, r.created_at,
+      >`SELECT r.id, r.name, r.permissions, r.created_at, r.is_system,
           (SELECT count(*)::int FROM core.tenant_memberships m
             WHERE m.custom_role_id = r.id) AS member_count
         FROM core.tenant_roles r
@@ -66,6 +67,7 @@ export class PostgresTenantRoleReadRepository implements TenantRoleReadPort {
         name: row.name,
         permissions: row.permissions,
         memberCount: row.member_count,
+        isSystem: row.is_system,
         createdAt: row.created_at.toISOString(),
       }));
     });
