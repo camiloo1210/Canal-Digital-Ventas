@@ -819,3 +819,46 @@ describe('member permission check migration', (): void => {
     expect(body).toMatch(/r\.permissions\s*&&\s*p_permissions/i);
   });
 });
+
+describe('default tenant roles migration', (): void => {
+  const migration = pending.find((m: PendingMigration): boolean =>
+    m.name.endsWith('_default_tenant_roles.sql'),
+  );
+  const sql = migration?.sql ?? '';
+
+  it('exists after the permission check migration and is transactional', (): void => {
+    expect(migration?.name).toBe('20261103090000_default_tenant_roles.sql');
+    expect(sql).toMatch(/^\s*BEGIN;/im);
+    expect(sql).toMatch(/COMMIT;\s*$/i);
+  });
+
+  it('seeds the four default roles without user management or integrations', (): void => {
+    for (const key of ['admin', 'seller', 'catalog', 'analyst']) {
+      expect(sql).toContain(`'${key}'`);
+    }
+    expect(sql).not.toMatch(/MANAGE_USERS|MANAGE_INTEGRATIONS/);
+    expect(sql).toMatch(/ON CONFLICT DO NOTHING/i);
+  });
+
+  it('seeds new stores by trigger and backfills existing ones', (): void => {
+    expect(sql).toMatch(/AFTER INSERT ON core\.tenants/i);
+    expect(sql).toMatch(/SELECT core\.seed_default_tenant_roles\(id\) FROM core\.tenants;/i);
+  });
+
+  it('locks both functions to the postgres login', (): void => {
+    for (const fn of [
+      String.raw`core.seed_default_tenant_roles\(uuid\)`,
+      String.raw`core.seed_default_tenant_roles_trigger\(\)`,
+    ]) {
+      expect(sql).toMatch(
+        new RegExp(
+          String.raw`REVOKE\s+ALL\s+ON\s+FUNCTION\s+${fn}\s+FROM\s+PUBLIC,\s*anon,\s*authenticated,\s*service_role`,
+          'i',
+        ),
+      );
+      expect(sql).toMatch(
+        new RegExp(String.raw`GRANT\s+EXECUTE\s+ON\s+FUNCTION\s+${fn}\s+TO\s+postgres`, 'i'),
+      );
+    }
+  });
+});
