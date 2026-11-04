@@ -77,6 +77,8 @@ export function usersErrorKey(error: unknown): string {
       return 'roleNameTaken';
     case 'TenantRoleInUseException':
       return 'roleInUse';
+    case 'TenantRoleProtectedException':
+      return 'roleProtected';
     case 'InvitationNotFoundException':
       return 'invitationNotFound';
     case 'InvitationNotUsableException':
