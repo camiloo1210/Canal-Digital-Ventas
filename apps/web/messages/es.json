@@ -524,7 +524,8 @@
     "navigation": {
       "label": "Navegación del comprador",
       "stores": "Tiendas",
-      "purchases": "Mis compras"
+      "purchases": "Mis compras",
+      "profile": "Mi perfil"
     },
     "directory": {
       "title": "Encuentra tu próxima tienda",
@@ -1110,6 +1111,10 @@
   },
   "KiviMessaging": {
     "title": "Canal WhatsApp",
+    "connectedTitle": "WhatsApp ya está conectado en Kivi",
+    "connectedNumber": "Número conectado",
+    "tokenStored": "Token guardado cifrado en Kivi",
+    "replaceHint": "Para cambiar de número o renovar un token de prueba vencido, ingresa el nuevo ID y token y pulsa «Guardar y conectar». Reemplaza las credenciales guardadas en Kivi.",
     "description": "Conecta el número de tu negocio sin salir del panel. Kivi administra la conexión con Meta.",
     "security": "El token se transmite desde el servidor y Kivi lo almacena cifrado. Nunca se muestra de nuevo.",
     "linkFirst": "Vincula primero tu tienda con Kivi para configurar WhatsApp.",
@@ -1550,6 +1555,31 @@
     "saved": "Perfil actualizado.",
     "validation": {
       "nameRequired": "Este campo es obligatorio."
+    },
+    "unsaved": "Tienes cambios sin guardar.",
+    "upToDate": "Todo al día.",
+    "discard": "Descartar",
+    "sections": {
+      "personal": {
+        "title": "Información personal",
+        "description": "Así te ven las personas de tu equipo y las tiendas donde participas."
+      },
+      "privacy": {
+        "title": "Privacidad y datos demográficos",
+        "description": "Tú decides si tus datos generales ayudan a las estadísticas anónimas de la tienda.",
+        "sharedTitle": "Lo que se comparte, agrupado",
+        "neverTitle": "Lo que nunca se comparte",
+        "shared": {
+          "ageRange": "Rango de edad",
+          "gender": "Género",
+          "province": "Provincia"
+        },
+        "never": {
+          "identity": "Tu nombre y tu correo",
+          "link": "Ningún vínculo con tu cuenta",
+          "individual": "Datos individuales: solo cifras de grupos grandes"
+        }
+      }
     }
   },
   "BusinessSwitcher": {
