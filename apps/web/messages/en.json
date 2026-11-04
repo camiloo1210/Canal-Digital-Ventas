@@ -167,7 +167,7 @@
     "accessDescription": "This overview requires owner or administrator access to the selected store.",
     "retry": "Reload",
     "denied": "You do not have permission to open that section. Ask the store owner for access.",
-    "limitedAccess": "Your role does not include reports. Use the menu to open the sections you can access."
+    "limitedAccess": "Your role does not include the general overview. Use the menu to open the sections you can access."
   },
   "AdminShell": {
     "administration": "Store administration",
@@ -1254,9 +1254,13 @@
           "label": "Manage catalog",
           "help": "Create, edit and archive products and categories."
         },
+        "VIEW_OVERVIEW": {
+          "label": "View overview",
+          "help": "Sales figures and recent orders on the home screen."
+        },
         "VIEW_REPORTS": {
           "label": "View reports",
-          "help": "Sales overview and business intelligence."
+          "help": "Business intelligence screen (sales, profit, replenishment)."
         },
         "MANAGE_STORE": {
           "label": "Manage store",
