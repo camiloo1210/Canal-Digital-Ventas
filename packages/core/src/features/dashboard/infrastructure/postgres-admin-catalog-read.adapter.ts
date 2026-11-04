@@ -48,7 +48,7 @@ export class PostgresAdminCatalogReadAdapter implements AdminCatalogReadPort {
           ) c),'[]'::jsonb) AS categories
         FROM core.tenants t JOIN core.tenant_memberships m ON m.tenant_id=t.id
         WHERE t.id=${tenantId}::uuid AND m.user_id=${userId}::uuid
-          AND m.status='active' AND m.role IN ('OWNER','ADMIN')`;
+          AND m.status='active' AND core.member_has_permission(m.user_id, m.tenant_id, ARRAY['MANAGE_CATALOG']::text[])`;
       return rows[0] ?? null;
     } catch (error: unknown) {
       throw new AdminCatalogReadException(error);
@@ -66,7 +66,7 @@ export class PostgresAdminCatalogReadAdapter implements AdminCatalogReadPort {
           SELECT t.id,t.base_currency FROM core.tenants t
           JOIN core.tenant_memberships m ON m.tenant_id=t.id
           WHERE t.id=${tenantId}::uuid AND m.user_id=${userId}::uuid
-            AND m.status='active' AND m.role IN ('OWNER','ADMIN')
+            AND m.status='active' AND core.member_has_permission(m.user_id, m.tenant_id, ARRAY['VIEW_CATALOG','MANAGE_CATALOG']::text[])
         ), filtered AS (
           SELECT p.id,p.name,p.sku,c.name AS "categoryName",p.price_cents AS "priceCents",
             t.base_currency AS currency,p.stock,p.status,p.image_url AS "imageUrl",p.created_at
@@ -97,7 +97,7 @@ export class PostgresAdminCatalogReadAdapter implements AdminCatalogReadPort {
         WITH authorized AS (
           SELECT t.id FROM core.tenants t JOIN core.tenant_memberships m ON m.tenant_id=t.id
           WHERE t.id=${tenantId}::uuid AND m.user_id=${userId}::uuid
-            AND m.status='active' AND m.role IN ('OWNER','ADMIN')
+            AND m.status='active' AND core.member_has_permission(m.user_id, m.tenant_id, ARRAY['VIEW_CATALOG','MANAGE_CATALOG']::text[])
         ), filtered AS (
           SELECT c.id,c.name,c.description,c.status,c.created_at,c.tenant_id
           FROM catalog.categories c JOIN authorized t ON t.id=c.tenant_id

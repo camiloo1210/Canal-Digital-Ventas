@@ -37,7 +37,7 @@ export class PostgresSellerOrderReadRepository implements SellerOrderReadReposit
       const rows = await this.sql<SellerOrderProjection[]>`
         WITH authorized AS (
           SELECT t.id,t.base_currency FROM core.tenants t JOIN core.tenant_memberships m ON m.tenant_id=t.id
-          WHERE t.id=${tenant}::uuid AND m.user_id=${actor}::uuid AND m.status='active' AND m.role IN ('OWNER','ADMIN')
+          WHERE t.id=${tenant}::uuid AND m.user_id=${actor}::uuid AND m.status='active' AND core.member_has_permission(m.user_id, m.tenant_id, ARRAY['VIEW_ORDERS','MANAGE_ORDERS']::text[])
         ), filtered AS (
           SELECT o.id,o.order_number AS "orderNumber",o.status,o.version,o.total_amount_cents AS "totalAmountCents",
             t.base_currency AS currency,o.created_at AS "createdAt",c.name AS "customerName",
