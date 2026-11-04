@@ -5,6 +5,8 @@ import { ProductName } from '@/products/domain/value-objects/product-name.vo';
 import { Sku } from '@/products/domain/value-objects/sku.vo';
 import { Money } from '@/shared/domain/value-objects/money.vo';
 import { ProductRepositoryPort } from '@/products/application/ports/out/product-repository.port';
+import { CategoryRepositoryPort } from '@/categories/application/ports/out/category-repository.port';
+import { CategoryNotFoundException } from '@/categories/application/exceptions/category-not-found.exception';
 import { EventBusPort } from '@/shared/application/ports/out/event-bus.port';
 import { createProductId } from '@/products/domain/types/product-id.type';
 import { createCategoryId } from '@/products/domain/types/category-id.type';
@@ -15,6 +17,7 @@ import { TransactionManagerPort } from '@/shared/application/ports/out/transacti
 export class CreateProductUseCase {
   constructor(
     private readonly productRepository: ProductRepositoryPort,
+    private readonly categoryRepository: CategoryRepositoryPort,
     private readonly eventBus: EventBusPort,
     private readonly transactionManager: TransactionManagerPort,
   ) {}
@@ -36,6 +39,12 @@ export class CreateProductUseCase {
         const productId = createProductId(dto.id);
         const categoryId = createCategoryId(dto.categoryId);
         const tenantId = createTenantId(dto.tenantId);
+
+        // Tenant-scoped lookup: a category of another tenant is indistinguishable from a missing one.
+        const category = await this.categoryRepository.findById(categoryId, tenantId, tx);
+        if (!category) {
+          throw new CategoryNotFoundException(dto.categoryId);
+        }
 
         const newProduct = Product.create(
           productId,

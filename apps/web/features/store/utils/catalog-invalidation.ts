@@ -1,12 +1,11 @@
 import 'server-only';
 
-import { getActiveTenantContextQuery } from '@/features/iam/queries/active-tenant.query';
 import { invalidatePublicCatalog } from '@/lib/cache/public-catalog-cache';
 
-export async function invalidateActiveTenantCatalog(userId: string): Promise<void> {
+/** Drops the public catalog cache of the business the mutation acted on (never inferred from the user). */
+export async function invalidateTenantCatalog(tenantSlug: string): Promise<void> {
   try {
-    const context = await getActiveTenantContextQuery(userId);
-    if (context.status === 'ready') await invalidatePublicCatalog(context.tenantSlug);
+    await invalidatePublicCatalog(tenantSlug);
   } catch {
     // Invalidation is best-effort; entries still expire by TTL.
   }

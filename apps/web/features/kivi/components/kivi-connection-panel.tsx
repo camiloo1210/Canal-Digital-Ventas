@@ -25,6 +25,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { TenantIdField } from '@/features/dashboard/components/tenant-scope';
 
 const IDLE: KiviConnectionActionState = { success: false, message: null };
 
@@ -57,6 +58,7 @@ function PairForm(): React.JSX.Element {
   const banner: KiviConnectionActionState = fieldError ? { ...state, message: null } : state;
   return (
     <form action={action} noValidate className="space-y-4" aria-busy={pending}>
+      <TenantIdField />
       <Feedback state={banner} />
       <fieldset disabled={pending} className="min-w-0 space-y-4 disabled:opacity-70">
         <div className="space-y-2">
@@ -95,6 +97,7 @@ function SyncNowForm(): React.JSX.Element {
   const [state, formAction, pending] = useActionState(requestKiviSyncAction, IDLE);
   return (
     <form action={formAction} className="space-y-2">
+      <TenantIdField />
       <Button type="submit" className="min-h-11" disabled={pending}>
         {pending ? t('syncing') : t('syncNow')}
       </Button>
@@ -146,6 +149,7 @@ function DisconnectDialog(): React.JSX.Element {
       </DialogTrigger>
       <DialogContent>
         <form action={formAction} className="grid gap-4">
+          <TenantIdField />
           <DialogHeader>
             <DialogTitle>{t('disconnectTitle')}</DialogTitle>
             <DialogDescription>{t('disconnectConfirm')}</DialogDescription>

@@ -1,8 +1,13 @@
+import 'server-only';
+import { isTenantId, tenantParam } from '@/features/dashboard/utils/tenant-scope';
+
 export interface SellerOrdersQuery {
   q: string;
   status: string;
   page: number;
   order: string | null;
+  /** Explicit business of the page, carried by every link so the choice survives navigation. */
+  tenant: string | null;
 }
 export type SellerOrdersSearchParams = Record<string, string | string[] | undefined>;
 export const sellerOrderStatuses = [
@@ -31,7 +36,9 @@ export function parseSellerOrdersQuery(params: SellerOrdersSearchParams): Seller
     /^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(params.order)
       ? params.order
       : null;
-  return { q, status, page, order };
+  const requestedTenant = tenantParam(params.tenant);
+  const tenant = isTenantId(requestedTenant) ? requestedTenant : null;
+  return { q, status, page, order, tenant };
 }
 
 export function sellerOrdersHref(
@@ -44,5 +51,6 @@ export function sellerOrdersHref(
   if (value.status !== 'all') params.set('status', value.status);
   if (value.page > 1) params.set('page', String(value.page));
   if (value.order) params.set('order', value.order);
+  if (value.tenant) params.set('tenant', value.tenant);
   return '/dashboard/orders' + (params.size ? '?' + params.toString() : '');
 }

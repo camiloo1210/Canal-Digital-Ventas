@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { TenantLink as Link } from '@/features/dashboard/components/tenant-scope';
 import Image from 'next/image';
 import { ImageIcon } from 'lucide-react';
 import { getLocale, getTranslations } from 'next-intl/server';

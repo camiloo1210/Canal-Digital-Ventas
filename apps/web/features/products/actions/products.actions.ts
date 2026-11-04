@@ -1,12 +1,14 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { invalidateActiveTenantCatalog } from '@/features/store/utils/catalog-invalidation';
+import { invalidateTenantCatalog } from '@/features/store/utils/catalog-invalidation';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { DomainException, ApplicationException } from '@canaldigital/packages/core';
+import { DomainException, ApplicationException, UserPermission } from '@canaldigital/packages/core';
 import { createClient } from '@/lib/supabase/server';
-import { getActiveTenantQuery } from '@/features/iam/queries/active-tenant.query';
+import { resolveActionTenant } from '@/features/dashboard/server/resolve-action-tenant';
+import { withTenant } from '@/features/dashboard/utils/tenant-scope';
+import { userHasAnyPermission } from '@/features/users/queries/member-permissions.query';
 import {
   getCreateProductUseCase,
   getUpdateProductUseCase,
@@ -56,6 +58,8 @@ function productFailure(
         return { error: t('fixErrors'), fieldErrors: { sku: [t('skuFormat')] } };
       case 'InvalidProductNameException':
         return { error: t('fixErrors'), fieldErrors: { name: [t('nameFormat')] } };
+      case 'CategoryNotFoundException':
+        return { error: t('fixErrors'), fieldErrors: { categoryId: [t('categoryUnavailable')] } };
       case 'OptimisticConcurrencyException':
         return { error: t('concurrency') };
       case 'ProductNotFoundException':
@@ -116,14 +120,19 @@ async function saveProduct(
     }
     return { ...rejected, error: t('fixErrors'), fieldErrors };
   }
+  let redirectTenantId: string | null = null;
   try {
     const client = await createClient();
     const {
       data: { user },
     } = await client.auth.getUser();
     if (!user) return { ...rejected, error: t('unauthorized') };
-    const tenantId = await getActiveTenantQuery(user.id);
-    if (!tenantId) return { ...rejected, error: t('tenantUnavailable') };
+    const tenant = await resolveActionTenant(formData, user.id);
+    if (!tenant) return { ...rejected, error: t('contextChanged') };
+    const tenantId = tenant.tenantId;
+    redirectTenantId = tenantId;
+    if (!(await userHasAnyPermission(user.id, tenantId, [UserPermission.MANAGE_CATALOG])))
+      return { ...rejected, error: t('forbidden') };
     const pathsCheck = uploadedImagePathsSchema(tenantId).safeParse(parsed.data.uploadedImagePaths);
     if (!pathsCheck.success) {
       return imageRejection(rejected, t, pathsCheck.error.issues[0]?.message ?? 'imageFormat');
@@ -177,13 +186,13 @@ async function saveProduct(
     } else {
       await getCreateProductUseCase().execute({ ...dto, id: crypto.randomUUID() });
     }
-    await invalidateActiveTenantCatalog(user.id);
+    await invalidateTenantCatalog(tenant.tenantSlug);
   } catch (error: unknown) {
     return { ...rejected, ...productFailure(error, t) };
   }
   revalidatePath('/dashboard/catalog/products');
   revalidatePath('/dashboard');
-  redirect('/dashboard/catalog/products');
+  redirect(withTenant('/dashboard/catalog/products', redirectTenantId));
 }
 
 export async function createProductAction(
@@ -200,7 +209,11 @@ export async function updateProductAction(
   return saveProduct(prevState, formData, true);
 }
 
-async function changeProductArchive(id: string, restore: boolean): Promise<ActionState> {
+async function changeProductArchive(
+  id: string,
+  tenantIdInput: string,
+  restore: boolean,
+): Promise<ActionState> {
   const t = await getTranslations('CatalogForms');
   try {
     const client = await createClient();
@@ -208,11 +221,14 @@ async function changeProductArchive(id: string, restore: boolean): Promise<Actio
       data: { user },
     } = await client.auth.getUser();
     if (!user) return { success: false, error: t('unauthorized') };
-    const tenantId = await getActiveTenantQuery(user.id);
-    if (!tenantId) return { success: false, error: t('tenantUnavailable') };
+    const tenant = await resolveActionTenant(tenantIdInput, user.id);
+    if (!tenant) return { success: false, error: t('contextChanged') };
+    const tenantId = tenant.tenantId;
+    if (!(await userHasAnyPermission(user.id, tenantId, [UserPermission.MANAGE_CATALOG])))
+      return { success: false, error: t('forbidden') };
     const useCase = restore ? getUnarchiveProductUseCase() : getArchiveProductUseCase();
     await useCase.execute({ id, tenantId });
-    await invalidateActiveTenantCatalog(user.id);
+    await invalidateTenantCatalog(tenant.tenantSlug);
   } catch (error: unknown) {
     return { success: false, error: productFailure(error, t).error };
   }
@@ -221,9 +237,9 @@ async function changeProductArchive(id: string, restore: boolean): Promise<Actio
   return { success: true, error: null };
 }
 
-export async function archiveProductAction(id: string): Promise<ActionState> {
-  return changeProductArchive(id, false);
+export async function archiveProductAction(id: string, tenantId: string): Promise<ActionState> {
+  return changeProductArchive(id, tenantId, false);
 }
-export async function unarchiveProductAction(id: string): Promise<ActionState> {
-  return changeProductArchive(id, true);
+export async function unarchiveProductAction(id: string, tenantId: string): Promise<ActionState> {
+  return changeProductArchive(id, tenantId, true);
 }

@@ -1,3 +1,5 @@
+import { AGE_RANGES, GENDERS, PROVINCES } from '@canaldigital/packages/core';
+import type { DemographicOptions } from '@/features/users/constants';
 import { SignupClientForm } from '@/features/iam/ui/components/signup-client-form';
 
 export const metadata = {
@@ -11,6 +13,12 @@ export default async function ClientSignupPage(props: {
   const tenantSlug =
     typeof searchParams.tenantSlug === 'string' ? searchParams.tenantSlug : undefined;
 
+  const options: DemographicOptions = {
+    ageRanges: AGE_RANGES,
+    genders: GENDERS,
+    provinces: PROVINCES,
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md relative z-10">
@@ -22,7 +30,7 @@ export default async function ClientSignupPage(props: {
         </div>
 
         <div className="bg-white border border-gray-200 p-8 rounded-2xl shadow-xl">
-          <SignupClientForm tenantSlug={tenantSlug} />
+          <SignupClientForm tenantSlug={tenantSlug} options={options} />
         </div>
       </div>
     </div>

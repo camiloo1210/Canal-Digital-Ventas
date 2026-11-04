@@ -12,6 +12,7 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select';
+import { TenantParamField } from '@/features/dashboard/components/tenant-scope';
 import { CatalogSearchButton } from '@/features/dashboard/components/catalog-search-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,6 +31,7 @@ export function BusinessIntelligenceFilters({
       className="rounded-xl border bg-card px-4 py-4 sm:px-5"
       aria-label={t('filters')}
     >
+      <TenantParamField />
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="grid min-w-48 flex-1 gap-2 sm:max-w-64">
           <Label htmlFor="bi-days">{t('period')}</Label>

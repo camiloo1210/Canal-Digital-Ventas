@@ -18,6 +18,7 @@ import {
   LanguagesIcon,
   LogInIcon,
   UserPlusIcon,
+  UserRoundIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from 'next-intl';
@@ -40,6 +41,7 @@ interface UserNavProps {
 
 export function UserNav({ viewer, redirectTo = '/', labels }: UserNavProps): React.JSX.Element {
   const t = useTranslations('Storefront.accessibility');
+  const profileT = useTranslations('Profile');
   if (!viewer.isAuthenticated) {
     return (
       <div className="flex items-center gap-2 text-sm font-medium">
@@ -124,6 +126,17 @@ export function UserNav({ viewer, redirectTo = '/', labels }: UserNavProps): Rea
                 <span>{labels.dashboard}</span>
               </DropdownMenuItem>
             )}
+            <DropdownMenuItem
+              render={
+                <Link
+                  href="/account/profile"
+                  className="flex w-full items-center gap-2 cursor-pointer"
+                />
+              }
+            >
+              <UserRoundIcon className="size-4" />
+              <span>{profileT('menu')}</span>
+            </DropdownMenuItem>
           </DropdownMenuGroup>
 
           <LocaleSwitcher />

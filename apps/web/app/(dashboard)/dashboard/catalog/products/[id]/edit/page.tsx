@@ -1,9 +1,12 @@
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { requireDashboardTenant } from '@/features/dashboard/queries/dashboard-context.query';
+import { requireDashboardPermission } from '@/features/dashboard/queries/dashboard-context.query';
+import { UserPermission } from '@canaldigital/packages/core';
 import { getProductReadRepository } from '@/features/products/di/products.di';
 import { getAdminCatalogReadRepository } from '@/features/dashboard/di/dashboard.di';
 import { EditProductForm } from '@/features/products/components/edit-product-form';
+import { TenantScope } from '@/features/dashboard/components/tenant-scope';
+import { tenantParam, type TenantSearchParams } from '@/features/dashboard/utils/tenant-scope';
 import { CatalogFormPage } from '@/features/dashboard/components/catalog-form-page';
 import { formatMinorUnitsForInput } from '@/lib/money';
 import type { ProductEditValues } from '@/features/products/schemas/product-form.schema';
@@ -15,11 +18,16 @@ export async function generateMetadata(): Promise<{ title: string }> {
 
 export default async function EditProductPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<TenantSearchParams>;
 }): Promise<React.JSX.Element> {
   const { id } = await params;
-  const { userId, tenantId } = await requireDashboardTenant();
+  const { userId, tenantId } = await requireDashboardPermission(
+    UserPermission.MANAGE_CATALOG,
+    tenantParam((await searchParams).tenant),
+  );
   const productData = await (await getProductReadRepository()).getProductForEdit(id, tenantId);
   if (!productData) notFound();
   const [t, context] = await Promise.all([
@@ -54,17 +62,19 @@ export default async function EditProductPage({
           : [],
   };
   return (
-    <CatalogFormPage
-      title={t('edit_title')}
-      description={t('edit_desc')}
-      backHref="/dashboard/catalog/products"
-      backLabel={t('list_title')}
-    >
-      <EditProductForm
-        product={product}
-        categories={context.categories}
-        currency={context.currency}
-      />
-    </CatalogFormPage>
+    <TenantScope tenantId={tenantId}>
+      <CatalogFormPage
+        title={t('edit_title')}
+        description={t('edit_desc')}
+        backHref="/dashboard/catalog/products"
+        backLabel={t('list_title')}
+      >
+        <EditProductForm
+          product={product}
+          categories={context.categories}
+          currency={context.currency}
+        />
+      </CatalogFormPage>
+    </TenantScope>
   );
 }

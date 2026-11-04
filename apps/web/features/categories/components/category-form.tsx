@@ -17,6 +17,7 @@ import {
   useCatalogFormErrors,
 } from '@/features/dashboard/components/catalog-form-feedback';
 import { CatalogFormActions } from '@/features/dashboard/components/catalog-form-actions';
+import { TenantIdField } from '@/features/dashboard/components/tenant-scope';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 
 const initialState: CategoryActionState = { success: false, error: null };
@@ -51,6 +52,7 @@ export function CategoryForm({ category }: { category?: CategoryEditValues }): R
         }
       }}
     >
+      <TenantIdField />
       {category && (
         <>
           <input type="hidden" name="categoryId" value={category.id} />

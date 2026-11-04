@@ -2,17 +2,24 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createTranslator } from 'next-intl';
 import es from '@/messages/es.json';
 import {
+  archiveProductAction,
   createProductAction,
+  unarchiveProductAction,
   updateProductAction,
 } from '@/features/products/actions/products.actions';
 import { InvalidProductAttributeException } from '@/products/domain/exceptions/invalid-product-attribute.exception';
 import { InvalidWholesaleRulesException } from '@/products/domain/exceptions/invalid-wholesale-rules.exception';
+import { CategoryNotFoundException } from '@/categories/application/exceptions/category-not-found.exception';
 import { OptimisticConcurrencyException } from '@/shared/application/exceptions/optimistic-concurrency.exception';
 
+vi.mock('@/features/users/queries/member-permissions.query', (): object => ({
+  userHasAnyPermission: vi.fn(async (): Promise<boolean> => true),
+}));
 const mocks = vi.hoisted(
   (): {
     create: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
+    archive: ReturnType<typeof vi.fn>;
     info: ReturnType<typeof vi.fn>;
     publicUrl: ReturnType<typeof vi.fn>;
     upload: ReturnType<typeof vi.fn>;
@@ -21,6 +28,7 @@ const mocks = vi.hoisted(
   } => ({
     create: vi.fn(),
     update: vi.fn(),
+    archive: vi.fn(),
     info: vi.fn(),
     publicUrl: vi.fn(),
     upload: vi.fn(),
@@ -35,6 +43,8 @@ vi.mock('next-intl/server', (): object => ({
 vi.mock('@/features/products/di/products.di', (): object => ({
   getCreateProductUseCase: (): object => ({ execute: mocks.create }),
   getUpdateProductUseCase: (): object => ({ execute: mocks.update }),
+  getArchiveProductUseCase: (): object => ({ execute: mocks.archive }),
+  getUnarchiveProductUseCase: (): object => ({ execute: mocks.archive }),
   getStorageAdapter: (): object => ({
     uploadImage: mocks.upload,
     objectInfo: mocks.info,
@@ -45,11 +55,11 @@ vi.mock('@/lib/supabase/server', (): object => ({
   createClient: async (): Promise<object> => ({ auth: { getUser: mocks.user } }),
 }));
 vi.mock('@/features/iam/queries/active-tenant.query', (): object => ({
-  getActiveTenantQuery: mocks.tenant,
+  resolveActiveTenantQuery: mocks.tenant,
 }));
 vi.mock('next/cache', (): object => ({ revalidatePath: vi.fn() }));
 vi.mock('@/features/store/utils/catalog-invalidation', (): object => ({
-  invalidateActiveTenantCatalog: vi.fn(),
+  invalidateTenantCatalog: vi.fn(),
 }));
 vi.mock('next/navigation', (): object => ({
   redirect: (): never => {
@@ -57,10 +67,12 @@ vi.mock('next/navigation', (): object => ({
   },
 }));
 
+const TENANT = '11111111-2222-4333-8444-555555555555';
+const FOREIGN = '99999999-2222-4333-8444-555555555555';
 const UUID_A = '3f2b8c1e-5d4a-4b6c-8e7f-0a1b2c3d4e5f';
 const UUID_B = '9a8b7c6d-1e2f-4a3b-9c4d-5e6f7a8b9c0d';
-const pathA = `real-tenant/${UUID_A}.png`;
-const pathB = `real-tenant/${UUID_B}.webp`;
+const pathA = `${TENANT}/${UUID_A}.png`;
+const pathB = `${TENANT}/${UUID_B}.webp`;
 
 function form(): FormData {
   const data = new FormData();
@@ -77,7 +89,7 @@ function form(): FormData {
     wholesaleMinQuantity: '37',
     stock: '12',
     isVatExempt: 'on',
-    tenantId: 'attacker-tenant',
+    tenantId: TENANT,
   }))
     data.set(name, value);
   return data;
@@ -88,7 +100,11 @@ describe('product form delivery', (): void => {
   beforeEach((): void => {
     vi.clearAllMocks();
     mocks.user.mockResolvedValue({ data: { user: { id: 'actor' } } });
-    mocks.tenant.mockResolvedValue('real-tenant');
+    mocks.tenant.mockImplementation(async (_user: string, id: string): Promise<object | null> =>
+      id === TENANT
+        ? { status: 'ready', tenantId: TENANT, tenantName: 'S', tenantSlug: 's', role: 'OWNER' }
+        : null,
+    );
     mocks.create.mockResolvedValue('product');
     mocks.update.mockResolvedValue(undefined);
     mocks.info.mockResolvedValue({ exists: true, size: 1000, contentType: 'image/png' });
@@ -105,10 +121,10 @@ describe('product form delivery', (): void => {
         wholesalePrice: 7000,
         sku: 'ABC123',
         price: 10105,
-        tenantId: 'real-tenant',
+        tenantId: TENANT,
       }),
     );
-    expect(mocks.tenant).toHaveBeenCalledWith('actor');
+    expect(mocks.tenant).toHaveBeenCalledWith('actor', TENANT);
     expect(mocks.upload).not.toHaveBeenCalled();
     expect(mocks.create).not.toHaveBeenCalled();
   });
@@ -124,6 +140,13 @@ describe('product form delivery', (): void => {
     });
     expect(result.error).toContain('Otro usuario');
     expect(result.revision).toBe(1);
+  });
+  it('maps a category of another tenant to a localized field error', async (): Promise<void> => {
+    mocks.create.mockRejectedValue(new CategoryNotFoundException('private-category-id'));
+    const result = await createProductAction(initial, form());
+    expect(result.fieldErrors?.categoryId?.[0]).toBe(es.CatalogForms.categoryUnavailable);
+    expect(result.error).not.toContain('private-category-id');
+    expect(result.values).toBeDefined();
   });
   it('maps wholesale invariant failures from Core to both fields', async (): Promise<void> => {
     mocks.create.mockRejectedValue(new InvalidWholesaleRulesException('private domain message'));
@@ -267,9 +290,46 @@ describe('product form delivery', (): void => {
     await expect(createProductAction(initial, data)).rejects.toThrow('NEXT_REDIRECT');
     expect(mocks.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        tenantId: 'real-tenant',
+        tenantId: TENANT,
         galleryUrls: ['https://example.test/' + pathA, 'https://example.test/' + pathB],
       }),
     );
+  });
+
+  describe('explicit business on every product mutation', (): void => {
+    it.each([
+      ['missing', (d: FormData): void => d.delete('tenantId')],
+      ['foreign', (d: FormData): void => d.set('tenantId', FOREIGN)],
+    ])(
+      'create and update reject a %s tenantId without executing',
+      async (_label, mutate): Promise<void> => {
+        const data = form();
+        mutate(data);
+        expect((await updateProductAction(initial, data)).error).toContain('negocio');
+        const created = form();
+        created.delete('productId');
+        created.delete('expectedVersion');
+        mutate(created);
+        expect((await createProductAction(initial, created)).error).toContain('negocio');
+        expect(mocks.update).not.toHaveBeenCalled();
+        expect(mocks.create).not.toHaveBeenCalled();
+      },
+    );
+    it.each([
+      ['missing', ''],
+      ['foreign', FOREIGN],
+    ])(
+      'archive and unarchive reject a %s tenantId without executing',
+      async (_label, id): Promise<void> => {
+        expect((await archiveProductAction('p', id)).success).toBe(false);
+        expect((await unarchiveProductAction('p', id)).error).toContain('negocio');
+        expect(mocks.archive).not.toHaveBeenCalled();
+      },
+    );
+    it('archives inside the explicitly named business', async (): Promise<void> => {
+      mocks.archive.mockResolvedValue(undefined);
+      expect((await archiveProductAction('p', TENANT)).success).toBe(true);
+      expect(mocks.archive).toHaveBeenCalledWith({ id: 'p', tenantId: TENANT });
+    });
   });
 });

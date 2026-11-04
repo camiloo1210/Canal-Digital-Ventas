@@ -1,8 +1,14 @@
 'use server';
 
 import { z } from 'zod';
+import { getTranslations } from 'next-intl/server';
 import { getOnboardTenantUseCase } from '@/features/iam/di/iam.di';
-import { DomainException, ApplicationException } from '@canaldigital/packages/core';
+import { getBusinessAccountReadRepository } from '@/features/iam/di/business-account.di';
+import {
+  BusinessAccountBoundException,
+  DomainException,
+  ApplicationException,
+} from '@canaldigital/packages/core';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { authenticationLimitMessage } from '@/lib/security/authentication-rate-limit';
@@ -54,6 +60,15 @@ export async function onboardBusinessAction(
       throw new Error('You are not authenticated.');
     }
 
+    // A business account belongs to ONE company and can never create another (the database
+    // trigger is the authority; this is the early, localized answer).
+    if (await getBusinessAccountReadRepository().isBusinessAccount(user.id)) {
+      return {
+        success: false,
+        error: (await getTranslations('Users.errors'))('businessAccountBound'),
+      };
+    }
+
     // We generate a tenant ID using crypto (or could use uuid library)
     const tenantId = crypto.randomUUID();
     const idempotencyKey = crypto.randomUUID(); // Idempotency key for atomic onboarding
@@ -76,6 +91,12 @@ export async function onboardBusinessAction(
 
     success = true;
   } catch (error: unknown) {
+    if (error instanceof BusinessAccountBoundException) {
+      return {
+        success: false,
+        error: (await getTranslations('Users.errors'))('businessAccountBound'),
+      };
+    }
     if (error instanceof DomainException || error instanceof ApplicationException) {
       return { success: false, error: (error as Error).message };
     }

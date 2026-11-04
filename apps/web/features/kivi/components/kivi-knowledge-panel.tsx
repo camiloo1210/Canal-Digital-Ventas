@@ -22,6 +22,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { TenantIdField } from '@/features/dashboard/components/tenant-scope';
 
 export interface KiviKnowledgeDocumentView {
   externalId: string;
@@ -119,6 +120,7 @@ export function KiviKnowledgePanel({
           className="space-y-4"
           onChange={(): void => setEditedState(state)}
         >
+          <TenantIdField />
           <input type="hidden" name="operation" value="upload" />
           <input type="hidden" name="documentId" value={replacing?.externalId ?? ''} />
           <fieldset disabled={!linked || pending} className="min-w-0 space-y-4 disabled:opacity-60">
@@ -273,6 +275,7 @@ export function KiviKnowledgePanel({
                     </Button>
                     {doc.status === 'failed' && (
                       <form action={action}>
+                        <TenantIdField />
                         <input type="hidden" name="operation" value="retry" />
                         <input type="hidden" name="documentId" value={doc.externalId} />
                         <Button
@@ -313,6 +316,7 @@ export function KiviKnowledgePanel({
                           </DialogDescription>
                         </DialogHeader>
                         <form action={action}>
+                          <TenantIdField />
                           <input type="hidden" name="operation" value="delete" />
                           <input type="hidden" name="documentId" value={doc.externalId} />
                           <Button

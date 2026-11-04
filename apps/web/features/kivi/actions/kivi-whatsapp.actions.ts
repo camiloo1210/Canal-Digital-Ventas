@@ -3,12 +3,14 @@
 import { getTranslations } from 'next-intl/server';
 import { revalidatePath } from 'next/cache';
 import {
+  UserPermission,
   KiviGatewayException,
   KiviLinkForbiddenException,
   KiviConnectionNotFoundException,
 } from '@canaldigital/packages/core';
 import { createClient } from '@/lib/supabase/server';
-import { getActiveTenantQuery } from '@/features/iam/queries/active-tenant.query';
+import { resolveActionTenant } from '@/features/dashboard/server/resolve-action-tenant';
+import { userHasAnyPermission } from '@/features/users/queries/member-permissions.query';
 import { getConfigureKiviWhatsAppUseCase } from '@/features/kivi/di/kivi.di';
 import { kiviWhatsAppSchema } from '@/features/kivi/schemas/kivi-whatsapp.schema';
 
@@ -39,8 +41,11 @@ export async function configureKiviWhatsAppAction(
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) return failure('unauthorized');
-    const tenantId = await getActiveTenantQuery(user.id);
-    if (!tenantId) return failure('unauthorized');
+    const tenant = await resolveActionTenant(data, user.id);
+    if (!tenant) return failure('contextChanged');
+    const tenantId = tenant.tenantId;
+    if (!(await userHasAnyPermission(user.id, tenantId, [UserPermission.MANAGE_INTEGRATIONS])))
+      return failure('unauthorized');
     const parsed = kiviWhatsAppSchema.safeParse({
       operation: data.get('operation'),
       phoneNumberId: data.get('phoneNumberId'),

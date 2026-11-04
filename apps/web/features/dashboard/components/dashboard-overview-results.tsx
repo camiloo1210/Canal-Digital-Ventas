@@ -2,6 +2,7 @@ import * as React from 'react';
 import { getTranslations } from 'next-intl/server';
 import type { DashboardOverviewReadModel } from '@canaldigital/packages/core';
 import { getDashboardOverviewReadRepository } from '@/features/dashboard/di/dashboard.di';
+import { TenantParamField } from '@/features/dashboard/components/tenant-scope';
 import { DashboardOverview } from '@/features/dashboard/components/dashboard-overview';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -31,6 +32,7 @@ export async function DashboardOverviewResults({
           <p>{t(failed ? 'errorDescription' : 'accessDescription')}</p>
           {failed && (
             <form action="/dashboard" method="get">
+              <TenantParamField />
               <Button type="submit" variant="outline" className="mt-3 min-h-11">
                 {t('retry')}
               </Button>

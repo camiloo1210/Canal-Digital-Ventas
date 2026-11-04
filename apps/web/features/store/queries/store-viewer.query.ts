@@ -1,6 +1,6 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
-import { getActiveTenantQuery } from '@/features/iam/queries/active-tenant.query';
+import { getActiveMembershipsQuery } from '@/features/iam/queries/active-tenant.query';
 
 export type StoreViewer = {
   isAuthenticated: boolean;
@@ -26,13 +26,13 @@ export async function getStoreViewerQuery(): Promise<StoreViewer> {
     };
   }
 
-  const activeTenantId = await getActiveTenantQuery(user.id);
+  const memberships = await getActiveMembershipsQuery(user.id);
 
   return {
     isAuthenticated: true,
     displayName: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
     email: user.email || null,
     avatarUrl: user.user_metadata?.avatar_url || null,
-    hasDashboardAccess: activeTenantId !== null,
+    hasDashboardAccess: memberships.length > 0,
   };
 }

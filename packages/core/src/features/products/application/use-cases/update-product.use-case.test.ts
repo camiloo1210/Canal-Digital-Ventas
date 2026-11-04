@@ -13,6 +13,9 @@ import type {
   TransactionContext,
   TransactionManagerPort,
 } from '@/shared/application/ports/out/transaction-manager.port';
+import type { CategoryRepositoryPort } from '@/categories/application/ports/out/category-repository.port';
+import type { Category } from '@/categories/domain/entities/category.entity';
+import { CategoryNotFoundException } from '@/categories/application/exceptions/category-not-found.exception';
 import { InvalidWholesaleRulesException } from '@/products/domain/exceptions/invalid-wholesale-rules.exception';
 
 function setup(): {
@@ -21,6 +24,7 @@ function setup(): {
   dto: UpdateProductDto;
   save: ReturnType<typeof vi.fn>;
   publish: ReturnType<typeof vi.fn>;
+  findCategory: ReturnType<typeof vi.fn>;
   context: TransactionContext;
 } {
   const product = Product.create(
@@ -59,7 +63,14 @@ function setup(): {
     findById: vi.fn().mockResolvedValue(product),
     save,
   } as unknown as ProductRepositoryPort;
-  const useCase = new UpdateProductUseCase(repository, { publish }, manager);
+  const TENANT = product.getTenantId();
+  const findCategory = vi
+    .fn()
+    .mockImplementation(async (_id: string, tenantId: string): Promise<Category | null> =>
+      tenantId === TENANT ? ({} as Category) : null,
+    );
+  const categories = { findById: findCategory } as unknown as CategoryRepositoryPort;
+  const useCase = new UpdateProductUseCase(repository, categories, { publish }, manager);
   const dto: UpdateProductDto = {
     productId: product.getId(),
     tenantId: product.getTenantId(),
@@ -75,7 +86,7 @@ function setup(): {
     seasonIds: [],
     isVatExempt: false,
   };
-  return { product, useCase, dto, save, publish, context };
+  return { product, useCase, dto, save, publish, findCategory, context };
 }
 
 describe('product edit transaction', (): void => {
@@ -119,5 +130,17 @@ describe('product edit transaction', (): void => {
     ).rejects.toThrow();
     expect(test.product.getImageUrl()).toBe('https://example.test/old.png');
     expect(test.save).not.toHaveBeenCalled();
+  });
+  it('rejects a category that does not exist for the tenant and saves nothing', async (): Promise<void> => {
+    const test = setup();
+    test.findCategory.mockResolvedValue(null);
+    await expect(test.useCase.execute(test.dto)).rejects.toThrow(CategoryNotFoundException);
+    expect(test.findCategory).toHaveBeenCalledWith(
+      test.dto.categoryId,
+      test.dto.tenantId,
+      test.context,
+    );
+    expect(test.save).not.toHaveBeenCalled();
+    expect(test.publish).not.toHaveBeenCalled();
   });
 });
