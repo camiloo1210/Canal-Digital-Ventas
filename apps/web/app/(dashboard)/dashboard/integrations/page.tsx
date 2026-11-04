@@ -1,13 +1,12 @@
 import { getMessages, getTranslations } from 'next-intl/server';
 import { NextIntlClientProvider } from 'next-intl';
-import { requireDashboardPermission } from '@/features/dashboard/queries/dashboard-context.query';
+import { requireDashboardOwner } from '@/features/dashboard/queries/dashboard-context.query';
 import {
   getKiviConnectionReadRepository,
   getKiviKnowledgeReadRepository,
   getKiviMessagingReadRepository,
 } from '@/features/kivi/di/kivi.di';
 import {
-  UserPermission,
   KIVI_KNOWLEDGE_MAX_DOCUMENTS,
   kiviKnowledgeDisplayName,
 } from '@canaldigital/packages/core';
@@ -31,8 +30,7 @@ export default async function IntegrationsPage({
 }): Promise<React.JSX.Element> {
   const t = await getTranslations('KiviConnection');
   const messages = await getMessages();
-  const { userId, tenantId } = await requireDashboardPermission(
-    UserPermission.MANAGE_INTEGRATIONS,
+  const { userId, tenantId } = await requireDashboardOwner(
     tenantParam((await searchParams).tenant),
   );
   // Owner-only projection: null both when unlinked and when the user is not an owner.
