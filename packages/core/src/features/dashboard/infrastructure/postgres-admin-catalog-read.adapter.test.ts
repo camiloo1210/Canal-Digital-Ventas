@@ -34,7 +34,9 @@ describe('admin catalog read projection', (): void => {
       25,
       50,
     ]);
-    expect(statement).toContain("m.status='active' AND m.role IN ('OWNER','ADMIN')");
+    expect(statement).toContain(
+      "m.status='active' AND core.member_has_permission(m.user_id, m.tenant_id, ARRAY['VIEW_CATALOG','MANAGE_CATALOG']::text[])",
+    );
     expect(statement).toContain('m.user_id=?::uuid');
     expect(statement).toContain('t.id=?::uuid');
     expect(statement).toContain('p.tenant_id');

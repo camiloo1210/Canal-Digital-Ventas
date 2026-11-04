@@ -3,7 +3,6 @@
 import { getTranslations } from 'next-intl/server';
 import { revalidatePath } from 'next/cache';
 import {
-  UserPermission,
   KiviConnectionNotFoundException,
   KiviGatewayException,
   KiviKnowledgeLimitException,
@@ -11,7 +10,7 @@ import {
 } from '@canaldigital/packages/core';
 import { createClient } from '@/lib/supabase/server';
 import { resolveActionTenant } from '@/features/dashboard/server/resolve-action-tenant';
-import { userHasAnyPermission } from '@/features/users/queries/member-permissions.query';
+import { userIsOwner } from '@/features/users/queries/member-permissions.query';
 import { getConfigureKiviKnowledgeUseCase } from '@/features/kivi/di/kivi.di';
 import {
   KIVI_KNOWLEDGE_ALLOWED_EXTENSIONS,
@@ -67,8 +66,7 @@ export async function configureKiviKnowledgeAction(
     const tenant = await resolveActionTenant(data, user.id);
     if (!tenant) return failure('contextChanged');
     const tenantId = tenant.tenantId;
-    if (!(await userHasAnyPermission(user.id, tenantId, [UserPermission.MANAGE_INTEGRATIONS])))
-      return failure('unauthorized');
+    if (!(await userIsOwner(user.id, tenantId))) return failure('unauthorized');
 
     const operation = text(data, 'operation');
     let title = values.title;

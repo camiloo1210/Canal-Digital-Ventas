@@ -29,7 +29,7 @@ export class PostgresBusinessIntelligenceReadAdapter implements BusinessIntellig
         WITH authorized AS (
           SELECT t.id,t.base_currency FROM core.tenants t
           WHERE EXISTS (SELECT 1 FROM core.tenant_memberships m WHERE m.tenant_id=t.id
-            AND m.user_id=${userId}::uuid AND m.status='active' AND m.role IN ('OWNER','ADMIN'))
+            AND m.user_id=${userId}::uuid AND m.status='active' AND core.member_has_permission(m.user_id, m.tenant_id, ARRAY['VIEW_REPORTS']::text[]))
           AND t.id=${tenantId}::uuid
         ), bounds AS (
           SELECT date_trunc('day',current_timestamp AT TIME ZONE 'UTC') AT TIME ZONE 'UTC' AS ends,
