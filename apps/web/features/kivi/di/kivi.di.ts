@@ -2,6 +2,10 @@ import 'server-only';
 import { sql } from '@/lib/postgres/server';
 import {
   ConfigureKiviWhatsAppUseCase,
+  ConfigureKiviKnowledgeUseCase,
+  HttpKiviKnowledgeGateway,
+  KiviKnowledgeReadRepository,
+  type KiviKnowledgeReadPort,
   ConfigureKiviNotificationsUseCase,
   KiviMessagingReadRepository,
   HttpKiviNotificationSettingsGateway,
@@ -50,6 +54,26 @@ export function getConfigureKiviWhatsAppUseCase(): ConfigureKiviWhatsAppUseCase 
     new PostgresTransactionManagerAdapter(sql),
     new KiviCredentialResolver(platform.cipher, new EnvKiviSecretResolver(process.env)),
     new HttpKiviWhatsAppGateway({ urlOptions: platform.urlOptions }),
+  );
+}
+
+export function getConfigureKiviKnowledgeUseCase(): ConfigureKiviKnowledgeUseCase {
+  const platform = loadKiviPlatformConfig(process.env);
+  return new ConfigureKiviKnowledgeUseCase(
+    new PostgresKiviConnectionRepository(platform.urlOptions),
+    new PostgresTransactionManagerAdapter(sql),
+    new KiviCredentialResolver(platform.cipher, new EnvKiviSecretResolver(process.env)),
+    new HttpKiviKnowledgeGateway({ urlOptions: platform.urlOptions }),
+  );
+}
+
+export function getKiviKnowledgeReadRepository(): KiviKnowledgeReadPort {
+  const platform = loadKiviPlatformConfig(process.env);
+  return new KiviKnowledgeReadRepository(
+    new PostgresKiviConnectionRepository(platform.urlOptions),
+    new PostgresTransactionManagerAdapter(sql),
+    new KiviCredentialResolver(platform.cipher, new EnvKiviSecretResolver(process.env)),
+    new HttpKiviKnowledgeGateway({ urlOptions: platform.urlOptions }),
   );
 }
 

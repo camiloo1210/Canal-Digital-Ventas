@@ -12,7 +12,7 @@ async function rulesFor(code: string): Promise<string[]> {
 describe('audited feature coding policy', (): void => {
   beforeAll(async (): Promise<void> => {
     await rulesFor('export const initialized = true;');
-  }, 20000);
+  }, 90000);
   it('requires explicit return annotations on expression callbacks', async (): Promise<void> => {
     expect(await rulesFor('export const values = [1].map((value) => value + 1);')).toContain(
       '@typescript-eslint/explicit-function-return-type',

@@ -4,6 +4,7 @@ import { headers } from 'next/headers';
 import { getTranslations } from 'next-intl/server';
 import { revalidatePath } from 'next/cache';
 import {
+  UserPermission,
   InvalidKiviPairingCodeException,
   KiviConfigurationException,
   KiviConnectionNotFoundException,
@@ -11,7 +12,8 @@ import {
   KiviPairingException,
 } from '@canaldigital/packages/core';
 import { createClient } from '@/lib/supabase/server';
-import { getActiveTenantQuery } from '@/features/iam/queries/active-tenant.query';
+import { resolveActionTenant } from '@/features/dashboard/server/resolve-action-tenant';
+import { userHasAnyPermission } from '@/features/users/queries/member-permissions.query';
 import {
   getPairStoreWithKiviUseCase,
   getRegisterKiviToolsUseCase,
@@ -23,6 +25,7 @@ import { pairKiviSchema } from '@/features/kivi/schemas/kivi-connection.schema';
 export type KiviConnectionErrorCode =
   | 'UNAUTHORIZED'
   | 'FORBIDDEN'
+  | 'CONTEXT_CHANGED'
   | 'INVALID_INPUT'
   | 'INVALID_CODE'
   | 'RATE_LIMITED'
@@ -52,15 +55,22 @@ interface Actor {
   tenantId: string;
 }
 
-/** The actor and tenant always come from the session, never from the submitted form. */
-async function resolveActor(): Promise<Actor | null> {
+/**
+ * The actor comes from the session. The business is the one the page named in the hidden
+ * `tenantId` field, accepted only after verifying the actor's active membership and permission
+ * in exactly that business; otherwise `CONTEXT_CHANGED` (stale tab) or null (not allowed).
+ */
+async function resolveActor(formData: FormData): Promise<Actor | 'CONTEXT_CHANGED' | null> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return null;
-  const tenantId = await getActiveTenantQuery(user.id);
-  return tenantId ? { userId: user.id, tenantId } : null;
+  const tenant = await resolveActionTenant(formData, user.id);
+  if (!tenant) return 'CONTEXT_CHANGED';
+  if (!(await userHasAnyPermission(user.id, tenant.tenantId, [UserPermission.MANAGE_INTEGRATIONS])))
+    return null;
+  return { userId: user.id, tenantId: tenant.tenantId };
 }
 
 function failure(
@@ -142,7 +152,9 @@ export async function pairKiviAction(
 ): Promise<KiviConnectionActionState> {
   const t = await getTranslations('KiviConnection');
   try {
-    const actor = await resolveActor();
+    const actor = await resolveActor(formData);
+    if (actor === 'CONTEXT_CHANGED')
+      return failure(previous, 'CONTEXT_CHANGED', t('contextChanged'));
     if (!actor) return failure(previous, 'UNAUTHORIZED', t('unauthorized'));
     const parsed = pairKiviSchema.safeParse({ code: String(formData.get('code') ?? '') });
     if (!parsed.success) {
@@ -167,10 +179,11 @@ export async function unlinkKiviAction(
   previous: KiviConnectionActionState,
   formData: FormData,
 ): Promise<KiviConnectionActionState> {
-  void formData;
   const t = await getTranslations('KiviConnection');
   try {
-    const actor = await resolveActor();
+    const actor = await resolveActor(formData);
+    if (actor === 'CONTEXT_CHANGED')
+      return failure(previous, 'CONTEXT_CHANGED', t('contextChanged'));
     if (!actor) return failure(previous, 'UNAUTHORIZED', t('unauthorized'));
     await getUnlinkStoreFromKiviUseCase().execute(actor);
     refresh();
@@ -184,10 +197,11 @@ export async function requestKiviSyncAction(
   previous: KiviConnectionActionState,
   formData: FormData,
 ): Promise<KiviConnectionActionState> {
-  void formData;
   const t = await getTranslations('KiviConnection');
   try {
-    const actor = await resolveActor();
+    const actor = await resolveActor(formData);
+    if (actor === 'CONTEXT_CHANGED')
+      return failure(previous, 'CONTEXT_CHANGED', t('contextChanged'));
     if (!actor) return failure(previous, 'UNAUTHORIZED', t('unauthorized'));
     await getRequestKiviSyncUseCase().execute(actor);
     // Keeps the assistant's tools current without re-pairing. Never fails the sync request.

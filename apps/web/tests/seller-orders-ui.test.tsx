@@ -37,7 +37,7 @@ describe('seller order URL and queue', (): void => {
   it('normalizes malformed parameters and only accepts implemented statuses and UUID detail links', (): void => {
     expect(
       parseSellerOrdersQuery({ page: '-4', status: 'invented', order: 'injected', q: ['a', 'b'] }),
-    ).toEqual({ q: '', status: 'all', page: 1, order: null });
+    ).toEqual({ q: '', status: 'all', page: 1, order: null, tenant: null });
     expect(
       parseSellerOrdersQuery({ order: order.id, page: '3', status: 'processing' }),
     ).toMatchObject({ order: order.id, page: 3, status: 'processing' });
@@ -50,6 +50,15 @@ describe('seller order URL and queue', (): void => {
     expect(sellerOrdersHref({ ...query, order: order.id }, { order: null })).toBe(
       '/dashboard/orders?q=A%26B&status=paid&page=3',
     );
+  });
+  it('keeps the explicit business on every link and ignores a malformed one', (): void => {
+    const tenant = '3f2b8c1e-9a4d-4e2b-8c7a-1d2e3f4a5b6c';
+    const query = parseSellerOrdersQuery({ status: 'paid', tenant });
+    expect(query.tenant).toBe(tenant);
+    expect(sellerOrdersHref(query, { order: order.id })).toBe(
+      '/dashboard/orders?status=paid&order=' + order.id + '&tenant=' + tenant,
+    );
+    expect(parseSellerOrdersQuery({ tenant: 'x' }).tenant).toBeNull();
   });
   it('keeps the queue compact and links to scoped details without exposing all addresses and lines in the list', async (): Promise<void> => {
     const html = renderToStaticMarkup(

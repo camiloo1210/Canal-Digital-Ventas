@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { TenantLink as Link } from '@/features/dashboard/components/tenant-scope';
 import { getLocale, getTranslations } from 'next-intl/server';
 import type { AdminCategoryCatalogItem } from '@canaldigital/packages/core';
 import {

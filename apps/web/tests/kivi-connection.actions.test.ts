@@ -12,7 +12,7 @@ import {
   getUnlinkStoreFromKiviUseCase,
 } from '@/features/kivi/di/kivi.di';
 import { createClient } from '@/lib/supabase/server';
-import { getActiveTenantQuery } from '@/features/iam/queries/active-tenant.query';
+import { resolveActiveTenantQuery } from '@/features/iam/queries/active-tenant.query';
 import { revalidatePath } from 'next/cache';
 import {
   InvalidKiviPairingCodeException,
@@ -22,6 +22,9 @@ import {
   KiviPairingException,
 } from '@canaldigital/packages/core';
 
+vi.mock('@/features/users/queries/member-permissions.query', (): object => ({
+  userHasAnyPermission: vi.fn(async (): Promise<boolean> => true),
+}));
 vi.mock('next-intl/server', (): object => ({
   getTranslations: vi.fn().mockResolvedValue((key: string): string => key),
 }));
@@ -33,7 +36,7 @@ vi.mock('next/headers', (): object => ({
 vi.mock('next/cache', (): object => ({ revalidatePath: vi.fn() }));
 vi.mock('@/lib/supabase/server', (): object => ({ createClient: vi.fn() }));
 vi.mock('@/features/iam/queries/active-tenant.query', (): object => ({
-  getActiveTenantQuery: vi.fn(),
+  resolveActiveTenantQuery: vi.fn(),
 }));
 vi.mock('@/features/kivi/di/kivi.di', (): object => ({
   getPairStoreWithKiviUseCase: vi.fn(),
@@ -52,8 +55,14 @@ const unlink = vi.fn();
 const sync = vi.fn();
 const registerTools = vi.fn();
 
-function pairForm(overrides: Record<string, string> = {}): FormData {
+function tenantForm(): FormData {
   const data = new FormData();
+  data.set('tenantId', activeTenant);
+  return data;
+}
+
+function pairForm(overrides: Record<string, string> = {}): FormData {
+  const data = tenantForm();
   data.set('code', CODE);
   for (const [key, value] of Object.entries(overrides)) data.set(key, value);
   return data;
@@ -68,8 +77,20 @@ describe('Kivi connection actions', (): void => {
     vi.mocked(createClient).mockResolvedValue({
       auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: actor } } }) },
     } as unknown as Awaited<ReturnType<typeof createClient>>);
-    vi.mocked(getActiveTenantQuery).mockResolvedValue(
-      activeTenant as Awaited<ReturnType<typeof getActiveTenantQuery>>,
+    vi.mocked(resolveActiveTenantQuery).mockImplementation(
+      async (
+        _user: string,
+        id: string,
+      ): Promise<Awaited<ReturnType<typeof resolveActiveTenantQuery>>> =>
+        id === activeTenant
+          ? {
+              status: 'ready',
+              tenantId: activeTenant,
+              tenantName: 'S',
+              tenantSlug: 's',
+              role: 'OWNER',
+            }
+          : null,
     );
     vi.mocked(getPairStoreWithKiviUseCase).mockReturnValue({
       execute: pair,
@@ -88,7 +109,7 @@ describe('Kivi connection actions', (): void => {
 
   describe('authorization', (): void => {
     it('uses the authenticated user and active tenant, ignoring client-supplied identities', async (): Promise<void> => {
-      const data = pairForm({ tenantId: crypto.randomUUID(), userId: crypto.randomUUID() });
+      const data = pairForm({ userId: crypto.randomUUID() });
       const result = await pairKiviAction(initial, data);
       expect(result.success).toBe(true);
       expect(pair).toHaveBeenCalledWith({
@@ -107,8 +128,8 @@ describe('Kivi connection actions', (): void => {
       } as unknown as Awaited<ReturnType<typeof createClient>>);
       for (const result of [
         await pairKiviAction(initial, pairForm()),
-        await unlinkKiviAction(initial, new FormData()),
-        await requestKiviSyncAction(initial, new FormData()),
+        await unlinkKiviAction(initial, tenantForm()),
+        await requestKiviSyncAction(initial, tenantForm()),
       ]) {
         expect(result).toMatchObject({ success: false, errorCode: 'UNAUTHORIZED' });
       }
@@ -117,11 +138,26 @@ describe('Kivi connection actions', (): void => {
       expect(sync).not.toHaveBeenCalled();
     });
 
-    it('denies users without an active store', async (): Promise<void> => {
-      vi.mocked(getActiveTenantQuery).mockResolvedValue(null);
-      const result = await pairKiviAction(initial, pairForm());
-      expect(result).toMatchObject({ success: false, errorCode: 'UNAUTHORIZED' });
+    it('rejects a missing or foreign tenantId on every mutation without executing anything', async (): Promise<void> => {
+      const missing = (): FormData => {
+        const data = pairForm();
+        data.delete('tenantId');
+        return data;
+      };
+      const foreign = (): FormData => pairForm({ tenantId: crypto.randomUUID() });
+      for (const make of [missing, foreign]) {
+        for (const result of [
+          await pairKiviAction(initial, make()),
+          await unlinkKiviAction(initial, make()),
+          await requestKiviSyncAction(initial, make()),
+        ]) {
+          expect(result).toMatchObject({ success: false, errorCode: 'CONTEXT_CHANGED' });
+          expect(result.message).toBe('contextChanged');
+        }
+      }
       expect(pair).not.toHaveBeenCalled();
+      expect(unlink).not.toHaveBeenCalled();
+      expect(sync).not.toHaveBeenCalled();
     });
 
     it('denies non-owners on every mutation', async (): Promise<void> => {
@@ -130,8 +166,8 @@ describe('Kivi connection actions', (): void => {
       sync.mockRejectedValue(new KiviLinkForbiddenException());
       for (const result of [
         await pairKiviAction(initial, pairForm()),
-        await unlinkKiviAction(initial, new FormData()),
-        await requestKiviSyncAction(initial, new FormData()),
+        await unlinkKiviAction(initial, tenantForm()),
+        await requestKiviSyncAction(initial, tenantForm()),
       ]) {
         expect(result).toMatchObject({ success: false, errorCode: 'FORBIDDEN' });
       }
@@ -139,21 +175,19 @@ describe('Kivi connection actions', (): void => {
 
     it('sync now also refreshes the assistant tools for the session tenant and never fails because of them', async (): Promise<void> => {
       registerTools.mockRejectedValueOnce(new Error('boom'));
-      const failing = await requestKiviSyncAction(initial, new FormData());
+      const failing = await requestKiviSyncAction(initial, tenantForm());
       expect(failing).toMatchObject({ success: true });
       registerTools.mockResolvedValue('registered');
-      const result = await requestKiviSyncAction(initial, new FormData());
+      const result = await requestKiviSyncAction(initial, tenantForm());
       expect(result).toMatchObject({ success: true });
       expect(registerTools).toHaveBeenLastCalledWith(
         expect.objectContaining({ userId: actor, tenantId: activeTenant }),
       );
     });
 
-    it('never acts on another tenant: unlink and sync always target the session tenant', async (): Promise<void> => {
-      const foreign = new FormData();
-      foreign.set('tenantId', crypto.randomUUID());
-      await unlinkKiviAction(initial, foreign);
-      await requestKiviSyncAction(initial, foreign);
+    it('unlink and sync target exactly the verified named tenant', async (): Promise<void> => {
+      await unlinkKiviAction(initial, tenantForm());
+      await requestKiviSyncAction(initial, tenantForm());
       expect(unlink).toHaveBeenCalledWith({ userId: actor, tenantId: activeTenant });
       expect(sync).toHaveBeenCalledWith({ userId: actor, tenantId: activeTenant });
     });
@@ -231,17 +265,17 @@ describe('Kivi connection actions', (): void => {
     it('reports a missing connection when unlinking or syncing', async (): Promise<void> => {
       unlink.mockRejectedValue(new KiviConnectionNotFoundException());
       sync.mockRejectedValue(new KiviConnectionNotFoundException());
-      expect(await unlinkKiviAction(initial, new FormData())).toMatchObject({
+      expect(await unlinkKiviAction(initial, tenantForm())).toMatchObject({
         errorCode: 'NOT_LINKED',
       });
-      expect(await requestKiviSyncAction(initial, new FormData())).toMatchObject({
+      expect(await requestKiviSyncAction(initial, tenantForm())).toMatchObject({
         errorCode: 'NOT_LINKED',
       });
     });
 
     it('masks unexpected failures when syncing', async (): Promise<void> => {
       sync.mockRejectedValue(new Error('connection string postgres://secret'));
-      const result = await requestKiviSyncAction(initial, new FormData());
+      const result = await requestKiviSyncAction(initial, tenantForm());
       expect(result).toMatchObject({
         success: false,
         errorCode: 'UNEXPECTED',
@@ -251,11 +285,11 @@ describe('Kivi connection actions', (): void => {
     });
 
     it('confirms sync and unlink success', async (): Promise<void> => {
-      expect(await requestKiviSyncAction(initial, new FormData())).toMatchObject({
+      expect(await requestKiviSyncAction(initial, tenantForm())).toMatchObject({
         success: true,
         message: 'syncRequested',
       });
-      expect(await unlinkKiviAction(initial, new FormData())).toMatchObject({
+      expect(await unlinkKiviAction(initial, tenantForm())).toMatchObject({
         success: true,
         message: 'unlinked',
       });

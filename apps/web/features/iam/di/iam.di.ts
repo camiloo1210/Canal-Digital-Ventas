@@ -1,4 +1,5 @@
 import 'server-only';
+import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js';
 import { createClient as createSupabaseServerClient } from '@/lib/supabase/server';
 import {
   SignInWithEmailUseCase,
@@ -11,7 +12,9 @@ import {
   LocalEventBus,
   RegisterGlobalIdentityUseCase,
   SupabaseActiveTenantContextReadAdapter,
+  SupabaseAdminAuthAdapter,
   type ActiveTenantContextReadPort,
+  type AdminAuthPort,
 } from '@canaldigital/packages/core';
 
 export async function getActiveTenantContextReadRepository(): Promise<ActiveTenantContextReadPort> {
@@ -51,4 +54,19 @@ export async function getRegisterGlobalIdentityUseCase(): Promise<RegisterGlobal
   const supabaseClient = await createSupabaseServerClient();
   const adapter = new SupabaseAuthAdapter(supabaseClient);
   return new RegisterGlobalIdentityUseCase(adapter);
+}
+
+/**
+ * Privileged Supabase Auth admin port, or null when SUPABASE_SERVICE_ROLE_KEY is not configured.
+ * The key is read only here, on the server, and never leaves this module.
+ */
+export function getAdminAuthPort(): AdminAuthPort | null {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !serviceRoleKey) return null;
+  return new SupabaseAdminAuthAdapter(
+    createSupabaseAdminClient(url, serviceRoleKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    }),
+  );
 }

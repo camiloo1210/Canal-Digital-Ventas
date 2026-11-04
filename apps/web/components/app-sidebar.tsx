@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import {
   LayoutDashboard,
@@ -11,8 +11,8 @@ import {
   ShoppingCart,
   Paintbrush,
   Plug,
-  Store,
   ChartNoAxesCombined,
+  UsersRound,
 } from 'lucide-react';
 import { NavUser } from '@/components/nav-user';
 import {
@@ -28,6 +28,9 @@ import {
   SidebarGroupContent,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { BusinessSwitcher } from '@/features/dashboard/components/business-switcher';
+import { currentBusiness, type BusinessOption } from '@/features/dashboard/utils/current-business';
+import { TENANT_PARAM, withTenant } from '@/features/dashboard/utils/tenant-scope';
 import {
   dashboardNavigation,
   isDashboardDestinationActive,
@@ -41,24 +44,31 @@ const icons = {
   categories: Tags,
   store: Paintbrush,
   integrations: Plug,
+  users: UsersRound,
 };
 
 interface DashboardSidebarUser {
   name: string;
   email: string;
   avatar: string;
-  tenantName: string;
-  tenantSlug: string;
 }
 
 export function AppSidebar({
   user,
+  businesses,
+  defaultTenantId,
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
   user: DashboardSidebarUser;
+  businesses: readonly BusinessOption[];
+  defaultTenantId: string | null;
 }): React.JSX.Element {
   const t = useTranslations('AdminShell');
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  // Every link below names its business (?tenant=); the server validates it on each request.
+  const current = currentBusiness(businesses, searchParams.get(TENANT_PARAM), defaultTenantId);
+  const visibleKeys = current?.visibleKeys ?? [];
   const { isMobile, setOpenMobile } = useSidebar();
   const focusAfterNavigation = React.useRef(false);
   React.useEffect((): (() => void) | undefined => {
@@ -94,16 +104,11 @@ export function AppSidebar({
       <SidebarHeader className="p-3 pr-14 md:pr-3">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              size="lg"
-              render={<Link href="/dashboard" onClick={closeOnNavigation} />}
-            >
-              <Store aria-hidden="true" className="size-5 shrink-0" />
-              <div className="min-w-0">
-                <p className="truncate font-semibold">{user.tenantName}</p>
-                <p className="text-xs text-muted-foreground">{t('administration')}</p>
-              </div>
-            </SidebarMenuButton>
+            <BusinessSwitcher
+              businesses={businesses}
+              current={current}
+              onNavigate={(): void => setOpenMobile(false)}
+            />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
@@ -113,35 +118,37 @@ export function AppSidebar({
             <SidebarGroupLabel>{t('workspace')}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {dashboardNavigation.map((item): React.JSX.Element => {
-                  const Icon = icons[item.key];
-                  const active = isDashboardDestinationActive(pathname, item.href);
-                  return (
-                    <SidebarMenuItem key={item.key}>
-                      <SidebarMenuButton
-                        isActive={active}
-                        className="min-h-11 text-sm"
-                        render={
-                          <Link
-                            href={item.href}
-                            onClick={closeOnNavigation}
-                            aria-current={active ? 'page' : undefined}
-                          />
-                        }
-                      >
-                        <Icon aria-hidden="true" />
-                        <span>{t(item.key)}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
+                {dashboardNavigation
+                  .filter((item): boolean => visibleKeys.includes(item.key))
+                  .map((item): React.JSX.Element => {
+                    const Icon = icons[item.key];
+                    const active = isDashboardDestinationActive(pathname, item.href);
+                    return (
+                      <SidebarMenuItem key={item.key}>
+                        <SidebarMenuButton
+                          isActive={active}
+                          className="min-h-11 text-sm"
+                          render={
+                            <Link
+                              href={withTenant(item.href, current?.tenantId)}
+                              onClick={closeOnNavigation}
+                              aria-current={active ? 'page' : undefined}
+                            />
+                          }
+                        >
+                          <Icon aria-hidden="true" />
+                          <span>{t(item.key)}</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         </nav>
       </SidebarContent>
       <SidebarFooter className="p-3">
-        <NavUser user={user} />
+        <NavUser user={{ ...user, tenantSlug: current?.tenantSlug ?? null }} />
       </SidebarFooter>
     </Sidebar>
   );

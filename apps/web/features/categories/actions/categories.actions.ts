@@ -2,11 +2,12 @@
 
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
-import { invalidateActiveTenantCatalog } from '@/features/store/utils/catalog-invalidation';
-import { DomainException, ApplicationException } from '@canaldigital/packages/core';
+import { invalidateTenantCatalog } from '@/features/store/utils/catalog-invalidation';
+import { DomainException, ApplicationException, UserPermission } from '@canaldigital/packages/core';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { getActiveTenantQuery } from '@/features/iam/queries/active-tenant.query';
+import { resolveActionTenant } from '@/features/dashboard/server/resolve-action-tenant';
+import { userHasAnyPermission } from '@/features/users/queries/member-permissions.query';
 import {
   getCreateCategoryUseCase,
   getChangeCategoryDetailsUseCase,
@@ -14,6 +15,7 @@ import {
   getUnarchiveCategoryUseCase,
 } from '@/features/categories/di/categories.di';
 import { getTranslations } from 'next-intl/server';
+import { withTenant } from '@/features/dashboard/utils/tenant-scope';
 
 import {
   categoryFormSchema,
@@ -62,6 +64,7 @@ export async function createCategoryAction(
   }
 
   let isSuccess = false;
+  let tenantIdForRedirect: string | null = null;
 
   try {
     const supabase = await createClient();
@@ -73,9 +76,19 @@ export async function createCategoryAction(
       return { error: t('errors_unexpected'), success: false, values: extractedValues, revision };
     }
 
-    const tenantId = await getActiveTenantQuery(user.id);
-    if (!tenantId) {
-      return { error: t('errors_unexpected'), success: false, values: extractedValues, revision };
+    const tenant = await resolveActionTenant(formData, user.id);
+    if (!tenant) {
+      return {
+        error: t('errors_contextChanged'),
+        success: false,
+        values: extractedValues,
+        revision,
+      };
+    }
+    const tenantId = tenant.tenantId;
+    tenantIdForRedirect = tenantId;
+    if (!(await userHasAnyPermission(user.id, tenantId, [UserPermission.MANAGE_CATALOG]))) {
+      return { error: t('errors_forbidden'), success: false, values: extractedValues, revision };
     }
 
     const useCase = getCreateCategoryUseCase();
@@ -88,7 +101,7 @@ export async function createCategoryAction(
       status: 'active',
     });
 
-    await invalidateActiveTenantCatalog(user.id);
+    await invalidateTenantCatalog(tenant.tenantSlug);
     isSuccess = true;
   } catch (error: unknown) {
     if (error instanceof DomainException || error instanceof ApplicationException) {
@@ -112,7 +125,7 @@ export async function createCategoryAction(
   if (isSuccess) {
     revalidatePath('/dashboard/catalog/categories');
     revalidatePath('/dashboard');
-    redirect('/dashboard/catalog/categories');
+    redirect(withTenant('/dashboard/catalog/categories', tenantIdForRedirect));
   }
 
   return { success: false, error: t('errors_unexpected'), values: extractedValues, revision };
@@ -154,6 +167,7 @@ export async function updateCategoryAction(
   }
 
   let isSuccess = false;
+  let tenantIdForRedirect: string | null = null;
 
   try {
     const supabase = await createClient();
@@ -165,9 +179,19 @@ export async function updateCategoryAction(
       return { error: t('errors_unexpected'), success: false, values: extractedValues, revision };
     }
 
-    const tenantId = await getActiveTenantQuery(user.id);
-    if (!tenantId) {
-      return { error: t('errors_unexpected'), success: false, values: extractedValues, revision };
+    const tenant = await resolveActionTenant(formData, user.id);
+    if (!tenant) {
+      return {
+        error: t('errors_contextChanged'),
+        success: false,
+        values: extractedValues,
+        revision,
+      };
+    }
+    const tenantId = tenant.tenantId;
+    tenantIdForRedirect = tenantId;
+    if (!(await userHasAnyPermission(user.id, tenantId, [UserPermission.MANAGE_CATALOG]))) {
+      return { error: t('errors_forbidden'), success: false, values: extractedValues, revision };
     }
 
     const useCase = getChangeCategoryDetailsUseCase();
@@ -180,7 +204,7 @@ export async function updateCategoryAction(
       description: parsed.data.description,
     });
 
-    await invalidateActiveTenantCatalog(user.id);
+    await invalidateTenantCatalog(tenant.tenantSlug);
     isSuccess = true;
   } catch (error: unknown) {
     if (error instanceof DomainException || error instanceof ApplicationException) {
@@ -201,7 +225,7 @@ export async function updateCategoryAction(
   if (isSuccess) {
     revalidatePath('/dashboard/catalog/categories');
     revalidatePath('/dashboard');
-    redirect('/dashboard/catalog/categories');
+    redirect(withTenant('/dashboard/catalog/categories', tenantIdForRedirect));
   }
 
   return { success: false, error: t('errors_unexpected'), values: extractedValues, revision };
@@ -209,6 +233,7 @@ export async function updateCategoryAction(
 
 export async function archiveCategoryAction(
   id: string,
+  tenantIdInput: string,
 ): Promise<{ success: boolean; error: string | null }> {
   const t = await getTranslations('Categories');
   let isSuccess = false;
@@ -223,9 +248,13 @@ export async function archiveCategoryAction(
       return { error: t('errors_unexpected'), success: false };
     }
 
-    const tenantId = await getActiveTenantQuery(user.id);
-    if (!tenantId) {
-      return { error: t('errors_unexpected'), success: false };
+    const tenant = await resolveActionTenant(tenantIdInput, user.id);
+    if (!tenant) {
+      return { error: t('errors_contextChanged'), success: false };
+    }
+    const tenantId = tenant.tenantId;
+    if (!(await userHasAnyPermission(user.id, tenantId, [UserPermission.MANAGE_CATALOG]))) {
+      return { error: t('errors_forbidden'), success: false };
     }
 
     const useCase = getArchiveCategoryUseCase();
@@ -235,7 +264,7 @@ export async function archiveCategoryAction(
       tenantId,
     });
 
-    await invalidateActiveTenantCatalog(user.id);
+    await invalidateTenantCatalog(tenant.tenantSlug);
     isSuccess = true;
   } catch (error: unknown) {
     if (error instanceof Error && error.name === 'CategoryHasProductsException') {
@@ -256,6 +285,7 @@ export async function archiveCategoryAction(
 
 export async function unarchiveCategoryAction(
   id: string,
+  tenantIdInput: string,
 ): Promise<{ success: boolean; error: string | null }> {
   const t = await getTranslations('Categories');
   let isSuccess = false;
@@ -270,9 +300,13 @@ export async function unarchiveCategoryAction(
       return { error: t('errors_unexpected'), success: false };
     }
 
-    const tenantId = await getActiveTenantQuery(user.id);
-    if (!tenantId) {
-      return { error: t('errors_unexpected'), success: false };
+    const tenant = await resolveActionTenant(tenantIdInput, user.id);
+    if (!tenant) {
+      return { error: t('errors_contextChanged'), success: false };
+    }
+    const tenantId = tenant.tenantId;
+    if (!(await userHasAnyPermission(user.id, tenantId, [UserPermission.MANAGE_CATALOG]))) {
+      return { error: t('errors_forbidden'), success: false };
     }
 
     const useCase = getUnarchiveCategoryUseCase();
@@ -282,7 +316,7 @@ export async function unarchiveCategoryAction(
       tenantId,
     });
 
-    await invalidateActiveTenantCatalog(user.id);
+    await invalidateTenantCatalog(tenant.tenantSlug);
     isSuccess = true;
   } catch (error: unknown) {
     console.error('Critical Server Exception:', error);

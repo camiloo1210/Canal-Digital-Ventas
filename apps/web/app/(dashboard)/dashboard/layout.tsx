@@ -1,12 +1,14 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { AppSidebar } from '@/components/app-sidebar';
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { getDashboardContextQuery } from '@/features/dashboard/queries/dashboard-context.query';
-import { LogoutForm } from '@/features/iam/components/logout-form';
+import { DashboardShell } from '@/features/dashboard/components/dashboard-shell';
+import {
+  defaultTenantFor,
+  getDashboardContextQuery,
+} from '@/features/dashboard/queries/dashboard-context.query';
+import { visibleDashboardNavigationKeys } from '@/features/dashboard/navigation/dashboard-navigation';
+import { getMemberPermissionsQuery } from '@/features/users/queries/member-permissions.query';
+import type { BusinessOption } from '@/features/dashboard/utils/current-business';
 
 export default async function DashboardLayout({
   children,
@@ -15,27 +17,25 @@ export default async function DashboardLayout({
 }): Promise<React.JSX.Element> {
   const context = await getDashboardContextQuery();
   const t = await getTranslations('AdminShell');
-  if (context.tenant.status === 'none') redirect('/onboarding');
-  if (context.tenant.status !== 'ready')
-    return (
-      <main className="mx-auto w-full max-w-xl space-y-6 px-4 py-16">
-        <h1 className="text-2xl font-semibold">{t('contextTitle')}</h1>
-        <Alert>
-          <AlertTitle>{t('multipleTitle')}</AlertTitle>
-          <AlertDescription>{t('multipleDescription')}</AlertDescription>
-        </Alert>
-        <div className="flex flex-wrap gap-3">
-          <Button nativeButton={false} render={<Link href="/" />}>
-            {t('backToStores')}
-          </Button>
-          <LogoutForm>
-            <Button variant="outline" type="submit">
-              {t('logout')}
-            </Button>
-          </LogoutForm>
-        </div>
-      </main>
-    );
+  if (context.memberships.length === 0) redirect('/onboarding');
+  // A layout cannot read the page's ?tenant=, so it describes EVERY business of the user and the
+  // client shell picks the displayed one (explicit param, else this validated default). Pages and
+  // actions never rely on this: they re-validate their own explicit tenant on each request.
+  const defaultTenant = await defaultTenantFor(context.memberships);
+  const businesses = await Promise.all(
+    context.memberships.map(async (membership): Promise<BusinessOption> => {
+      const member = await getMemberPermissionsQuery(context.userId, membership.tenantId);
+      return {
+        tenantId: membership.tenantId,
+        tenantName: membership.tenantName,
+        tenantSlug: membership.tenantSlug,
+        role: membership.role,
+        visibleKeys: member
+          ? visibleDashboardNavigationKeys(member.baseRole, member.permissions)
+          : ['overview'],
+      };
+    }),
+  );
   return (
     <div className="admin-space min-h-svh">
       <Link
@@ -44,27 +44,13 @@ export default async function DashboardLayout({
       >
         {t('skip')}
       </Link>
-      <SidebarProvider
-        style={{ '--sidebar-width': '16rem', '--header-height': '3.5rem' } as React.CSSProperties}
+      <DashboardShell
+        user={{ name: context.name || t('account'), email: context.email, avatar: context.avatar }}
+        businesses={businesses}
+        defaultTenantId={defaultTenant?.tenantId ?? null}
       >
-        <AppSidebar
-          variant="inset"
-          user={{
-            name: context.name || t('account'),
-            email: context.email,
-            avatar: context.avatar,
-            tenantName: context.tenant.tenantName,
-            tenantSlug: context.tenant.tenantSlug,
-          }}
-        />
-        <SidebarInset
-          id="dashboard-main"
-          tabIndex={-1}
-          className="min-w-0 scroll-mt-16 focus:outline-none"
-        >
-          {children}
-        </SidebarInset>
-      </SidebarProvider>
+        {children}
+      </DashboardShell>
     </div>
   );
 }

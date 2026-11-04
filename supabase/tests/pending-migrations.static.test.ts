@@ -284,3 +284,499 @@ describe('pending migrations (static checks)', (): void => {
     expect(kivi).toHaveLength(5);
   });
 });
+
+describe('user management migration (demographic consent)', (): void => {
+  const migration = pending.find((m: PendingMigration): boolean =>
+    m.name.endsWith('_user_management.sql'),
+  );
+  const fn = (name: string): FunctionDefinition | undefined =>
+    functionsOf(migration?.sql ?? '').find((f: FunctionDefinition): boolean => f.name === name);
+
+  it('accept_invitation never downgrades the global consent flag', (): void => {
+    const body = fn('core.accept_invitation')?.body ?? '';
+    expect(body).not.toMatch(/demographic_consent\s*=\s*COALESCE\s*\(\s*p_consent/i);
+    expect(body).not.toMatch(/demographic_consent\s*=\s*(false|CASE)/i);
+    expect(body).toMatch(/demographic_consent\s*=\s*true/i);
+    expect(body).toMatch(/NOT\s+demographic_consent/i);
+  });
+
+  it('record_signup_demographics only stores an unlinked sample when consent is given', (): void => {
+    const definition = fn('core.record_signup_demographics');
+    expect(definition, 'function exists').toBeDefined();
+    expect(definition?.header).toMatch(/SECURITY\s+DEFINER/i);
+    const body = definition?.body ?? '';
+    const insert = body.search(/INSERT\s+INTO\s+analytics\.demographic_samples/i);
+    expect(insert).toBeGreaterThan(
+      body.search(/IF\s+COALESCE\s*\(\s*p_consent\s*,\s*false\s*\)\s+THEN/i),
+    );
+    const statement = body.slice(insert).match(/INSERT[\s\S]*?;/i)?.[0] ?? '';
+    expect(statement).not.toMatch(/user_id|email/i);
+    expect(statement).toMatch(/date_trunc\(\s*'month'/i);
+    expect(body).not.toMatch(/demographic_consent\s*=\s*false/i);
+    expect(sqlGrantsTo(migration?.sql ?? '', 'core.record_signup_demographics')).toBe('postgres');
+  });
+});
+
+function sqlGrantsTo(sql: string, name: string): string | null {
+  const escaped = name.replace('.', String.raw`\.`);
+  const pattern = String.raw`GRANT\s+EXECUTE\s+ON\s+FUNCTION\s+${escaped}\s*\([^)]*\)\s+TO\s+(\w+)`;
+  const match = sql.match(new RegExp(pattern, 'i'));
+  return match ? match[1] : null;
+}
+
+describe('invitation account mode migration', (): void => {
+  const migration = pending.find((m: PendingMigration): boolean =>
+    m.name.endsWith('_invitation_account_mode.sql'),
+  );
+
+  it('adds a constrained account_mode column defaulting to generated emails', (): void => {
+    const sql = migration?.sql ?? '';
+    expect(migration, 'migration exists').toBeDefined();
+    expect(sql).toMatch(/ALTER\s+TABLE\s+core\.tenant_invitations/i);
+    expect(sql).toMatch(/account_mode\s+text\s+NOT\s+NULL\s+DEFAULT\s+'GENERATED_EMAIL'/i);
+    expect(sql).toMatch(
+      /CHECK\s*\(\s*account_mode\s+IN\s*\(\s*'GENERATED_EMAIL'\s*,\s*'REAL_EMAIL'\s*,\s*'GOOGLE'\s*\)\s*\)/i,
+    );
+  });
+
+  it('does not redefine accept_invitation or touch grants', (): void => {
+    const sql = migration?.sql ?? '';
+    expect(sql).not.toMatch(/FUNCTION/i);
+    expect(sql).not.toMatch(/\bGRANT\b/i);
+  });
+});
+
+describe('member account management migration', (): void => {
+  const migration = pending.find((m: PendingMigration): boolean =>
+    m.name.endsWith('_member_account_management.sql'),
+  );
+  const sql = migration?.sql ?? '';
+  const fn = (name: string): FunctionDefinition | undefined =>
+    functionsOf(sql).find((f: FunctionDefinition): boolean => f.name === name);
+  const acceptBody = fn('core.accept_invitation')?.body ?? '';
+
+  it('exists and is ordered after the invitation account mode migration', (): void => {
+    expect(migration, 'migration exists').toBeDefined();
+    expect(migration?.name ?? '').toBe('20261103040000_member_account_management.sql');
+  });
+
+  it('adds a nullable managed_by_tenant_id referencing tenants with ON DELETE SET NULL', (): void => {
+    expect(sql).toMatch(/ALTER\s+TABLE\s+core\.users/i);
+    expect(sql).toMatch(
+      /managed_by_tenant_id\s+uuid\s+NULL\s+REFERENCES\s+core\.tenants\s*\(\s*id\s*\)\s+ON\s+DELETE\s+SET\s+NULL/i,
+    );
+  });
+
+  it('redefines accept_invitation with the same signature and grants only postgres', (): void => {
+    const definition = fn('core.accept_invitation');
+    expect(definition, 'function exists').toBeDefined();
+    expect(definition?.header).toMatch(/SECURITY\s+DEFINER/i);
+    expect(definition?.header).toMatch(
+      /p_token_hash\s+text,\s*p_user_id\s+uuid,\s*p_consent\s+boolean,\s*p_age_range\s+text,\s*p_gender\s+text,\s*p_province\s+text,\s*p_first_name\s+text\s+DEFAULT\s+NULL,\s*p_last_name\s+text\s+DEFAULT\s+NULL/i,
+    );
+    expect(sqlGrantsTo(sql, 'core.accept_invitation')).toBe('postgres');
+    expect(sql).toMatch(
+      /REVOKE\s+ALL\s+ON\s+FUNCTION\s+core\.accept_invitation\(text, uuid, boolean, text, text, text, text, text\)\s+FROM\s+PUBLIC,\s*anon,\s*authenticated,\s*service_role/i,
+    );
+  });
+
+  it('keeps every prior accept_invitation behaviour', (): void => {
+    expect(acceptBody).toMatch(/Invitation not usable/);
+    expect(acceptBody).toMatch(/Already a member/);
+    expect(acceptBody).toMatch(/Unknown user/);
+    expect(acceptBody).toMatch(/use_count\s*=\s*use_count\s*\+\s*1/i);
+    expect(acceptBody).toMatch(/INSERT\s+INTO\s+analytics\.demographic_samples/i);
+    expect(acceptBody).not.toMatch(/demographic_consent\s*=\s*COALESCE\s*\(\s*p_consent/i);
+    expect(acceptBody).not.toMatch(/demographic_consent\s*=\s*(false|CASE)/i);
+    expect(acceptBody).toMatch(/demographic_consent\s*=\s*true/i);
+    expect(acceptBody).toMatch(/NOT\s+demographic_consent/i);
+  });
+
+  it('marks ownership only for GENERATED_EMAIL invitations on accounts created by this flow', (): void => {
+    expect(acceptBody).toMatch(/account_mode\s*=\s*'GENERATED_EMAIL'/i);
+    // Never take over an existing personal account: no membership anywhere, no previous owner,
+    // a fresh account and a non deliverable generated login address.
+    expect(acceptBody).toMatch(/NOT\s+EXISTS\s*\(\s*SELECT\s+1\s+FROM\s+core\.tenant_memberships/i);
+    expect(acceptBody).toMatch(/managed_by_tenant_id\s+IS\s+NULL/i);
+    expect(acceptBody).toMatch(/\.staff\.invalid/);
+    expect(acceptBody).toMatch(/created_at\s*>/i);
+    const update = acceptBody.match(
+      /UPDATE\s+core\.users\s+SET\s+managed_by_tenant_id[\s\S]*?;/i,
+    )?.[0];
+    expect(update, 'sets managed_by_tenant_id').toBeDefined();
+    expect(update).toMatch(/managed_by_tenant_id\s+IS\s+NULL/i);
+    expect(update).toMatch(/v_inv\.tenant_id/);
+  });
+
+  it('prevents API roles from writing managed_by_tenant_id', (): void => {
+    const guard = functionsOf(sql).find((f: FunctionDefinition): boolean =>
+      /managed_by_tenant_id/.test(f.body),
+    );
+    expect(sql).toMatch(/CREATE\s+TRIGGER\s+\w+[\s\S]*?ON\s+core\.users/i);
+    const guarded = functionsOf(sql).find((f: FunctionDefinition): boolean =>
+      /IS\s+DISTINCT\s+FROM\s+OLD\.managed_by_tenant_id/i.test(f.body),
+    );
+    expect(guarded, 'guard function').toBeDefined();
+    expect(guarded?.body).toMatch(/authenticated/);
+    expect(guarded?.body).toMatch(/anon/);
+    expect(guard).toBeDefined();
+  });
+});
+
+describe('membership hardening migration', (): void => {
+  const migration = pending.find((m: PendingMigration): boolean =>
+    m.name.endsWith('_membership_hardening.sql'),
+  );
+  const sql = migration?.sql ?? '';
+  const fn = (name: string): FunctionDefinition | undefined =>
+    functionsOf(sql).find((f: FunctionDefinition): boolean => f.name === name);
+  const policy = (verb: string): string =>
+    sql.match(
+      new RegExp(
+        `CREATE\\s+POLICY\\s+"OWNER and ADMIN can ${verb} memberships"[\\s\\S]*?;\\s*(?=DROP|CREATE|COMMIT|$)`,
+        'i',
+      ),
+    )?.[0] ?? '';
+
+  it('exists after the member account management migration', (): void => {
+    expect(migration?.name).toBe('20261103050000_membership_hardening.sql');
+  });
+
+  it('gives every function it defines a postgres-only grant', (): void => {
+    for (const name of [
+      'core.is_business_account',
+      'core.accept_invitation',
+      'core.check_last_owner',
+      'core.guard_membership_write',
+      'core.sync_business_account_access',
+    ]) {
+      expect(fn(name), name).toBeDefined();
+      expect(sqlGrantsTo(sql, name), name).toBe('postgres');
+    }
+  });
+
+  describe('H1 membership writes', (): void => {
+    it('replaces the three write policies so ADMIN is limited to other MEMBER rows of its tenant', (): void => {
+      for (const verb of ['insert', 'update', 'delete']) {
+        expect(sql).toMatch(
+          new RegExp(
+            `DROP\\s+POLICY\\s+IF\\s+EXISTS\\s+"OWNER and ADMIN can ${verb} memberships"`,
+            'i',
+          ),
+        );
+        const body = policy(verb);
+        expect(body, verb).not.toBe('');
+        expect(body, verb).not.toMatch(/ARRAY\s*\[\s*'OWNER'\s*,\s*'ADMIN'\s*\]/i);
+        expect(body, verb).toMatch(/user_has_role_in_tenant\(\s*tenant_id\s*,\s*ARRAY\['OWNER'\]/i);
+        expect(body, verb).toMatch(/user_has_role_in_tenant\(\s*tenant_id\s*,\s*ARRAY\['ADMIN'\]/i);
+        expect(body, verb).toMatch(/role\s*=\s*'MEMBER'/i);
+        expect(body, verb).toMatch(/user_id\s*<>\s*\(SELECT\s+auth\.uid\(\)\)/i);
+      }
+      expect(policy('update')).toMatch(/\bWITH\s+CHECK\b/i);
+    });
+
+    it('guards every membership write with a BEFORE trigger that only acts for API roles', (): void => {
+      expect(sql).toMatch(
+        /CREATE\s+TRIGGER\s+guard_membership_write\s+BEFORE\s+INSERT\s+OR\s+UPDATE\s+OR\s+DELETE\s+ON\s+core\.tenant_memberships/i,
+      );
+      const guard = fn('core.guard_membership_write');
+      expect(guard?.header).toMatch(/SET\s+search_path\s*=\s*pg_catalog,\s*pg_temp/i);
+      expect(guard?.header).not.toMatch(/SECURITY\s+DEFINER/i);
+      const body = guard?.body ?? '';
+      expect(body).toMatch(/current_user\s+NOT\s+IN\s*\(\s*'authenticated'\s*,\s*'anon'\s*\)/i);
+      expect(body).toMatch(/auth\.uid\(\)/);
+      expect(body).toMatch(/NEW\.tenant_id\s+IS\s+DISTINCT\s+FROM\s+OLD\.tenant_id/i);
+      expect(body).toMatch(/core\.user_has_role_in_tenant\(\s*v_tenant\s*,\s*ARRAY\['OWNER'\]/i);
+      expect(body).toMatch(/core\.user_has_role_in_tenant\(\s*v_tenant\s*,\s*ARRAY\['ADMIN'\]/i);
+      expect(body).toMatch(/NEW\.role\s*<>\s*'MEMBER'/i);
+      expect(body).toMatch(/OLD\.role\s*<>\s*'MEMBER'/i);
+      expect(body).toMatch(/NEW\.user_id\s*=\s*v_actor/i);
+      expect(body).toMatch(/OLD\.user_id\s*=\s*v_actor/i);
+      expect(body).toMatch(/ERRCODE\s*=\s*'42501'/i);
+    });
+
+    it('keeps the last owner invariant and fixes its BEFORE DELETE return value', (): void => {
+      const body = fn('core.check_last_owner')?.body ?? '';
+      expect(body).toMatch(/RETURN\s+OLD/i);
+      expect(body).toMatch(/último OWNER/);
+      expect(sql).toMatch(
+        /CREATE\s+TRIGGER\s+prevent_last_owner_removal\s+BEFORE\s+DELETE\s+OR\s+UPDATE\s+ON\s+core\.tenant_memberships/i,
+      );
+    });
+
+    it('forces a custom role to belong to the membership tenant', (): void => {
+      expect(sql).toMatch(
+        /FOREIGN\s+KEY\s*\(\s*custom_role_id\s*,\s*tenant_id\s*\)\s+REFERENCES\s+core\.tenant_roles\s*\(\s*id\s*,\s*tenant_id\s*\)/i,
+      );
+      expect(sql).toMatch(/UNIQUE\s*\(\s*id\s*,\s*tenant_id\s*\)/i);
+    });
+  });
+
+  describe('H4 central business rule', (): void => {
+    it('defines is_business_account over auth app_metadata and core.users', (): void => {
+      const definition = fn('core.is_business_account');
+      expect(definition?.header).toMatch(
+        /p_user_id\s+uuid,\s*p_tenant_id\s+uuid\s+DEFAULT\s+NULL\s*\)\s*RETURNS\s+boolean/i,
+      );
+      expect(definition?.header).toMatch(/\bSTABLE\b/i);
+      expect(definition?.header).toMatch(/SECURITY\s+DEFINER/i);
+      expect(definition?.header).toMatch(/SET\s+search_path\s*=\s*pg_catalog,\s*pg_temp/i);
+      expect(definition?.body).toMatch(/raw_app_meta_data\s*->>\s*'managed_by_tenant'/i);
+      expect(definition?.body).toMatch(/managed_by_tenant_id/i);
+    });
+
+    it('decides ownership in accept_invitation through that function and keeps its contract', (): void => {
+      const definition = fn('core.accept_invitation');
+      const body = definition?.body ?? '';
+      expect(definition?.header).toMatch(
+        /p_token_hash\s+text,\s*p_user_id\s+uuid,\s*p_consent\s+boolean,\s*p_age_range\s+text,\s*p_gender\s+text,\s*p_province\s+text,\s*p_first_name\s+text\s+DEFAULT\s+NULL,\s*p_last_name\s+text\s+DEFAULT\s+NULL/i,
+      );
+      expect(body).toMatch(/account_mode\s*=\s*'GENERATED_EMAIL'/i);
+      expect(body).toMatch(/core\.is_business_account\(\s*p_user_id\s*,\s*v_inv\.tenant_id\s*\)/i);
+      for (const kept of ['Invitation not usable', 'Already a member', 'Unknown user']) {
+        expect(body).toContain(kept);
+      }
+      expect(body).toMatch(/use_count\s*=\s*use_count\s*\+\s*1/i);
+      expect(body).toMatch(/INSERT\s+INTO\s+analytics\.demographic_samples/i);
+      expect(body).toMatch(/NOT\s+demographic_consent/i);
+      expect(sql).toMatch(
+        /REVOKE\s+ALL\s+ON\s+FUNCTION\s+core\.accept_invitation\(text, uuid, boolean, text, text, text, text, text\)\s+FROM\s+PUBLIC,\s*anon,\s*authenticated,\s*service_role/i,
+      );
+    });
+
+    it('does not depend on the generated email suffix or the one hour window in the effective SQL', (): void => {
+      expect(sql).not.toMatch(/staff\.invalid/i);
+      expect(sql).not.toMatch(/\bLIKE\b/i);
+      expect(sql).not.toMatch(/interval\s+'1\s+hour'/i);
+      const latest = new Map<string, string>();
+      for (const m of pending) {
+        for (const f of functionsOf(m.sql)) latest.set(f.name, f.body);
+      }
+      for (const [name, body] of latest) {
+        expect(body, name).not.toMatch(/staff\.invalid/i);
+      }
+    });
+  });
+
+  describe('H3 deactivation sync', (): void => {
+    const body = (): string => fn('core.sync_business_account_access')?.body ?? '';
+
+    it('is a pinned SECURITY DEFINER function wired to status updates and deletes', (): void => {
+      const definition = fn('core.sync_business_account_access');
+      expect(definition?.header).toMatch(/SECURITY\s+DEFINER/i);
+      expect(definition?.header).toMatch(/SET\s+search_path\s*=\s*pg_catalog,\s*pg_temp/i);
+      expect(sql).toMatch(
+        /CREATE\s+TRIGGER\s+\w+\s+AFTER\s+UPDATE\s+OF\s+status\s+ON\s+core\.tenant_memberships[\s\S]*?EXECUTE\s+FUNCTION\s+core\.sync_business_account_access\(\)/i,
+      );
+      expect(sql).toMatch(
+        /CREATE\s+TRIGGER\s+\w+\s+AFTER\s+DELETE\s+ON\s+core\.tenant_memberships[\s\S]*?EXECUTE\s+FUNCTION\s+core\.sync_business_account_access\(\)/i,
+      );
+    });
+
+    it('only touches business accounts without another active membership', (): void => {
+      expect(body()).toMatch(/NOT\s+core\.is_business_account\(\s*v_user\s*\)/i);
+      expect(body()).toMatch(
+        /m\.user_id\s*=\s*v_user\s+AND\s+m\.tenant_id\s*<>\s*v_tenant\s+AND\s+m\.status\s*=\s*'active'/i,
+      );
+    });
+
+    it('bans and revokes sessions on suspension or unlink, and clears the ban on reactivation', (): void => {
+      expect(body()).toMatch(
+        /SET\s+banned_until\s*=\s*pg_catalog\.now\(\)\s*\+\s*interval\s+'100 years'/i,
+      );
+      expect(body()).toMatch(/DELETE\s+FROM\s+auth\.refresh_tokens/i);
+      expect(body()).toMatch(/DELETE\s+FROM\s+auth\.sessions/i);
+      expect(body()).toMatch(/SET\s+banned_until\s*=\s*NULL/i);
+    });
+  });
+});
+
+describe('audit fixes migration', (): void => {
+  const migration = pending.find((m: PendingMigration): boolean =>
+    m.name.endsWith('_audit_fixes.sql'),
+  );
+  const sql = migration?.sql ?? '';
+  const fn = (name: string): FunctionDefinition | undefined =>
+    functionsOf(sql).find((f: FunctionDefinition): boolean => f.name === name);
+
+  it('exists after the membership hardening migration and is transactional', (): void => {
+    expect(migration?.name).toBe('20261103060000_audit_fixes.sql');
+    expect(sql).toMatch(/^\s*BEGIN;/i);
+    expect(sql).toMatch(/COMMIT;\s*$/i);
+  });
+
+  it('gives every function it defines a postgres-only grant and a pinned search_path', (): void => {
+    for (const name of [
+      'core.mark_tenant_deletion',
+      'core.check_last_owner',
+      'core.sync_business_account_access',
+      'core.revoke_user_sessions',
+    ]) {
+      expect(fn(name), name).toBeDefined();
+      expect(fn(name)?.header, name).toMatch(/SET\s+search_path\s*=\s*pg_catalog,\s*pg_temp/i);
+      expect(sqlGrantsTo(sql, name), name).toBe('postgres');
+    }
+  });
+
+  describe('D1 category integrity', (): void => {
+    it('fails safe before touching constraints when cross-tenant products exist', (): void => {
+      const check = sql.search(/RAISE\s+EXCEPTION[\s\S]*?category of another tenant/i);
+      const constraint = sql.search(/ADD\s+CONSTRAINT\s+uq_categories_tenant_id_id/i);
+      expect(check).toBeGreaterThan(-1);
+      expect(constraint).toBeGreaterThan(check);
+      expect(sql).toMatch(/c\.tenant_id\s*<>\s*p\.tenant_id/i);
+      expect(sql).toMatch(/pg_catalog\.count\(\*\)/i);
+    });
+
+    it('adds the composite unique key and foreign key', (): void => {
+      expect(sql).toMatch(
+        /ALTER\s+TABLE\s+catalog\.categories\s+ADD\s+CONSTRAINT\s+uq_categories_tenant_id_id\s+UNIQUE\s*\(\s*tenant_id\s*,\s*id\s*\)/i,
+      );
+      expect(sql).toMatch(
+        /FOREIGN\s+KEY\s*\(\s*tenant_id\s*,\s*category_id\s*\)\s+REFERENCES\s+catalog\.categories\s*\(\s*tenant_id\s*,\s*id\s*\)/i,
+      );
+    });
+  });
+
+  describe('D2 last owner', (): void => {
+    const body = (): string => fn('core.check_last_owner')?.body ?? '';
+
+    it('lets the cascade of a deleted tenant through but not a direct owner delete', (): void => {
+      expect(body()).toMatch(
+        /NOT\s+EXISTS\s*\(\s*SELECT\s+1\s+FROM\s+core\.tenants\s+t\s+WHERE\s+t\.id\s*=\s*OLD\.tenant_id\s*\)/i,
+      );
+      expect(body()).toMatch(/core\.tenant_being_deleted/);
+      expect(body()).toMatch(/último OWNER/);
+      expect(sql).toMatch(
+        /CREATE\s+TRIGGER\s+mark_tenant_deletion\s+BEFORE\s+DELETE\s+ON\s+core\.tenants/i,
+      );
+    });
+
+    it('blocks suspending the last active owner and any tenant change', (): void => {
+      expect(body()).toMatch(
+        /OLD\.role\s*=\s*'OWNER'\s+AND\s+OLD\.status\s*=\s*'active'\s+AND\s+NEW\.status\s*<>\s*'active'/i,
+      );
+      expect(body()).toMatch(/m\.status\s*=\s*'active'/i);
+      expect(body()).toMatch(/NEW\.tenant_id\s+IS\s+DISTINCT\s+FROM\s+OLD\.tenant_id/i);
+      expect(body()).toMatch(/RETURN\s+OLD/i);
+    });
+  });
+
+  describe('D3 business account access', (): void => {
+    const body = (): string => fn('core.sync_business_account_access')?.body ?? '';
+
+    it('is wired to INSERT, status UPDATE and DELETE', (): void => {
+      for (const event of ['INSERT', String.raw`UPDATE\s+OF\s+status`, 'DELETE']) {
+        expect(sql).toMatch(
+          new RegExp(
+            String.raw`CREATE\s+TRIGGER\s+\w+\s+AFTER\s+${event}\s+ON\s+core\.tenant_memberships[\s\S]*?EXECUTE\s+FUNCTION\s+core\.sync_business_account_access\(\)`,
+            'i',
+          ),
+        );
+      }
+      expect(sql).toMatch(
+        /ALTER\s+FUNCTION\s+core\.sync_business_account_access\(\)\s+OWNER\s+TO\s+postgres/i,
+      );
+    });
+
+    it('evaluates the global state: any suspended managing membership keeps the ban', (): void => {
+      expect(body()).toMatch(/m\.status\s*=\s*'suspended'/i);
+      expect(body()).toMatch(/core\.is_business_account\(\s*v_user\s*,\s*m\.tenant_id\s*\)/i);
+      expect(body()).toMatch(/NOT\s+EXISTS[\s\S]*?m\.status\s*=\s*'active'/i);
+    });
+
+    it('only lifts the long ban it sets itself', (): void => {
+      expect(body()).toMatch(
+        /SET\s+banned_until\s*=\s*NULL[\s\S]*?banned_until\s*>=\s*pg_catalog\.now\(\)\s*\+\s*interval\s+'50 years'/i,
+      );
+      expect(body()).toMatch(/DELETE\s+FROM\s+auth\.refresh_tokens/i);
+      expect(body()).toMatch(/DELETE\s+FROM\s+auth\.sessions/i);
+    });
+  });
+
+  describe('D4 session revocation', (): void => {
+    it('is limited to business accounts and deletes sessions and refresh tokens', (): void => {
+      const definition = fn('core.revoke_user_sessions');
+      expect(definition?.header).toMatch(/^\s*p_user_id\s+uuid\s*\)\s*RETURNS\s+void/i);
+      expect(definition?.header).toMatch(/SECURITY\s+DEFINER/i);
+      expect(definition?.body).toMatch(/NOT\s+core\.is_business_account\(\s*p_user_id\s*\)/i);
+      expect(definition?.body).toMatch(/DELETE\s+FROM\s+auth\.refresh_tokens/i);
+      expect(definition?.body).toMatch(/DELETE\s+FROM\s+auth\.sessions/i);
+      expect(sql).toMatch(
+        /REVOKE\s+ALL\s+ON\s+FUNCTION\s+core\.revoke_user_sessions\(uuid\)\s+FROM\s+PUBLIC,\s*anon,\s*authenticated,\s*service_role/i,
+      );
+    });
+  });
+});
+
+describe('business account single tenant migration', (): void => {
+  const migration = pending.find((m: PendingMigration): boolean =>
+    m.name.endsWith('_business_account_single_tenant.sql'),
+  );
+  const sql = migration?.sql ?? '';
+  const fn = (name: string): FunctionDefinition | undefined =>
+    functionsOf(sql).find((f: FunctionDefinition): boolean => f.name === name);
+
+  it('exists after the audit fixes migration and is transactional', (): void => {
+    expect(migration?.name).toBe('20261103070000_business_account_single_tenant.sql');
+    expect(sql).toMatch(/^\s*BEGIN;/i);
+    expect(sql).toMatch(/COMMIT;\s*$/i);
+  });
+
+  it('defines a pinned, postgres-owned, postgres-only SECURITY DEFINER enforcement function', (): void => {
+    const definition = fn('core.enforce_business_account_single_tenant');
+    expect(definition?.header).toMatch(/RETURNS\s+trigger/i);
+    expect(definition?.header).toMatch(/SECURITY\s+DEFINER/i);
+    expect(definition?.header).toMatch(/SET\s+search_path\s*=\s*pg_catalog,\s*pg_temp/i);
+    expect(sql).toMatch(
+      /ALTER\s+FUNCTION\s+core\.enforce_business_account_single_tenant\(\)\s+OWNER\s+TO\s+postgres/i,
+    );
+    expect(sql).toMatch(
+      /REVOKE\s+ALL\s+ON\s+FUNCTION\s+core\.enforce_business_account_single_tenant\(\)\s+FROM\s+PUBLIC,\s*anon,\s*authenticated,\s*service_role/i,
+    );
+    expect(sql).toMatch(
+      /GRANT\s+EXECUTE\s+ON\s+FUNCTION\s+core\.enforce_business_account_single_tenant\(\)\s+TO\s+postgres/i,
+    );
+  });
+
+  it('refuses a business account in any tenant but its own with SQLSTATE P0004', (): void => {
+    const body = fn('core.enforce_business_account_single_tenant')?.body ?? '';
+    expect(body).toMatch(
+      /core\.is_business_account\(\s*NEW\.user_id\s*\)\s+AND\s+NOT\s+core\.is_business_account\(\s*NEW\.user_id\s*,\s*NEW\.tenant_id\s*\)/i,
+    );
+    expect(body).toMatch(/ERRCODE\s*=\s*'P0004'/i);
+  });
+
+  it('fires BEFORE INSERT and BEFORE UPDATE OF tenant_id, user_id, after guard_membership_write', (): void => {
+    expect(sql).toMatch(
+      /CREATE\s+TRIGGER\s+(\w+)\s+BEFORE\s+INSERT\s+ON\s+core\.tenant_memberships\s+FOR\s+EACH\s+ROW\s+EXECUTE\s+FUNCTION\s+core\.enforce_business_account_single_tenant\(\)/i,
+    );
+    expect(sql).toMatch(
+      /CREATE\s+TRIGGER\s+(\w+)\s+BEFORE\s+UPDATE\s+OF\s+tenant_id,\s*user_id\s+ON\s+core\.tenant_memberships[\s\S]*?EXECUTE\s+FUNCTION\s+core\.enforce_business_account_single_tenant\(\)/i,
+    );
+    for (const match of sql.matchAll(
+      /CREATE\s+TRIGGER\s+(\w+)\s+BEFORE[^;]*?enforce_business_account_single_tenant/gi,
+    )) {
+      // Alphabetical order decides firing order: API roles must hit the guard first.
+      expect(match[1].localeCompare('guard_membership_write')).toBeGreaterThan(0);
+    }
+  });
+
+  it('redefines accept_invitation with an early P0004 check, keeping signature, grants and consent rules', (): void => {
+    const definition = fn('core.accept_invitation');
+    expect(definition?.header).toMatch(/SECURITY\s+DEFINER/i);
+    expect(definition?.header).toMatch(/SET\s+search_path\s*=\s*pg_catalog,\s*pg_temp/i);
+    const body = definition?.body ?? '';
+    expect(body).toMatch(
+      /core\.is_business_account\(\s*p_user_id\s*\)\s+AND\s+NOT\s+core\.is_business_account\(\s*p_user_id\s*,\s*v_inv\.tenant_id\s*\)/i,
+    );
+    expect(body).toMatch(/ERRCODE\s*=\s*'P0004'/i);
+    expect(body.search(/P0004/)).toBeLessThan(
+      body.search(/INSERT\s+INTO\s+core\.tenant_memberships/i),
+    );
+    expect(body).toMatch(/CASE\s+WHEN\s+NOT\s+demographic_consent/i);
+    expect(sql).toMatch(
+      /GRANT\s+EXECUTE\s+ON\s+FUNCTION\s+core\.accept_invitation\(text, uuid, boolean, text, text, text, text, text\)\s+TO\s+postgres/i,
+    );
+  });
+});

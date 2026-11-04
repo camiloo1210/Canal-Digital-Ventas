@@ -1,6 +1,7 @@
 import { SupabaseClient, Provider } from '@supabase/supabase-js';
 import { AuthPort } from '@/iam/application/ports/out/auth.port';
 import { InvalidCredentialsException } from '@/iam/domain/exceptions/invalid-credentials.exception';
+import { EmailAlreadyRegisteredException } from '@/iam/application/exceptions/email-already-registered.exception';
 import { AuthGatewayException } from '@/iam/application/exceptions/auth-gateway.exception';
 
 export class SupabaseAuthAdapter implements AuthPort {
@@ -61,9 +62,21 @@ export class SupabaseAuthAdapter implements AuthPort {
   }
 
   async signUpWithEmail(email: string, password: string): Promise<string> {
+    return (await this.signUpWithEmailDetailed(email, password)).userId;
+  }
+
+  async signUpWithEmailDetailed(
+    email: string,
+    password: string,
+  ): Promise<{ userId: string; hasSession: boolean }> {
     const { data, error } = await this.supabase.auth.signUp({ email, password });
-    if (error) throw new AuthGatewayException(`Signup failed: ${error.message}`, error);
+    if (error) {
+      if (error.code === 'email_exists' || error.code === 'user_already_exists') {
+        throw new EmailAlreadyRegisteredException();
+      }
+      throw new AuthGatewayException(`Signup failed: ${error.message}`, error);
+    }
     if (!data.user) throw new AuthGatewayException('Signup failed', 'No user returned');
-    return data.user.id;
+    return { userId: data.user.id, hasSession: data.session !== null };
   }
 }

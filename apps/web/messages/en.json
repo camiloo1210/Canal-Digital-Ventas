@@ -165,7 +165,9 @@
     "errorDescription": "The information is unavailable right now. Try loading it again.",
     "accessTitle": "Overview unavailable for this account",
     "accessDescription": "This overview requires owner or administrator access to the selected store.",
-    "retry": "Reload"
+    "retry": "Reload",
+    "denied": "You do not have permission to open that section. Ask the store owner for access.",
+    "limitedAccess": "Your role does not include reports. Use the menu to open the sections you can access."
   },
   "AdminShell": {
     "administration": "Store administration",
@@ -194,7 +196,9 @@
     "demoTitle": "Example overview",
     "demoDescription": "The metrics, chart and table in this view are a demonstration and do not represent your store activity.",
     "integrations": "Integrations",
-    "businessIntelligence": "Business Intelligence"
+    "businessIntelligence": "Business Intelligence",
+    "users": "Users and roles",
+    "profile": "My profile"
   },
   "Sidebar": {
     "title": "Canal Digital",
@@ -268,7 +272,9 @@
     "unarchive_confirm_desc": "Are you sure you want to unarchive this product? It will become active again.",
     "form_invalid_format": "Invalid format",
     "error_money_format": "Please enter a valid amount (e.g. 10.99).",
-    "error_stock_format": "Stock must be a positive whole number."
+    "error_stock_format": "Stock must be a positive whole number.",
+    "archive_success": "Product archived successfully",
+    "concurrency_error": "The product was modified by another user. Please reload before saving your changes."
   },
   "Categories": {
     "list_title": "Categories",
@@ -311,7 +317,9 @@
     "errors_concurrency": "The category was modified by another user. Please refresh and try again.",
     "errors_unexpected": "An unexpected server error occurred.",
     "errors_categoryHasProducts": "This category still has products. Move them to another category or archive them first.",
-    "offline_error": "You are offline. Please check your connection."
+    "offline_error": "You are offline. Please check your connection.",
+    "errors_forbidden": "You do not have permission to manage the catalog.",
+    "errors_contextChanged": "The active business changed or you no longer have access to it. Reload the page and try again."
   },
   "Storefront": {
     "login": "Login",
@@ -614,7 +622,8 @@
       "NOT_FOUND": "No order you can manage was found for this business.",
       "CONCURRENCY": "The order changed while you were viewing it. Refresh the page before continuing.",
       "INVALID_STATE": "The order cannot advance from its current state or its payment needs review.",
-      "UNEXPECTED": "The order could not be updated. Please try again."
+      "UNEXPECTED": "The order could not be updated. Please try again.",
+      "CONTEXT_CHANGED": "The active business changed or you no longer have access to it. Reload the page and try again."
     }
   },
   "Payments": {
@@ -758,7 +767,8 @@
       "name": "Use a name between 3 and 100 characters.",
       "slug": "Use 3–50 lowercase letters, numbers or single hyphens.",
       "description": "The description must not exceed 255 characters."
-    }
+    },
+    "contextChanged": "The active business changed or you no longer have access to it. Reload the page and try again."
   },
   "KiviConnection": {
     "title": "Kivi integration",
@@ -825,7 +835,8 @@
       "codeRequired": "Enter the pairing code.",
       "codeFormat": "The code must start with kvp_. Copy it in full from Kivi.",
       "codeIsToken": "That looks like a connection token (kc_). Paste the pairing code (kvp_) generated in Kivi here."
-    }
+    },
+    "contextChanged": "The active business changed or you no longer have access to it. Reload the page and try again."
   },
   "NotFound": {
     "brand": "Canal Digital",
@@ -980,9 +991,12 @@
     "unauthorized": "Your session has expired. Sign in again to save.",
     "tenantUnavailable": "You do not have administrator access to this store.",
     "productUnavailable": "This product is no longer available in your store.",
+    "categoryUnavailable": "The selected category does not exist in your store. Choose another category.",
     "invalidProduct": "Unable to save these details. Review the product information.",
     "concurrency": "Another user changed this product. Your changes have not been saved. Reload to see the latest version.",
-    "unexpected": "Unable to save this change. Your details have been kept; please try again."
+    "unexpected": "Unable to save this change. Your details have been kept; please try again.",
+    "forbidden": "You do not have permission to manage the catalog.",
+    "contextChanged": "The active business changed or you no longer have access to it. Reload the page and try again."
   },
   "AdminOrders": {
     "metadata": "Orders | Canal Digital",
@@ -1041,6 +1055,58 @@
     "errorDescription": "Please try again or return to your store overview.",
     "retry": "Try again",
     "back": "Go to overview"
+  },
+  "KiviKnowledge": {
+    "title": "Assistant knowledge base",
+    "description": "Upload the guides and answers the Kivi assistant should use, such as how to request an invoice or the RIMPE guidelines. They are published to Kivi and the assistant consults them when replying.",
+    "privacy": "Publish only information you are happy to share with customers: the assistant may quote it in chat. Do not upload personal data or credentials.",
+    "linkFirst": "Link your store with Kivi first to upload documents.",
+    "count": "{count} of {max} documents",
+    "statusUnknown": "Status not checked",
+    "file": "File",
+    "fileHelp": "Markdown (.md) or text (.txt), up to 200 KB. Markdown with one ## heading per question or topic works best.",
+    "docTitle": "Document title",
+    "docTitleHelp": "Optional when you upload a file: the file name is used.",
+    "text": "Or paste the text",
+    "textHelp": "Use this if you have no file. Up to 100,000 characters.",
+    "upload": "Upload to Kivi",
+    "replace": "Replace document",
+    "replacing": "Replacing: {name}",
+    "cancelReplace": "Cancel",
+    "working": "Working…",
+    "listTitle": "Published documents",
+    "refresh": "Refresh",
+    "empty": "You have not uploaded any documents yet.",
+    "listUnavailable": "The document list could not be loaded. You can still upload a new one and refresh later.",
+    "statusPending": "Indexing…",
+    "statusIndexed": "Ready",
+    "statusFailed": "Indexing failed",
+    "replaceAction": "Replace",
+    "retry": "Retry",
+    "delete": "Delete",
+    "deleteHelp": "The assistant will stop using “{name}” in its answers.",
+    "confirmDelete": "Confirm deletion",
+    "cancel": "Close",
+    "unauthorized": "Sign in and select a store.",
+    "forbidden": "Only the owner can manage the knowledge base.",
+    "notLinked": "Link the store with Kivi first.",
+    "invalidInput": "Check the highlighted fields.",
+    "uploaded": "Document sent to Kivi. The assistant can use it once indexing finishes.",
+    "deleted": "Document deleted.",
+    "retried": "Retrying indexing.",
+    "limitReached": "You reached the document limit. Delete one or replace an existing one.",
+    "missingScope": "This link does not allow managing knowledge. In Kivi, generate a new code with the knowledge option and link this store again.",
+    "notFound": "The document no longer exists. Refresh the list.",
+    "conflict": "The document changed while you were editing. Refresh the list and try again.",
+    "rejected": "Kivi rejected the document. Check its size and content.",
+    "unavailable": "The operation could not be completed. Check the Kivi connection and try again.",
+    "validation": {
+      "title": "Enter a title (up to 500 characters).",
+      "content": "Upload a file or paste text (up to 100,000 characters).",
+      "fileType": "Only .md or .txt text files are supported. Convert PDF and Word files to Markdown before uploading.",
+      "fileSize": "The file is larger than 200 KB."
+    },
+    "contextChanged": "The active business changed or you no longer have access to it. Reload the page and try again."
   },
   "KiviMessaging": {
     "title": "WhatsApp channel",
@@ -1115,6 +1181,394 @@
       "failed": "Rejected · review required",
       "unknown": "Uncertain outcome · review required",
       "skipped": "Skipped"
+    },
+    "contextChanged": "The active business changed or you no longer have access to it. Reload the page and try again."
+  },
+  "Users": {
+    "metadata": "Users and roles | Canal Digital",
+    "title": "Users and roles",
+    "subtitle": "Create access profiles for your team, invite them with a link, and see what your audience looks like without identifying anyone.",
+    "tabs": {
+      "label": "User sections",
+      "roles": "Roles and invitations",
+      "members": "Members",
+      "demographics": "Demographics"
+    },
+    "common": {
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving...",
+      "deleting": "Deleting...",
+      "working": "Working...",
+      "actions": "Actions",
+      "close": "Close"
+    },
+    "roles": {
+      "title": "Store roles",
+      "description": "A role groups the permissions a team member receives. The owner always has full access.",
+      "new": "New role",
+      "edit": "Edit role",
+      "editLabel": "Edit the {name} role",
+      "deleteLabel": "Delete the {name} role",
+      "name": "Role name",
+      "namePlaceholder": "For example: Salesperson",
+      "permissions": "Permissions",
+      "selectAll": "Select all",
+      "members": "Members",
+      "createdAt": "Created",
+      "empty": "There are no roles yet. Create the first one to invite your team.",
+      "formHelp": "Choose which sections this role can view and change.",
+      "created": "Role created.",
+      "updated": "Role updated.",
+      "deleted": "Role deleted.",
+      "delete": "Delete role",
+      "deleteTitle": "Delete the {name} role?",
+      "deleteBody": "This cannot be undone. Pending invitations for this role will stop working.",
+      "deleteBlocked": "It cannot be deleted: {count, plural, one {# member has} other {# members have}} this role. Change their role first.",
+      "validation": {
+        "nameLength": "The name must be 2 to 40 characters long.",
+        "permissionsRequired": "Select at least one permission."
+      }
+    },
+    "permissions": {
+      "groups": {
+        "orders": "Orders",
+        "catalog": "Catalog",
+        "reports": "Reports",
+        "store": "Store",
+        "integrations": "Integrations"
+      },
+      "items": {
+        "VIEW_ORDERS": {
+          "label": "View orders",
+          "help": "Browse the store orders."
+        },
+        "MANAGE_ORDERS": {
+          "label": "Manage orders",
+          "help": "Change order statuses."
+        },
+        "VIEW_CATALOG": {
+          "label": "View catalog",
+          "help": "Browse products and categories."
+        },
+        "MANAGE_CATALOG": {
+          "label": "Manage catalog",
+          "help": "Create, edit and archive products and categories."
+        },
+        "VIEW_REPORTS": {
+          "label": "View reports",
+          "help": "Sales overview and business intelligence."
+        },
+        "MANAGE_STORE": {
+          "label": "Manage store",
+          "help": "Edit the store name, images and public details."
+        },
+        "MANAGE_INTEGRATIONS": {
+          "label": "Manage integrations",
+          "help": "Connect and configure Kivi and WhatsApp."
+        },
+        "MANAGE_INVENTORY": {
+          "label": "Manage inventory",
+          "help": "Legacy permission; it is now controlled through the catalog."
+        },
+        "MANAGE_USERS": {
+          "label": "Manage users",
+          "help": "Reserved for the store owner."
+        }
+      }
+    },
+    "invitations": {
+      "title": "Invitations",
+      "description": "Generate a link so someone can create their account with the chosen role. The link is shown only once.",
+      "noRoles": "Create a role before generating invitations.",
+      "role": "Role",
+      "expiry": "Expires in",
+      "expiryDays": "{count, plural, one {# day} other {# days}}",
+      "maxUses": "Maximum uses",
+      "create": "Generate link",
+      "creating": "Generating...",
+      "created": "Invitation created.",
+      "revoked": "Invitation revoked.",
+      "revoke": "Revoke",
+      "linkTitle": "Invitation link",
+      "linkWarning": "Copy it now: for security you will not be able to see it again.",
+      "linkExpires": "It expires on {date}.",
+      "linkLabel": "Invitation link",
+      "copy": "Copy link",
+      "copied": "Copied",
+      "empty": "You have not generated any invitations yet.",
+      "statusHeader": "Status",
+      "expires": "Expires",
+      "uses": "Uses",
+      "status": {
+        "ACTIVE": "Active",
+        "REVOKED": "Revoked",
+        "EXPIRED": "Expired",
+        "EXHAUSTED": "Used up"
+      },
+      "validation": {
+        "roleRequired": "Choose a role.",
+        "expiryInvalid": "Choose a valid duration (1 to 30 days).",
+        "maxUsesInvalid": "Enter a number of uses between 1 and 100.",
+        "accountModeInvalid": "Choose how the person will create their account."
+      },
+      "accountMode": {
+        "header": "Account",
+        "legend": "How will the person create their account?",
+        "intro": "Choose once per invitation. You cannot change it afterwards.",
+        "adminUnavailableWarning": "SUPABASE_SERVICE_ROLE_KEY is not configured on the server, so accounts with a generated email cannot be created. Choose another option or ask your administrator to configure it.",
+        "GENERATED_EMAIL": {
+          "label": "Generated email (recommended)",
+          "help": "The person only types their name and a password. We create a sign-in email inside your store that cannot receive messages, so the password cannot be recovered by email: they must save it or ask you for help."
+        },
+        "REAL_EMAIL": {
+          "label": "Their own email",
+          "help": "The person types their real email and a password. Password recovery works by email."
+        },
+        "GOOGLE": {
+          "label": "Google account",
+          "help": "The person signs in with Google. No password is created and Google handles recovery."
+        }
+      }
+    },
+    "members": {
+      "title": "Team members",
+      "description": "People with access to your store dashboard. Change each person's role whenever you need.",
+      "empty": "There are no members yet.",
+      "name": "Name",
+      "email": "Email",
+      "statusHeader": "Status",
+      "role": "Role",
+      "owner": "Owner",
+      "noRole": "No role (no access)",
+      "roleFor": "Role for {name}",
+      "roleUpdated": "Role updated.",
+      "status": {
+        "active": "Active",
+        "suspended": "Suspended",
+        "invited": "Invited"
+      },
+      "accountKind": {
+        "managed": "Business account",
+        "personal": "Personal account"
+      },
+      "accountHeader": "Account",
+      "actionsHeader": "Actions",
+      "actionsFor": "Actions for {name}",
+      "actionRename": "Rename",
+      "actionResetPassword": "Reset password",
+      "actionDeactivate": "Deactivate access",
+      "actionReactivate": "Reactivate access",
+      "actionUnlink": "Unlink from business",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "newPassword": "New password",
+      "newPasswordHelp": "At least 8 characters. Share it with the person over a secure channel: it is not shown again.",
+      "confirm": "Confirm",
+      "done": "Done",
+      "working": "Working...",
+      "renameTitle": "Rename",
+      "renameDescription": "Update the name of {name}. The generated sign-in email does not change.",
+      "resetTitle": "Reset password",
+      "resetDescription": "Set a new password for {name}. The previous one stops working.",
+      "deactivateTitle": "Deactivate access",
+      "deactivateDescription": "Without access, {name} cannot enter the dashboard or sign in. You can reactivate it later.",
+      "reactivateTitle": "Reactivate access",
+      "reactivateDescription": "{name} will have access again with the same role.",
+      "unlinkTitle": "Unlink from business",
+      "unlinkManagedDescription": "The account of {name} belongs to the business: it is unlinked and deactivated, and loses all access.",
+      "unlinkPersonalDescription": "This is a personal account. {name} keeps their account and becomes a regular buyer; they only lose access to the business.",
+      "adminUnavailableNotice": "Resetting passwords for business accounts requires SUPABASE_SERVICE_ROLE_KEY on the server. Deactivating or unlinking does not need it: the database blocks sign-in automatically.",
+      "adminUnavailableHere": "This action requires SUPABASE_SERVICE_ROLE_KEY on the server and is not available.",
+      "unlinked": "Member unlinked.",
+      "activated": "Access reactivated.",
+      "deactivated": "Access deactivated.",
+      "renamed": "Name updated.",
+      "passwordReset": "Password reset.",
+      "sessionsNotRevoked": "The password was changed, but the existing sessions of this account could not be closed. They may stay signed in until they expire; try again or deactivate and reactivate the account."
+    },
+    "demographics": {
+      "title": "Team and audience demographics",
+      "description": "Aggregated statistics from people who agreed to share general data when creating their account.",
+      "privacy": "Only groups of {min} or more people are shown, and nothing at all until at least {total} people have agreed; never individual data. Answers are stored without a name, email or link to the account.",
+      "noData": "Not enough data yet: at least {total} people in total and {min} per group are needed.",
+      "suppressed": "Some groups are hidden because they have fewer than {min} people.",
+      "notSpecified": "I prefer not to say",
+      "consentLabel": "I agree to the anonymous use of my general data (optional)",
+      "consentHelp": "Age range, gender and province are stored without your name or email and only shown in groups. You can create your account without agreeing. Because they are not linked to you, they cannot be deleted later.",
+      "dimensions": {
+        "ageRange": "Age range",
+        "gender": "Gender",
+        "province": "Province"
+      },
+      "values": {
+        "ageRange": {
+          "18_24": "18 to 24",
+          "25_34": "25 to 34",
+          "35_44": "35 to 44",
+          "45_54": "45 to 54",
+          "55_64": "55 to 64",
+          "65_PLUS": "65 or older"
+        },
+        "gender": {
+          "FEMALE": "Female",
+          "MALE": "Male",
+          "OTHER": "Other",
+          "PREFER_NOT_TO_SAY": "Prefer not to say"
+        },
+        "province": {
+          "AZUAY": "Azuay",
+          "BOLIVAR": "Bolívar",
+          "CANAR": "Cañar",
+          "CARCHI": "Carchi",
+          "CHIMBORAZO": "Chimborazo",
+          "COTOPAXI": "Cotopaxi",
+          "EL_ORO": "El Oro",
+          "ESMERALDAS": "Esmeraldas",
+          "GALAPAGOS": "Galápagos",
+          "GUAYAS": "Guayas",
+          "IMBABURA": "Imbabura",
+          "LOJA": "Loja",
+          "LOS_RIOS": "Los Ríos",
+          "MANABI": "Manabí",
+          "MORONA_SANTIAGO": "Morona Santiago",
+          "NAPO": "Napo",
+          "ORELLANA": "Orellana",
+          "PASTAZA": "Pastaza",
+          "PICHINCHA": "Pichincha",
+          "SANTA_ELENA": "Santa Elena",
+          "SANTO_DOMINGO": "Santo Domingo de los Tsáchilas",
+          "SUCUMBIOS": "Sucumbíos",
+          "TUNGURAHUA": "Tungurahua",
+          "ZAMORA_CHINCHIPE": "Zamora Chinchipe",
+          "OTHER": "Other / abroad"
+        }
+      }
+    },
+    "invite": {
+      "metadata": "Invitation | Canal Digital",
+      "platform": "Canal Digital",
+      "title": "You were invited to join {store}",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email",
+      "password": "Password",
+      "passwordHelp": "At least 8 characters.",
+      "submit": "Create account and join",
+      "submitting": "Creating account...",
+      "acceptExisting": "Accept invitation",
+      "signedInAs": "Signed in as {email}. This access will be added to your account.",
+      "haveAccount": "Already have an account?",
+      "login": "Sign in and reopen this link",
+      "invalidTitle": "Invalid invitation",
+      "invalidBody": "The link does not exist, has expired, was revoked or reached its usage limit. Ask the store owner for a new link.",
+      "backHome": "Go to the home page",
+      "validation": {
+        "emailInvalid": "Enter a valid email.",
+        "passwordLength": "The password must be at least 8 characters.",
+        "nameRequired": "This field is required.",
+        "passwordMismatch": "The passwords do not match."
+      },
+      "errors": {
+        "invalidInput": "Check the form data.",
+        "invitationNotUsable": "This invitation is no longer valid. Ask for a new link.",
+        "registrationFailed": "We could not create the account. If you already have one with this email, sign in and reopen the link.",
+        "notSignedIn": "Sign in to accept the invitation.",
+        "acceptFailedAccountCreated": "Your account was created, but we could not apply the invitation: {reason} Reopen the same link to retry with your current session.",
+        "modeMismatch": "This invitation uses a different way of creating the account. Reopen the link and use the form it shows.",
+        "confirmationRequired": "Accounts with a generated email cannot be created right now because email confirmation is required. Ask the store owner for help.",
+        "emailGenerationFailed": "We could not generate a unique sign-in email. Try again.",
+        "adminAuthUnavailable": "Accounts with a generated email cannot be created right now because the server is not fully configured. Ask the store owner for help.",
+        "acceptFailedRolledBack": "We could not apply the invitation: {reason} Your account was not created, so you can try again.",
+        "acceptFailedGeneratedAccount": "Your account was created, but we could not apply the invitation: {reason} Save the sign-in email shown below and ask the store owner for help.",
+        "alreadyMember": "This account already belongs to the store.",
+        "businessAccountBound": "This business account can only belong to the company that manages it. It cannot join another company or create its own business.",
+        "rateLimited": "Too many attempts. Wait a moment and try again.",
+        "googleStartFailed": "We could not start the Google sign-in. Try again.",
+        "googleFailed": "Google sign-in could not be completed. Try again.",
+        "unexpected": "An unexpected error occurred. Try again."
+      },
+      "description": {
+        "GENERATED_EMAIL": "You will have the {role} role. Enter your name and a password: we will create your sign-in email for you.",
+        "REAL_EMAIL": "You will have the {role} role. Create your account with your own email to accept the invitation.",
+        "GOOGLE": "You will have the {role} role. Continue with your Google account to accept the invitation."
+      },
+      "confirmPassword": "Confirm password",
+      "generatedEmailHint": "Your sign-in email is generated from your name inside this store. You will see it as soon as your account is created.",
+      "generatedEmailTitle": "Your account is ready",
+      "generatedEmailPendingTitle": "Save your sign-in email",
+      "generatedEmailIntro": "This is the email you will use to sign in, together with the password you just chose.",
+      "generatedEmailLabel": "Your sign-in email",
+      "generatedEmailWarningTitle": "Save it now",
+      "generatedEmailWarning": "This email cannot receive messages, so the password cannot be recovered by email. If you forget it, ask the store owner to help you. Write this email down or copy it before continuing.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "continueToDashboard": "Continue to the dashboard",
+      "googleButton": "Continue with Google",
+      "googleHelp": "You will return here automatically after signing in with Google."
+    },
+    "errors": {
+      "unauthorized": "Your session is not valid. Sign in again.",
+      "invalidInput": "Check the data and try again.",
+      "forbidden": "Only the store owner can do this.",
+      "roleNotFound": "The role no longer exists.",
+      "roleNameTaken": "A role with that name already exists.",
+      "roleInUse": "A role that still has members cannot be deleted.",
+      "invitationNotFound": "The invitation does not exist.",
+      "invitationNotUsable": "The invitation is no longer valid.",
+      "memberNotFound": "That person is no longer a member of the store.",
+      "protectedMember": "The owner's role cannot be changed.",
+      "memberNotActive": "Only active members can be assigned a role.",
+      "alreadyMember": "This account already belongs to the store.",
+      "businessAccountBound": "This business account can only belong to the company that manages it. It cannot join another company or create its own business.",
+      "invalidRole": "The role data is not valid.",
+      "invalidInvitation": "The invitation data is not valid.",
+      "invalidDemographic": "A demographic option is not valid.",
+      "invalidName": "The first or last name is not valid.",
+      "unexpected": "An unexpected error occurred. Try again.",
+      "personalAccountProtected": "This is a personal account: you can only unlink it from the business.",
+      "adminAuthUnavailable": "This action requires SUPABASE_SERVICE_ROLE_KEY on the server.",
+      "invalidPassword": "The password must be at least 8 characters.",
+      "contextChanged": "The active business changed or you no longer have access to it. Reload the page and try again."
+    }
+  },
+  "Profile": {
+    "metadata": "My profile | Canal Digital",
+    "menu": "My profile",
+    "back": "Back",
+    "title": "My profile",
+    "subtitle": "Update your details and decide whether to share general information anonymously.",
+    "email": "Email",
+    "emailHelp": "The email cannot be changed from here.",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "consentLabel": "Allow anonymous use of my general demographic data",
+    "consentHelp": "This setting only covers data collected at future signups. Anonymous samples already recorded are not linked to you, so they cannot be found or removed. It is used only in grouped statistics, without your name or email. You can withdraw permission at any time and it will stop applying to anything new.",
+    "save": "Save changes",
+    "saving": "Saving...",
+    "saved": "Profile updated.",
+    "validation": {
+      "nameRequired": "This field is required."
+    }
+  },
+  "BusinessSwitcher": {
+    "metadata": "Choose a business | Canal Digital",
+    "pageTitle": "Which business do you want to work on?",
+    "pageDescription": "You manage more than one business. Pick one to continue; you can switch at any time from the side menu.",
+    "label": "Your businesses",
+    "trigger": "Active business: {name}. Switch business",
+    "none": "Choose a business",
+    "choose": "Select to choose",
+    "current": "Current business",
+    "lastUsed": "Last used",
+    "logout": "Sign out",
+    "unauthorized": "Sign in to continue.",
+    "unexpected": "The business could not be switched. Try again.",
+    "contextChanged": "The active business changed or you no longer have access to it. Reload the page and try again.",
+    "roles": {
+      "OWNER": "Owner",
+      "ADMIN": "Administrator",
+      "MEMBER": "Member"
     }
   }
 }

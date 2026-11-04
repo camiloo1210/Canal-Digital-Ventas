@@ -4,12 +4,14 @@ import { getTranslations } from 'next-intl/server';
 import { revalidatePath } from 'next/cache';
 import { invalidatePublicCatalog } from '@/lib/cache/public-catalog-cache';
 import {
+  UserPermission,
   DomainException,
   OptimisticConcurrencyException,
   TenantSlugAlreadyInUseException,
 } from '@canaldigital/packages/core';
 import { createClient } from '@/lib/supabase/server';
-import { getActiveTenantQuery } from '@/features/iam/queries/active-tenant.query';
+import { resolveActionTenant } from '@/features/dashboard/server/resolve-action-tenant';
+import { userHasAnyPermission } from '@/features/users/queries/member-permissions.query';
 import {
   getStoreSettingsReadRepository,
   getStoreBrandingStorage,
@@ -60,8 +62,11 @@ export async function updateStoreSettingsAction(
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) return failure(t('unauthorized'));
-    const tenantId = await getActiveTenantQuery(user.id);
-    if (!tenantId) return failure(t('unauthorized'));
+    const tenant = await resolveActionTenant(formData, user.id);
+    if (!tenant) return failure(t('contextChanged'));
+    const tenantId = tenant.tenantId;
+    if (!(await userHasAnyPermission(user.id, tenantId, [UserPermission.MANAGE_STORE])))
+      return failure(t('unauthorized'));
     const current = await getStoreSettingsReadRepository().findForManager(user.id, tenantId);
     if (!current) return failure(t('unauthorized'));
     const parsed = storeSettingsSchema.safeParse({
