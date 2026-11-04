@@ -20,6 +20,8 @@ export interface KiviSourceProduct {
    * reconcile re-based the product above it. Defaults to 0; only ever grows.
    */
   kiviVersionOffset?: number;
+  /** Up to 5 public https photo URLs, main photo first. */
+  imageUrls?: string[];
 }
 
 export interface KiviSyncStorePort {

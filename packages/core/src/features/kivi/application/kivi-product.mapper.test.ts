@@ -65,4 +65,12 @@ describe('kivi product mapping', (): void => {
       is_orderable: false,
     });
   });
+
+  it('sends the product photos, and an explicit empty list when there are none', (): void => {
+    const urls = [1, 2, 3, 4, 5, 6].map((n: number): string => `https://cdn.example.com/${n}.jpg`);
+    expect(toKiviProductPayload({ ...product, imageUrls: urls }).image_urls).toEqual(
+      urls.slice(0, 5),
+    );
+    expect(toKiviProductPayload(product).image_urls).toEqual([]);
+  });
 });

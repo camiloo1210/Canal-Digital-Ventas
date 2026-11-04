@@ -30,5 +30,6 @@ export function toKiviProductPayload(product: KiviSourceProduct): KiviProductPay
     description: product.description,
     is_available: available,
     is_orderable: product.status === 'active' && product.stock > 0,
+    image_urls: (product.imageUrls ?? []).slice(0, 5),
   };
 }

@@ -25,6 +25,7 @@ const payload: KiviProductPayload = {
   description: null,
   is_available: true,
   is_orderable: true,
+  image_urls: [],
 };
 
 interface Call {

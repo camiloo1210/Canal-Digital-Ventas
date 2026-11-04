@@ -17,6 +17,8 @@ export interface KiviProductPayload {
   description: string | null;
   is_available: boolean;
   is_orderable: boolean;
+  /** Authoritative photo list; an empty list removes the product's photos in Kivi. */
+  image_urls: string[];
 }
 
 export interface KiviProductIdentity {
