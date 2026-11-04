@@ -3,12 +3,14 @@
 import { getTranslations } from 'next-intl/server';
 import { revalidatePath } from 'next/cache';
 import {
+  UserPermission,
   KiviConnectionNotFoundException,
   KiviGatewayException,
   KiviLinkForbiddenException,
 } from '@canaldigital/packages/core';
 import { createClient } from '@/lib/supabase/server';
-import { getActiveTenantQuery } from '@/features/iam/queries/active-tenant.query';
+import { resolveActionTenant } from '@/features/dashboard/server/resolve-action-tenant';
+import { userHasAnyPermission } from '@/features/users/queries/member-permissions.query';
 import { getConfigureKiviNotificationsUseCase } from '@/features/kivi/di/kivi.di';
 import { kiviNotificationsSchema } from '@/features/kivi/schemas/kivi-notifications.schema';
 
@@ -50,8 +52,11 @@ export async function configureKiviNotificationsAction(
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) return failure('unauthorized');
-    const tenantId = await getActiveTenantQuery(user.id);
-    if (!tenantId) return failure('unauthorized');
+    const tenant = await resolveActionTenant(data, user.id);
+    if (!tenant) return failure('contextChanged');
+    const tenantId = tenant.tenantId;
+    if (!(await userHasAnyPermission(user.id, tenantId, [UserPermission.MANAGE_INTEGRATIONS])))
+      return failure('unauthorized');
     const parsed = kiviNotificationsSchema.safeParse({
       templateName,
       language,

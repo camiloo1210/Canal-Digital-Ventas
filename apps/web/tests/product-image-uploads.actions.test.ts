@@ -3,6 +3,9 @@ import { createTranslator } from 'next-intl';
 import es from '@/messages/es.json';
 import { createProductImageUploadsAction } from '@/features/products/actions/product-image-uploads.actions';
 
+vi.mock('@/features/users/queries/member-permissions.query', (): object => ({
+  userHasAnyPermission: vi.fn(async (): Promise<boolean> => true),
+}));
 const mocks = vi.hoisted(
   (): {
     sign: ReturnType<typeof vi.fn>;
@@ -21,15 +24,22 @@ vi.mock('@/lib/supabase/server', (): object => ({
   createClient: async (): Promise<object> => ({ auth: { getUser: mocks.user } }),
 }));
 vi.mock('@/features/iam/queries/active-tenant.query', (): object => ({
-  getActiveTenantQuery: mocks.tenant,
+  resolveActiveTenantQuery: mocks.tenant,
 }));
+
+const TENANT = '11111111-2222-4333-8444-555555555555';
+const FOREIGN = '99999999-2222-4333-8444-555555555555';
 
 describe('createProductImageUploadsAction', (): void => {
   beforeEach((): void => {
     vi.clearAllMocks();
     vi.spyOn(console, 'error').mockImplementation((): void => undefined);
     mocks.user.mockResolvedValue({ data: { user: { id: 'actor' } } });
-    mocks.tenant.mockResolvedValue('real-tenant');
+    mocks.tenant.mockImplementation(async (_user: string, id: string): Promise<object | null> =>
+      id === TENANT
+        ? { status: 'ready', tenantId: TENANT, tenantName: 'S', tenantSlug: 's', role: 'OWNER' }
+        : null,
+    );
     mocks.sign.mockImplementation(
       async (path: string): Promise<{ path: string; token: string }> => ({
         path,
@@ -39,20 +49,24 @@ describe('createProductImageUploadsAction', (): void => {
   });
   it('rejects anonymous callers before touching storage', async (): Promise<void> => {
     mocks.user.mockResolvedValue({ data: { user: null } });
-    const result = await createProductImageUploadsAction({ contentTypes: ['image/png'] });
+    const result = await createProductImageUploadsAction({
+      contentTypes: ['image/png'],
+      tenantId: TENANT,
+    });
     expect(result).toMatchObject({ success: false, errorCode: 'UNAUTHORIZED' });
     expect(mocks.sign).not.toHaveBeenCalled();
   });
   it('derives keys from the session tenant and passes tokens through', async (): Promise<void> => {
     const result = await createProductImageUploadsAction({
       contentTypes: ['image/jpeg', 'image/png', 'image/webp'],
+      tenantId: TENANT,
     });
-    expect(mocks.tenant).toHaveBeenCalledWith('actor');
+    expect(mocks.tenant).toHaveBeenCalledWith('actor', TENANT);
     if (!result.success) throw new Error('expected success');
     expect(result.uploads).toHaveLength(3);
     const patterns = [/\.jpg$/, /\.png$/, /\.webp$/];
     result.uploads.forEach((upload, index): void => {
-      expect(upload.path).toMatch(/^real-tenant\/[0-9a-f-]{36}\./);
+      expect(upload.path).toMatch(/^11111111-2222-4333-8444-555555555555\/[0-9a-f-]{36}\./);
       expect(upload.path).toMatch(patterns[index]);
       expect(upload.token).toBe('token-for-' + upload.path);
     });
@@ -61,24 +75,38 @@ describe('createProductImageUploadsAction', (): void => {
   it('ignores any client supplied tenant or path', async (): Promise<void> => {
     const result = await createProductImageUploadsAction({
       contentTypes: ['image/png'],
-      tenantId: 'attacker',
+      tenantId: TENANT,
       path: 'attacker/x.png',
-    } as { contentTypes: string[] });
+    } as { contentTypes: string[]; tenantId: string });
     if (!result.success) throw new Error('expected success');
-    expect(result.uploads[0].path.startsWith('real-tenant/')).toBe(true);
+    expect(result.uploads[0].path.startsWith(TENANT + '/')).toBe(true);
   });
   it.each([
     ['empty list', []],
     ['unsupported mime', ['image/gif']],
     ['more than 8 items', Array.from({ length: 9 }, (): string => 'image/png')],
   ])('returns INVALID_INPUT for %s', async (_name, contentTypes): Promise<void> => {
-    const result = await createProductImageUploadsAction({ contentTypes });
+    const result = await createProductImageUploadsAction({ contentTypes, tenantId: TENANT });
     expect(result).toMatchObject({ success: false, errorCode: 'INVALID_INPUT' });
+    expect(mocks.sign).not.toHaveBeenCalled();
+  });
+  it.each([
+    ['missing', undefined],
+    ['foreign', FOREIGN],
+  ])('rejects a %s tenantId before touching storage', async (_name, tenantId): Promise<void> => {
+    const result = await createProductImageUploadsAction({
+      contentTypes: ['image/png'],
+      tenantId: tenantId as string,
+    });
+    expect(result).toMatchObject({ success: false, errorCode: 'CONTEXT_CHANGED' });
     expect(mocks.sign).not.toHaveBeenCalled();
   });
   it('masks storage failures as UNEXPECTED', async (): Promise<void> => {
     mocks.sign.mockRejectedValue(new Error('secret vendor detail'));
-    const result = await createProductImageUploadsAction({ contentTypes: ['image/png'] });
+    const result = await createProductImageUploadsAction({
+      contentTypes: ['image/png'],
+      tenantId: TENANT,
+    });
     expect(result).toMatchObject({ success: false, errorCode: 'UNEXPECTED' });
     expect(JSON.stringify(result)).not.toContain('secret');
   });

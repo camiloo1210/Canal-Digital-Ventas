@@ -43,8 +43,13 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
   const isPublicStoreRoute = /^\/store\/[^/]+(?:\/products\/[^/]+)?\/?$/.test(
     request.nextUrl.pathname,
   );
+  // Invitation links are opened by visitors who have no account yet.
+  const isInviteRoute = request.nextUrl.pathname.startsWith('/invite/');
   const isPublicRoute =
-    isAuthRoute || isPublicStoreRoute || request.nextUrl.pathname.startsWith('/api');
+    isAuthRoute ||
+    isPublicStoreRoute ||
+    isInviteRoute ||
+    request.nextUrl.pathname.startsWith('/api');
   // Under V5, we query tenant_memberships instead of trusting JWT claims
   let hasTenant = false;
   if (user && (isDashboardRoute || isOnboardingPath || isAuthRoute)) {

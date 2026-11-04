@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useFormStatus } from 'react-dom';
 import Link from 'next/link';
+import { ConsentFields } from '@/features/users/components/consent-fields';
+import type { DemographicOptions } from '@/features/users/constants';
 
 function SubmitButton(): React.JSX.Element {
   const { pending } = useFormStatus();
@@ -17,7 +19,13 @@ function SubmitButton(): React.JSX.Element {
   );
 }
 
-export function SignupClientForm({ tenantSlug }: { tenantSlug?: string }): React.JSX.Element {
+export function SignupClientForm({
+  tenantSlug,
+  options,
+}: {
+  tenantSlug?: string;
+  options: DemographicOptions;
+}): React.JSX.Element {
   const [state, formAction] = useActionState(signupClientAction, {
     success: false,
     error: null,
@@ -43,6 +51,8 @@ export function SignupClientForm({ tenantSlug }: { tenantSlug?: string }): React
         <Label htmlFor="password">Password</Label>
         <Input id="password" name="password" type="password" required placeholder="********" />
       </div>
+
+      <ConsentFields options={options} />
 
       {state.error && <div className="text-sm text-red-500 font-medium">{state.error}</div>}
 

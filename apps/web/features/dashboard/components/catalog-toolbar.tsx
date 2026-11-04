@@ -1,5 +1,5 @@
 import Form from 'next/form';
-import Link from 'next/link';
+import { TenantLink as Link, TenantParamField } from '@/features/dashboard/components/tenant-scope';
 import { getTranslations } from 'next-intl/server';
 import type { AdminCatalogQuery } from '@canaldigital/packages/core';
 import type { CatalogKind } from '@/features/dashboard/queries/catalog-query';
@@ -34,6 +34,7 @@ export async function CatalogToolbar({
       className="flex flex-wrap items-end gap-3 rounded-xl border bg-card p-4"
       key={query.q + ':' + query.status}
     >
+      <TenantParamField />
       <div className="min-w-0 grow basis-64 space-y-2">
         <Label htmlFor="catalog-search">
           {t(kind === 'products' ? 'searchProducts' : 'searchCategories')}

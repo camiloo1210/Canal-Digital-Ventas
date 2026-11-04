@@ -2,6 +2,7 @@ import * as React from 'react';
 import { getTranslations } from 'next-intl/server';
 import type { BusinessIntelligenceReport, IntelligenceQuery } from '@canaldigital/packages/core';
 import { getBusinessIntelligenceReadRepository } from '@/features/dashboard/di/dashboard.di';
+import { TenantParamField } from '@/features/dashboard/components/tenant-scope';
 import { BusinessIntelligenceDashboard } from '@/features/dashboard/components/business-intelligence-dashboard';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -32,6 +33,7 @@ export async function BusinessIntelligenceResults({
           <p>{t(failed ? 'errorHelp' : 'accessHelp')}</p>
           {failed && (
             <form action="/dashboard/business-intelligence" method="get">
+              <TenantParamField />
               <input type="hidden" name="days" value={query.days} />
               <input type="hidden" name="leadTimeDays" value={query.leadTimeDays} />
               <input type="hidden" name="targetCoverageDays" value={query.targetCoverageDays} />

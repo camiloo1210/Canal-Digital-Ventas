@@ -5,13 +5,16 @@ import {
   getUpdateStoreSettingsUseCase,
 } from '@/features/store-settings/di/store-settings.di';
 import { createClient } from '@/lib/supabase/server';
-import { getActiveTenantQuery } from '@/features/iam/queries/active-tenant.query';
+import { resolveActiveTenantQuery } from '@/features/iam/queries/active-tenant.query';
 import { revalidatePath } from 'next/cache';
 import {
   TenantSlugAlreadyInUseException,
   type TenantBrandingReadModel,
 } from '@canaldigital/packages/core';
 
+vi.mock('@/features/users/queries/member-permissions.query', (): object => ({
+  userHasAnyPermission: vi.fn(async (): Promise<boolean> => true),
+}));
 vi.mock('next-intl/server', (): object => ({
   getTranslations: vi.fn().mockResolvedValue((key: string): string => key),
 }));
@@ -21,7 +24,7 @@ vi.mock('@/lib/cache/public-catalog-cache', (): object => ({
 }));
 vi.mock('@/lib/supabase/server', (): object => ({ createClient: vi.fn() }));
 vi.mock('@/features/iam/queries/active-tenant.query', (): object => ({
-  getActiveTenantQuery: vi.fn(),
+  resolveActiveTenantQuery: vi.fn(),
 }));
 vi.mock('@/features/store-settings/di/store-settings.di', (): object => ({
   getStoreSettingsReadRepository: vi.fn(),
@@ -47,6 +50,7 @@ function form(): FormData {
   data.set('slug', 'new-store');
   data.set('description', 'Description');
   data.set('version', '2');
+  data.set('tenantId', tenantId);
   return data;
 }
 
@@ -57,8 +61,20 @@ describe('store URL changes', (): void => {
     vi.mocked(createClient).mockResolvedValue({
       auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: actor } } }) },
     } as unknown as Awaited<ReturnType<typeof createClient>>);
-    vi.mocked(getActiveTenantQuery).mockResolvedValue(
-      tenantId as Awaited<ReturnType<typeof getActiveTenantQuery>>,
+    vi.mocked(resolveActiveTenantQuery).mockImplementation(
+      async (
+        _user: string,
+        id: string,
+      ): Promise<Awaited<ReturnType<typeof resolveActiveTenantQuery>>> =>
+        id === tenantId
+          ? {
+              status: 'ready',
+              tenantId,
+              tenantName: 'S',
+              tenantSlug: 'original-store',
+              role: 'OWNER',
+            }
+          : null,
     );
     vi.mocked(getStoreSettingsReadRepository).mockReturnValue({
       findForManager: vi.fn().mockResolvedValue(current),
@@ -68,9 +84,8 @@ describe('store URL changes', (): void => {
     >);
   });
 
-  it('updates the trusted tenant and invalidates the old URL, new URL and dashboard navigation', async (): Promise<void> => {
+  it('updates the verified named tenant and invalidates the old URL, new URL and dashboard navigation', async (): Promise<void> => {
     const data = form();
-    data.set('tenantId', crypto.randomUUID());
     data.set('userId', crypto.randomUUID());
     const result = await updateStoreSettingsAction({ success: false, message: null }, data);
     expect(result.success).toBe(true);
@@ -136,4 +151,19 @@ describe('store URL changes', (): void => {
       log.mockRestore();
     }
   });
+
+  it.each([
+    ['missing', (d: FormData): void => d.delete('tenantId')],
+    ['foreign', (d: FormData): void => d.set('tenantId', crypto.randomUUID())],
+  ])(
+    'rejects a %s tenantId without reading or writing anything',
+    async (_label, mutate): Promise<void> => {
+      const data = form();
+      mutate(data);
+      const result = await updateStoreSettingsAction({ success: false, message: null }, data);
+      expect(result).toMatchObject({ success: false, message: 'contextChanged' });
+      expect(execute).not.toHaveBeenCalled();
+      expect(getStoreSettingsReadRepository).not.toHaveBeenCalled();
+    },
+  );
 });

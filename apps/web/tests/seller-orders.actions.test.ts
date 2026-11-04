@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { changeOrderStatusAction } from '@/features/orders/actions/change-order-status.actions';
 import { ordersDi } from '@/features/orders/di/orders.di';
 import { createClient } from '@/lib/supabase/server';
-import { getActiveTenantQuery } from '@/features/iam/queries/active-tenant.query';
+import { resolveActiveTenantQuery } from '@/features/iam/queries/active-tenant.query';
+import { userHasAnyPermission } from '@/features/users/queries/member-permissions.query';
 import { revalidatePath } from 'next/cache';
 import {
   OrderNotFoundException,
@@ -10,17 +11,20 @@ import {
   OptimisticConcurrencyException,
 } from '@canaldigital/packages/core';
 
-import { invalidateActiveTenantCatalog } from '@/features/store/utils/catalog-invalidation';
+import { invalidateTenantCatalog } from '@/features/store/utils/catalog-invalidation';
+vi.mock('@/features/users/queries/member-permissions.query', (): object => ({
+  userHasAnyPermission: vi.fn(async (): Promise<boolean> => true),
+}));
 vi.mock('next-intl/server', (): object => ({
   getTranslations: vi.fn().mockResolvedValue((key: string): string => key),
 }));
 vi.mock('next/cache', (): object => ({ revalidatePath: vi.fn() }));
 vi.mock('@/features/store/utils/catalog-invalidation', (): object => ({
-  invalidateActiveTenantCatalog: vi.fn(),
+  invalidateTenantCatalog: vi.fn(),
 }));
 vi.mock('@/lib/supabase/server', (): object => ({ createClient: vi.fn() }));
 vi.mock('@/features/iam/queries/active-tenant.query', (): object => ({
-  getActiveTenantQuery: vi.fn(),
+  resolveActiveTenantQuery: vi.fn(),
 }));
 vi.mock('@/features/orders/di/orders.di', (): object => ({
   ordersDi: { resolveChangeOrderStatusUseCase: vi.fn() },
@@ -36,6 +40,7 @@ function form(): FormData {
   data.set('orderId', orderId);
   data.set('status', 'processing');
   data.set('expectedVersion', '4');
+  data.set('tenantId', tenantId);
   return data;
 }
 
@@ -52,8 +57,14 @@ describe('seller order status action security', (): void => {
     vi.clearAllMocks();
     execute.mockReset().mockResolvedValue(undefined);
     authenticate(actor);
-    vi.mocked(getActiveTenantQuery).mockResolvedValue(
-      tenantId as Awaited<ReturnType<typeof getActiveTenantQuery>>,
+    vi.mocked(resolveActiveTenantQuery).mockImplementation(
+      async (
+        _user: string,
+        id: string,
+      ): Promise<Awaited<ReturnType<typeof resolveActiveTenantQuery>>> =>
+        id === tenantId
+          ? { status: 'ready', tenantId, tenantName: 'S', tenantSlug: 'store', role: 'MEMBER' }
+          : null,
     );
     vi.mocked(ordersDi.resolveChangeOrderStatusUseCase).mockReturnValue({
       execute,
@@ -67,13 +78,20 @@ describe('seller order status action security', (): void => {
     expect(execute).not.toHaveBeenCalled();
   });
 
-  it('injects actor and tenant from the session and ignores client identities', async (): Promise<void> => {
+  it('rejects a member whose role lacks the order management permission', async (): Promise<void> => {
+    vi.mocked(userHasAnyPermission).mockResolvedValueOnce(false);
+    const result = await changeOrderStatusAction({ success: false, errorCode: null }, form());
+    expect(result.errorCode).toBe('UNAUTHORIZED');
+    expect(execute).not.toHaveBeenCalled();
+    expect(userHasAnyPermission).toHaveBeenCalledWith(actor, tenantId, ['MANAGE_ORDERS']);
+  });
+
+  it('injects the actor from the session, uses the verified named business and ignores client actor ids', async (): Promise<void> => {
     const data = form();
-    data.set('tenantId', crypto.randomUUID());
     data.set('authenticatedSellerId', crypto.randomUUID());
     const result = await changeOrderStatusAction({ success: false, errorCode: null }, data);
     expect(result.success).toBe(true);
-    expect(invalidateActiveTenantCatalog).toHaveBeenCalledWith(actor);
+    expect(invalidateTenantCatalog).toHaveBeenCalledWith('store');
     expect(execute).toHaveBeenCalledWith({
       orderId,
       status: 'processing',
@@ -101,13 +119,21 @@ describe('seller order status action security', (): void => {
     expect(execute).not.toHaveBeenCalled();
   });
 
-  it('rejects requests without a trusted active tenant', async (): Promise<void> => {
-    vi.mocked(getActiveTenantQuery).mockResolvedValue(null);
-    expect(
-      (await changeOrderStatusAction({ success: false, errorCode: null }, form())).errorCode,
-    ).toBe('NOT_FOUND');
-    expect(execute).not.toHaveBeenCalled();
-  });
+  it.each([
+    ['missing', (d: FormData): void => d.delete('tenantId')],
+    ['foreign', (d: FormData): void => d.set('tenantId', crypto.randomUUID())],
+  ])(
+    'rejects a %s tenantId without executing the use case',
+    async (_label, mutate): Promise<void> => {
+      const data = form();
+      mutate(data);
+      const result = await changeOrderStatusAction({ success: false, errorCode: null }, data);
+      expect(result.errorCode).toBe('CONTEXT_CHANGED');
+      expect(result.message).toBe('errors.CONTEXT_CHANGED');
+      expect(execute).not.toHaveBeenCalled();
+      expect(userHasAnyPermission).not.toHaveBeenCalled();
+    },
+  );
 
   it.each([
     [new OrderNotFoundException(), 'NOT_FOUND'],

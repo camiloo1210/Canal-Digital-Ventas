@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { TenantIdField } from '@/features/dashboard/components/tenant-scope';
 
 const INITIAL: KiviNotificationsActionState = { success: false, message: null };
 
@@ -76,6 +77,7 @@ export function KiviNotificationsPanel({
           className="space-y-4"
           onChange={(): void => setEdited(state)}
         >
+          <TenantIdField />
           <fieldset
             disabled={!available || pending}
             className="min-w-0 space-y-5 disabled:opacity-60"

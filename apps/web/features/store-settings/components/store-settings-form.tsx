@@ -21,6 +21,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { FieldError } from '@/components/ui/field';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { TenantIdField } from '@/features/dashboard/components/tenant-scope';
 
 interface SelectedImage {
   file: File;
@@ -110,6 +111,7 @@ export function StoreSettingsForm({
       }}
       className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]"
     >
+      <TenantIdField />
       <input type="hidden" name="version" value={saved.version} />
       {(Boolean(state.message && !edited) || Object.keys(visibleErrors).length > 0) && (
         <div className="order-first col-span-full">

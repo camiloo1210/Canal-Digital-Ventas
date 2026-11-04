@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { TenantLink as Link, TenantParamField } from '@/features/dashboard/components/tenant-scope';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { PackageSearch } from 'lucide-react';
@@ -61,6 +61,7 @@ export async function CatalogResults({
               <input type="hidden" name="q" value={query.q} />
               <input type="hidden" name="status" value={query.status} />
               <input type="hidden" name="page" value={query.page} />
+              <TenantParamField />
               <Button type="submit" variant="outline" className="mt-3 min-h-11">
                 {t('retry')}
               </Button>
@@ -70,7 +71,8 @@ export async function CatalogResults({
       </Alert>
     );
   // Redirects must stay outside the query catch; Next.js uses a thrown redirect signal.
-  if (query.page > result.totalPages) redirect(catalogHref(kind, query, result.totalPages));
+  if (query.page > result.totalPages)
+    redirect(catalogHref(kind, query, result.totalPages, tenantId));
   const filtered = Boolean(query.q || query.status !== 'all');
   return (
     <section
@@ -128,6 +130,7 @@ export async function CatalogResults({
         query={query}
         totalItems={result.totalItems}
         totalPages={result.totalPages}
+        tenantId={tenantId}
       />
     </section>
   );

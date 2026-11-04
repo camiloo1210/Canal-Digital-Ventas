@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field';
+import { useTenantId } from '@/features/dashboard/components/tenant-scope';
 import { createClient } from '@/lib/supabase/client';
 import { createProductImageUploadsAction } from '@/features/products/actions/product-image-uploads.actions';
 import {
@@ -68,6 +69,7 @@ export function ProductGalleryField({
   onUploadingChange,
 }: ProductGalleryFieldProps): React.JSX.Element {
   const t = useTranslations('CatalogForms');
+  const tenantId = useTenantId();
   const [existing, setExisting] = useState<string[]>(initialUrls);
   const [pending, setPending] = useState<PendingImage[]>([]);
   const [rejectedCount, setRejectedCount] = useState(0);
@@ -114,7 +116,7 @@ export function ProductGalleryField({
       {
         prepare: compressImageInBrowser,
         requestSlots: async (contentTypes): Promise<{ path: string; token: string }[] | null> => {
-          const result = await createProductImageUploadsAction({ contentTypes });
+          const result = await createProductImageUploadsAction({ contentTypes, tenantId });
           return result.success ? result.uploads : null;
         },
         put: async (slot, file): Promise<boolean> => {

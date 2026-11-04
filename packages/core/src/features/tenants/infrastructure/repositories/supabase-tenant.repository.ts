@@ -10,6 +10,7 @@ import { SupabaseTenantMapper } from '@/tenants/infrastructure/mappers/supabase-
 import { DbTenantRow } from '@/tenants/infrastructure/types/supabase-tenant.types';
 import { PaginationOptions, PaginatedResult } from '@/shared/domain/pagination/pagination';
 import { TenantRepositoryException } from '@/tenants/application/exceptions/tenant-repository.exception';
+import { BusinessAccountBoundException } from '@/iam/application/exceptions/business-account-bound.exception';
 import { SlugAlreadyTakenException } from '@/tenants/application/exceptions/slug-already-taken.exception';
 
 export class SupabaseTenantRepository implements TenantRepositoryPort {
@@ -55,6 +56,8 @@ export class SupabaseTenantRepository implements TenantRepositoryPort {
       if (error.code === '23505') {
         throw new SlugAlreadyTakenException(tenant.getSlug().getValue());
       }
+      // P0004: a business account can never own another company (membership trigger).
+      if (error.code === 'P0004') throw new BusinessAccountBoundException();
       throw new TenantRepositoryException(`Failed to onboard tenant: ${error.message}`, error);
     }
   }

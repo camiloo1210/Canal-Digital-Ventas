@@ -5,6 +5,7 @@ import {
   SupabaseProductReadRepository,
   type ProductReadRepositoryPort,
   PostgresProductRepository,
+  PostgresCategoryRepository,
   PostgresTransactionManagerAdapter,
   CreateProductUseCase,
   UpdateProductUseCase,
@@ -29,6 +30,10 @@ export function getPostgresProductRepository(): PostgresProductRepository {
   return new PostgresProductRepository(sql);
 }
 
+function getPostgresCategoryRepository(): PostgresCategoryRepository {
+  return new PostgresCategoryRepository(sql);
+}
+
 function getEventBus(): PostgresEventBusAdapter {
   return new PostgresEventBusAdapter();
 }
@@ -40,6 +45,7 @@ export function getTransactionManager(): PostgresTransactionManagerAdapter {
 export function getCreateProductUseCase(): CreateProductUseCase {
   return new CreateProductUseCase(
     getPostgresProductRepository(),
+    getPostgresCategoryRepository(),
     getEventBus(),
     getTransactionManager(),
   );
@@ -48,6 +54,7 @@ export function getCreateProductUseCase(): CreateProductUseCase {
 export function getUpdateProductUseCase(): UpdateProductUseCase {
   return new UpdateProductUseCase(
     getPostgresProductRepository(),
+    getPostgresCategoryRepository(),
     getEventBus(),
     getTransactionManager(),
   );

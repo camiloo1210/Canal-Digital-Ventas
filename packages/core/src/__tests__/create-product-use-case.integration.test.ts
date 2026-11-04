@@ -3,6 +3,7 @@ import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import postgres from 'postgres';
 import { PostgresTransactionManagerAdapter } from '@/shared/infrastructure/adapters/postgres-transaction-manager.adapter';
 import { PostgresProductRepository } from '@/products/infrastructure/repositories/postgres-product.repository';
+import { PostgresCategoryRepository } from '@/categories/infrastructure/repositories/postgres-category.repository';
 import { CreateProductUseCase } from '@/products/application/use-cases/create-product.use-case';
 import { EventBusPort } from '@/shared/application/ports/out/event-bus.port';
 import { createTenantId } from '@/shared/domain/types/tenant-id.type';
@@ -28,7 +29,12 @@ describe('CreateProductUseCase Integration (Transaction & Rollback)', () => {
     transactionManager = new PostgresTransactionManagerAdapter(sql);
     productRepository = new PostgresProductRepository(sql);
     eventBus = { publish: vi.fn() };
-    useCase = new CreateProductUseCase(productRepository, eventBus, transactionManager);
+    useCase = new CreateProductUseCase(
+      productRepository,
+      new PostgresCategoryRepository(sql),
+      eventBus,
+      transactionManager,
+    );
   });
 
   afterAll(async () => {

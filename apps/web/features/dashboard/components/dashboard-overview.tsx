@@ -1,5 +1,5 @@
 import * as React from 'react';
-import Link from 'next/link';
+import { TenantLink as Link } from '@/features/dashboard/components/tenant-scope';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import type { DashboardOverviewReadModel } from '@canaldigital/packages/core';

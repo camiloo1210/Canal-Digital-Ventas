@@ -20,6 +20,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { TenantIdField } from '@/features/dashboard/components/tenant-scope';
 
 const INITIAL: KiviWhatsAppActionState = { success: false, message: null };
 
@@ -85,6 +86,7 @@ export function KiviWhatsAppPanel({
           className="space-y-4"
           onChange={(): void => setEditedState(state)}
         >
+          <TenantIdField />
           <fieldset disabled={!linked || pending} className="min-w-0 space-y-4 disabled:opacity-60">
             <div className="space-y-2">
               <Label htmlFor="whatsapp-phone-id">{t('phoneNumberId')}</Label>
@@ -199,7 +201,9 @@ export function KiviWhatsAppPanel({
             </Dialog>
           )}
         </form>
-        <form id="whatsapp-disconnect" action={action} />
+        <form id="whatsapp-disconnect" action={action}>
+          <TenantIdField />
+        </form>
       </CardContent>
     </Card>
   );

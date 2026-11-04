@@ -3,6 +3,7 @@
 import { useActionState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
+import { TenantIdField } from '@/features/dashboard/components/tenant-scope';
 import { Loader2 } from 'lucide-react';
 import {
   changeOrderStatusAction,
@@ -26,6 +27,7 @@ export function SellerOrderStatusForm({
   const [state, action, pending] = useActionState(changeOrderStatusAction, initialState);
   return (
     <form action={action} className="flex flex-col gap-2">
+      <TenantIdField />
       <input type="hidden" name="orderId" value={orderId} />
       <input type="hidden" name="expectedVersion" value={version} />
       <input type="hidden" name="status" value={nextStatus} />

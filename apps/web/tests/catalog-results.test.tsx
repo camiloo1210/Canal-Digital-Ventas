@@ -95,7 +95,7 @@ describe('catalog recovery and pagination', (): void => {
       spy.mockRestore();
     }
   });
-  it('redirects out-of-range pages outside the query catch and preserves active filters', async (): Promise<void> => {
+  it('redirects out-of-range pages outside the query catch and preserves active filters and the explicit business', async (): Promise<void> => {
     mocks.products.mockResolvedValue({ items: [], totalItems: 51, totalPages: 3, currentPage: 9 });
     const signal = new Error('NEXT_REDIRECT');
     mocks.redirect.mockImplementation((): never => {
@@ -110,7 +110,7 @@ describe('catalog recovery and pagination', (): void => {
       }),
     ).rejects.toBe(signal);
     expect(mocks.redirect).toHaveBeenCalledWith(
-      '/dashboard/catalog/products?q=product&status=active&page=3',
+      '/dashboard/catalog/products?q=product&status=active&page=3&tenant=tenant',
     );
   });
 });

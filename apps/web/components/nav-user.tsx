@@ -18,7 +18,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { EllipsisVerticalIcon, LogOutIcon, StoreIcon } from 'lucide-react';
+import { EllipsisVerticalIcon, LogOutIcon, StoreIcon, UserRoundIcon } from 'lucide-react';
 import { LogoutForm } from '@/features/iam/components/logout-form';
 import { LocaleSwitcher } from '@/components/locale-switcher';
 
@@ -98,6 +98,19 @@ export function NavUser({
                 </DropdownMenuGroup>
               </>
             )}
+            <DropdownMenuGroup>
+              <DropdownMenuItem
+                render={
+                  <Link
+                    href="/account/profile"
+                    className="flex w-full items-center gap-2 cursor-pointer"
+                  />
+                }
+              >
+                <UserRoundIcon className="size-4" />
+                <span>{t('profile')}</span>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
             <LocaleSwitcher />
             <DropdownMenuSeparator />
             <LogoutForm className="w-full">
