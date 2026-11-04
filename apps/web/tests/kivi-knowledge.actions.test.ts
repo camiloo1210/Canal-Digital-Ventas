@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { resolveActiveTenantQuery } from '@/features/iam/queries/active-tenant.query';
 
 vi.mock('@/features/users/queries/member-permissions.query', (): object => ({
-  userHasAnyPermission: vi.fn(async (): Promise<boolean> => true),
+  userIsOwner: vi.fn(async (): Promise<boolean> => true),
 }));
 vi.mock('next-intl/server', (): object => ({
   getTranslations: vi.fn().mockResolvedValue((key: string): string => key),

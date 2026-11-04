@@ -20,3 +20,9 @@ export async function userHasAnyPermission(
   if (member.baseRole === 'OWNER') return true;
   return required.some((permission): boolean => member.permissions.includes(permission));
 }
+
+/** True only for the active OWNER of the store; for areas that can never be delegated (Kivi). */
+export async function userIsOwner(userId: string, tenantId: string): Promise<boolean> {
+  const member = await getMemberPermissionsQuery(userId, tenantId);
+  return member?.baseRole === 'OWNER';
+}

@@ -780,3 +780,42 @@ describe('business account single tenant migration', (): void => {
     );
   });
 });
+
+describe('member permission check migration', (): void => {
+  const migration = pending.find((m: PendingMigration): boolean =>
+    m.name.endsWith('_member_permission_check.sql'),
+  );
+  const sql = migration?.sql ?? '';
+  const definition = functionsOf(sql).find(
+    (f: FunctionDefinition): boolean => f.name === 'core.member_has_permission',
+  );
+
+  it('exists after the single-tenant migration and is transactional', (): void => {
+    expect(migration?.name).toBe('20261103080000_member_permission_check.sql');
+    expect(sql).toMatch(/^\s*BEGIN;/im);
+    expect(sql).toMatch(/COMMIT;\s*$/i);
+  });
+
+  it('is a pinned, postgres-owned, postgres-only SECURITY DEFINER function', (): void => {
+    expect(definition?.header).toMatch(/RETURNS\s+boolean/i);
+    expect(definition?.header).toMatch(/SECURITY\s+DEFINER/i);
+    expect(definition?.header).toMatch(/SET\s+search_path\s*=\s*pg_catalog,\s*pg_temp/i);
+    expect(sql).toMatch(
+      /ALTER\s+FUNCTION\s+core\.member_has_permission\(uuid, uuid, text\[\]\)\s+OWNER\s+TO\s+postgres/i,
+    );
+    expect(sql).toMatch(
+      /REVOKE\s+ALL\s+ON\s+FUNCTION\s+core\.member_has_permission\(uuid, uuid, text\[\]\)\s+FROM\s+PUBLIC,\s*anon,\s*authenticated,\s*service_role/i,
+    );
+    expect(sql).toMatch(
+      /GRANT\s+EXECUTE\s+ON\s+FUNCTION\s+core\.member_has_permission\(uuid, uuid, text\[\]\)\s+TO\s+postgres/i,
+    );
+  });
+
+  it('requires an active membership and scopes the custom role to the same tenant', (): void => {
+    const body = definition?.body ?? '';
+    expect(body).toMatch(/m\.status\s*=\s*'active'/i);
+    expect(body).toMatch(/r\.tenant_id\s*=\s*m\.tenant_id/i);
+    expect(body).toMatch(/m\.role\s+IN\s*\('OWNER',\s*'ADMIN'\)/i);
+    expect(body).toMatch(/r\.permissions\s*&&\s*p_permissions/i);
+  });
+});

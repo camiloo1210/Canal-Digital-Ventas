@@ -56,7 +56,9 @@ describe('dashboard operational projection', (): void => {
     const [parts, ...parameters] = sql.mock.calls[0] as [TemplateStringsArray, ...unknown[]];
     const statement = parts.join('?');
     expect(parameters).toEqual(['actor', 'tenant']);
-    expect(statement).toContain("m.status='active' AND m.role IN ('OWNER','ADMIN')");
+    expect(statement).toContain(
+      "m.status='active' AND core.member_has_permission(m.user_id, m.tenant_id, ARRAY['VIEW_REPORTS']::text[])",
+    );
     expect(statement).toContain('m.user_id=?::uuid');
     expect(statement).toContain('WHERE t.id=?::uuid');
     expect(statement).toContain("WHERE ord.tenant_id=t.id AND ord.status<>'draft'");

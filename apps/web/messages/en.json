@@ -1235,8 +1235,7 @@
         "orders": "Orders",
         "catalog": "Catalog",
         "reports": "Reports",
-        "store": "Store",
-        "integrations": "Integrations"
+        "store": "Store"
       },
       "items": {
         "VIEW_ORDERS": {
@@ -1262,10 +1261,6 @@
         "MANAGE_STORE": {
           "label": "Manage store",
           "help": "Edit the store name, images and public details."
-        },
-        "MANAGE_INTEGRATIONS": {
-          "label": "Manage integrations",
-          "help": "Connect and configure Kivi and WhatsApp."
         },
         "MANAGE_INVENTORY": {
           "label": "Manage inventory",

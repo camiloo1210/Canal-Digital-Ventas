@@ -57,7 +57,9 @@ describe('seller order search projection', (): void => {
       tenant,
       50,
     ]);
-    expect(statement).toContain("m.status='active' AND m.role IN ('OWNER','ADMIN')");
+    expect(statement).toContain(
+      "m.status='active' AND core.member_has_permission(m.user_id, m.tenant_id, ARRAY['VIEW_ORDERS','MANAGE_ORDERS']::text[])",
+    );
     expect(statement).toContain('c.tenant_id=o.tenant_id');
     expect(statement).toContain('own.tenant_id=?::uuid');
     expect(statement).toContain("o.status<>'draft'");
