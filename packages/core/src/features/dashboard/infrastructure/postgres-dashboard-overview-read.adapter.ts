@@ -50,7 +50,7 @@ export class PostgresDashboardOverviewReadAdapter implements DashboardOverviewRe
             ORDER BY ord.created_at DESC,ord.id DESC LIMIT 5
           ) r),'[]'::jsonb) AS recent_orders
         FROM core.tenants t JOIN core.tenant_memberships m ON m.tenant_id=t.id
-          AND m.user_id=${userId}::uuid AND m.status='active' AND core.member_has_permission(m.user_id, m.tenant_id, ARRAY['VIEW_REPORTS']::text[])
+          AND m.user_id=${userId}::uuid AND m.status='active' AND core.member_has_permission(m.user_id, m.tenant_id, ARRAY['VIEW_OVERVIEW']::text[])
         CROSS JOIN LATERAL (
           SELECT count(*) FILTER (WHERE status='paid')::int AS awaiting_preparation,
             count(*) FILTER (WHERE status='processing')::int AS processing,
