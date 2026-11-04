@@ -102,7 +102,7 @@ export function NavUser({
               <DropdownMenuItem
                 render={
                   <Link
-                    href="/account/profile"
+                    href="/dashboard/profile"
                     className="flex w-full items-center gap-2 cursor-pointer"
                   />
                 }

@@ -5,6 +5,7 @@ import type {
   KiviWhatsAppGatewayPort,
   KiviWhatsAppResult,
 } from '@/kivi/application/ports/out/kivi-whatsapp-gateway.port';
+import type { KiviTarget } from '@/kivi/application/ports/out/kivi-catalog-gateway.port';
 import { resolveKiviOwnerTarget } from '@/kivi/application/kivi-owner-target';
 
 export interface ConfigureKiviWhatsAppDto {
@@ -30,10 +31,28 @@ export class ConfigureKiviWhatsAppUseCase {
       dto.tenantId,
     );
     // Kivi owns credential validation and persistence. Never hold a SQL transaction over HTTP.
-    if (dto.operation === 'disconnect') return this.gateway.disconnect(target);
+    if (dto.operation === 'disconnect') {
+      const result = await this.gateway.disconnect(target);
+      return { ...result, widgetHandoff: await this.syncHandoff(target, false) };
+    }
     const credentials = { phoneNumberId: dto.phoneNumberId, token: dto.token };
-    return dto.operation === 'validate'
-      ? this.gateway.validate(target, credentials)
-      : this.gateway.connect(target, credentials);
+    if (dto.operation === 'validate') return this.gateway.validate(target, credentials);
+    const result = await this.gateway.connect(target, credentials);
+    return { ...result, widgetHandoff: await this.syncHandoff(target, true) };
+  }
+  /** Best effort: WhatsApp is already (dis)connected, so a widget failure must not fail the request. */
+  private async syncHandoff(
+    target: KiviTarget,
+    enabled: boolean,
+  ): Promise<'enabled' | 'disabled' | 'skipped'> {
+    try {
+      return (await this.gateway.syncWidgetHandoff(target, enabled))
+        ? enabled
+          ? 'enabled'
+          : 'disabled'
+        : 'skipped';
+    } catch {
+      return 'skipped';
+    }
   }
 }

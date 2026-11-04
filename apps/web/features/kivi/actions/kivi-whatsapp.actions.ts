@@ -67,15 +67,20 @@ export async function configureKiviWhatsAppAction(
       token: input.operation === 'disconnect' ? '' : input.token,
     });
     revalidatePath('/dashboard/integrations');
+    const base = t(
+      input.operation === 'validate'
+        ? 'validated'
+        : input.operation === 'connect'
+          ? 'connected'
+          : 'disconnected',
+    );
+    const widgetNote =
+      input.operation === 'connect' && result.widgetHandoff
+        ? ` ${t(result.widgetHandoff === 'enabled' ? 'widgetEnabled' : 'widgetSkipped')}`
+        : '';
     return {
       success: true,
-      message: t(
-        input.operation === 'validate'
-          ? 'validated'
-          : input.operation === 'connect'
-            ? 'connected'
-            : 'disconnected',
-      ),
+      message: `${base}${widgetNote}`,
       phoneNumberId,
       ...(input.operation === 'validate' ? {} : { connected: result.connected }),
     };

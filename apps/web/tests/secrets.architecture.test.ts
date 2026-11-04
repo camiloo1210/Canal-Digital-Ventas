@@ -35,7 +35,8 @@ const runtimeSources = [
   ...walk(path.join(repoRoot, 'packages', 'core', 'src')),
 ].filter((file): boolean => !isTestFile(file));
 
-describe('service role key never leaks', (): void => {
+// Scans every tracked file; the default 5 s is too tight when the whole suite runs in parallel.
+describe('service role key never leaks', { timeout: 30_000 }, (): void => {
   it('is read only by the server-only IAM DI module', (): void => {
     const unexpected = runtimeSources
       .filter((file): boolean => ENV_READ.test(readFileSync(file, 'utf8')))

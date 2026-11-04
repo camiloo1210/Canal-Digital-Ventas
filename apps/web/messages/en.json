@@ -524,7 +524,8 @@
     "navigation": {
       "label": "Buyer navigation",
       "stores": "Stores",
-      "purchases": "My purchases"
+      "purchases": "My purchases",
+      "profile": "My profile"
     },
     "directory": {
       "title": "Find your next store",
@@ -1110,6 +1111,12 @@
   },
   "KiviMessaging": {
     "title": "WhatsApp channel",
+    "widgetEnabled": "The web widget “Continue on WhatsApp” button now uses this number.",
+    "widgetSkipped": "The web widget WhatsApp button was not enabled: create the widget in Kivi first.",
+    "connectedTitle": "WhatsApp is already connected in Kivi",
+    "connectedNumber": "Connected number",
+    "tokenStored": "Token stored encrypted in Kivi",
+    "replaceHint": "To switch numbers or renew an expired test token, enter the new ID and token and press “Save and connect”. This replaces the credentials stored in Kivi.",
     "description": "Connect your business number from this dashboard. Kivi manages the connection to Meta.",
     "security": "The token is sent from the server and stored encrypted by Kivi. It is never shown again.",
     "linkFirst": "Link your store to Kivi before configuring WhatsApp.",
@@ -1550,6 +1557,31 @@
     "saved": "Profile updated.",
     "validation": {
       "nameRequired": "This field is required."
+    },
+    "unsaved": "You have unsaved changes.",
+    "upToDate": "Everything is up to date.",
+    "discard": "Discard",
+    "sections": {
+      "personal": {
+        "title": "Personal information",
+        "description": "How your teammates and the stores you take part in see you."
+      },
+      "privacy": {
+        "title": "Privacy and demographic data",
+        "description": "You decide whether your general details feed the anonymous store statistics.",
+        "sharedTitle": "What is shared, grouped",
+        "neverTitle": "What is never shared",
+        "shared": {
+          "ageRange": "Age range",
+          "gender": "Gender",
+          "province": "Province"
+        },
+        "never": {
+          "identity": "Your name and your email",
+          "link": "Any link to your account",
+          "individual": "Individual data: only figures from large groups"
+        }
+      }
     }
   },
   "BusinessSwitcher": {
