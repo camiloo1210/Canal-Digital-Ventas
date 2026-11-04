@@ -44,7 +44,7 @@ export class PostgresTenantBrandingRepository implements TenantBrandingRepositor
         const rows = await sql<DbTenantRow[]>`SELECT t.* FROM core.tenants t
           JOIN core.tenant_memberships m ON m.tenant_id=t.id
           WHERE t.id=${tenantId}::uuid AND m.user_id=${userId}::uuid
-            AND m.status='active' AND m.role IN ('OWNER','ADMIN') FOR UPDATE OF t FOR SHARE OF m`;
+            AND m.status='active' AND core.member_has_permission(m.user_id, m.tenant_id, ARRAY['MANAGE_STORE']::text[]) FOR UPDATE OF t FOR SHARE OF m`;
         return rows[0] ? SupabaseTenantMapper.toDomain(rows[0]) : null;
       });
     } catch (error: unknown) {
@@ -97,7 +97,7 @@ export class PostgresTenantBrandingReadRepository implements TenantBrandingReadR
         coalesce(t.description,'') AS description,t.logo_url AS "logoUrl",t.banner_url AS "bannerUrl",t.version
         FROM core.tenants t JOIN core.tenant_memberships m ON m.tenant_id=t.id
         WHERE t.id=${tenantId}::uuid AND m.user_id=${userId}::uuid
-          AND m.status='active' AND m.role IN ('OWNER','ADMIN')`;
+          AND m.status='active' AND core.member_has_permission(m.user_id, m.tenant_id, ARRAY['MANAGE_STORE']::text[])`;
       return rows[0] ?? null;
     } catch (error: unknown) {
       throw new TenantRepositoryException('Cannot read store customization.', error);

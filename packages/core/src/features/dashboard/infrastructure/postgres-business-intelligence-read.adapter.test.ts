@@ -21,7 +21,9 @@ describe('authorized business intelligence projection', (): void => {
     const [parts, ...values] = sql.mock.calls[0] as [TemplateStringsArray, ...unknown[]];
     const statement = parts.join('?');
     expect(values).toEqual(['actor', 'tenant', 30]);
-    expect(statement).toContain("m.role IN ('OWNER','ADMIN')");
+    expect(statement).toContain(
+      "core.member_has_permission(m.user_id, m.tenant_id, ARRAY['VIEW_REPORTS']::text[])",
+    );
     expect(statement).toContain("m.status='active'");
     expect(statement).toContain('m.user_id=');
     expect(statement).toContain('p.tenant_id=a.id');

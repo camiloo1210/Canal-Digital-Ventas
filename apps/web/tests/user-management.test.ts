@@ -59,6 +59,17 @@ describe('dashboard navigation permissions', (): void => {
   it('hides user management from members even with the MANAGE_USERS permission', (): void => {
     expect(visibleDashboardNavigationKeys('MEMBER', ['MANAGE_USERS'])).toEqual(['overview']);
   });
+  it('keeps integrations (Kivi) owner-only even for a member holding every delegable permission', (): void => {
+    const everyPermission = PERMISSION_GROUPS.flatMap((group): string[] => [...group.permissions]);
+    const keys = visibleDashboardNavigationKeys('MEMBER', everyPermission);
+    expect(keys).not.toContain('integrations');
+    expect(keys).not.toContain('users');
+    expect(visibleDashboardNavigationKeys('OWNER', [])).toContain('integrations');
+  });
+  it('no longer offers a delegable integrations permission', (): void => {
+    expect(Object.values(UserPermission)).not.toContain('MANAGE_INTEGRATIONS');
+    expect(PERMISSION_GROUPS.map((group): string => group.key)).not.toContain('integrations');
+  });
   it('shows a member without a role only the overview', (): void => {
     expect(visibleDashboardNavigationKeys('MEMBER', [])).toEqual(['overview']);
   });

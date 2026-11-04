@@ -34,7 +34,7 @@ export const dashboardNavigation: readonly DashboardNavigationItem[] = [
     permissions: ['VIEW_CATALOG', 'MANAGE_CATALOG'],
   },
   { key: 'store', href: '/dashboard/store', permissions: ['MANAGE_STORE'] },
-  { key: 'integrations', href: '/dashboard/integrations', permissions: ['MANAGE_INTEGRATIONS'] },
+  { key: 'integrations', href: '/dashboard/integrations', permissions: [], ownerOnly: true },
   { key: 'users', href: '/dashboard/users', permissions: [], ownerOnly: true },
 ];
 

@@ -3,10 +3,10 @@
  * client components, which must not pull the Core barrel into the browser bundle. A unit test
  * keeps these values aligned with Core's UserPermission enum.
  * MANAGE_USERS and MANAGE_INVENTORY are intentionally absent: user management is owner-only and
- * inventory is edited through the catalog permission.
+ * inventory is edited through the catalog permission. Integrations (Kivi) are owner-only too.
  */
 export interface PermissionGroup {
-  key: 'orders' | 'catalog' | 'reports' | 'store' | 'integrations';
+  key: 'orders' | 'catalog' | 'reports' | 'store';
   permissions: readonly string[];
 }
 
@@ -15,7 +15,6 @@ export const PERMISSION_GROUPS: readonly PermissionGroup[] = [
   { key: 'catalog', permissions: ['VIEW_CATALOG', 'MANAGE_CATALOG'] },
   { key: 'reports', permissions: ['VIEW_REPORTS'] },
   { key: 'store', permissions: ['MANAGE_STORE'] },
-  { key: 'integrations', permissions: ['MANAGE_INTEGRATIONS'] },
 ];
 
 export const INVITATION_EXPIRY_OPTIONS: readonly number[] = [1, 3, 7, 14, 30];

@@ -4,7 +4,6 @@ import { headers } from 'next/headers';
 import { getTranslations } from 'next-intl/server';
 import { revalidatePath } from 'next/cache';
 import {
-  UserPermission,
   InvalidKiviPairingCodeException,
   KiviConfigurationException,
   KiviConnectionNotFoundException,
@@ -13,7 +12,7 @@ import {
 } from '@canaldigital/packages/core';
 import { createClient } from '@/lib/supabase/server';
 import { resolveActionTenant } from '@/features/dashboard/server/resolve-action-tenant';
-import { userHasAnyPermission } from '@/features/users/queries/member-permissions.query';
+import { userIsOwner } from '@/features/users/queries/member-permissions.query';
 import {
   getPairStoreWithKiviUseCase,
   getRegisterKiviToolsUseCase,
@@ -68,8 +67,7 @@ async function resolveActor(formData: FormData): Promise<Actor | 'CONTEXT_CHANGE
   if (!user) return null;
   const tenant = await resolveActionTenant(formData, user.id);
   if (!tenant) return 'CONTEXT_CHANGED';
-  if (!(await userHasAnyPermission(user.id, tenant.tenantId, [UserPermission.MANAGE_INTEGRATIONS])))
-    return null;
+  if (!(await userIsOwner(user.id, tenant.tenantId))) return null;
   return { userId: user.id, tenantId: tenant.tenantId };
 }
 

@@ -18,7 +18,7 @@ export class PostgresSellerOrderAccessAdapter implements SellerOrderAccessPort {
       >(async (sql): Promise<boolean> => {
         const rows = await sql`SELECT id FROM core.tenant_memberships
             WHERE user_id=${userId}::uuid AND tenant_id=${tenantId}::uuid
-            AND status='active' AND role IN ('OWNER','ADMIN')
+            AND status='active' AND core.member_has_permission(user_id, tenant_id, ARRAY['MANAGE_ORDERS']::text[])
             AND EXISTS(SELECT 1 FROM sales.orders o WHERE o.id=${orderId}::uuid AND o.tenant_id=${tenantId}::uuid)
             FOR SHARE`;
         return rows.length === 1;

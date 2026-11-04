@@ -122,3 +122,15 @@ export async function requireDashboardPermission(
   }
   return context;
 }
+
+/** Page guard for areas that are never delegated: only the OWNER passes. */
+export async function requireDashboardOwner(
+  requestedTenantId?: string | null,
+): Promise<DashboardPermissionContext> {
+  const context = await requireDashboardMember(requestedTenantId);
+  if (context.member.baseRole !== 'OWNER') {
+    const { memberships } = await getDashboardContextQuery();
+    redirect(withTenant('/dashboard?denied=1', memberships.length > 1 ? context.tenantId : null));
+  }
+  return context;
+}
