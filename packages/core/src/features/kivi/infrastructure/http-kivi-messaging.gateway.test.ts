@@ -106,6 +106,23 @@ describe('Kivi messaging HTTP contracts', (): void => {
     ).readSettings(target);
     expect(settings.language).toBe('en_US');
   });
+  it('treats a missing Kivi widget as skipped, not as an error', async (): Promise<void> => {
+    const ok = options({ enabled: true });
+    expect(await new HttpKiviWhatsAppGateway(ok).syncWidgetHandoff(target, true)).toBe(true);
+    expect(ok.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/channels/whatsapp/widget-handoff'),
+      expect.objectContaining({ method: 'PUT', body: JSON.stringify({ enabled: true }) }),
+    );
+    expect(
+      await new HttpKiviWhatsAppGateway(options({ detail: 'x' }, 409)).syncWidgetHandoff(
+        target,
+        true,
+      ),
+    ).toBe(false);
+    await expect(
+      new HttpKiviWhatsAppGateway(options({}, 403)).syncWidgetHandoff(target, true),
+    ).rejects.toMatchObject({ status: 403 });
+  });
   it('allowlists validation metadata and masks provider secrets and errors', async (): Promise<void> => {
     const result = await new HttpKiviWhatsAppGateway(
       options({ valid: true, phone_display: '+593', verified_name: 'Store', token: 'leaked' }),
