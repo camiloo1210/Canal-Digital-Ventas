@@ -5,6 +5,8 @@ import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { OAUTH_INTENT_COOKIE, OAUTH_RETURN_COOKIE } from '@/features/iam/constants';
 import { safeAuthReturnPath, buyerAuthHref } from '@/features/iam/utils/auth-return-path';
+import { INVITE_GOOGLE_COOKIE } from '@/features/users/constants';
+import { parseGoogleInviteCookie } from '@/features/users/google-invite-cookie';
 
 const oauthQuerySchema = z.object({
   code: z.string().min(1, 'Authorization code is missing'),
@@ -18,6 +20,16 @@ export async function GET(request: Request): Promise<NextResponse> {
   const returnPath = safeAuthReturnPath(requestedReturn);
   cookieStore.delete(OAUTH_RETURN_COOKIE);
 
+  // A pending Google invitation (set by startGoogleInvitationAction). One use: always cleared, and
+  // its contents are re-validated here because cookies are client-controlled input.
+  const rawInviteCookie = cookieStore.get(INVITE_GOOGLE_COOKIE)?.value;
+  if (rawInviteCookie !== undefined) cookieStore.delete(INVITE_GOOGLE_COOKIE);
+  const pendingInvite = parseGoogleInviteCookie(rawInviteCookie);
+  const inviteRedirect = (error: string): NextResponse =>
+    NextResponse.redirect(
+      new URL(`/invite/${pendingInvite?.token ?? ''}?error=${error}`, requestUrl.origin),
+    );
+
   const validation = oauthQuerySchema.safeParse({ code: codeParam });
 
   if (validation.success) {
@@ -26,6 +38,7 @@ export async function GET(request: Request): Promise<NextResponse> {
       await useCase.execute(validation.data.code);
     } catch (error) {
       console.error('Error exchanging code:', error);
+      if (pendingInvite) return inviteRedirect('googleFailed');
       return NextResponse.redirect(
         new URL(`${buyerAuthHref('/login', returnPath)}&error=auth_failed`, requestUrl.origin),
       );
@@ -45,6 +58,16 @@ export async function GET(request: Request): Promise<NextResponse> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  if (pendingInvite) {
+    if (!user) return inviteRedirect('googleFailed');
+    // Loaded on demand: ordinary sign-ins never need the invitation (database) wiring.
+    const { completeGoogleInvitation } = await import('@/features/users/google-invitation');
+    const result = await completeGoogleInvitation(pendingInvite, user.id);
+    return result.ok
+      ? NextResponse.redirect(new URL('/dashboard', requestUrl.origin))
+      : inviteRedirect(result.error);
+  }
 
   if (!user) {
     return NextResponse.redirect(

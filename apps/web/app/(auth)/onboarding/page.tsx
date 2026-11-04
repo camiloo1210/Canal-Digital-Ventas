@@ -1,4 +1,6 @@
 import { OnboardingForm } from '@/features/iam/ui/components/onboarding-form';
+import { getTranslations } from 'next-intl/server';
+import { getBusinessAccountReadRepository } from '@/features/iam/di/business-account.di';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Image from 'next/image';
@@ -19,6 +21,10 @@ export default async function OnboardingPage(): Promise<React.JSX.Element> {
     redirect('/login');
   }
 
+  // Business accounts belong to one company and can never create another: no form for them.
+  const isBusinessAccount = await getBusinessAccountReadRepository().isBusinessAccount(user.id);
+  const t = await getTranslations('Users.errors');
+
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="flex flex-col gap-4 p-6 md:p-10">
@@ -38,7 +44,16 @@ export default async function OnboardingPage(): Promise<React.JSX.Element> {
                 Solo toma un minuto dejar todo listo para empezar a vender.
               </p>
             </div>
-            <OnboardingForm />
+            {isBusinessAccount ? (
+              <div
+                role="alert"
+                className="bg-destructive/15 text-destructive border border-destructive/50 p-3 rounded-md text-sm font-medium"
+              >
+                {t('businessAccountBound')}
+              </div>
+            ) : (
+              <OnboardingForm />
+            )}
           </div>
         </div>
       </div>
