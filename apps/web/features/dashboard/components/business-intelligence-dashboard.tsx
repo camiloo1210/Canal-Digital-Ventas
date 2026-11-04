@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
+import { TenantLink as Link } from '@/features/dashboard/components/tenant-scope';
 import { useLocale, useTranslations } from 'next-intl';
 import {
   ArrowUpRight,

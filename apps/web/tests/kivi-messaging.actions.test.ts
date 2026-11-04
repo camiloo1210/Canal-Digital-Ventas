@@ -6,16 +6,19 @@ import {
   getConfigureKiviNotificationsUseCase,
 } from '@/features/kivi/di/kivi.di';
 import { createClient } from '@/lib/supabase/server';
-import { getActiveTenantQuery } from '@/features/iam/queries/active-tenant.query';
+import { resolveActiveTenantQuery } from '@/features/iam/queries/active-tenant.query';
 import { KiviConnectionNotFoundException, MessagingException } from '@canaldigital/packages/core';
 
+vi.mock('@/features/users/queries/member-permissions.query', (): object => ({
+  userHasAnyPermission: vi.fn(async (): Promise<boolean> => true),
+}));
 vi.mock('next-intl/server', (): object => ({
   getTranslations: vi.fn().mockResolvedValue((key: string): string => key),
 }));
 vi.mock('next/cache', (): object => ({ revalidatePath: vi.fn() }));
 vi.mock('@/lib/supabase/server', (): object => ({ createClient: vi.fn() }));
 vi.mock('@/features/iam/queries/active-tenant.query', (): object => ({
-  getActiveTenantQuery: vi.fn(),
+  resolveActiveTenantQuery: vi.fn(),
 }));
 vi.mock('@/features/kivi/di/kivi.di', (): object => ({
   getConfigureKiviWhatsAppUseCase: vi.fn(),
@@ -23,8 +26,10 @@ vi.mock('@/features/kivi/di/kivi.di', (): object => ({
 }));
 const execute = vi.fn();
 const initial = { success: false, message: null };
+const SERVER_TENANT = crypto.randomUUID();
 function form(fields: Record<string, string>): FormData {
   const data = new FormData();
+  data.set('tenantId', SERVER_TENANT);
   for (const [key, value] of Object.entries(fields)) data.set(key, value);
   return data;
 }
@@ -38,8 +43,20 @@ describe('Kivi messaging action boundary', (): void => {
     vi.mocked(createClient).mockResolvedValue({
       auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'server-user' } } }) },
     } as unknown as Awaited<ReturnType<typeof createClient>>);
-    vi.mocked(getActiveTenantQuery).mockResolvedValue(
-      'server-tenant' as Awaited<ReturnType<typeof getActiveTenantQuery>>,
+    vi.mocked(resolveActiveTenantQuery).mockImplementation(
+      async (
+        _user: string,
+        id: string,
+      ): Promise<Awaited<ReturnType<typeof resolveActiveTenantQuery>>> =>
+        id === SERVER_TENANT
+          ? {
+              status: 'ready',
+              tenantId: SERVER_TENANT,
+              tenantName: 'S',
+              tenantSlug: 's',
+              role: 'OWNER',
+            }
+          : null,
     );
     vi.mocked(getConfigureKiviWhatsAppUseCase).mockReturnValue({ execute } as unknown as ReturnType<
       typeof getConfigureKiviWhatsAppUseCase
@@ -55,7 +72,6 @@ describe('Kivi messaging action boundary', (): void => {
         operation: 'connect',
         phoneNumberId: '123',
         token: 'meta-secret',
-        tenantId: 'attacker',
         userId: 'attacker',
       }),
     );
@@ -64,7 +80,7 @@ describe('Kivi messaging action boundary', (): void => {
       phoneNumberId: '123',
       token: 'meta-secret',
       userId: 'server-user',
-      tenantId: 'server-tenant',
+      tenantId: SERVER_TENANT,
     });
     expect(JSON.stringify(result)).not.toContain('meta-secret');
   });
@@ -98,7 +114,6 @@ describe('Kivi messaging action boundary', (): void => {
         whatsappEnabled: 'on',
         templateName: 'order_update',
         language: 'es',
-        tenantId: 'attacker',
       }),
     );
     expect(result.success).toBe(true);
@@ -108,7 +123,7 @@ describe('Kivi messaging action boundary', (): void => {
       templateName: 'order_update',
       language: 'es',
       userId: 'server-user',
-      tenantId: 'server-tenant',
+      tenantId: SERVER_TENANT,
     });
   });
   it('rejects a file or unexpected string used as a notification checkbox', async (): Promise<void> => {
@@ -171,7 +186,37 @@ describe('Kivi messaging action boundary', (): void => {
       'unauthorized',
     );
     expect((await configureKiviWhatsAppAction(initial, form({}))).message).toBe('unauthorized');
-    expect(getActiveTenantQuery).not.toHaveBeenCalled();
+    expect(resolveActiveTenantQuery).not.toHaveBeenCalled();
     expect(execute).not.toHaveBeenCalled();
   });
+
+  it.each([
+    [
+      'missing',
+      (): FormData => {
+        const d = form({ phoneNumberId: '123', token: 't', operation: 'connect' });
+        d.delete('tenantId');
+        return d;
+      },
+    ],
+    [
+      'foreign',
+      (): FormData =>
+        form({
+          phoneNumberId: '123',
+          token: 't',
+          operation: 'connect',
+          tenantId: crypto.randomUUID(),
+        }),
+    ],
+  ])(
+    'rejects a %s tenantId on every messaging mutation without executing',
+    async (_label, make): Promise<void> => {
+      expect((await configureKiviWhatsAppAction(initial, make())).message).toBe('contextChanged');
+      expect((await configureKiviNotificationsAction(initial, make())).message).toBe(
+        'contextChanged',
+      );
+      expect(execute).not.toHaveBeenCalled();
+    },
+  );
 });

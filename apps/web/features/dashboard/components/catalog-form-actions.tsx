@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { TenantLink as Link } from '@/features/dashboard/components/tenant-scope';
 import { useFormStatus } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import { Loader2, Check } from 'lucide-react';

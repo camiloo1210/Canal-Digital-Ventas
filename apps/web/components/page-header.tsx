@@ -1,5 +1,5 @@
 import React from 'react';
-import Link from 'next/link';
+import { TenantLink as Link } from '@/features/dashboard/components/tenant-scope';
 import { ArrowLeft } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { SidebarTrigger } from '@/components/ui/sidebar';

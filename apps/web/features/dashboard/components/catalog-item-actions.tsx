@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import Link from 'next/link';
+import { TenantLink as Link } from '@/features/dashboard/components/tenant-scope';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { MoreHorizontal, Pencil, Archive, ArchiveRestore, Loader2 } from 'lucide-react';

@@ -14,7 +14,7 @@ vi.mock('next-intl/server', (): object => ({
   > => createTranslator({ locale: 'es', messages: es.BusinessIntelligence }),
 }));
 vi.mock('@/features/dashboard/queries/dashboard-context.query', (): object => ({
-  requireDashboardTenant: async (): Promise<{ userId: string; tenantId: string }> => ({
+  requireDashboardPermission: async (): Promise<{ userId: string; tenantId: string }> => ({
     userId: 'actor',
     tenantId: 'tenant',
   }),

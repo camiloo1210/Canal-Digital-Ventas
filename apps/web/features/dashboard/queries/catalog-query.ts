@@ -1,3 +1,4 @@
+import 'server-only';
 import type { AdminCatalogQuery, CatalogStatus } from '@canaldigital/packages/core';
 
 export type CatalogKind = 'products' | 'categories';
@@ -28,10 +29,12 @@ export function catalogHref(
   kind: CatalogKind,
   query: AdminCatalogQuery,
   page = query.page,
+  tenantId: string | null = null,
 ): string {
   const params = new URLSearchParams();
   if (query.q) params.set('q', query.q);
   if (query.status !== 'all') params.set('status', query.status);
   if (page > 1) params.set('page', String(page));
+  if (tenantId) params.set('tenant', tenantId);
   return '/dashboard/catalog/' + kind + (params.size ? '?' + params.toString() : '');
 }

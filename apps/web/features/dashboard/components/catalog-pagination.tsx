@@ -14,11 +14,13 @@ export async function CatalogPagination({
   query,
   totalItems,
   totalPages,
+  tenantId = null,
 }: {
   kind: CatalogKind;
   query: AdminCatalogQuery;
   totalItems: number;
   totalPages: number;
+  tenantId?: string | null;
 }): Promise<React.JSX.Element> {
   const t = await getTranslations('AdminCatalog');
   const from = totalItems === 0 ? 0 : (query.page - 1) * query.limit + 1;
@@ -33,7 +35,7 @@ export async function CatalogPagination({
           <PaginationItem>
             {query.page > 1 ? (
               <PaginationLink
-                href={catalogHref(kind, query, query.page - 1)}
+                href={catalogHref(kind, query, query.page - 1, tenantId)}
                 aria-label={t('previous')}
               >
                 <ChevronLeft aria-hidden="true" className="size-4" />
@@ -56,7 +58,7 @@ export async function CatalogPagination({
           <PaginationItem>
             {query.page < totalPages ? (
               <PaginationLink
-                href={catalogHref(kind, query, query.page + 1)}
+                href={catalogHref(kind, query, query.page + 1, tenantId)}
                 aria-label={t('next')}
               >
                 <ChevronRight aria-hidden="true" className="size-4" />

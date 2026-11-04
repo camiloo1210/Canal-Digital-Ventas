@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { TenantLink as Link } from '@/features/dashboard/components/tenant-scope';
 import { ArrowLeft } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { PageHeader } from '@/components/page-header';

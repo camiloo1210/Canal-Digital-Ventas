@@ -1,15 +1,17 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { invalidateActiveTenantCatalog } from '@/features/store/utils/catalog-invalidation';
+import { invalidateTenantCatalog } from '@/features/store/utils/catalog-invalidation';
 import { getTranslations } from 'next-intl/server';
 import {
+  UserPermission,
   DomainException,
   OrderNotFoundException,
   OptimisticConcurrencyException,
 } from '@canaldigital/packages/core';
 import { createClient } from '@/lib/supabase/server';
-import { getActiveTenantQuery } from '@/features/iam/queries/active-tenant.query';
+import { resolveActionTenant } from '@/features/dashboard/server/resolve-action-tenant';
+import { userHasAnyPermission } from '@/features/users/queries/member-permissions.query';
 import { ordersDi } from '@/features/orders/di/orders.di';
 import { changeOrderStatusSchema } from '@/features/orders/schemas/change-order-status.schema';
 
@@ -22,6 +24,7 @@ export interface ChangeOrderStatusActionState {
     | 'CONCURRENCY'
     | 'INVALID_STATE'
     | 'UNEXPECTED'
+    | 'CONTEXT_CHANGED'
     | null;
   readonly message?: string;
 }
@@ -45,15 +48,22 @@ export async function changeOrderStatusAction(
     });
     if (!parsed.success)
       return { success: false, errorCode: 'INVALID_INPUT', message: t('errors.INVALID_INPUT') };
-    const tenantId = await getActiveTenantQuery(user.id);
-    if (!tenantId)
-      return { success: false, errorCode: 'NOT_FOUND', message: t('errors.NOT_FOUND') };
+    const tenant = await resolveActionTenant(formData, user.id);
+    if (!tenant)
+      return {
+        success: false,
+        errorCode: 'CONTEXT_CHANGED',
+        message: t('errors.CONTEXT_CHANGED'),
+      };
+    const tenantId = tenant.tenantId;
+    if (!(await userHasAnyPermission(user.id, tenantId, [UserPermission.MANAGE_ORDERS])))
+      return { success: false, errorCode: 'UNAUTHORIZED', message: t('errors.UNAUTHORIZED') };
     await ordersDi.resolveChangeOrderStatusUseCase().execute({
       ...parsed.data,
       tenantId,
       authenticatedSellerId: user.id,
     });
-    await invalidateActiveTenantCatalog(user.id);
+    await invalidateTenantCatalog(tenant.tenantSlug);
     revalidatePath('/dashboard/orders');
     revalidatePath('/dashboard');
     revalidatePath('/');

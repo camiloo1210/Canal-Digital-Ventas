@@ -6,9 +6,12 @@ export const productImageUploadsSchema = z.object({
     .array(z.enum(['image/jpeg', 'image/png', 'image/webp']))
     .min(1)
     .max(PRODUCT_IMAGE_MAX_COUNT),
+  /** The business the form was rendered for; verified server-side, never trusted. */
+  tenantId: z.string().max(64).optional(),
 });
 
-export type ProductImageUploadErrorCode = 'UNAUTHORIZED' | 'INVALID_INPUT' | 'UNEXPECTED';
+export type ProductImageUploadErrorCode =
+  'UNAUTHORIZED' | 'INVALID_INPUT' | 'CONTEXT_CHANGED' | 'UNEXPECTED';
 
 export interface ProductImageUploadSlot {
   path: string;

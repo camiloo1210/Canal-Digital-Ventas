@@ -1,6 +1,7 @@
 'use client';
 
 import { useActionState, useRef, useState } from 'react';
+import { TenantIdField } from '@/features/dashboard/components/tenant-scope';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import {
@@ -81,6 +82,7 @@ export function ProductForm({
         }
       }}
     >
+      <TenantIdField />
       {product && (
         <>
           <input type="hidden" name="productId" value={product.id} />

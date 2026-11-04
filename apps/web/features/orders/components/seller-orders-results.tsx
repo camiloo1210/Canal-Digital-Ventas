@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { withTenant } from '@/features/dashboard/utils/tenant-scope';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { ChevronLeft, ChevronRight, PackageSearch } from 'lucide-react';
@@ -65,6 +66,7 @@ export async function SellerOrdersResults({
             <input type="hidden" name="status" value={query.status} />
             <input type="hidden" name="page" value={query.page} />
             {query.order && <input type="hidden" name="order" value={query.order} />}
+            <input type="hidden" name="tenant" value={tenantId} />
             <Button type="submit" variant="outline" className="mt-3 min-h-11">
               {t('retry')}
             </Button>
@@ -121,7 +123,7 @@ export async function SellerOrdersResults({
                   role="link"
                   variant="outline"
                   className="min-h-11"
-                  render={<Link href="/dashboard/orders" />}
+                  render={<Link href={withTenant('/dashboard/orders', tenantId)} />}
                 >
                   {t('clear')}
                 </Button>

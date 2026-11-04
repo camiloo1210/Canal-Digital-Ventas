@@ -1,12 +1,13 @@
 import { getMessages, getTranslations } from 'next-intl/server';
 import { NextIntlClientProvider } from 'next-intl';
-import { requireDashboardTenant } from '@/features/dashboard/queries/dashboard-context.query';
+import { requireDashboardPermission } from '@/features/dashboard/queries/dashboard-context.query';
 import {
   getKiviConnectionReadRepository,
   getKiviKnowledgeReadRepository,
   getKiviMessagingReadRepository,
 } from '@/features/kivi/di/kivi.di';
 import {
+  UserPermission,
   KIVI_KNOWLEDGE_MAX_DOCUMENTS,
   kiviKnowledgeDisplayName,
 } from '@canaldigital/packages/core';
@@ -20,11 +21,20 @@ import { KiviNotificationsPanel } from '@/features/kivi/components/kivi-notifica
 import { KiviDeliveriesPanel } from '@/features/kivi/components/kivi-deliveries-panel';
 import type { KiviMessagingStatus } from '@canaldigital/packages/core';
 import { PageHeader } from '@/components/page-header';
+import { TenantScope } from '@/features/dashboard/components/tenant-scope';
+import { tenantParam, type TenantSearchParams } from '@/features/dashboard/utils/tenant-scope';
 
-export default async function IntegrationsPage(): Promise<React.JSX.Element> {
+export default async function IntegrationsPage({
+  searchParams,
+}: {
+  searchParams: Promise<TenantSearchParams>;
+}): Promise<React.JSX.Element> {
   const t = await getTranslations('KiviConnection');
   const messages = await getMessages();
-  const { userId, tenantId } = await requireDashboardTenant();
+  const { userId, tenantId } = await requireDashboardPermission(
+    UserPermission.MANAGE_INTEGRATIONS,
+    tenantParam((await searchParams).tenant),
+  );
   // Owner-only projection: null both when unlinked and when the user is not an owner.
   const connection = await getKiviConnectionReadRepository().findForOwner(userId, tenantId);
   let messaging: KiviMessagingStatus = { channel: 'unavailable', settings: null, deliveries: null };
@@ -60,37 +70,39 @@ export default async function IntegrationsPage(): Promise<React.JSX.Element> {
   }
 
   return (
-    <div className="flex flex-1 flex-col">
-      <PageHeader breadcrumbs={[{ label: t('title'), href: null }]} />
-      <div className="mx-auto w-full max-w-6xl space-y-8 px-4 py-6 lg:px-6 lg:py-10">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-[2rem]">{t('title')}</h1>
-          <p className="mt-2 text-muted-foreground">{t('subtitle')}</p>
+    <TenantScope tenantId={tenantId}>
+      <div className="flex flex-1 flex-col">
+        <PageHeader breadcrumbs={[{ label: t('title'), href: null }]} />
+        <div className="mx-auto w-full max-w-6xl space-y-8 px-4 py-6 lg:px-6 lg:py-10">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-[2rem]">{t('title')}</h1>
+            <p className="mt-2 text-muted-foreground">{t('subtitle')}</p>
+          </div>
+          <NextIntlClientProvider
+            messages={{
+              KiviConnection: messages.KiviConnection,
+              KiviMessaging: messages.KiviMessaging,
+              KiviKnowledge: messages.KiviKnowledge,
+            }}
+          >
+            <KiviConnectionPanel connection={connection} />
+            <KiviKnowledgePanel
+              linked={connection !== null}
+              documents={knowledge}
+              available={knowledgeAvailable}
+              maxDocuments={KIVI_KNOWLEDGE_MAX_DOCUMENTS}
+            />
+            <KiviWhatsAppPanel linked={connection !== null} channel={messaging.channel} />
+            <KiviNotificationsPanel
+              settings={messaging.settings}
+              available={messaging.settings !== null}
+              workerEnabled={process.env.KIVI_NOTIFICATIONS_ENABLED === 'true'}
+              channel={messaging.channel}
+            />
+            <KiviDeliveriesPanel deliveries={messaging.deliveries} />
+          </NextIntlClientProvider>
         </div>
-        <NextIntlClientProvider
-          messages={{
-            KiviConnection: messages.KiviConnection,
-            KiviMessaging: messages.KiviMessaging,
-            KiviKnowledge: messages.KiviKnowledge,
-          }}
-        >
-          <KiviConnectionPanel connection={connection} />
-          <KiviKnowledgePanel
-            linked={connection !== null}
-            documents={knowledge}
-            available={knowledgeAvailable}
-            maxDocuments={KIVI_KNOWLEDGE_MAX_DOCUMENTS}
-          />
-          <KiviWhatsAppPanel linked={connection !== null} channel={messaging.channel} />
-          <KiviNotificationsPanel
-            settings={messaging.settings}
-            available={messaging.settings !== null}
-            workerEnabled={process.env.KIVI_NOTIFICATIONS_ENABLED === 'true'}
-            channel={messaging.channel}
-          />
-          <KiviDeliveriesPanel deliveries={messaging.deliveries} />
-        </NextIntlClientProvider>
       </div>
-    </div>
+    </TenantScope>
   );
 }
