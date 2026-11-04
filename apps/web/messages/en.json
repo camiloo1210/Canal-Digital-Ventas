@@ -1111,6 +1111,8 @@
   },
   "KiviMessaging": {
     "title": "WhatsApp channel",
+    "widgetEnabled": "The web widget “Continue on WhatsApp” button now uses this number.",
+    "widgetSkipped": "The web widget WhatsApp button was not enabled: create the widget in Kivi first.",
     "connectedTitle": "WhatsApp is already connected in Kivi",
     "connectedNumber": "Connected number",
     "tokenStored": "Token stored encrypted in Kivi",
