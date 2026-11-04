@@ -1,6 +1,8 @@
 import { PRODUCT_AGGREGATE_TYPE } from '@/products/application/outbox/product-aggregate.constants';
 import { ProductRepositoryPort } from '@/products/application/ports/out/product-repository.port';
 import { ProductNotFoundException } from '@/products/application/exceptions/product-not-found.exception';
+import { CategoryRepositoryPort } from '@/categories/application/ports/out/category-repository.port';
+import { CategoryNotFoundException } from '@/categories/application/exceptions/category-not-found.exception';
 import { UpdateProductDto } from '@/products/application/dtos/update-product.dto';
 import {
   EventBusPort,
@@ -19,6 +21,7 @@ import { OptimisticConcurrencyException } from '@/shared/application/exceptions/
 export class UpdateProductUseCase {
   constructor(
     private readonly productRepository: ProductRepositoryPort,
+    private readonly categoryRepository: CategoryRepositoryPort,
     private readonly eventBus: EventBusPort,
     private readonly transactionManager: TransactionManagerPort,
   ) {}
@@ -46,6 +49,11 @@ export class UpdateProductUseCase {
         const wholesalePrice = dto.wholesalePrice ? Money.from(dto.wholesalePrice) : Money.from(0);
         const wholesaleMinQuantity = dto.wholesaleMinQuantity ?? 0;
         const categoryId = createCategoryId(dto.categoryId);
+        // Tenant-scoped lookup: a category of another tenant is indistinguishable from a missing one.
+        const category = await this.categoryRepository.findById(categoryId, tenantId, tx);
+        if (!category) {
+          throw new CategoryNotFoundException(dto.categoryId);
+        }
         const seasonIds = dto.seasonIds.map((id): SeasonId => createSeasonId(id));
 
         product.changeDetails(

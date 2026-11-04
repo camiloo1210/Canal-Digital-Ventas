@@ -4,6 +4,8 @@ export type {
 } from '@/dashboard/application/ports/out/dashboard-overview-read.port';
 export { PostgresDashboardOverviewReadAdapter } from '@/dashboard/infrastructure/postgres-dashboard-overview-read.adapter';
 export type {
+  ActiveMembershipSummary,
+  ActiveTenantReadyContext,
   ActiveTenantContextReadModel,
   ActiveTenantContextReadPort,
 } from '@/iam/application/ports/out/active-tenant-context-read.port';
@@ -433,3 +435,168 @@ export { PostgresBuyerCartRepository } from '@/carts/infrastructure/postgres/pos
 export { PostgresBuyerCartCatalogReadRepository } from '@/carts/infrastructure/postgres/postgres-buyer-cart-catalog-read.repository';
 export { loadCartRetentionWorkerConfig } from '@/carts/infrastructure/cart-retention-worker-config';
 export { runCartRetentionWorker } from '@/carts/infrastructure/cart-retention-worker';
+
+// User management: custom tenant roles, invitations, own profile, demographics (HU-18..21).
+export { UserPermission } from '@/iam/domain/enums/permission.enum';
+export { resolveEffectivePermissions } from '@/iam/domain/effective-permissions';
+export {
+  INVITATION_DEFAULT_EXPIRY_DAYS,
+  INVITATION_MAX_EXPIRY_DAYS,
+  INVITATION_MAX_USES_LIMIT,
+} from '@/iam/domain/entities/invitation.entity';
+export {
+  INVITATION_ACCOUNT_MODES,
+  DEFAULT_INVITATION_ACCOUNT_MODE,
+  parseInvitationAccountMode,
+  type InvitationAccountMode,
+} from '@/iam/domain/value-objects/invitation-account-mode.vo';
+export {
+  StaffEmailGenerator,
+  slugifyPersonName,
+  isGeneratedStaffEmailOf,
+  STAFF_EMAIL_DOMAIN_SUFFIX,
+} from '@/iam/domain/services/staff-email-generator';
+export {
+  CreateStaffAccountUseCase,
+  type CreateStaffAccountDto,
+  type CreateStaffAccountResult,
+} from '@/iam/application/use-cases/create-staff-account.use-case';
+export { EmailAlreadyRegisteredException } from '@/iam/application/exceptions/email-already-registered.exception';
+export { StaffAccountConfirmationRequiredException } from '@/iam/application/exceptions/staff-account-confirmation-required.exception';
+export { StaffEmailGenerationExhaustedException } from '@/iam/application/exceptions/staff-email-generation-exhausted.exception';
+export type { AdminAuthPort } from '@/iam/application/ports/out/admin-auth.port';
+export type { AuthPort } from '@/iam/application/ports/out/auth.port';
+export { AGE_RANGES, type AgeRangeValue } from '@/iam/domain/value-objects/age-range.vo';
+export { GENDERS, type GenderValue } from '@/iam/domain/value-objects/gender.vo';
+export { PROVINCES, type ProvinceValue } from '@/iam/domain/value-objects/province.vo';
+export { InvalidTenantRoleException } from '@/iam/domain/exceptions/invalid-tenant-role.exception';
+export { InvalidInvitationException } from '@/iam/domain/exceptions/invalid-invitation.exception';
+export { InvitationNotUsableException } from '@/iam/domain/exceptions/invitation-not-usable.exception';
+export { InvalidDemographicBucketException } from '@/iam/domain/exceptions/invalid-demographic-bucket.exception';
+export { InvalidPersonNameException } from '@/shared/domain/exceptions/invalid-person-name.exception';
+export { UserManagementForbiddenException } from '@/iam/application/exceptions/user-management-forbidden.exception';
+export { TenantRoleNotFoundException } from '@/iam/application/exceptions/tenant-role-not-found.exception';
+export { TenantRoleNameTakenException } from '@/iam/application/exceptions/tenant-role-name-taken.exception';
+export { TenantRoleInUseException } from '@/iam/application/exceptions/tenant-role-in-use.exception';
+export { InvitationNotFoundException } from '@/iam/application/exceptions/invitation-not-found.exception';
+export { MemberNotFoundException } from '@/iam/application/exceptions/member-not-found.exception';
+export { ProtectedMemberException } from '@/iam/application/exceptions/protected-member.exception';
+export { MemberNotActiveException } from '@/iam/application/exceptions/member-not-active.exception';
+export { BusinessAccountBoundException } from '@/iam/application/exceptions/business-account-bound.exception';
+export { AlreadyMemberException } from '@/iam/application/exceptions/already-member.exception';
+export { UserManagementRepositoryException } from '@/iam/application/exceptions/user-management-repository.exception';
+export {
+  DEMOGRAPHIC_MIN_BUCKET_SIZE,
+  DEMOGRAPHIC_MIN_TOTAL_SAMPLES,
+} from '@/iam/application/demographic-k-anonymity';
+
+export {
+  CreateTenantRoleUseCase,
+  type CreateTenantRoleDto,
+} from '@/iam/application/use-cases/create-tenant-role.use-case';
+export {
+  UpdateTenantRoleUseCase,
+  type UpdateTenantRoleDto,
+} from '@/iam/application/use-cases/update-tenant-role.use-case';
+export {
+  DeleteTenantRoleUseCase,
+  type DeleteTenantRoleDto,
+} from '@/iam/application/use-cases/delete-tenant-role.use-case';
+export {
+  CreateInvitationUseCase,
+  type CreateInvitationDto,
+  type CreateInvitationResult,
+} from '@/iam/application/use-cases/create-invitation.use-case';
+export {
+  RevokeInvitationUseCase,
+  type RevokeInvitationDto,
+} from '@/iam/application/use-cases/revoke-invitation.use-case';
+export {
+  AcceptInvitationUseCase,
+  type AcceptInvitationDto,
+} from '@/iam/application/use-cases/accept-invitation.use-case';
+export {
+  AssignMemberRoleUseCase,
+  type AssignMemberRoleDto,
+} from '@/iam/application/use-cases/assign-member-role.use-case';
+export {
+  UpdateOwnProfileUseCase,
+  type UpdateOwnProfileDto,
+} from '@/iam/application/use-cases/update-own-profile.use-case';
+export { GetInvitationPreviewUseCase } from '@/iam/application/use-cases/get-invitation-preview.use-case';
+export {
+  UnlinkMemberUseCase,
+  type UnlinkMemberDto,
+  type UnlinkMemberResult,
+} from '@/iam/application/use-cases/unlink-member.use-case';
+export {
+  SetMemberActiveUseCase,
+  type SetMemberActiveDto,
+} from '@/iam/application/use-cases/set-member-active.use-case';
+export {
+  ResetManagedAccountPasswordUseCase,
+  MANAGED_PASSWORD_MIN_LENGTH,
+  type ResetManagedAccountPasswordDto,
+  type ResetManagedAccountPasswordResult,
+} from '@/iam/application/use-cases/reset-managed-account-password.use-case';
+export {
+  RenameManagedAccountUseCase,
+  type RenameManagedAccountDto,
+} from '@/iam/application/use-cases/rename-managed-account.use-case';
+export { PersonalAccountProtectedException } from '@/iam/application/exceptions/personal-account-protected.exception';
+export { AdminAuthUnavailableException } from '@/iam/application/exceptions/admin-auth-unavailable.exception';
+export { InvalidManagedPasswordException } from '@/iam/domain/exceptions/invalid-managed-password.exception';
+
+export type { SessionRevocationPort } from '@/iam/application/ports/out/session-revocation.port';
+export type { TenantOwnershipPort } from '@/iam/application/ports/out/tenant-ownership.port';
+export type { TenantRoleRepositoryPort } from '@/iam/application/ports/out/tenant-role-repository.port';
+export type { InvitationRepositoryPort } from '@/iam/application/ports/out/invitation-repository.port';
+export type { MembershipRepositoryPort } from '@/iam/application/ports/out/membership-repository.port';
+export type { UserProfileRepositoryPort } from '@/iam/application/ports/out/user-profile-repository.port';
+export type { SignupDemographicsPort } from '@/iam/application/ports/out/signup-demographics.port';
+export {
+  RecordSignupDemographicsUseCase,
+  type RecordSignupDemographicsDto,
+} from '@/iam/application/use-cases/record-signup-demographics.use-case';
+export { PostgresSignupDemographicsAdapter } from '@/iam/infrastructure/postgres/postgres-signup-demographics.adapter';
+export type { InvitationAcceptancePort } from '@/iam/application/ports/out/invitation-acceptance.port';
+export type { TokenGeneratorPort } from '@/iam/application/ports/out/token-generator.port';
+export type { TenantRoleReadPort } from '@/iam/application/ports/out/tenant-role-read.port';
+export type { InvitationReadPort } from '@/iam/application/ports/out/invitation-read.port';
+export type { MemberDirectoryReadPort } from '@/iam/application/ports/out/member-directory-read.port';
+export type { DemographicStatsReadPort } from '@/iam/application/ports/out/demographic-stats-read.port';
+export type { BusinessAccountReadPort } from '@/iam/application/ports/out/business-account-read.port';
+export type { InvitationPreviewReadPort } from '@/iam/application/ports/out/invitation-preview-read.port';
+export type { OwnProfileReadPort } from '@/iam/application/ports/out/own-profile-read.port';
+export type { MemberPermissionsReadPort } from '@/iam/application/ports/out/member-permissions-read.port';
+export type {
+  TenantRoleReadModel,
+  InvitationReadModel,
+  InvitationViewStatus,
+  MemberReadModel,
+  DemographicBucketCount,
+  DemographicDimensionStats,
+  DemographicStatsReadModel,
+  InvitationPreviewReadModel,
+  MemberPermissionsReadModel,
+  OwnProfileReadModel,
+} from '@/iam/application/read-models/user-management.read-models';
+
+export { NodeCryptoTokenGenerator } from '@/iam/infrastructure/node-crypto-token.generator';
+export { PostgresSessionRevocationAdapter } from '@/iam/infrastructure/postgres/postgres-session-revocation.adapter';
+export { PostgresTenantOwnershipAdapter } from '@/iam/infrastructure/postgres/postgres-tenant-ownership.adapter';
+export { PostgresTenantRoleRepository } from '@/iam/infrastructure/postgres/postgres-tenant-role.repository';
+export { PostgresInvitationRepository } from '@/iam/infrastructure/postgres/postgres-invitation.repository';
+export { PostgresMembershipRepository } from '@/iam/infrastructure/postgres/postgres-membership.repository';
+export { PostgresUserProfileRepository } from '@/iam/infrastructure/postgres/postgres-user-profile.repository';
+export { PostgresBusinessAccountReadRepository } from '@/iam/infrastructure/postgres/postgres-business-account-read.repository';
+export { PostgresInvitationAcceptanceAdapter } from '@/iam/infrastructure/postgres/postgres-invitation-acceptance.adapter';
+export {
+  PostgresTenantRoleReadRepository,
+  PostgresInvitationReadRepository,
+  PostgresMemberDirectoryReadRepository,
+  PostgresDemographicStatsReadRepository,
+  PostgresInvitationPreviewReadRepository,
+  PostgresMemberPermissionsReadRepository,
+  PostgresOwnProfileReadRepository,
+} from '@/iam/infrastructure/postgres/postgres-user-management-read.repositories';
