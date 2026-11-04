@@ -73,6 +73,28 @@ describe('Kivi messaging HTTP contracts', (): void => {
       new HttpKiviNotificationSettingsGateway(options(body)).readDeliveries(target),
     ).rejects.toMatchObject({ failure: 'transient' });
   });
+  it('exposes only non-secret identity of the connected WhatsApp number', async (): Promise<void> => {
+    const result = await new HttpKiviNotificationSettingsGateway(
+      options({
+        channel: 'whatsapp',
+        connected: true,
+        external_id: '1234567890',
+        name: '+57 300 000 0000',
+        access_token: 'secret',
+        webhook_subscribed: true,
+      }),
+    ).readChannel(target);
+    expect(result).toEqual({
+      connected: true,
+      phoneNumberId: '1234567890',
+      name: '+57 300 000 0000',
+    });
+    expect(
+      await new HttpKiviNotificationSettingsGateway(
+        options({ channel: 'whatsapp', connected: false, external_id: '99' }),
+      ).readChannel(target),
+    ).toEqual({ connected: false, phoneNumberId: null, name: null });
+  });
   it('reads a regional Meta locale without replacing it with a base language', async (): Promise<void> => {
     const settings = await new HttpKiviNotificationSettingsGateway(
       options({

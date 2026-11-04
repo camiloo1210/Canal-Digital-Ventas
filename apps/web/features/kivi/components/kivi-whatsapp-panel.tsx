@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { MessageCircle, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, KeyRound, MessageCircle, ShieldCheck } from 'lucide-react';
 import {
   configureKiviWhatsAppAction,
   type KiviWhatsAppActionState,
@@ -27,9 +27,11 @@ const INITIAL: KiviWhatsAppActionState = { success: false, message: null };
 export function KiviWhatsAppPanel({
   linked,
   channel,
+  account,
 }: {
   linked: boolean;
   channel: 'connected' | 'disconnected' | 'unavailable';
+  account: { phoneNumberId: string | null; name: string | null } | null;
 }): React.JSX.Element {
   const t = useTranslations('KiviMessaging');
   const [token, setToken] = useState('');
@@ -74,6 +76,44 @@ export function KiviWhatsAppPanel({
           <ShieldCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
           {t('security')}
         </p>
+        {linked && channel === 'connected' && (
+          <section
+            aria-labelledby="whatsapp-connected-title"
+            className="rounded-lg border border-success/30 bg-success/5 p-4"
+          >
+            <div className="flex items-center gap-2 text-success">
+              <CheckCircle2 aria-hidden="true" className="size-5 shrink-0" />
+              <h3 id="whatsapp-connected-title" className="font-medium">
+                {t('connectedTitle')}
+              </h3>
+            </div>
+            <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-3">
+              {account?.name && (
+                <div>
+                  <dt className="text-muted-foreground">{t('connectedNumber')}</dt>
+                  <dd className="font-medium">{account.name}</dd>
+                </div>
+              )}
+              {account?.phoneNumberId && (
+                <div>
+                  <dt className="text-muted-foreground">{t('phoneNumberId')}</dt>
+                  <dd className="font-mono font-medium">
+                    {`••••${account.phoneNumberId.slice(-4)}`}
+                  </dd>
+                </div>
+              )}
+              <div>
+                <dt className="text-muted-foreground">{t('token')}</dt>
+                <dd className="flex items-center gap-1.5 font-medium">
+                  <KeyRound aria-hidden="true" className="size-4" />
+                  <span aria-hidden="true">••••••••••••</span>
+                  <span className="sr-only">{t('tokenStored')}</span>
+                </dd>
+              </div>
+            </dl>
+            <p className="mt-3 text-sm text-muted-foreground">{t('replaceHint')}</p>
+          </section>
+        )}
         {!linked && (
           <p role="status" className="rounded-lg border bg-muted/40 p-4 text-sm">
             {t('linkFirst')}

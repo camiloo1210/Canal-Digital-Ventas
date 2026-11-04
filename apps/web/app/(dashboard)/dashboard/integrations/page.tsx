@@ -35,7 +35,12 @@ export default async function IntegrationsPage({
   );
   // Owner-only projection: null both when unlinked and when the user is not an owner.
   const connection = await getKiviConnectionReadRepository().findForOwner(userId, tenantId);
-  let messaging: KiviMessagingStatus = { channel: 'unavailable', settings: null, deliveries: null };
+  let messaging: KiviMessagingStatus = {
+    channel: 'unavailable',
+    account: null,
+    settings: null,
+    deliveries: null,
+  };
   if (connection) {
     try {
       messaging = await getKiviMessagingReadRepository().findForOwner(userId, tenantId);
@@ -90,7 +95,11 @@ export default async function IntegrationsPage({
               available={knowledgeAvailable}
               maxDocuments={KIVI_KNOWLEDGE_MAX_DOCUMENTS}
             />
-            <KiviWhatsAppPanel linked={connection !== null} channel={messaging.channel} />
+            <KiviWhatsAppPanel
+              linked={connection !== null}
+              channel={messaging.channel}
+              account={messaging.account}
+            />
             <KiviNotificationsPanel
               settings={messaging.settings}
               available={messaging.settings !== null}

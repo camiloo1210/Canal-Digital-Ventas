@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { KiviMessagingReadRepository } from '@/kivi/infrastructure/kivi-messaging-read.repository';
 import { connection, TENANT, TOKEN } from '@/kivi/application/kivi-test-doubles';
+import type { KiviChannelAccount } from '@/kivi/application/ports/out/kivi-messaging.port';
 import type { TransactionContext } from '@/shared/application/ports/out/transaction-manager.port';
 
 describe('owner messaging diagnostics', (): void => {
@@ -24,7 +25,11 @@ describe('owner messaging diagnostics', (): void => {
         },
         { resolve: (): string => TOKEN },
         {
-          readChannel: async (): Promise<boolean> => true,
+          readChannel: async (): Promise<KiviChannelAccount> => ({
+            connected: true,
+            phoneNumberId: '1234567890',
+            name: '+57 300 000 0000',
+          }),
           readSettings: async (): Promise<{
             whatsappEnabled: boolean;
             widgetEnabled: boolean;
@@ -47,6 +52,7 @@ describe('owner messaging diagnostics', (): void => {
     const { repository } = setup();
     const result = await repository.findForOwner('owner', TENANT);
     expect(result.channel).toBe('connected');
+    expect(result.account).toEqual({ phoneNumberId: '1234567890', name: '+57 300 000 0000' });
     expect(result.settings?.whatsappEnabled).toBe(true);
     expect(result.deliveries).toBeNull();
   });

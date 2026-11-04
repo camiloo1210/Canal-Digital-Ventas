@@ -1,6 +1,7 @@
 import { HttpKiviCatalogGateway } from '@/kivi/infrastructure/http-kivi-catalog.gateway';
 import type { KiviTarget } from '@/kivi/application/ports/out/kivi-catalog-gateway.port';
 import type {
+  KiviChannelAccount,
   KiviNotificationSettings,
   KiviNotificationSettingsGatewayPort,
   KiviDeliverySummary,
@@ -63,7 +64,7 @@ export class HttpKiviNotificationSettingsGateway
       throw new KiviGatewayException('transient', 200);
     return { widgetKey: body.widget_key };
   }
-  public async readChannel(target: KiviTarget): Promise<boolean> {
+  public async readChannel(target: KiviTarget): Promise<KiviChannelAccount> {
     const body = await this.request(target, 'GET', '/channels/whatsapp');
     if (
       typeof body !== 'object' ||
@@ -72,7 +73,15 @@ export class HttpKiviNotificationSettingsGateway
       typeof body.connected !== 'boolean'
     )
       throw new KiviGatewayException('transient', 200);
-    return body.connected;
+    // Allowlist: only identity fields leave this adapter, never credentials.
+    const fields: Record<string, unknown> = { ...body };
+    const text = (key: 'external_id' | 'name', max: number): string | null => {
+      const value = fields[key];
+      return typeof value === 'string' ? value.slice(0, max) || null : null;
+    };
+    return body.connected
+      ? { connected: true, phoneNumberId: text('external_id', 64), name: text('name', 200) }
+      : { connected: false, phoneNumberId: null, name: null };
   }
   public async readSettings(target: KiviTarget): Promise<KiviNotificationSettings> {
     const body = await this.request(target, 'GET', '/notifications/settings');
