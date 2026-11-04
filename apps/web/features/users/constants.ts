@@ -13,7 +13,7 @@ export interface PermissionGroup {
 export const PERMISSION_GROUPS: readonly PermissionGroup[] = [
   { key: 'orders', permissions: ['VIEW_ORDERS', 'MANAGE_ORDERS'] },
   { key: 'catalog', permissions: ['VIEW_CATALOG', 'MANAGE_CATALOG'] },
-  { key: 'reports', permissions: ['VIEW_REPORTS'] },
+  { key: 'reports', permissions: ['VIEW_OVERVIEW', 'VIEW_REPORTS'] },
   { key: 'store', permissions: ['MANAGE_STORE'] },
 ];
 

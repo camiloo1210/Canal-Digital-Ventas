@@ -66,6 +66,15 @@ describe('dashboard navigation permissions', (): void => {
     expect(keys).not.toContain('users');
     expect(visibleDashboardNavigationKeys('OWNER', [])).toContain('integrations');
   });
+  it('grants the general overview through its own permission, separate from reports', (): void => {
+    const reports = PERMISSION_GROUPS.find((group): boolean => group.key === 'reports');
+    expect(reports?.permissions).toEqual(['VIEW_OVERVIEW', 'VIEW_REPORTS']);
+    expect(Object.values(UserPermission)).toContain('VIEW_OVERVIEW');
+    expect(visibleDashboardNavigationKeys('MEMBER', ['VIEW_REPORTS'])).toEqual([
+      'overview',
+      'businessIntelligence',
+    ]);
+  });
   it('no longer offers a delegable integrations permission', (): void => {
     expect(Object.values(UserPermission)).not.toContain('MANAGE_INTEGRATIONS');
     expect(PERMISSION_GROUPS.map((group): string => group.key)).not.toContain('integrations');
