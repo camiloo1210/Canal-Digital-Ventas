@@ -57,7 +57,7 @@ describe('dashboard operational projection', (): void => {
     const statement = parts.join('?');
     expect(parameters).toEqual(['actor', 'tenant']);
     expect(statement).toContain(
-      "m.status='active' AND core.member_has_permission(m.user_id, m.tenant_id, ARRAY['VIEW_REPORTS']::text[])",
+      "m.status='active' AND core.member_has_permission(m.user_id, m.tenant_id, ARRAY['VIEW_OVERVIEW']::text[])",
     );
     expect(statement).toContain('m.user_id=?::uuid');
     expect(statement).toContain('WHERE t.id=?::uuid');

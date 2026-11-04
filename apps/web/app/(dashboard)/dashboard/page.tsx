@@ -28,9 +28,9 @@ export default async function DashboardPage({
   const t = await getTranslations('AdminOverview');
   const denied = params.denied !== undefined;
   const member = await getMemberPermissionsQuery(context.userId, tenant.tenantId);
-  // Sales figures are report data: owners and members with the reports permission only.
-  const canViewReports =
-    member?.baseRole === 'OWNER' || (member?.permissions.includes('VIEW_REPORTS') ?? false);
+  // The general overview (sales, orders) is its own permission, separate from the reports page.
+  const canViewOverview =
+    member?.baseRole === 'OWNER' || (member?.permissions.includes('VIEW_OVERVIEW') ?? false);
   return (
     <TenantScope tenantId={tenant.tenantId}>
       <div className="flex flex-1 flex-col">
@@ -58,7 +58,7 @@ export default async function DashboardPage({
               <AlertDescription>{t('denied')}</AlertDescription>
             </Alert>
           )}
-          {canViewReports ? (
+          {canViewOverview ? (
             <React.Suspense fallback={<DashboardOverviewSkeleton label={t('loading')} />}>
               <DashboardOverviewResults userId={context.userId} tenantId={tenant.tenantId} />
             </React.Suspense>

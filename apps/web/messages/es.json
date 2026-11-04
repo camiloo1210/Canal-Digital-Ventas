@@ -167,7 +167,7 @@
     "accessDescription": "Este resumen requiere ser propietario o administrador de la tienda seleccionada.",
     "retry": "Volver a cargar",
     "denied": "No tienes permiso para abrir esa sección. Pide acceso al propietario de la tienda.",
-    "limitedAccess": "Tu rol no incluye reportes. Usa el menú para abrir las secciones a las que tienes acceso."
+    "limitedAccess": "Tu rol no incluye el resumen general. Usa el menú para abrir las secciones a las que tienes acceso."
   },
   "AdminShell": {
     "administration": "Administración de tienda",
@@ -1254,9 +1254,13 @@
           "label": "Gestionar catálogo",
           "help": "Crear, editar y archivar productos y categorías."
         },
+        "VIEW_OVERVIEW": {
+          "label": "Ver resumen general",
+          "help": "Cifras de ventas y pedidos recientes de la pantalla de inicio."
+        },
         "VIEW_REPORTS": {
           "label": "Ver reportes",
-          "help": "Resumen de ventas e inteligencia de negocio."
+          "help": "Pantalla de inteligencia de negocio (ventas, rentabilidad, reabastecimiento)."
         },
         "MANAGE_STORE": {
           "label": "Gestionar tienda",
