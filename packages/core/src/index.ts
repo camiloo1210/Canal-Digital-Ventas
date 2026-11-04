@@ -478,6 +478,7 @@ export { UserManagementForbiddenException } from '@/iam/application/exceptions/u
 export { TenantRoleNotFoundException } from '@/iam/application/exceptions/tenant-role-not-found.exception';
 export { TenantRoleNameTakenException } from '@/iam/application/exceptions/tenant-role-name-taken.exception';
 export { TenantRoleInUseException } from '@/iam/application/exceptions/tenant-role-in-use.exception';
+export { TenantRoleProtectedException } from '@/iam/application/exceptions/tenant-role-protected.exception';
 export { InvitationNotFoundException } from '@/iam/application/exceptions/invitation-not-found.exception';
 export { MemberNotFoundException } from '@/iam/application/exceptions/member-not-found.exception';
 export { ProtectedMemberException } from '@/iam/application/exceptions/protected-member.exception';

@@ -29,6 +29,7 @@ import { UserManagementForbiddenException } from '@/iam/application/exceptions/u
 import { TenantRoleNotFoundException } from '@/iam/application/exceptions/tenant-role-not-found.exception';
 import { TenantRoleNameTakenException } from '@/iam/application/exceptions/tenant-role-name-taken.exception';
 import { TenantRoleInUseException } from '@/iam/application/exceptions/tenant-role-in-use.exception';
+import { TenantRoleProtectedException } from '@/iam/application/exceptions/tenant-role-protected.exception';
 import { InvitationNotFoundException } from '@/iam/application/exceptions/invitation-not-found.exception';
 import { BusinessAccountBoundException } from '@/iam/application/exceptions/business-account-bound.exception';
 import { MemberNotFoundException } from '@/iam/application/exceptions/member-not-found.exception';
@@ -194,6 +195,22 @@ describe('DeleteTenantRoleUseCase', () => {
     const roles = roleRepo([existingRole()]);
     await new DeleteTenantRoleUseCase(roles, ownership(true), transactions()).execute(dto);
     expect(roles.delete).toHaveBeenCalledWith(ROLE, TENANT, TX);
+  });
+
+  it('never deletes a default role, even when unused', async () => {
+    const roles = roleRepo([
+      TenantRole.reconstitute({
+        id: ROLE,
+        tenantId: TENANT,
+        name: 'Administrador',
+        permissions: ['VIEW_ORDERS'],
+        isSystem: true,
+      }),
+    ]);
+    await expect(
+      new DeleteTenantRoleUseCase(roles, ownership(true), transactions()).execute(dto),
+    ).rejects.toBeInstanceOf(TenantRoleProtectedException);
+    expect(roles.delete).not.toHaveBeenCalled();
   });
 
   it('blocks deletion while members are assigned', async () => {
@@ -572,21 +589,19 @@ describe('UpdateOwnProfileUseCase', () => {
 describe('GetInvitationPreviewUseCase', () => {
   it('hashes the token and returns the preview or null', async () => {
     const read: InvitationPreviewReadPort = {
-      findUsableByTokenHash: vi
-        .fn()
-        .mockImplementation((hash: string) =>
-          Promise.resolve(
-            hash === 'b'.repeat(64)
-              ? {
-                  tenantId: 't-1',
-                  tenantName: 'Tienda',
-                  tenantSlug: 'tienda',
-                  roleName: 'Cajero',
-                  accountMode: 'GOOGLE' as const,
-                }
-              : null,
-          ),
+      findUsableByTokenHash: vi.fn().mockImplementation((hash: string) =>
+        Promise.resolve(
+          hash === 'b'.repeat(64)
+            ? {
+                tenantId: 't-1',
+                tenantName: 'Tienda',
+                tenantSlug: 'tienda',
+                roleName: 'Cajero',
+                accountMode: 'GOOGLE' as const,
+              }
+            : null,
         ),
+      ),
     };
     const uc = new GetInvitationPreviewUseCase(read, tokens);
     await expect(uc.execute('raw-secret-token')).resolves.toEqual({

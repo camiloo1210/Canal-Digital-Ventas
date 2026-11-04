@@ -5,6 +5,7 @@ export interface TenantRoleReadModel {
   name: string;
   permissions: string[];
   memberCount: number;
+  isSystem: boolean;
   createdAt: string;
 }
 
