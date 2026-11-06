@@ -1,5 +1,11 @@
 'use client';
 
+import {
+  quoteCartLine,
+  quoteCartSubtotal,
+  isCartQuoteWithinLimit,
+} from '@canaldigital/packages/core/cart-pricing';
+
 import * as React from 'react';
 import { useCartStore } from '@/features/cart/store/cart.store';
 import {
@@ -44,11 +50,10 @@ export function CartSheet({ labels }: CartSheetProps): React.JSX.Element | null 
 
   if (!isMounted) return <span aria-hidden="true" className="block size-11 shrink-0" />;
 
+  const quoteSupported = isCartQuoteWithinLimit(cartStore.items);
   const totalItems = cartStore.items.reduce((sum, item): number => sum + item.quantity, 0);
-  const informationalSubtotal = cartStore.items.reduce(
-    (sum, item): number => sum + Math.round(item.price * 100) * item.quantity, // Convert decimal price to cents
-    0,
-  );
+  const cartCurrency = cartStore.items[0]?.currency;
+  const informationalSubtotal = quoteSupported ? quoteCartSubtotal(cartStore.items) : null;
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -122,7 +127,7 @@ export function CartSheet({ labels }: CartSheetProps): React.JSX.Element | null 
                           {item.name}
                         </h4>
                         <p className="text-sm font-semibold text-foreground">
-                          {formatMoney(Math.round(item.price * 100), 'USD', locale)}
+                          {formatMoney(quoteCartLine(item).unitPriceCents, item.currency, locale)}
                         </p>
                       </div>
                       <Button
@@ -179,11 +184,17 @@ export function CartSheet({ labels }: CartSheetProps): React.JSX.Element | null 
             <div className="space-y-1.5 w-full">
               <div className="flex items-center justify-between w-full font-semibold text-base">
                 <span>{labels.subtotal}</span>
-                <span>{formatMoney(informationalSubtotal, 'USD', locale)}</span>
+                <span>
+                  {quoteSupported && cartCurrency
+                    ? formatMoney(informationalSubtotal, cartCurrency, locale)
+                    : t('totalUnsupported')}
+                </span>
               </div>
               <p className="text-[0.8rem] text-muted-foreground text-center">{labels.taxesNote}</p>
             </div>
+            {!quoteSupported && <p role="alert">{t('totalUnsupported')}</p>}
             <Button
+              disabled={!quoteSupported}
               className="w-full h-12 text-base font-medium rounded-xl shadow-sm"
               onClick={(): void => {
                 setIsOpen(false);

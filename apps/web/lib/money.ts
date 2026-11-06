@@ -1,92 +1,73 @@
+import {
+  currencyExponent,
+  decimalStringToMinor,
+  minorToDecimalString,
+  minorUnitsPerMajor,
+} from '@canaldigital/packages/core/money-format';
+import { MAX_MONEY_CENTS } from '@canaldigital/packages/core/money-limits';
+
+/** Shown instead of a fake zero when the amount (or the currency) is unknown. */
+export const MISSING_MONEY_PLACEHOLDER = '—';
+
 /**
- * Deterministically formats minor units into a display currency string.
- * @param minorUnits The integer value in minor units (e.g. cents)
- * @param currency The ISO 4217 currency code. (e.g., USD)
- * @returns Formatted currency string
+ * Deterministically formats minor units into a display currency string. The number of fraction
+ * digits comes from the ISO 4217 exponent of `currency` (CLP 129 -> "$129", USD 129 -> "$1.29").
+ * Pure BigInt arithmetic; the float is only used for the already-split whole part.
+ * @returns the formatted amount, or an em dash when `minorUnits` is null/undefined.
  */
 export function formatMoney(
   minorUnits: number | null | undefined,
-  currency = 'USD',
-  locale = 'en-US',
+  currency: string,
+  locale: string,
 ): string {
-  if (
-    minorUnits === null ||
-    minorUnits === undefined ||
-    !Number.isFinite(minorUnits) ||
-    Number.isNaN(minorUnits)
-  ) {
-    return '$0.00';
-  }
+  if (minorUnits === null || minorUnits === undefined) return MISSING_MONEY_PLACEHOLDER;
+  if (!Number.isSafeInteger(minorUnits)) throw new Error('Invalid monetary value');
 
-  const decimalValue = minorUnits / 100;
-  return new Intl.NumberFormat(locale, {
+  const exponent = currencyExponent(currency);
+  const scale = minorUnitsPerMajor(currency);
+  const amount = BigInt(minorUnits);
+  const negative = amount < BigInt(0);
+  const absolute = negative ? -amount : amount;
+  const whole = absolute / scale;
+  const fraction = absolute % scale;
+  const signedWhole: bigint | number = negative ? (whole === BigInt(0) ? -0 : -whole) : whole;
+  const formatter = new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
-  }).format(decimalValue);
+    minimumFractionDigits: exponent,
+    maximumFractionDigits: exponent,
+  });
+  if (exponent === 0) return formatter.format(signedWhole);
+  const fractionText = new Intl.NumberFormat(locale, {
+    minimumIntegerDigits: exponent,
+    useGrouping: false,
+  }).format(fraction);
+  return formatter
+    .formatToParts(signedWhole)
+    .map((part): string => (part.type === 'fraction' ? fractionText : part.value))
+    .join('');
 }
 
 /**
- * Deterministically parses a valid decimal string or number into minor units (integers).
- * Pre-emptively rejects unaccepted formatting or extreme values.
- *
- * @param value The raw input (string or number from FormData/Zod)
- * @returns integer denoting minor units
+ * Deterministically parses a validated decimal string into persisted minor units, honouring the
+ * currency exponent (no fraction for CLP, at most 2 digits for USD). Never rounds.
  * @throws Error if value is unparseable or outside safe bounds
  */
-export function parseToMinorUnits(value: number | string): number {
-  if (typeof value === 'number') {
-    if (!Number.isFinite(value) || value < 0) {
-      throw new Error('Invalid monetary value');
-    }
-    const minorUnits = Math.round(value * 100);
-    if (minorUnits > Number.MAX_SAFE_INTEGER || minorUnits < 0) {
-      throw new Error('Value exceeds safe money bounds');
-    }
-    return minorUnits;
-  }
-
-  // Precondition: String must be syntactically validated (e.g., by Zod regex /^\d+(\.\d{1,2})?$/)
-  const sanitized = value.trim();
-  if (sanitized === '') {
-    throw new Error('Invalid monetary value: empty string');
-  }
-
-  const parts = sanitized.split('.');
-  const wholeStr = parts[0] || '0';
-  const fractionStr = parts[1] || '00';
-
-  const paddedFraction = fractionStr.padEnd(2, '0').substring(0, 2);
-
-  try {
-    const minorUnitsBig = BigInt(wholeStr) * BigInt(100) + BigInt(paddedFraction);
-
-    if (minorUnitsBig > BigInt(Number.MAX_SAFE_INTEGER)) {
-      throw new Error('Value exceeds safe money bounds');
-    }
-
-    return Number(minorUnitsBig);
-  } catch (err) {
-    if (err instanceof Error && err.message === 'Value exceeds safe money bounds') {
-      throw err;
-    }
-    throw new Error('Invalid monetary value');
-  }
+export function parseToMinorUnits(value: string, currency: string): number {
+  return decimalStringToMinor(value, currency, MAX_MONEY_CENTS);
 }
 
 /**
- * Formats minor units into an input-ready string (e.g. "30.00" without currency symbols)
- * Strict integer arithmetic to avoid floating point issues.
+ * Formats minor units into an input-ready string ("30.00" USD, "3000" CLP) without symbols.
+ * Returns '' for missing or unpersistable values.
  */
-export function formatMinorUnitsForInput(minorUnits: number | null | undefined): string {
-  if (minorUnits === null || minorUnits === undefined) {
+export function formatMinorUnitsForInput(
+  minorUnits: number | null | undefined,
+  currency: string,
+): string {
+  if (minorUnits === null || minorUnits === undefined) return '';
+  if (!Number.isSafeInteger(minorUnits) || minorUnits < 0 || minorUnits > MAX_MONEY_CENTS) {
     return '';
   }
-  if (!Number.isInteger(minorUnits) || minorUnits < 0) {
-    return '';
-  }
-
-  const wholeStr = Math.floor(minorUnits / 100).toString();
-  const fractionStr = (minorUnits % 100).toString().padStart(2, '0');
-
-  return `${wholeStr}.${fractionStr}`;
+  return minorToDecimalString(minorUnits, currency);
 }
