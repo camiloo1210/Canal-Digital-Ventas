@@ -1,3 +1,4 @@
+import { readBoundedRequestText } from '@/lib/security/bounded-request-body';
 import { z } from 'zod';
 import {
   decodeKiviTokenEncryptionKey,
@@ -43,12 +44,9 @@ export async function POST(request: Request): Promise<Response> {
   const masterKey = decodeKiviTokenEncryptionKey(process.env.KIVI_TOKEN_ENCRYPTION_KEY);
   if (masterKey === null) return json({ error: 'unavailable' }, 503);
   try {
-    const declared = Number(request.headers.get('content-length') ?? '0');
-    if (declared > MAX_BODY_BYTES) return json({ error: 'payload_too_large' }, 413);
-    const rawBody = await request.text();
-    if (Buffer.byteLength(rawBody, 'utf8') > MAX_BODY_BYTES) {
-      return json({ error: 'payload_too_large' }, 413);
-    }
+    const body = await readBoundedRequestText(request, MAX_BODY_BYTES);
+    if ('tooLarge' in body) return json({ error: 'payload_too_large' }, 413);
+    const rawBody = body.text;
     const timestamp = request.headers.get('X-Kivi-Timestamp');
     const signature = request.headers.get('X-Kivi-Signature');
     const tenantId = tenantIdOf(rawBody);
