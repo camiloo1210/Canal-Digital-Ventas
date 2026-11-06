@@ -1,3 +1,4 @@
+import { Currency } from '@/shared/domain/enums/currency.enum';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { ProductRepositoryPort } from '@/products/application/ports/out/product-repository.port';
 import { Product } from '@/products/domain/entities/product.entity';
@@ -42,8 +43,11 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
       throw new ProductRepositoryException(`Failed to search products: ${error.message}`, error);
     }
 
+    const currency = await this.getCurrency(filters.tenantId);
     const totalItems = count ?? 0;
-    const products = (data ?? []).map((row: DbProductRow) => SupabaseProductMapper.toDomain(row));
+    const products = (data ?? []).map((row: DbProductRow): Product =>
+      SupabaseProductMapper.toDomain(row, currency),
+    );
 
     return {
       items: products,
@@ -76,8 +80,11 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
       );
     }
 
+    const currency = await this.getCurrency(tenantId);
     const totalItems = count ?? 0;
-    const products = (data ?? []).map((row: DbProductRow) => SupabaseProductMapper.toDomain(row));
+    const products = (data ?? []).map((row: DbProductRow): Product =>
+      SupabaseProductMapper.toDomain(row, currency),
+    );
 
     return {
       items: products,
@@ -99,7 +106,10 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
       throw new ProductRepositoryException(`Failed to search products: ${error.message}`, error);
     }
 
-    return (data ?? []).map((row: DbProductRow) => SupabaseProductMapper.toDomain(row));
+    const currency = await this.getCurrency(tenantId);
+    return (data ?? []).map((row: DbProductRow): Product =>
+      SupabaseProductMapper.toDomain(row, currency),
+    );
   }
 
   async findByCategoryId(categoryId: CategoryId, tenantId: TenantId): Promise<Product[]> {
@@ -117,7 +127,10 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
       );
     }
 
-    return (data ?? []).map((row: DbProductRow) => SupabaseProductMapper.toDomain(row));
+    const currency = await this.getCurrency(tenantId);
+    return (data ?? []).map((row: DbProductRow): Product =>
+      SupabaseProductMapper.toDomain(row, currency),
+    );
   }
 
   async findById(id: ProductId, tenantId: TenantId): Promise<Product | null> {
@@ -139,7 +152,19 @@ export class SupabaseProductRepository implements ProductRepositoryPort {
       return null;
     }
 
-    return SupabaseProductMapper.toDomain(data as DbProductRow);
+    return SupabaseProductMapper.toDomain(data as DbProductRow, await this.getCurrency(tenantId));
+  }
+
+  private async getCurrency(tenantId: TenantId): Promise<Currency> {
+    const { data, error } = await this.supabase
+      .schema('core')
+      .from('tenants')
+      .select('base_currency')
+      .eq('id', tenantId)
+      .single();
+    if (error || !data)
+      throw new ProductRepositoryException('Failed to resolve product currency.', error);
+    return data.base_currency as Currency;
   }
 
   async save(): Promise<void> {
