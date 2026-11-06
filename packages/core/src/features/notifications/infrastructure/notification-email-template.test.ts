@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readNotificationTestMessages } from '@/notifications/infrastructure/notification-test-messages.fixture';
 import {
+  formatMinorUnits,
   renderNotificationEmail,
   safeEmailImage,
 } from '@/notifications/infrastructure/notification-email-template';
@@ -198,5 +199,20 @@ describe('transactional email presentation', (): void => {
         loadSmtpConfig({ SMTP_FROM_EMAIL: 'sales@example.test', NOTIFICATION_APP_URL: url }),
       ).toThrow();
     }
+  });
+});
+
+describe('notification money formatting by currency', (): void => {
+  it('formats CLP without decimals and USD with two, in es and en', (): void => {
+    expect(formatMinorUnits(5000, 'CLP', 'es')).toMatch(/5\.000/);
+    expect(formatMinorUnits(5000, 'CLP', 'es')).not.toMatch(/,\d\d$/);
+    expect(formatMinorUnits(5000, 'CLP', 'en')).toMatch(/5,000$/);
+    expect(formatMinorUnits(5000, 'USD', 'en')).toBe('$50.00');
+    expect(formatMinorUnits(5000, 'USD', 'es')).toMatch(/50,00/);
+    expect(formatMinorUnits(-5, 'USD', 'en')).toMatch(/-.*0\.05/);
+  });
+  it('refuses to guess a missing currency', (): void => {
+    expect((): string => formatMinorUnits(100, undefined, 'en')).toThrow(/currency/i);
+    expect((): string => formatMinorUnits(100, 'XXX', 'en')).toThrow();
   });
 });

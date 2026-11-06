@@ -39,6 +39,7 @@ export function product(id: string, overrides: Partial<KiviSourceProduct> = {}):
     tenantId: TENANT,
     name: `Product ${id}`,
     priceCents: 1000,
+    currency: 'USD',
     wholesalePriceCents: 0,
     wholesaleMinQuantity: 0,
     description: null,
