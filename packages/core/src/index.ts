@@ -85,7 +85,7 @@ export { DomainException } from '@/shared/domain/exceptions/domain.exception';
 export { InvalidTenantIdException } from '@/shared/domain/exceptions/invalid-tenant-id.exception';
 export { Money } from '@/shared/domain/value-objects/money.vo';
 export { RoundingMode } from '@/shared/domain/rounding-mode';
-
+export { DiscountExceedsTotalException } from '@/orders/domain/exceptions/discount-exceeds-total.exception';
 export type { DomainEvent } from '@/shared/domain/events/domain-event.interface';
 
 export type { EventBusPort } from '@/shared/application/ports/out/event-bus.port';

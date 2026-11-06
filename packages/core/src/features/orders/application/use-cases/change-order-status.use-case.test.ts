@@ -1,6 +1,10 @@
+import { Currency } from '@/shared/domain/enums/currency.enum';
 import { describe, expect, it, vi } from 'vitest';
 import { ChangeOrderStatusUseCase } from '@/orders/application/use-cases/change-order-status.use-case';
 import { Order } from '@/orders/domain/entities/order.entity';
+import { OrderItem } from '@/orders/domain/entities/order-item.entity';
+import { createOrderItemId } from '@/orders/domain/types/order-item-id.type';
+import { createProductId } from '@/products/domain/types/product-id.type';
 import { OrderStatus, nextLogisticsStatus } from '@/orders/domain/enums/order-status.enum';
 import { createOrderId } from '@/orders/domain/types/order-id.type';
 import { createCustomerId } from '@/orders/domain/types/customer-id.type';
@@ -35,12 +39,21 @@ function order(status: OrderStatus): Order {
     tenantId: createTenantId(tenantId),
     orderNumber: 'ORD-LOGISTICS',
     status,
-    items: [],
-    subtotal: Money.from(100),
-    taxAmount: Money.from(0),
-    discountAmount: Money.from(0),
-    shippingCost: Money.from(0),
-    totalAmount: Money.from(100),
+    items: [
+      OrderItem.create(
+        createOrderItemId('item'),
+        createProductId('product'),
+        'Product',
+        1,
+        Money.from(100, Currency.USD),
+        'SKU',
+      ),
+    ],
+    subtotal: Money.from(100, Currency.USD),
+    taxAmount: Money.from(0, Currency.USD),
+    discountAmount: Money.from(0, Currency.USD),
+    shippingCost: Money.from(0, Currency.USD),
+    totalAmount: Money.from(100, Currency.USD),
     shippingAddress: Address.create('Street 1', 'City', 'State', '12345', 'US'),
     paymentGatewayId: null,
     createdAt: new Date(),
