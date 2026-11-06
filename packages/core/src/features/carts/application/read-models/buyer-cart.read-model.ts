@@ -3,6 +3,10 @@ export interface BuyerCartItemReadModel {
   name: string;
   sku: string;
   unitPriceCents: number;
+  retailPriceCents: number;
+  currency: string;
+  wholesalePriceCents: number | null;
+  wholesaleMinQuantity: number | null;
   quantity: number;
   /** Currently purchasable units, capped at MAX_LINE_QUANTITY. */
   maxQuantity: number;

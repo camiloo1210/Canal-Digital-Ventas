@@ -3,6 +3,9 @@ export interface BuyerCartCatalogProduct {
   name: string;
   sku: string;
   unitPriceCents: number;
+  currency: string;
+  wholesalePriceCents: number | null;
+  wholesaleMinQuantity: number | null;
   /** Units purchasable right now (never negative), straight from stock. */
   availableQuantity: number;
   imageUrl: string | null;
