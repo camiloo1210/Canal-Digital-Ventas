@@ -6,6 +6,7 @@ export interface KiviSourceProduct {
   tenantId: string;
   name: string;
   priceCents: number;
+  currency: string;
   /** Per-unit wholesale price in cents; 0 when the product has no wholesale offer. */
   wholesalePriceCents: number;
   /** Minimum units for the wholesale price; 0 when there is no offer. */
@@ -20,6 +21,8 @@ export interface KiviSourceProduct {
    * reconcile re-based the product above it. Defaults to 0; only ever grows.
    */
   kiviVersionOffset?: number;
+  /** Up to 5 public https photo URLs, main photo first. */
+  imageUrls?: string[];
 }
 
 export interface KiviSyncStorePort {

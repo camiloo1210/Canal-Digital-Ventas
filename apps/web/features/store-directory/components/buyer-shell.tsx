@@ -9,7 +9,7 @@ import { BuyerKiviWidget } from '@/features/store-directory/components/buyer-kiv
 
 interface BuyerShellProps {
   children: React.ReactNode;
-  active: 'stores' | 'purchases';
+  active: 'stores' | 'purchases' | 'profile';
   viewer: StoreViewer;
 }
 
@@ -37,6 +37,7 @@ export async function BuyerShell({
             [
               { href: '/', key: 'stores' },
               { href: '/purchases', key: 'purchases' },
+              { href: '/account/profile', key: 'profile' },
             ] as const
           ).map((item): React.JSX.Element => (
             <Link
@@ -54,7 +55,9 @@ export async function BuyerShell({
         </nav>
         <UserNav
           viewer={viewer}
-          redirectTo={active === 'purchases' ? '/purchases' : '/'}
+          redirectTo={
+            active === 'purchases' ? '/purchases' : active === 'profile' ? '/account/profile' : '/'
+          }
           labels={{
             login: t('login'),
             createAccount: t('createAccount'),

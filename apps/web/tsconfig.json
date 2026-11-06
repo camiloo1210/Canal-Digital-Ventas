@@ -19,6 +19,15 @@
       }
     ],
     "paths": {
+      "@canaldigital/packages/core/cart-pricing": [
+        "../../packages/core/src/features/carts/application/services/cart-quote.ts"
+      ],
+      "@canaldigital/packages/core/money-format": [
+        "../../packages/core/src/features/shared/domain/money-format.ts"
+      ],
+      "@canaldigital/packages/core/money-limits": [
+        "../../packages/core/src/features/shared/domain/money-limits.ts"
+      ],
       "@/dashboard/*": ["../../packages/core/src/features/dashboard/*"],
       "@/*": ["./*"],
       "@/shared/*": ["../../packages/core/src/features/shared/*"],

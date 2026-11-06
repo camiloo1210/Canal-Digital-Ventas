@@ -28,13 +28,14 @@ export class KiviMessagingReadRepository implements KiviMessagingReadPort {
       this.gateway.readSettings(target),
       this.gateway.readDeliveries(target),
     ]);
+    const connected = channel.status === 'fulfilled' && channel.value.connected;
     return {
       channel:
-        channel.status === 'fulfilled'
-          ? channel.value
-            ? 'connected'
-            : 'disconnected'
-          : 'unavailable',
+        channel.status === 'fulfilled' ? (connected ? 'connected' : 'disconnected') : 'unavailable',
+      account:
+        channel.status === 'fulfilled' && connected
+          ? { phoneNumberId: channel.value.phoneNumberId, name: channel.value.name }
+          : null,
       settings: settings.status === 'fulfilled' ? settings.value : null,
       deliveries: deliveries.status === 'fulfilled' ? deliveries.value : null,
     };

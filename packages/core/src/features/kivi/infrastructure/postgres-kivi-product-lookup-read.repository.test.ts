@@ -28,6 +28,7 @@ function row(overrides: Record<string, unknown> = {}): Record<string, unknown> {
     sku: 'CAF-001',
     category: 'Bebidas',
     price_cents: 350,
+    currency: 'USD',
     wholesale_price_cents: 275,
     wholesale_min_quantity: 12,
     stock: 50,

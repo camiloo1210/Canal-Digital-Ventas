@@ -6,6 +6,7 @@ import { KIVI_PRODUCT_EVENT_TYPES } from '@/kivi/application/kivi-events';
 
 const BASELINE_VERSION = '20261014000000';
 const SEED_TABLES: Readonly<Record<string, readonly string[]>> = {
+  '20261105000000_order_status_history.sql': ['sales.order_status_history'],
   '20261020000000_kivi_connections.sql': ['core.outbox_relay_routes'],
   '20261019000000_store_branding_storage.sql': ['storage.buckets'],
   '20261018183618_seller_order_delivery_notifications.sql': ['core.outbox_relay_routes'],
@@ -146,8 +147,15 @@ describe('pending migrations (static checks)', (): void => {
 
   it.each(pending.map((m: PendingMigration): [string, string] => [m.name, m.sql]))(
     '%s never grants to anon, authenticated, service_role or PUBLIC and never grants privileged attributes',
-    (_name: string, sql: string): void => {
+    (name: string, sql: string): void => {
       for (const match of sql.matchAll(/\bGRANT\b[^;]*?\bTO\b\s+([^;]+);/gi)) {
+        if (
+          name === '20261106014558_monetary_invariants_and_currency.sql' &&
+          /^GRANT\s+EXECUTE\s+ON\s+FUNCTION\s+public\.get_public_(products_by_slug|product_by_id)_v2\([^;]+\)\s+TO\s+anon,\s*authenticated;$/i.test(
+            match[0],
+          )
+        )
+          continue;
         if (
           /^GRANT\s+SELECT\s+ON\s+sales\.(refund_operations|compensation_obligations)\s+TO\s+authenticated;$/i.test(
             match[0],
@@ -173,6 +181,15 @@ describe('pending migrations (static checks)', (): void => {
       );
       // Match statement starts, not the UPDATE keyword in a CREATE POLICY ... FOR UPDATE TO.
       for (const match of topLevel.matchAll(/(?:^|;)\s*(INSERT\s+INTO|UPDATE)\s+([\w.]+)/gi)) {
+        if (
+          name === '20261106014558_monetary_invariants_and_currency.sql' &&
+          match[1].toUpperCase() === 'UPDATE' &&
+          match[2] === 'sales.orders'
+        ) {
+          expect(topLevel).toMatch(/UPDATE sales\.orders o SET currency = coalesce\(/);
+          expect(topLevel).toMatch(/WHERE t\.id = o\.tenant_id AND o\.currency IS NULL/);
+          continue;
+        }
         expect(match[1].toUpperCase()).toBe('INSERT INTO');
         expect(SEED_TABLES[name] ?? []).toContain(match[2]);
       }
@@ -817,5 +834,48 @@ describe('member permission check migration', (): void => {
     expect(body).toMatch(/r\.tenant_id\s*=\s*m\.tenant_id/i);
     expect(body).toMatch(/m\.role\s+IN\s*\('OWNER',\s*'ADMIN'\)/i);
     expect(body).toMatch(/r\.permissions\s*&&\s*p_permissions/i);
+  });
+});
+
+describe('default tenant roles migration', (): void => {
+  const migration = pending.find((m: PendingMigration): boolean =>
+    m.name.endsWith('_default_tenant_roles.sql'),
+  );
+  const sql = migration?.sql ?? '';
+
+  it('exists after the permission check migration and is transactional', (): void => {
+    expect(migration?.name).toBe('20261103090000_default_tenant_roles.sql');
+    expect(sql).toMatch(/^\s*BEGIN;/im);
+    expect(sql).toMatch(/COMMIT;\s*$/i);
+  });
+
+  it('seeds the four default roles without user management or integrations', (): void => {
+    for (const key of ['admin', 'seller', 'catalog', 'analyst']) {
+      expect(sql).toContain(`'${key}'`);
+    }
+    expect(sql).not.toMatch(/MANAGE_USERS|MANAGE_INTEGRATIONS/);
+    expect(sql).toMatch(/ON CONFLICT DO NOTHING/i);
+  });
+
+  it('seeds new stores by trigger and backfills existing ones', (): void => {
+    expect(sql).toMatch(/AFTER INSERT ON core\.tenants/i);
+    expect(sql).toMatch(/SELECT core\.seed_default_tenant_roles\(id\) FROM core\.tenants;/i);
+  });
+
+  it('locks both functions to the postgres login', (): void => {
+    for (const fn of [
+      String.raw`core.seed_default_tenant_roles\(uuid\)`,
+      String.raw`core.seed_default_tenant_roles_trigger\(\)`,
+    ]) {
+      expect(sql).toMatch(
+        new RegExp(
+          String.raw`REVOKE\s+ALL\s+ON\s+FUNCTION\s+${fn}\s+FROM\s+PUBLIC,\s*anon,\s*authenticated,\s*service_role`,
+          'i',
+        ),
+      );
+      expect(sql).toMatch(
+        new RegExp(String.raw`GRANT\s+EXECUTE\s+ON\s+FUNCTION\s+${fn}\s+TO\s+postgres`, 'i'),
+      );
+    }
   });
 });

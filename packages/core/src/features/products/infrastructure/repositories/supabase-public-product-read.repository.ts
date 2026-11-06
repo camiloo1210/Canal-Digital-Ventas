@@ -1,3 +1,4 @@
+import { parseCurrency } from '@/shared/domain/enums/currency.enum';
 import { SupabaseClient } from '@supabase/supabase-js';
 import {
   PublicProductReadRepositoryPort,
@@ -59,7 +60,7 @@ export class SupabasePublicProductReadRepository implements PublicProductReadRep
     const page = pagination?.page ?? 1;
     const limit = pagination?.limit ?? 24;
 
-    const { data, error } = await this.supabase.rpc('get_public_products_by_slug', {
+    const { data, error } = await this.supabase.rpc('get_public_products_by_slug_v2', {
       p_tenant_slug: tenantSlug,
       p_category_slug: filters.categorySlug || null,
       p_search: filters.name ? this.escapeLike(filters.name.trim()) : null,
@@ -79,6 +80,7 @@ export class SupabasePublicProductReadRepository implements PublicProductReadRep
         id: string;
         name: string;
         price_cents: number;
+        currency: string;
         description: string | null;
         category_id: string;
         sku: string | null;
@@ -89,7 +91,7 @@ export class SupabasePublicProductReadRepository implements PublicProductReadRep
         total_count?: number;
         wholesale_price_cents: unknown;
         wholesale_min_quantity: unknown;
-      }) => {
+      }): PublicProductReadModel => {
         const wholesale = extractWholesaleRules(
           row.wholesale_price_cents,
           row.wholesale_min_quantity,
@@ -98,6 +100,7 @@ export class SupabasePublicProductReadRepository implements PublicProductReadRep
           id: row.id,
           name: row.name,
           priceCents: row.price_cents,
+          currency: parseCurrency(row.currency),
           description: row.description || '',
           categoryId: row.category_id,
           sku: row.sku || '',
@@ -125,7 +128,7 @@ export class SupabasePublicProductReadRepository implements PublicProductReadRep
     tenantSlug: string;
     productId: string;
   }): Promise<PublicProductDetailReadModel | null> {
-    const { data, error } = await this.supabase.rpc('get_public_product_by_id', {
+    const { data, error } = await this.supabase.rpc('get_public_product_by_id_v2', {
       p_tenant_slug: params.tenantSlug,
       p_product_id: params.productId,
     });
@@ -148,6 +151,7 @@ export class SupabasePublicProductReadRepository implements PublicProductReadRep
       id: row.id,
       name: row.name,
       priceCents: row.price_cents,
+      currency: parseCurrency(row.currency),
       description: row.description || '',
       categoryId: row.category_id || null,
       sku: row.sku || '',

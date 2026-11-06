@@ -4,4 +4,5 @@ export interface GenerateCheckoutDto {
   customerId: string;
   gateway: string;
   amount: number;
+  currency: string;
 }

@@ -32,7 +32,7 @@ export default async function DashboardLayout({
         role: membership.role,
         visibleKeys: member
           ? visibleDashboardNavigationKeys(member.baseRole, member.permissions)
-          : ['overview'],
+          : ['overview', 'profile'],
       };
     }),
   );

@@ -109,6 +109,7 @@ export async function submitCheckoutAction(
         return rejected('PRODUCT_UNAVAILABLE', t('productUnavailable'));
       if (
         error.name === 'InvalidOrderAttributeException' ||
+        error.name === 'InvalidMoneyException' ||
         error.name === 'InvalidQuantityException'
       )
         return rejected('INVALID_CART', t('invalidCart'));

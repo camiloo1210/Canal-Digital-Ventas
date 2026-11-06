@@ -13,6 +13,7 @@ export interface DbOrderItemRow {
 }
 
 export interface DbOrderRow {
+  currency: string;
   id: string;
   order_number: string;
   customer_id: string;

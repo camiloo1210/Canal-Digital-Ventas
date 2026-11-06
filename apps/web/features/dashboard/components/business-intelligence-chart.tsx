@@ -15,7 +15,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { intelligenceMoney } from '@/features/dashboard/components/business-intelligence-format';
+import {
+  intelligenceMoney,
+  minorToChartScale,
+} from '@/features/dashboard/components/business-intelligence-format';
 import { findIntelligenceDay } from '@/features/dashboard/components/business-intelligence-chart-data';
 
 type Metric = 'revenue' | 'profit' | 'units';
@@ -53,7 +56,7 @@ export function BusinessIntelligenceChart({
             notation: 'compact',
             maximumFractionDigits: 1,
           },
-    ).format(metric === 'units' ? value : value / 100);
+    ).format(metric === 'units' ? value : minorToChartScale(value, report.currency));
   return (
     <Card className="min-w-0 gap-5 sm:[--card-spacing:--spacing(5)]">
       <CardHeader className="gap-3">

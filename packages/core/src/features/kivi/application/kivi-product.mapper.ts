@@ -1,7 +1,9 @@
+import { parseCurrency } from '@/shared/domain/enums/currency.enum';
 import type { KiviProductPayload } from '@/kivi/application/ports/out/kivi-catalog-gateway.port';
 import type { KiviSourceProduct } from '@/kivi/application/ports/out/kivi-sync-store.port';
-
-const CURRENCY = 'USD';
+import { MAX_MONEY_CENTS } from '@/shared/domain/money-limits';
+import { minorToDecimalString } from '@/shared/domain/money-format';
+import { InvalidMoneyException } from '@/shared/domain/exceptions/invalid-money.exception';
 
 /**
  * Persisted versions start at 0 and Kivi requires integers >= 1; the shift keeps order. The
@@ -11,10 +13,11 @@ export function kiviVersionOf(product: KiviSourceProduct): number {
   return product.version + 1 + (product.kiviVersionOffset ?? 0);
 }
 
-export function centsToDecimalString(cents: number): string {
-  const whole = Math.trunc(cents / 100);
-  const fraction = String(cents % 100).padStart(2, '0');
-  return `${whole}.${fraction}`;
+export function centsToDecimalString(amount: number, currency: string): string {
+  if (!Number.isSafeInteger(amount) || amount < 0 || amount > MAX_MONEY_CENTS) {
+    throw new InvalidMoneyException('Invalid minor units for external monetary representation.');
+  }
+  return minorToDecimalString(amount, currency);
 }
 
 export function toKiviProductPayload(product: KiviSourceProduct): KiviProductPayload {
@@ -23,12 +26,15 @@ export function toKiviProductPayload(product: KiviSourceProduct): KiviProductPay
   return {
     version: kiviVersionOf(product),
     name: product.name,
-    price: centsToDecimalString(product.priceCents),
-    wholesale_price: hasWholesale ? centsToDecimalString(product.wholesalePriceCents) : null,
+    price: centsToDecimalString(product.priceCents, product.currency),
+    wholesale_price: hasWholesale
+      ? centsToDecimalString(product.wholesalePriceCents, product.currency)
+      : null,
     wholesale_min_quantity: hasWholesale ? product.wholesaleMinQuantity : null,
-    currency: CURRENCY,
+    currency: parseCurrency(product.currency),
     description: product.description,
     is_available: available,
     is_orderable: product.status === 'active' && product.stock > 0,
+    image_urls: (product.imageUrls ?? []).slice(0, 5),
   };
 }

@@ -92,6 +92,15 @@ describe('checkout adapter validation and retention', (): void => {
     expect(result.message).toBe('unexpected');
     expect(result.values?.['shipping.country']).toBe('Kept value');
   });
+  it('rejects an unsupported monetary total without losing the checkout fields', async (): Promise<void> => {
+    const failure = new Error('Monetary limit exceeded');
+    failure.name = 'InvalidMoneyException';
+    execute.mockRejectedValue(failure);
+    const result = await submitCheckoutAction('store', { success: false, errorCode: null }, form());
+    expect(result.errorCode).toBe('INVALID_CART');
+    expect(result.values?.['shipping.city']).toBe('Kept value');
+    expect(completeCart).not.toHaveBeenCalled();
+  });
   it('injects the authenticated buyer and submits only the allowed DTO fields', async (): Promise<void> => {
     const data = form();
     data.set('buyerId', 'attacker');

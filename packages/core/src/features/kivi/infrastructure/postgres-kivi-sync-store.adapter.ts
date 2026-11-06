@@ -29,6 +29,7 @@ interface ProductRow {
   tenant_id: string;
   name: string;
   price_cents: number;
+  currency: string;
   description: string | null;
   stock: number;
   status: KiviSourceProduct['status'];
@@ -36,6 +37,7 @@ interface ProductRow {
   kivi_version_offset: number;
   wholesale_price_cents: number;
   wholesale_min_quantity: number;
+  image_urls: string[] | null;
 }
 
 export class KiviSyncStoreException extends InfrastructureException {
@@ -129,7 +131,7 @@ export class PostgresKiviSyncStoreAdapter implements KiviSyncStorePort {
       (): Promise<ProductRow[]> =>
         this.sql<
           ProductRow[]
-        >`SELECT * FROM core.kivi_sync_get_product_with_offset_v2(${tenantId}::uuid, ${productId}::uuid)`,
+        >`SELECT * FROM core.kivi_sync_get_product_with_offset_v4(${tenantId}::uuid, ${productId}::uuid)`,
       'Unable to load the product',
     );
     return rows[0] ? this.toProduct(rows[0]) : null;
@@ -144,7 +146,7 @@ export class PostgresKiviSyncStoreAdapter implements KiviSyncStorePort {
       (): Promise<ProductRow[]> =>
         this.sql<
           ProductRow[]
-        >`SELECT * FROM core.kivi_sync_list_products_with_offset_v2(${tenantId}::uuid, ${afterId}::uuid, ${limit}::integer)`,
+        >`SELECT * FROM core.kivi_sync_list_products_with_offset_v4(${tenantId}::uuid, ${afterId}::uuid, ${limit}::integer)`,
       'Unable to list products',
     );
     return rows.map((row): KiviSourceProduct => this.toProduct(row));
@@ -179,6 +181,7 @@ export class PostgresKiviSyncStoreAdapter implements KiviSyncStorePort {
       tenantId: row.tenant_id,
       name: row.name,
       priceCents: row.price_cents,
+      currency: row.currency,
       wholesalePriceCents: row.wholesale_price_cents,
       wholesaleMinQuantity: row.wholesale_min_quantity,
       description: row.description,
@@ -186,6 +189,7 @@ export class PostgresKiviSyncStoreAdapter implements KiviSyncStorePort {
       status: row.status,
       version: row.version,
       kiviVersionOffset: row.kivi_version_offset,
+      imageUrls: row.image_urls ?? [],
     };
   }
 }

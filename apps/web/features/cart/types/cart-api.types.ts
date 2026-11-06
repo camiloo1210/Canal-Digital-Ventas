@@ -7,6 +7,10 @@ export interface CartApiItem {
   name: string;
   sku: string;
   unitPriceCents: number;
+  retailPriceCents: number;
+  currency: string;
+  wholesalePriceCents: number | null;
+  wholesaleMinQuantity: number | null;
   quantity: number;
   maxQuantity: number;
   imageUrl: string | null;

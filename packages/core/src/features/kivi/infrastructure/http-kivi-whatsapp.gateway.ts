@@ -33,6 +33,15 @@ export class HttpKiviWhatsAppGateway
     await this.request(target, 'DELETE', '/channels/whatsapp');
     return { connected: false, phoneDisplay: '', verifiedName: '' };
   }
+  public async syncWidgetHandoff(target: KiviTarget, enabled: boolean): Promise<boolean> {
+    try {
+      await this.request(target, 'PUT', '/channels/whatsapp/widget-handoff', { enabled });
+      return true;
+    } catch (error: unknown) {
+      if (error instanceof KiviGatewayException && error.status === 409) return false;
+      throw error;
+    }
+  }
   private payload(credentials: KiviWhatsAppCredentials): {
     phone_number_id: string;
     whatsapp_token: string;

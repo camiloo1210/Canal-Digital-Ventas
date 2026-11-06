@@ -13,7 +13,9 @@ import { OrderItem } from '@/orders/domain/entities/order-item.entity';
 import { Order } from '@/orders/domain/entities/order.entity';
 import { Address } from '@/shared/domain/value-objects/adress.vo';
 import { Money } from '@/shared/domain/value-objects/money.vo';
-import { Currency } from '@/shared/domain/enums/currency.enum';
+import { selectUnitPriceCents } from '@/shared/domain/unit-price.policy';
+import { InvalidMoneyException } from '@/shared/domain/exceptions/invalid-money.exception';
+import { InvalidQuantityException } from '@/orders/domain/exceptions/invalid-quantity.exception';
 import { createOrderId } from '@/orders/domain/types/order-id.type';
 import { createOrderItemId } from '@/orders/domain/types/order-item-id.type';
 import { createCustomerId } from '@/orders/domain/types/customer-id.type';
@@ -35,7 +37,7 @@ export class GenerateCommercialOrderUseCase {
 
   async execute(dto: GenerateCommercialOrderDto): Promise<void> {
     await this.transactionManager.runInTransaction(
-      async (tx: TransactionContext) => {
+      async (tx: TransactionContext): Promise<void> => {
         const tenantData = await this.orderTenantRepository.findActiveBySlug(dto.tenantSlug, tx);
         if (!tenantData) {
           throw new TenantNotAvailableException();
@@ -66,17 +68,22 @@ export class GenerateCommercialOrderUseCase {
         const customerId = createCustomerId(customer.getId());
 
         const orderItems: OrderItem[] = [];
-        let subtotalAmount = 0;
-        let currency = Currency.USD;
+        const currency = tenantData.currency;
+        let subtotal = Money.from(0, currency);
 
         const consolidatedItemsMap = new Map<string, number>();
         for (const itemDto of dto.items) {
+          if (!Number.isSafeInteger(itemDto.quantity) || itemDto.quantity <= 0) {
+            throw new InvalidQuantityException();
+          }
           const currentQty = consolidatedItemsMap.get(itemDto.productId) || 0;
-          consolidatedItemsMap.set(itemDto.productId, currentQty + itemDto.quantity);
+          const quantity = currentQty + itemDto.quantity;
+          if (!Number.isSafeInteger(quantity)) throw new InvalidQuantityException();
+          consolidatedItemsMap.set(itemDto.productId, quantity);
         }
 
         const consolidatedItems = Array.from(consolidatedItemsMap.entries()).map(
-          ([productId, quantity]) => ({
+          ([productId, quantity]): { productId: string; quantity: number } => ({
             productId,
             quantity,
           }),
@@ -101,19 +108,21 @@ export class GenerateCommercialOrderUseCase {
           product.decreaseStock(itemDto.quantity);
           await this.productRepository.decreaseStock(productId, tenantId, itemDto.quantity, tx);
 
-          let authoritativePrice = product.getPrice().getValue();
-          currency = product.getPrice().getCurrency();
-
-          const wholesaleMin = product.getWholesaleMinQuantity();
-          const wholesalePrice = product.getWholesalePrice();
-          if (
-            wholesaleMin !== null &&
-            itemDto.quantity >= wholesaleMin &&
-            wholesalePrice !== null &&
-            wholesalePrice.getValue() > 0
-          ) {
-            authoritativePrice = wholesalePrice.getValue();
+          if (product.getPrice().getCurrency() !== currency) {
+            throw new InvalidMoneyException('Product currency must match tenant currency.');
           }
+          const wholesalePrice = product.getWholesalePrice();
+          if (wholesalePrice !== null && wholesalePrice.getCurrency() !== currency) {
+            throw new InvalidMoneyException('Wholesale price currency must match tenant currency.');
+          }
+          const authoritativePrice = selectUnitPriceCents(
+            {
+              retailPriceCents: product.getPrice().getValue(),
+              wholesalePriceCents: wholesalePrice?.getValue() ?? null,
+              wholesaleMinQuantity: product.getWholesaleMinQuantity(),
+            },
+            itemDto.quantity,
+          );
 
           const unitPriceMoney = Money.from(authoritativePrice, currency);
 
@@ -127,10 +136,9 @@ export class GenerateCommercialOrderUseCase {
           );
 
           orderItems.push(orderItem);
-          subtotalAmount += authoritativePrice * itemDto.quantity;
+          subtotal = subtotal.add(orderItem.getSubtotal());
         }
 
-        const subtotal = Money.from(subtotalAmount, currency);
         const taxAmount = Money.from(0, currency);
         const discountAmount = Money.from(0, currency);
         const shippingCost = Money.from(0, currency);

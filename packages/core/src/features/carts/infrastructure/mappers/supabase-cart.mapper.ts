@@ -2,7 +2,8 @@ import { Cart } from '@/carts/domain/entities/cart.entity';
 import { CartItem } from '@/carts/domain/entities/cart-item.entity';
 import { DbCartRow, DbCartItemRow } from '@/carts/infrastructure/types/supabase-cart.types';
 import { Money } from '@/shared/domain/value-objects/money.vo';
-import { Currency } from '@/shared/domain/enums/currency.enum';
+import { parseCurrency, Currency } from '@/shared/domain/enums/currency.enum';
+import { InvalidCartAttributeException } from '@/carts/domain/exceptions/invalid-cart-attribute.exception';
 import { parseCartStatus } from '@/carts/domain/enums/cart-status.enum';
 import { CartId } from '@/carts/domain/types/cart-id.type';
 import { CustomerId } from '@/carts/domain/types/customer-id.type';
@@ -13,6 +14,10 @@ import { VariantId } from '@/carts/domain/types/variant-id.type';
 
 export class SupabaseCartMapper {
   static toDomain(row: DbCartRow): Cart {
+    if (typeof row.currency !== 'string' || row.currency.length === 0) {
+      throw new InvalidCartAttributeException('Cart row has no currency.');
+    }
+    const currency: Currency = parseCurrency(row.currency);
     const items = (row.cart_items || []).map((itemRow: DbCartItemRow) =>
       CartItem.reconstitute({
         id: itemRow.id as CartItemId,
@@ -20,9 +25,9 @@ export class SupabaseCartMapper {
         variantId: itemRow.variant_id ? (itemRow.variant_id as VariantId) : null,
         productName: itemRow.product_name,
         sku: itemRow.sku,
-        unitPrice: Money.from(itemRow.unit_price_cents, Currency.USD),
+        unitPrice: Money.from(itemRow.unit_price_cents, currency),
         quantity: itemRow.quantity,
-        subtotal: Money.from(itemRow.subtotal_cents, Currency.USD),
+        subtotal: Money.from(itemRow.subtotal_cents, currency),
       }),
     );
 
@@ -32,7 +37,7 @@ export class SupabaseCartMapper {
       customerId: row.customer_id ? (row.customer_id as CustomerId) : null,
       items,
       status: parseCartStatus(row.status),
-      subtotal: Money.from(row.subtotal_cents, Currency.USD),
+      subtotal: Money.from(row.subtotal_cents, currency),
       expiresAt: new Date(row.expires_at),
       createdAt: new Date(row.created_at),
       updatedAt: new Date(row.updated_at),
@@ -47,6 +52,7 @@ export class SupabaseCartMapper {
       customer_id: cart.getCustomerId(),
       status: cart.getStatus(),
       subtotal_cents: cart.getSubtotal().getValue(),
+      currency: cart.getSubtotal().getCurrency(),
       expires_at: cart.getExpiresAt().toISOString(),
       created_at: cart.getCreatedAt().toISOString(),
       updated_at: cart.getUpdatedAt().toISOString(),

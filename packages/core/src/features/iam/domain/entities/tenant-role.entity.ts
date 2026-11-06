@@ -7,6 +7,7 @@ export interface TenantRoleSnapshot {
   tenantId: string;
   name: string;
   permissions: UserPermission[];
+  isSystem: boolean;
 }
 
 interface TenantRoleProps {
@@ -14,6 +15,8 @@ interface TenantRoleProps {
   tenantId: string;
   name: string;
   permissions: readonly string[];
+  /** Default role every store starts with: editable, never deletable. */
+  isSystem?: boolean;
 }
 
 const KNOWN_PERMISSIONS: readonly string[] = Object.values(UserPermission);
@@ -28,6 +31,7 @@ export class TenantRole {
     private readonly tenantId: string,
     private name: TenantRoleName,
     private permissions: ReadonlySet<UserPermission>,
+    private readonly system: boolean,
   ) {}
 
   public static create(props: TenantRoleProps): TenantRole {
@@ -38,6 +42,7 @@ export class TenantRole {
       props.tenantId,
       TenantRoleName.create(props.name),
       TenantRole.parsePermissions(props.permissions),
+      props.isSystem ?? false,
     );
   }
 
@@ -48,6 +53,7 @@ export class TenantRole {
       props.tenantId,
       TenantRoleName.reconstitute(props.name),
       new Set(props.permissions.filter(isPermission)),
+      props.isSystem ?? false,
     );
   }
 
@@ -77,6 +83,10 @@ export class TenantRole {
     return this.permissions.has(permission);
   }
 
+  public isSystem(): boolean {
+    return this.system;
+  }
+
   public getId(): string {
     return this.id;
   }
@@ -99,6 +109,7 @@ export class TenantRole {
       tenantId: this.tenantId,
       name: this.getName(),
       permissions: this.getPermissions(),
+      isSystem: this.system,
     };
   }
 }

@@ -4,6 +4,7 @@ import type {
   ProviderCheckoutPort,
 } from '@/payments/application/ports/out/provider-checkout.port';
 import { ProviderCheckoutException } from '@/payments/application/exceptions/provider-checkout.exception';
+import { toProviderMinorUnits } from '@/payments/infrastructure/lemon-squeezy-amount';
 import {
   isLemonSqueezyCheckoutUrl,
   providerObject,
@@ -70,7 +71,8 @@ export class LemonSqueezyCheckoutAdapter implements ProviderCheckoutPort {
           data: {
             type: 'checkouts',
             attributes: {
-              custom_price: input.amountCents,
+              // Smallest currency unit, passed through explicitly (see toProviderMinorUnits).
+              custom_price: toProviderMinorUnits(input.amountCents, input.currency),
               expires_at: providerExpiresAt,
               test_mode: input.environment === 'test',
               preview: true,

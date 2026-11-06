@@ -58,6 +58,7 @@ export async function updateOwnProfileAction(
       demographicConsent: parsed.data.consent,
     });
     revalidatePath('/account/profile');
+    revalidatePath('/dashboard/profile');
     return { success: true, message: t('saved'), values, revision };
   } catch (error: unknown) {
     const key = usersErrorKey(error);

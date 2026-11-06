@@ -73,6 +73,28 @@ describe('Kivi messaging HTTP contracts', (): void => {
       new HttpKiviNotificationSettingsGateway(options(body)).readDeliveries(target),
     ).rejects.toMatchObject({ failure: 'transient' });
   });
+  it('exposes only non-secret identity of the connected WhatsApp number', async (): Promise<void> => {
+    const result = await new HttpKiviNotificationSettingsGateway(
+      options({
+        channel: 'whatsapp',
+        connected: true,
+        external_id: '1234567890',
+        name: '+57 300 000 0000',
+        access_token: 'secret',
+        webhook_subscribed: true,
+      }),
+    ).readChannel(target);
+    expect(result).toEqual({
+      connected: true,
+      phoneNumberId: '1234567890',
+      name: '+57 300 000 0000',
+    });
+    expect(
+      await new HttpKiviNotificationSettingsGateway(
+        options({ channel: 'whatsapp', connected: false, external_id: '99' }),
+      ).readChannel(target),
+    ).toEqual({ connected: false, phoneNumberId: null, name: null });
+  });
   it('reads a regional Meta locale without replacing it with a base language', async (): Promise<void> => {
     const settings = await new HttpKiviNotificationSettingsGateway(
       options({
@@ -83,6 +105,23 @@ describe('Kivi messaging HTTP contracts', (): void => {
       }),
     ).readSettings(target);
     expect(settings.language).toBe('en_US');
+  });
+  it('treats a missing Kivi widget as skipped, not as an error', async (): Promise<void> => {
+    const ok = options({ enabled: true });
+    expect(await new HttpKiviWhatsAppGateway(ok).syncWidgetHandoff(target, true)).toBe(true);
+    expect(ok.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/channels/whatsapp/widget-handoff'),
+      expect.objectContaining({ method: 'PUT', body: JSON.stringify({ enabled: true }) }),
+    );
+    expect(
+      await new HttpKiviWhatsAppGateway(options({ detail: 'x' }, 409)).syncWidgetHandoff(
+        target,
+        true,
+      ),
+    ).toBe(false);
+    await expect(
+      new HttpKiviWhatsAppGateway(options({}, 403)).syncWidgetHandoff(target, true),
+    ).rejects.toMatchObject({ status: 403 });
   });
   it('allowlists validation metadata and masks provider secrets and errors', async (): Promise<void> => {
     const result = await new HttpKiviWhatsAppGateway(

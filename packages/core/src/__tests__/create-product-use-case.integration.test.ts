@@ -1,3 +1,4 @@
+import { PostgresProductCurrencyRepository } from '@/products/infrastructure/repositories/postgres-product-currency.repository';
 import { createProductId } from '@/products/domain/types/product-id.type';
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import postgres from 'postgres';
@@ -13,14 +14,14 @@ import { CreateProductDto } from '@/products/application/dtos/create-product.dto
 const DATABASE_URL = process.env.DATABASE_URL;
 const TEST_TENANT_ID = createTenantId('00000000-0000-0000-0000-000000000000');
 
-describe('CreateProductUseCase Integration (Transaction & Rollback)', () => {
+describe('CreateProductUseCase Integration (Transaction & Rollback)', (): void => {
   let sql: postgres.Sql<Record<string, unknown>>;
   let transactionManager: PostgresTransactionManagerAdapter;
   let productRepository: PostgresProductRepository;
   let eventBus: EventBusPort;
   let useCase: CreateProductUseCase;
 
-  beforeAll(async () => {
+  beforeAll(async (): Promise<void> => {
     if (!DATABASE_URL) {
       console.warn('DATABASE_URL is not set. Skipping real integration tests.');
       return;
@@ -34,16 +35,17 @@ describe('CreateProductUseCase Integration (Transaction & Rollback)', () => {
       new PostgresCategoryRepository(sql),
       eventBus,
       transactionManager,
+      new PostgresProductCurrencyRepository(),
     );
   });
 
-  afterAll(async () => {
+  afterAll(async (): Promise<void> => {
     if (sql) {
       await sql.end();
     }
   });
 
-  it('should completely ROLLBACK creation if an error occurs after saving', async () => {
+  it('should completely ROLLBACK creation if an error occurs after saving', async (): Promise<void> => {
     if (!DATABASE_URL) return;
 
     const testProductId = crypto.randomUUID();
@@ -63,9 +65,11 @@ describe('CreateProductUseCase Integration (Transaction & Rollback)', () => {
       isVatExempt: false,
     };
 
-    const publishSpy = vi.spyOn(eventBus, 'publish').mockImplementationOnce(async () => {
-      throw new TransactionException('Forced failure to trigger ROLLBACK during event publish');
-    });
+    const publishSpy = vi
+      .spyOn(eventBus, 'publish')
+      .mockImplementationOnce(async (): Promise<void> => {
+        throw new TransactionException('Forced failure to trigger ROLLBACK during event publish');
+      });
 
     try {
       await useCase.execute(dto);
@@ -84,7 +88,7 @@ describe('CreateProductUseCase Integration (Transaction & Rollback)', () => {
     publishSpy.mockRestore();
   });
 
-  it('should COMMIT creation successfully if no error occurs', async () => {
+  it('should COMMIT creation successfully if no error occurs', async (): Promise<void> => {
     if (!DATABASE_URL) return;
 
     const testProductId = crypto.randomUUID();

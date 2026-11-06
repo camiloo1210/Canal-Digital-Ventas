@@ -54,10 +54,14 @@ describe('dashboard navigation permissions', (): void => {
       'orders',
       'products',
       'categories',
+      'profile',
     ]);
   });
   it('hides user management from members even with the MANAGE_USERS permission', (): void => {
-    expect(visibleDashboardNavigationKeys('MEMBER', ['MANAGE_USERS'])).toEqual(['overview']);
+    expect(visibleDashboardNavigationKeys('MEMBER', ['MANAGE_USERS'])).toEqual([
+      'overview',
+      'profile',
+    ]);
   });
   it('keeps integrations (Kivi) owner-only even for a member holding every delegable permission', (): void => {
     const everyPermission = PERMISSION_GROUPS.flatMap((group): string[] => [...group.permissions]);
@@ -66,12 +70,26 @@ describe('dashboard navigation permissions', (): void => {
     expect(keys).not.toContain('users');
     expect(visibleDashboardNavigationKeys('OWNER', [])).toContain('integrations');
   });
+  it('gives every member the profile tab, whatever their role', (): void => {
+    expect(visibleDashboardNavigationKeys('MEMBER', [])).toContain('profile');
+    expect(visibleDashboardNavigationKeys('OWNER', [])).toContain('profile');
+  });
+  it('grants the general overview through its own permission, separate from reports', (): void => {
+    const reports = PERMISSION_GROUPS.find((group): boolean => group.key === 'reports');
+    expect(reports?.permissions).toEqual(['VIEW_OVERVIEW', 'VIEW_REPORTS']);
+    expect(Object.values(UserPermission)).toContain('VIEW_OVERVIEW');
+    expect(visibleDashboardNavigationKeys('MEMBER', ['VIEW_REPORTS'])).toEqual([
+      'overview',
+      'businessIntelligence',
+      'profile',
+    ]);
+  });
   it('no longer offers a delegable integrations permission', (): void => {
     expect(Object.values(UserPermission)).not.toContain('MANAGE_INTEGRATIONS');
     expect(PERMISSION_GROUPS.map((group): string => group.key)).not.toContain('integrations');
   });
   it('shows a member without a role only the overview', (): void => {
-    expect(visibleDashboardNavigationKeys('MEMBER', [])).toEqual(['overview']);
+    expect(visibleDashboardNavigationKeys('MEMBER', [])).toEqual(['overview', 'profile']);
   });
 });
 

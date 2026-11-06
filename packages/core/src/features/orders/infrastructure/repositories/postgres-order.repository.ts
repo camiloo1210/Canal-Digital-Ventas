@@ -15,7 +15,7 @@ import { ORDER_AGGREGATE_TYPE } from '@/orders/application/outbox/order-aggregat
 
 import { OptimisticConcurrencyException } from '@/shared/application/exceptions/optimistic-concurrency.exception';
 import { SupabaseOrderMapper } from '@/orders/infrastructure/mappers/supabase-order.mapper';
-import { DbOrderRow } from '@/orders/infrastructure/types/supabase-order.types';
+import { DbOrderRow, DbOrderItemRow } from '@/orders/infrastructure/types/supabase-order.types';
 
 export class PostgresOrderRepository implements OrderRepositoryPort {
   constructor(
@@ -64,16 +64,17 @@ export class PostgresOrderRepository implements OrderRepositoryPort {
       );
     }
 
-    await tx.executeNative(async (sql: postgres.TransactionSql<Record<string, unknown>>) => {
-      // 1. Upsert Order
-      const addr = order.getShippingAddress();
-      const rows = await sql`
+    await tx.executeNative(
+      async (sql: postgres.TransactionSql<Record<string, unknown>>): Promise<void> => {
+        // 1. Upsert Order
+        const addr = order.getShippingAddress();
+        const rows = await sql`
         INSERT INTO sales.orders (
-          id, order_number, customer_id, tenant_id, status, subtotal_cents, tax_amount_cents, discount_amount_cents, shipping_cost_cents, total_amount_cents,
+          id, order_number, customer_id, tenant_id, currency, status, subtotal_cents, tax_amount_cents, discount_amount_cents, shipping_cost_cents, total_amount_cents,
           shipping_address_street, shipping_address_city, shipping_address_state, shipping_address_zip_code, shipping_address_country, shipping_address_reference,
           payment_gateway_id, version, created_at, updated_at
         ) VALUES (
-          ${order.getId()}, ${order.getOrderNumber()}, ${order.getCustomerId()}, ${order.getTenantId()}, ${order.getStatus()}, ${order.getSubtotal().getValue()}, ${order.getTaxAmount().getValue()}, ${order.getDiscountAmount().getValue()}, ${order.getShippingCost().getValue()}, ${order.getTotalAmount().getValue()},
+          ${order.getId()}, ${order.getOrderNumber()}, ${order.getCustomerId()}, ${order.getTenantId()}, ${order.getTotalAmount().getCurrency()}, ${order.getStatus()}, ${order.getSubtotal().getValue()}, ${order.getTaxAmount().getValue()}, ${order.getDiscountAmount().getValue()}, ${order.getShippingCost().getValue()}, ${order.getTotalAmount().getValue()},
           ${addr.getStreet()}, ${addr.getCity()}, ${addr.getState()}, ${addr.getZipCode()}, ${addr.getCountry()}, ${addr.getReference() || null},
           ${order.getPaymentGatewayId()}, ${order.getVersion()}, ${order.getCreatedAt()}, ${order.getUpdatedAt()}
         )
@@ -97,44 +98,47 @@ export class PostgresOrderRepository implements OrderRepositoryPort {
         RETURNING id;
       `;
 
-      if (rows.length === 0) {
-        throw new OptimisticConcurrencyException('Order', order.getId());
-      }
+        if (rows.length === 0) {
+          throw new OptimisticConcurrencyException('Order', order.getId());
+        }
 
-      // 2. Delete existing items
-      await sql`DELETE FROM sales.order_items WHERE order_id = ${order.getId()}`;
+        // 2. Delete existing items
+        await sql`DELETE FROM sales.order_items WHERE order_id = ${order.getId()}`;
 
-      // 3. Insert items
-      const items = order.getItems();
-      if (items.length > 0) {
-        const itemRows = items.map((i) => ({
-          id: i.getId(),
-          order_id: order.getId(),
-          product_id: i.getProductId(),
-          product_name: i.getProductName(),
-          quantity: i.getQuantity(),
-          unit_price_cents: i.getUnitPrice().getValue(),
-          sku: i.getSku(),
-          variant_id: i.getVariantId(),
-          subtotal_cents: i.getSubtotal().getValue(),
-        }));
+        // 3. Insert items
+        const items = order.getItems();
+        if (items.length > 0) {
+          const itemRows = items.map((i): Omit<DbOrderItemRow, 'created_at' | 'updated_at'> => ({
+            id: i.getId(),
+            order_id: order.getId(),
+            product_id: i.getProductId(),
+            product_name: i.getProductName(),
+            quantity: i.getQuantity(),
+            unit_price_cents: i.getUnitPrice().getValue(),
+            sku: i.getSku(),
+            variant_id: i.getVariantId(),
+            subtotal_cents: i.getSubtotal().getValue(),
+          }));
 
-        await sql`
+          await sql`
           INSERT INTO sales.order_items ${sql(itemRows)}
         `;
-      }
-    });
+        }
+      },
+    );
 
     // Publish domain events
     if (order.domainEvents.length > 0) {
-      const envelopes: DomainEventEnvelope[] = order.domainEvents.map((event) => ({
-        context: {
-          tenantId: order.getTenantId(),
-          aggregateType: ORDER_AGGREGATE_TYPE,
-          aggregateId: order.getId(),
-        },
-        event,
-      }));
+      const envelopes: DomainEventEnvelope[] = order.domainEvents.map(
+        (event): DomainEventEnvelope => ({
+          context: {
+            tenantId: order.getTenantId(),
+            aggregateType: ORDER_AGGREGATE_TYPE,
+            aggregateId: order.getId(),
+          },
+          event,
+        }),
+      );
       await this.eventBus.publish(envelopes, tx);
       order.clearDomainEvents();
     }
@@ -168,6 +172,7 @@ export class PostgresOrderRepository implements OrderRepositoryPort {
         order_number: orderRow.order_number as string,
         customer_id: orderRow.customer_id as string,
         tenant_id: orderRow.tenant_id as string,
+        currency: orderRow.currency as string,
         status: orderRow.status as string,
         subtotal_cents: Number(orderRow.subtotal_cents),
         tax_amount_cents: Number(orderRow.tax_amount_cents),
@@ -186,7 +191,7 @@ export class PostgresOrderRepository implements OrderRepositoryPort {
         created_at: new Date(orderRow.created_at as string | Date).toISOString(),
         updated_at: new Date(orderRow.updated_at as string | Date).toISOString(),
         version: Number(orderRow.version ?? 0),
-        order_items: itemRows.map((i) => ({
+        order_items: itemRows.map((i): DbOrderItemRow => ({
           id: i.id as string,
           order_id: i.order_id as string,
           product_id: i.product_id as string,

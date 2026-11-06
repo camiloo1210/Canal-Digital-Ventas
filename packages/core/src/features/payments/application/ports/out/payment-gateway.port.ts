@@ -7,6 +7,9 @@ export interface WebhookResult {
   paymentId: PaymentId;
   status: PaymentStatus;
   failureReason?: string;
+  /** Amount (minor units) and currency the provider reports as charged; required to complete. */
+  paidAmount?: number;
+  paidCurrency?: string;
 }
 
 export interface PaymentGatewayPort {

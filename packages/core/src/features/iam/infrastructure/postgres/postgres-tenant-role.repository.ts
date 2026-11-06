@@ -13,6 +13,7 @@ interface RoleRow {
   tenant_id: string;
   name: string;
   permissions: string[];
+  is_system: boolean;
 }
 
 export class PostgresTenantRoleRepository implements TenantRoleRepositoryPort {
@@ -25,7 +26,7 @@ export class PostgresTenantRoleRepository implements TenantRoleRepositoryPort {
       tx,
       'Unable to load the role',
       async (sql: TxSql): Promise<TenantRole | null> => {
-        const rows = await sql<RoleRow[]>`SELECT id, tenant_id, name, permissions
+        const rows = await sql<RoleRow[]>`SELECT id, tenant_id, name, permissions, is_system
         FROM core.tenant_roles
         WHERE id = ${roleId}::uuid AND tenant_id = ${tenantId}::uuid FOR UPDATE`;
         const row = rows[0];
@@ -35,6 +36,7 @@ export class PostgresTenantRoleRepository implements TenantRoleRepositoryPort {
               tenantId: row.tenant_id,
               name: row.name,
               permissions: row.permissions,
+              isSystem: row.is_system,
             })
           : null;
       },
@@ -79,7 +81,7 @@ export class PostgresTenantRoleRepository implements TenantRoleRepositoryPort {
   public async delete(roleId: string, tenantId: string, tx: TransactionContext): Promise<void> {
     await runInTx(tx, 'Unable to delete the role', async (sql: TxSql): Promise<void> => {
       await sql`DELETE FROM core.tenant_roles
-        WHERE id = ${roleId}::uuid AND tenant_id = ${tenantId}::uuid`;
+        WHERE id = ${roleId}::uuid AND tenant_id = ${tenantId}::uuid AND NOT is_system`;
     });
   }
 

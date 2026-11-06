@@ -21,6 +21,7 @@ function render(adminAuthAvailable: boolean, locale: 'es' | 'en' = 'es'): string
             name: 'Cajero',
             permissions: ['orders.read'],
             memberCount: 0,
+            isSystem: false,
             createdAt: '2026-11-03T00:00:00.000Z',
           },
         ]}

@@ -18,7 +18,19 @@ describe('endCartSession', (): void => {
     vi.useFakeTimers();
     useCartStore.setState({
       tenantSlug: 'shop',
-      items: [{ productId: 'p1', name: 'Pen', price: 1, quantity: 2, maxQuantity: 5 }],
+      items: [
+        {
+          productId: 'p1',
+          name: 'Pen',
+          unitPriceCents: 100,
+          retailPriceCents: 100,
+          currency: 'COP',
+          wholesalePriceCents: null,
+          wholesaleMinQuantity: null,
+          quantity: 2,
+          maxQuantity: 5,
+        },
+      ],
       serverVersion: 4,
       hydration: 'ready',
     });
@@ -51,13 +63,28 @@ describe('endCartSession', (): void => {
   });
 
   it('never blocks sign-out: a hung or failing save still clears the cart', async (): Promise<void> => {
-    registerActiveCartSync(controllerWith((): Promise<void> => new Promise<void>(() => undefined)));
+    registerActiveCartSync(
+      controllerWith((): Promise<void> => new Promise<void>((): undefined => undefined)),
+    );
     const pending = endCartSession();
     await vi.advanceTimersByTimeAsync(3000);
     await pending;
     expect(useCartStore.getState().items).toEqual([]);
 
-    useCartStore.setState({ items: [{ productId: 'p2', name: 'X', price: 1, quantity: 1 }] });
+    useCartStore.setState({
+      items: [
+        {
+          productId: 'p2',
+          name: 'X',
+          unitPriceCents: 100,
+          retailPriceCents: 100,
+          currency: 'COP',
+          wholesalePriceCents: null,
+          wholesaleMinQuantity: null,
+          quantity: 1,
+        },
+      ],
+    });
     registerActiveCartSync(controllerWith((): Promise<void> => Promise.reject(new Error('down'))));
     await endCartSession();
     expect(useCartStore.getState().items).toEqual([]);

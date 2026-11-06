@@ -1,3 +1,4 @@
+import { DiscountExceedsTotalException } from '@/orders/domain/exceptions/discount-exceeds-total.exception';
 import { OrderItem } from '@/orders/domain/entities/order-item.entity';
 import { OrderStatus } from '@/orders/domain/enums/order-status.enum';
 import { InvalidTenantIdException } from '@/shared/domain/exceptions/invalid-tenant-id.exception';
@@ -58,7 +59,9 @@ export class Order {
     private readonly createdAt: Date,
     private updatedAt: Date,
     private version: number,
-  ) {}
+  ) {
+    this.items = items.map((item: OrderItem): OrderItem => Order.snapshotItem(item));
+  }
 
   public static create(
     id: OrderId,
@@ -78,7 +81,8 @@ export class Order {
     Order.validateTenantId(tenantId);
     Order.validateItems(items);
     Order.validateShippingAddress(shippingAddress);
-    const calculatedTotal = subtotal.add(taxAmount).add(shippingCost).subtract(discountAmount);
+    const calculatedTotal = Order.calculateTotal(subtotal, taxAmount, discountAmount, shippingCost);
+    Order.validateItemSubtotal(items, subtotal);
     Order.validateAmounts(subtotal, taxAmount, discountAmount, shippingCost, calculatedTotal);
 
     const order = new Order(
@@ -86,7 +90,7 @@ export class Order {
       orderNumber,
       customerId,
       tenantId,
-      items,
+      [...items],
       OrderStatus.DRAFT,
       subtotal,
       taxAmount,
@@ -146,16 +150,48 @@ export class Order {
     if (!subtotal || !taxAmount || !discountAmount || !shippingCost || !totalAmount) {
       throw new InvalidOrderAttributeException('Amounts are required.');
     }
-    if (
-      subtotal.getValue() +
-        taxAmount.getValue() +
-        shippingCost.getValue() -
-        discountAmount.getValue() !==
-      totalAmount.getValue()
-    ) {
-      throw new InvalidOrderAttributeException('Invalid total amount.');
+    const expected = Order.calculateTotal(subtotal, taxAmount, discountAmount, shippingCost);
+    if (!expected.equals(totalAmount)) {
+      throw new InvalidOrderAttributeException('Invalid total amount or currency.');
     }
   }
+
+  private static calculateTotal(
+    subtotal: Money,
+    taxAmount: Money,
+    discountAmount: Money,
+    shippingCost: Money,
+  ): Money {
+    const currency = subtotal.getCurrency();
+    for (const amount of [taxAmount, discountAmount, shippingCost]) {
+      if (amount.getCurrency() !== currency) {
+        throw new InvalidOrderAttributeException('Order amounts must share one currency.');
+      }
+    }
+    const gross =
+      BigInt(subtotal.getValue()) + BigInt(taxAmount.getValue()) + BigInt(shippingCost.getValue());
+    const total = gross - BigInt(discountAmount.getValue());
+    if (total < BigInt(0)) throw new DiscountExceedsTotalException();
+    return Money.from(Number(total), currency);
+  }
+
+  private static calculateSubtotal(
+    items: OrderItem[],
+    currency: ReturnType<Money['getCurrency']>,
+  ): Money {
+    let subtotal = Money.from(0, currency);
+    for (const item of items) {
+      subtotal = subtotal.add(item.getSubtotal());
+    }
+    return subtotal;
+  }
+
+  private static validateItemSubtotal(items: OrderItem[], subtotal: Money): void {
+    if (!Order.calculateSubtotal(items, subtotal.getCurrency()).equals(subtotal)) {
+      throw new InvalidOrderAttributeException('Order subtotal must match its items.');
+    }
+  }
+
   private static validateShippingAddress(shippingAddress: Address): void {
     if (!shippingAddress) {
       throw new InvalidOrderAttributeException('Shipping address is required.');
@@ -197,12 +233,21 @@ export class Order {
   }
 
   public static reconstitute(props: OrderProps): Order {
+    Order.validateItems(props.items);
+    Order.validateItemSubtotal(props.items, props.subtotal);
+    Order.validateAmounts(
+      props.subtotal,
+      props.taxAmount,
+      props.discountAmount,
+      props.shippingCost,
+      props.totalAmount,
+    );
     return new Order(
       props.id,
       props.orderNumber,
       props.customerId,
       props.tenantId,
-      props.items,
+      [...props.items],
       props.status,
       props.subtotal,
       props.taxAmount,
@@ -319,52 +364,75 @@ export class Order {
       (i: OrderItem): boolean =>
         i.getProductId() === item.getProductId() && i.getVariantId() === item.getVariantId(),
     );
-    if (existingItem) {
-      existingItem.changeQuantity(existingItem.getQuantity() + item.getQuantity());
-    } else {
-      this.items.push(item);
+    if (item.getUnitPrice().getCurrency() !== this.subtotal.getCurrency()) {
+      throw new InvalidOrderAttributeException('Order items must share the order currency.');
     }
-    this.recalculateAllTotals();
-    this.updateUpdatedAt();
+    if (existingItem) {
+      this.changeItemQuantity(
+        existingItem.getId(),
+        existingItem.getQuantity() + item.getQuantity(),
+      );
+      return;
+    }
+    this.replaceItems([...this.items, item]);
   }
 
   public removeOrderItem(itemId: string): void {
     if (this.status !== OrderStatus.DRAFT) {
       throw new InvalidOrderStateException('Items can only be removed from draft orders.');
     }
-    this.items = this.items.filter((i: OrderItem): boolean => i.getId() !== itemId);
-    if (this.items.length === 0)
-      throw new InvalidOrderAttributeException('Order must have at least one item.');
-    this.recalculateAllTotals();
-    this.updateUpdatedAt();
+    const items = this.items.filter((item: OrderItem): boolean => item.getId() !== itemId);
+    Order.validateItems(items);
+    this.replaceItems(items);
   }
 
   public changeItemQuantity(itemId: string, quantity: number): void {
     if (this.status !== OrderStatus.DRAFT) {
       throw new InvalidOrderStateException('Item quantities can only change in draft orders.');
     }
-    const item = this.items.find((i: OrderItem): boolean => i.getId() === itemId);
+    const item = this.items.find((candidate: OrderItem): boolean => candidate.getId() === itemId);
     if (!item) throw new InvalidOrderAttributeException('Item not found in order.');
-    item.changeQuantity(quantity);
-    this.recalculateAllTotals();
-    this.updateUpdatedAt();
+    const replacement = OrderItem.create(
+      item.getId(),
+      item.getProductId(),
+      item.getProductName(),
+      quantity,
+      item.getUnitPrice(),
+      item.getSku(),
+      item.getVariantId() ?? undefined,
+    );
+    this.replaceItems(
+      this.items.map((candidate: OrderItem): OrderItem =>
+        candidate === item ? replacement : candidate,
+      ),
+    );
   }
 
-  private recalculateAllTotals(): void {
-    if (this.items.length === 0) return;
-    const currency = this.items[0].getUnitPrice().getCurrency();
+  private static snapshotItem(item: OrderItem): OrderItem {
+    return OrderItem.reconstitute({
+      id: item.getId(),
+      productId: item.getProductId(),
+      productName: item.getProductName(),
+      quantity: item.getQuantity(),
+      unitPrice: item.getUnitPrice(),
+      variantId: item.getVariantId(),
+      sku: item.getSku(),
+      subtotal: item.getSubtotal(),
+    });
+  }
 
-    let newSubtotal = Money.from(0, currency);
-    for (const item of this.items) {
-      newSubtotal = newSubtotal.add(item.getSubtotal());
-    }
-
-    this.subtotal = newSubtotal;
-
-    this.totalAmount = this.subtotal
-      .add(this.taxAmount)
-      .add(this.shippingCost)
-      .subtract(this.discountAmount);
+  private replaceItems(items: OrderItem[]): void {
+    const subtotal = Order.calculateSubtotal(items, this.subtotal.getCurrency());
+    const total = Order.calculateTotal(
+      subtotal,
+      this.taxAmount,
+      this.discountAmount,
+      this.shippingCost,
+    );
+    this.items = items.map((item: OrderItem): OrderItem => Order.snapshotItem(item));
+    this.subtotal = subtotal;
+    this.totalAmount = total;
+    this.updateUpdatedAt();
   }
 
   private addDomainEvent(event: DomainEvent): void {
@@ -394,7 +462,7 @@ export class Order {
   }
 
   public getItems(): OrderItem[] {
-    return [...this.items];
+    return this.items.map((item: OrderItem): OrderItem => Order.snapshotItem(item));
   }
 
   public getStatus(): OrderStatus {

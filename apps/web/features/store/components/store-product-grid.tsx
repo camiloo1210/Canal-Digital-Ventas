@@ -127,7 +127,7 @@ export async function StoreProductGrid({
                 <div className="mt-auto flex flex-col gap-2">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="min-w-0 max-w-full text-lg font-semibold tabular-nums text-foreground [overflow-wrap:anywhere]">
-                      {formatMoney(product.priceCents, 'USD', locale)}
+                      {formatMoney(product.priceCents, product.currency, locale)}
                     </span>
                     <StoreProductStockBadge availability={product.stockAvailability} />
                   </div>
@@ -136,7 +136,7 @@ export async function StoreProductGrid({
                       <div className="flex flex-col items-start gap-1.5 text-xs leading-relaxed text-muted-foreground">
                         <Badge variant="secondary">{t('wholesaleBadge')}</Badge>
                         <span>
-                          {formatMoney(product.wholesalePriceCents, 'USD', locale)} (
+                          {formatMoney(product.wholesalePriceCents, product.currency, locale)} (
                           {t('wholesaleMin')}: {product.wholesaleMinQuantity})
                         </span>
                       </div>

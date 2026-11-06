@@ -1,3 +1,5 @@
+import { isCartSnapshot } from '@/features/cart/store/cart.store';
+import { quoteCartLine } from '@canaldigital/packages/core/cart-pricing';
 import type { CartHydrationStatus, CartItem, CartState } from '@/features/cart/store/cart.store';
 import type {
   CartApiCart,
@@ -67,10 +69,15 @@ function isCart(value: unknown): value is CartApiCart {
   return (
     isRecord(value) &&
     Array.isArray(value.items) &&
+    value.items.length <= 50 &&
     typeof value.version === 'number' &&
     value.items.every(
       (item: unknown): boolean =>
-        isRecord(item) && typeof item.productId === 'string' && typeof item.quantity === 'number',
+        isRecord(item) && (value.items as Record<string, unknown>[])[0]?.currency === item.currency,
+    ) &&
+    value.items.every(
+      (item: unknown): boolean =>
+        isRecord(item) && isCartSnapshot({ ...item, imageUrl: item.imageUrl ?? undefined }),
     )
   );
 }
@@ -87,7 +94,11 @@ function toCartItem(item: CartApiItem): CartItem {
   return {
     productId: item.productId,
     name: item.name,
-    price: item.unitPriceCents / 100,
+    unitPriceCents: item.unitPriceCents,
+    retailPriceCents: item.retailPriceCents,
+    currency: item.currency,
+    wholesalePriceCents: item.wholesalePriceCents,
+    wholesaleMinQuantity: item.wholesaleMinQuantity,
     quantity: item.quantity,
     maxQuantity: item.maxQuantity,
     ...(item.imageUrl ? { imageUrl: item.imageUrl } : {}),
@@ -108,7 +119,11 @@ function mergeMax(
       continue;
     }
     const quantity = Math.max(existing.quantity, local.quantity);
-    merged.set(local.productId, { ...existing, quantity });
+    merged.set(local.productId, {
+      ...existing,
+      unitPriceCents: quoteCartLine({ ...existing, quantity }).unitPriceCents,
+      quantity,
+    });
   }
   return [...merged.values()];
 }

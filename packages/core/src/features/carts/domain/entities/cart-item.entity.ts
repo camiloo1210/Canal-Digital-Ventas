@@ -56,6 +56,12 @@ export class CartItem {
 
   // Reconstitute
   public static reconstitute(props: CartItemProps): CartItem {
+    CartItem.validateQuantity(props.quantity);
+    if (!props.unitPrice.multiply(props.quantity).equals(props.subtotal)) {
+      throw new InvalidCartAttributeException(
+        'Item subtotal must equal unit price times quantity in the same currency.',
+      );
+    }
     return new CartItem(
       props.id,
       props.productId,
@@ -70,7 +76,7 @@ export class CartItem {
 
   // Validations
   private static validateQuantity(quantity: number): void {
-    if (quantity <= 0) {
+    if (!Number.isSafeInteger(quantity) || quantity <= 0) {
       throw new InvalidCartItemQuantityException();
     }
   }
@@ -84,8 +90,9 @@ export class CartItem {
   // Domain Methods
   public changeQuantity(newQuantity: number): void {
     CartItem.validateQuantity(newQuantity);
+    const subtotal = this.unitPrice.multiply(newQuantity);
     this.quantity = newQuantity;
-    this.subtotal = this.unitPrice.multiply(newQuantity);
+    this.subtotal = subtotal;
   }
 
   // Getters

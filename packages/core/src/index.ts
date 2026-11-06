@@ -1,8 +1,12 @@
 export type {
   DashboardOverviewReadModel,
+  DashboardOverviewKpis,
+  DashboardOverviewPeriod,
   DashboardOverviewReadPort,
 } from '@/dashboard/application/ports/out/dashboard-overview-read.port';
 export { PostgresDashboardOverviewReadAdapter } from '@/dashboard/infrastructure/postgres-dashboard-overview-read.adapter';
+export type { ProductCurrencyRepositoryPort } from '@/products/application/ports/out/product-currency-repository.port';
+export { PostgresProductCurrencyRepository } from '@/products/infrastructure/repositories/postgres-product-currency.repository';
 export type {
   ActiveMembershipSummary,
   ActiveTenantReadyContext,
@@ -83,6 +87,8 @@ export type { PaginatedResult, PaginationOptions } from '@/shared/domain/paginat
 export { DomainException } from '@/shared/domain/exceptions/domain.exception';
 export { InvalidTenantIdException } from '@/shared/domain/exceptions/invalid-tenant-id.exception';
 export { Money } from '@/shared/domain/value-objects/money.vo';
+export { RoundingMode } from '@/shared/domain/rounding-mode';
+export { DiscountExceedsTotalException } from '@/orders/domain/exceptions/discount-exceeds-total.exception';
 export type { DomainEvent } from '@/shared/domain/events/domain-event.interface';
 
 export type { EventBusPort } from '@/shared/application/ports/out/event-bus.port';
@@ -299,9 +305,28 @@ export type {
   IntelligenceQuery,
   IntelligenceProductResult,
   IntelligenceSignal,
+  OrderFlowReport,
+  OrderFlowStage,
+  StuckOrder,
+  FlowStatus,
 } from '@/dashboard/domain/business-intelligence';
+export { MAX_INTELLIGENCE_DAYS } from '@/dashboard/domain/business-intelligence';
 export type { BusinessIntelligenceReadPort } from '@/dashboard/application/ports/out/business-intelligence-read.port';
 export { PostgresBusinessIntelligenceReadAdapter } from '@/dashboard/infrastructure/postgres-business-intelligence-read.adapter';
+export type {
+  AdviceCategory,
+  AdviceLocale,
+  BusinessAdvice,
+  BusinessAdviceTip,
+  BusinessAdvisorPort,
+} from '@/dashboard/application/ports/out/business-advisor.port';
+export { ADVICE_CATEGORIES } from '@/dashboard/application/ports/out/business-advisor.port';
+export {
+  BusinessAdvisorException,
+  BusinessAdviceAccessDeniedException,
+} from '@/dashboard/application/exceptions/business-advisor.exception';
+export { GenerateBusinessAdviceUseCase } from '@/dashboard/application/use-cases/generate-business-advice.use-case';
+export { GeminiBusinessAdvisorAdapter } from '@/dashboard/infrastructure/gemini-business-advisor.adapter';
 export { ConfigureKiviWhatsAppUseCase } from '@/kivi/application/use-cases/configure-kivi-whatsapp.use-case';
 export { HttpKiviWhatsAppGateway } from '@/kivi/infrastructure/http-kivi-whatsapp.gateway';
 export { KiviCredentialResolver } from '@/kivi/infrastructure/kivi-credential.resolver';
@@ -478,6 +503,7 @@ export { UserManagementForbiddenException } from '@/iam/application/exceptions/u
 export { TenantRoleNotFoundException } from '@/iam/application/exceptions/tenant-role-not-found.exception';
 export { TenantRoleNameTakenException } from '@/iam/application/exceptions/tenant-role-name-taken.exception';
 export { TenantRoleInUseException } from '@/iam/application/exceptions/tenant-role-in-use.exception';
+export { TenantRoleProtectedException } from '@/iam/application/exceptions/tenant-role-protected.exception';
 export { InvitationNotFoundException } from '@/iam/application/exceptions/invitation-not-found.exception';
 export { MemberNotFoundException } from '@/iam/application/exceptions/member-not-found.exception';
 export { ProtectedMemberException } from '@/iam/application/exceptions/protected-member.exception';
@@ -600,3 +626,14 @@ export {
   PostgresMemberPermissionsReadRepository,
   PostgresOwnProfileReadRepository,
 } from '@/iam/infrastructure/postgres/postgres-user-management-read.repositories';
+export { MAX_MONEY_CENTS } from '@/shared/domain/value-objects/money.vo';
+
+export {
+  CURRENCY_EXPONENTS,
+  currencyExponent,
+  decimalStringToMinor,
+  isSupportedCurrencyCode,
+  minorToDecimalString,
+  minorUnitsPerMajor,
+  type SupportedCurrencyCode,
+} from '@/shared/domain/money-format';
