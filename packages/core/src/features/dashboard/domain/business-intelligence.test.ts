@@ -36,6 +36,7 @@ const snapshot: IntelligenceSnapshot = {
     {
       id: 'sale',
       createdAt: '2026-10-24T12:00:00Z',
+      currency: 'USD',
       discountCents: 1,
       items: [
         { productId: 'a', quantity: 7, subtotalCents: 2100 },
@@ -45,6 +46,7 @@ const snapshot: IntelligenceSnapshot = {
     {
       id: 'previous',
       createdAt: '2026-10-17T12:00:00Z',
+      currency: 'USD',
       discountCents: 0,
       items: [{ productId: 'a', quantity: 1, subtotalCents: 300 }],
     },
@@ -61,6 +63,7 @@ describe('business intelligence policy', (): void => {
           {
             id: 'ranking',
             createdAt: '2026-10-24T12:00:00Z',
+            currency: 'USD',
             discountCents: 0,
             items: [
               { productId: 'a', quantity: 2, subtotalCents: 200 },
@@ -107,6 +110,7 @@ describe('business intelligence policy', (): void => {
           {
             id: 'sale',
             createdAt: '2026-10-24T12:00:00Z',
+            currency: 'USD',
             discountCents: 0,
             items: [
               { productId: 'slow', quantity: 1, subtotalCents: 300 },
@@ -131,12 +135,14 @@ describe('business intelligence policy', (): void => {
           {
             id: 'shipping-discount',
             createdAt: '2026-10-24T12:00:00Z',
+            currency: 'USD',
             discountCents: 150,
             items: [{ productId: 'a', quantity: 1, subtotalCents: 100 }],
           },
           {
             id: 'free-merchandise',
             createdAt: '2026-10-24T12:00:00Z',
+            currency: 'USD',
             discountCents: 50,
             items: [{ productId: 'b', quantity: 1, subtotalCents: 0 }],
           },
@@ -200,12 +206,14 @@ describe('business intelligence policy', (): void => {
           {
             id: 'today',
             createdAt: '2026-10-25T00:00:00Z',
+            currency: 'USD',
             discountCents: 0,
             items: [{ productId: 'a', quantity: 99, subtotalCents: 9999 }],
           },
           {
             id: 'old',
             createdAt: '2026-10-10T23:59:59Z',
+            currency: 'USD',
             discountCents: 0,
             items: [{ productId: 'a', quantity: 99, subtotalCents: 9999 }],
           },
@@ -335,5 +343,60 @@ describe('business intelligence policy', (): void => {
     expect(flow.stages[3].averageMinutes).toBeNull();
     expect(flow.stuckCount).toBe(1);
     expect(flow.stuckOrders[0]).toMatchObject({ id: 'slow', status: 'paid', hoursInStatus: 60 });
+  });
+  it('counts confirmed checkout orders and their payment latency', (): void => {
+    const report = analyzeBusinessIntelligence(
+      {
+        ...snapshot,
+        flowOrders: [
+          {
+            id: 'waiting',
+            orderNumber: 'C1',
+            status: 'confirmed',
+            createdAt: '2026-10-20T12:00:00Z',
+            transitions: [{ status: 'confirmed', at: '2026-10-20T12:00:00Z' }],
+          },
+          {
+            id: 'done',
+            orderNumber: 'C2',
+            status: 'paid',
+            createdAt: '2026-10-23T12:00:00Z',
+            transitions: [
+              { status: 'confirmed', at: '2026-10-23T12:00:00Z' },
+              { status: 'paid', at: '2026-10-23T13:00:00Z' },
+            ],
+          },
+        ],
+      },
+      query,
+    );
+    expect(report.orderFlow.totalOrders).toBe(2);
+    expect(
+      report.orderFlow.statusCounts.find((row): boolean => row.status === 'confirmed')?.count,
+    ).toBe(1);
+    expect(report.orderFlow.stages.find((row): boolean => row.from === 'confirmed')).toMatchObject({
+      to: 'paid',
+      averageMinutes: 60,
+      samples: 1,
+    });
+    expect(report.orderFlow.stuckOrders.some((row): boolean => row.id === 'waiting')).toBe(true);
+  });
+  it('keeps foreign currency units but excludes their incompatible money and costs', (): void => {
+    const report = analyzeBusinessIntelligence(
+      { ...snapshot, orders: [{ ...snapshot.orders[0], currency: 'EUR' }] },
+      query,
+    );
+    expect(report).toMatchObject({
+      revenueCents: 0,
+      estimatedProfitCents: 0,
+      orderCount: 1,
+      unitsSold: 8,
+      excludedCurrencyOrders: 1,
+    });
+    expect(report.products[0]).toMatchObject({
+      unitsSold: 7,
+      revenueCents: 0,
+      estimatedProfitCents: 0,
+    });
   });
 });

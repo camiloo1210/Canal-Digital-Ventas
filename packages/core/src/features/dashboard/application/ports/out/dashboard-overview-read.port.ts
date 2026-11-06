@@ -11,6 +11,7 @@ export interface DashboardOverviewKpis {
   readonly revenueCents: number;
   readonly previousRevenueCents: number;
   readonly revenueChangeBps: number | null;
+  readonly excludedCurrencyOrders: number;
   readonly orderCount: number;
   readonly lifetimeRevenueCents: number;
   readonly lifetimeOrderCount: number;

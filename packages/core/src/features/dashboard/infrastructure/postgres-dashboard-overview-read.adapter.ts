@@ -21,6 +21,7 @@ interface OverviewRow {
   period_orders: number;
   lifetime_revenue: string;
   lifetime_orders: number;
+  foreign_currency_orders: number;
   buying_customers: number;
   total_customers: number;
   active_products: number;
@@ -34,6 +35,7 @@ interface OverviewRow {
     created_at: string;
     customer_name: string;
     total_amount_cents: number;
+    currency: string;
   }[];
 }
 
@@ -59,13 +61,13 @@ export class PostgresDashboardOverviewReadAdapter implements DashboardOverviewRe
       const rows = await this.sql<OverviewRow[]>`
         SELECT t.name,t.slug,t.base_currency AS currency,current_timestamp AS observed_at,
           k.period_ends,k.period_revenue,k.previous_revenue,k.period_orders,k.lifetime_revenue,
-          k.lifetime_orders,k.buying_customers,
+          k.lifetime_orders,k.buying_customers,k.foreign_currency_orders,
           (SELECT count(*)::int FROM sales.customers cu WHERE cu.tenant_id=t.id) AS total_customers,
           o.awaiting_preparation,o.processing,o.shipped,o.pending_payment,
           p.active_products,p.out_of_stock,p.without_image,
           (SELECT count(*)::int FROM catalog.categories c WHERE c.tenant_id=t.id AND c.status='active') AS active_categories,
           coalesce((SELECT jsonb_agg(r ORDER BY r.created_at DESC,r.id DESC) FROM (
-            SELECT ord.id,ord.order_number,ord.status,ord.created_at,ord.total_amount_cents,
+            SELECT ord.id,ord.order_number,ord.status,ord.created_at,ord.total_amount_cents,ord.currency,
               c.name AS customer_name
             FROM sales.orders ord JOIN sales.customers c ON c.id=ord.customer_id AND c.tenant_id=ord.tenant_id
             WHERE ord.tenant_id=t.id AND ord.status<>'draft'
@@ -81,14 +83,15 @@ export class PostgresDashboardOverviewReadAdapter implements DashboardOverviewRe
         CROSS JOIN LATERAL (
           -- Net merchandise per order: items minus discount capped at items (same policy as business intelligence).
           SELECT b.ends AS period_ends,
-            coalesce(sum(n.net) FILTER (WHERE n.created_at>=b.ends-${period.days}::int*interval '1 day' AND n.created_at<b.ends),0)::text AS period_revenue,
-            coalesce(sum(n.net) FILTER (WHERE n.created_at>=b.ends-${period.days}::int*2*interval '1 day' AND n.created_at<b.ends-${period.days}::int*interval '1 day'),0)::text AS previous_revenue,
+            coalesce(sum(n.net) FILTER (WHERE n.currency=t.base_currency AND n.created_at>=b.ends-${period.days}::int*interval '1 day' AND n.created_at<b.ends),0)::text AS period_revenue,
+            coalesce(sum(n.net) FILTER (WHERE n.currency=t.base_currency AND n.created_at>=b.ends-${period.days}::int*2*interval '1 day' AND n.created_at<b.ends-${period.days}::int*interval '1 day'),0)::text AS previous_revenue,
             (count(*) FILTER (WHERE n.created_at>=b.ends-${period.days}::int*interval '1 day' AND n.created_at<b.ends))::int AS period_orders,
-            coalesce(sum(n.net),0)::text AS lifetime_revenue,
+            coalesce(sum(n.net) FILTER (WHERE n.currency=t.base_currency),0)::text AS lifetime_revenue,
+            (count(*) FILTER (WHERE n.currency<>t.base_currency))::int AS foreign_currency_orders,
             count(n.customer_id)::int AS lifetime_orders,
             (count(DISTINCT n.customer_id) FILTER (WHERE n.created_at>=b.ends-${period.days}::int*interval '1 day' AND n.created_at<b.ends))::int AS buying_customers
           FROM (
-            SELECT ord.customer_id,ord.created_at,g.gross-least(ord.discount_amount_cents::bigint,g.gross) AS net
+            SELECT ord.customer_id,ord.created_at,ord.currency,g.gross-least(ord.discount_amount_cents::bigint,g.gross) AS net
             FROM sales.orders ord CROSS JOIN LATERAL (
               SELECT coalesce(sum(i.subtotal_cents),0)::bigint AS gross FROM sales.order_items i WHERE i.order_id=ord.id
             ) g
@@ -99,7 +102,7 @@ export class PostgresDashboardOverviewReadAdapter implements DashboardOverviewRe
           SELECT count(*) FILTER (WHERE status='paid')::int AS awaiting_preparation,
             count(*) FILTER (WHERE status='processing')::int AS processing,
             count(*) FILTER (WHERE status='shipped')::int AS shipped,
-            count(*) FILTER (WHERE status='pending_payment')::int AS pending_payment
+            count(*) FILTER (WHERE status IN ('confirmed','pending_payment'))::int AS pending_payment
           FROM sales.orders WHERE tenant_id=t.id
         ) o
         CROSS JOIN LATERAL (
@@ -126,6 +129,7 @@ export class PostgresDashboardOverviewReadAdapter implements DashboardOverviewRe
             previous === BigInt(0)
               ? null
               : safeInteger(((revenue - previous) * BigInt(10000)) / previous),
+          excludedCurrencyOrders: row.foreign_currency_orders ?? 0,
           orderCount: row.period_orders,
           lifetimeRevenueCents: safeInteger(row.lifetime_revenue),
           lifetimeOrderCount: row.lifetime_orders,
@@ -151,7 +155,7 @@ export class PostgresDashboardOverviewReadAdapter implements DashboardOverviewRe
             createdAt: new Date(order.created_at).toISOString(),
             customerName: order.customer_name,
             totalAmountCents: safeInteger(order.total_amount_cents),
-            currency: row.currency,
+            currency: order.currency,
           }),
         ),
       };

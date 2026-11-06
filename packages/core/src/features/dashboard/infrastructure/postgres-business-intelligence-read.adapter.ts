@@ -46,7 +46,7 @@ export class PostgresBusinessIntelligenceReadAdapter implements BusinessIntellig
             JOIN catalog.categories c ON c.id=p.category_id AND c.tenant_id=p.tenant_id
             WHERE p.tenant_id=a.id),'[]'::jsonb) AS products,
           coalesce((SELECT jsonb_agg(jsonb_build_object(
-            'id',o.id,'createdAt',o.created_at,'discountCents',o.discount_amount_cents,
+            'id',o.id,'createdAt',o.created_at,'currency',o.currency,'discountCents',o.discount_amount_cents,
             'items',(SELECT coalesce(jsonb_agg(jsonb_build_object(
               'productId',i.product_id,'quantity',i.quantity,'subtotalCents',i.subtotal_cents
             ) ORDER BY i.id),'[]'::jsonb) FROM sales.order_items i WHERE i.order_id=o.id)
@@ -61,7 +61,7 @@ export class PostgresBusinessIntelligenceReadAdapter implements BusinessIntellig
           ) ORDER BY fo.created_at,fo.id) FROM sales.orders fo CROSS JOIN bounds fb
             WHERE fo.tenant_id=a.id AND (
               (fo.created_at>=fb.ends - fb.days * interval '1 day' AND fo.created_at<fb.ends)
-              OR fo.status IN ('pending_payment','paid','processing','shipped'))
+              OR fo.status IN ('confirmed','pending_payment','paid','processing','shipped'))
           ),'[]'::jsonb) AS flow_orders
         FROM authorized a`;
       const row = rows[0];

@@ -31,6 +31,7 @@ export interface IntelligenceSnapshot {
   readonly orders: readonly {
     id: string;
     createdAt: string;
+    currency: string;
     discountCents: number;
     items: readonly { productId: string; quantity: number; subtotalCents: number }[];
   }[];
@@ -47,6 +48,7 @@ export interface IntelligenceFlowOrder {
 }
 
 export const FLOW_STATUSES = [
+  'confirmed',
   'pending_payment',
   'paid',
   'processing',
@@ -57,12 +59,19 @@ export const FLOW_STATUSES = [
 ] as const;
 export type FlowStatus = (typeof FLOW_STATUSES)[number];
 
-const OPEN_STATUSES: readonly string[] = ['pending_payment', 'paid', 'processing', 'shipped'];
+const OPEN_STATUSES: readonly string[] = [
+  'confirmed',
+  'pending_payment',
+  'paid',
+  'processing',
+  'shipped',
+];
 const STAGES: readonly (readonly [FlowStatus, FlowStatus])[] = [
   ['pending_payment', 'paid'],
   ['paid', 'processing'],
   ['processing', 'shipped'],
   ['shipped', 'delivered'],
+  ['confirmed', 'paid'],
 ];
 
 export interface OrderFlowStage {
@@ -110,6 +119,8 @@ export interface BusinessIntelligenceReport {
   readonly revenueChangeBps: number | null;
   readonly estimatedProfitCents: number;
   readonly marginBps: number | null;
+  /** Orders in either comparison window whose money is excluded because its currency differs. */
+  readonly excludedCurrencyOrders: number;
   readonly orderCount: number;
   readonly orderFlow: OrderFlowReport;
   readonly unitsSold: number;
@@ -293,6 +304,7 @@ export function analyzeBusinessIntelligence(
   let profit = BigInt(0);
   let orderCount = 0;
   let unitsSold = 0;
+  let excludedCurrencyOrders = 0;
   for (const order of snapshot.orders) {
     const time = new Date(order.createdAt).getTime();
     if (!Number.isFinite(time)) throw new IntelligenceDataException();
@@ -304,7 +316,9 @@ export function analyzeBusinessIntelligence(
     const orderDiscount = integer(order.discountCents);
     // Merchandise-first reporting allocation. Excess discount belongs to excluded tax/shipping.
     const discount = orderDiscount > gross ? gross : orderDiscount;
-    const net = gross - discount;
+    const sameCurrency = order.currency === snapshot.currency;
+    if (!sameCurrency) excludedCurrencyOrders++;
+    const net = sameCurrency ? gross - discount : BigInt(0);
     const current = time >= start;
     const bucket = daily[Math.floor((time - (current ? start : previousStart)) / day)];
     if (current) {
@@ -324,9 +338,13 @@ export function analyzeBusinessIntelligence(
       const quantity = integer(item.quantity, 1);
       cumulative += integer(item.subtotalCents);
       const nextAllocation = gross === BigInt(0) ? BigInt(0) : (discount * cumulative) / gross;
-      const itemRevenue = BigInt(item.subtotalCents) - (nextAllocation - allocated);
+      const itemRevenue = sameCurrency
+        ? BigInt(item.subtotalCents) - (nextAllocation - allocated)
+        : BigInt(0);
       allocated = nextAllocation;
-      const itemProfit = itemRevenue - quantity * BigInt(product.costCents);
+      const itemProfit = sameCurrency
+        ? itemRevenue - quantity * BigInt(product.costCents)
+        : BigInt(0);
       if (!current) {
         bucket.previousEstimatedProfitCents = safe(
           BigInt(bucket.previousEstimatedProfitCents) + itemProfit,
@@ -392,6 +410,7 @@ export function analyzeBusinessIntelligence(
     estimatedProfitCents: safe(profit),
     marginBps: ratio(safe(profit), safe(revenue)),
     orderCount,
+    excludedCurrencyOrders,
     orderFlow: analyzeOrderFlow(snapshot.flowOrders, start, end, observed.getTime()),
     unitsSold,
     restockCount,
@@ -399,7 +418,7 @@ export function analyzeBusinessIntelligence(
     products,
     productRankings: {
       revenue: products
-        .filter((product): boolean => product.unitsSold > 0)
+        .filter((product): boolean => product.revenueCents > 0)
         .sort((a, b): number => b.revenueCents - a.revenueCents || a.id.localeCompare(b.id))
         .slice(0, 5),
       units: products
