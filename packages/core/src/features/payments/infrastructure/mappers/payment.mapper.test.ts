@@ -16,6 +16,7 @@ function buildRow(status: string): DbPaymentRow {
     status,
     gateway: 'lemon_squeezy',
     amount_cents: 1500,
+    currency: 'USD',
     gateway_transaction_id: 'txn-1',
     failure_reason: null,
     created_at: '2026-10-01T00:00:00.000Z',
@@ -35,6 +36,16 @@ const NEW_STATUSES: ReadonlyArray<string> = [
 const UNKNOWN_STATUSES: ReadonlyArray<string> = ['', 'weird', 'COMPLETED', '__unrecognized__'];
 
 describe('PaymentMapper', (): void => {
+  it('preserves the stored currency rather than relabeling amounts as USD', (): void => {
+    const payment = PaymentMapper.toDomain({ ...buildRow('pending'), currency: 'EUR' });
+    expect(payment.getAmount().getCurrency()).toBe('EUR');
+    expect(PaymentMapper.toPersistence(payment).currency).toBe('EUR');
+  });
+  it('refuses unclassified historical currency instead of inventing USD', (): void => {
+    expect((): Payment =>
+      PaymentMapper.toDomain({ ...buildRow('pending'), currency: null }),
+    ).toThrow();
+  });
   it.each(LEGACY_STATUSES)('round-trips legacy status "%s" unchanged', (status: string): void => {
     const row = buildRow(status);
 

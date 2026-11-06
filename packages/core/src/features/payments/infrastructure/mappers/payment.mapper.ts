@@ -7,11 +7,13 @@ import { resolvePaymentStatus } from '@/payments/domain/enums/payment-status.enu
 import { UnpersistablePaymentStatusException } from '@/payments/domain/exceptions/unpersistable-payment-status.exception';
 import { PaymentGateway } from '@/payments/domain/enums/payment-gateway.enum';
 import { Money } from '@/shared/domain/value-objects/money.vo';
-import { Currency } from '@/shared/domain/enums/currency.enum';
+import { parseCurrency } from '@/shared/domain/enums/currency.enum';
+import { PaymentRepositoryException } from '@/payments/application/exceptions/payment-repository.exception';
 import { DbPaymentRow } from '@/payments/infrastructure/types/supabase-payment.types';
 
 export class PaymentMapper {
   static toDomain(row: DbPaymentRow): Payment {
+    if (!row.currency) throw new PaymentRepositoryException('Payment has no stored currency.');
     const props: PaymentProps = {
       id: row.id as PaymentId,
       orderId: row.order_id as OrderId,
@@ -20,7 +22,7 @@ export class PaymentMapper {
       status: resolvePaymentStatus(row.status),
       rawStatus: row.status,
       gateway: row.gateway as PaymentGateway,
-      amount: Money.from(row.amount_cents, Currency.USD),
+      amount: Money.from(row.amount_cents, parseCurrency(row.currency)),
       gatewayTransactionId: row.gateway_transaction_id,
       failureReason: row.failure_reason,
       createdAt: new Date(row.created_at),
@@ -44,6 +46,7 @@ export class PaymentMapper {
       status: entity.getStatus(),
       gateway: entity.getGateway(),
       amount_cents: entity.getAmount().getValue(),
+      currency: entity.getAmount().getCurrency(),
       gateway_transaction_id: entity.getGatewayTransactionId(),
       failure_reason: entity.getFailureReason(),
       created_at: entity.getCreatedAt().toISOString(),
