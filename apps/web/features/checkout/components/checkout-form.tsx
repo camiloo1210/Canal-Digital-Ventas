@@ -1,5 +1,11 @@
 'use client';
 
+import {
+  quoteCartLine,
+  quoteCartSubtotal,
+  isCartQuoteWithinLimit,
+} from '@canaldigital/packages/core/cart-pricing';
+
 import * as React from 'react';
 import { useActionState, useEffect, useRef, useState } from 'react';
 import { submitCheckoutAction } from '@/features/checkout/actions/checkout.actions';
@@ -135,11 +141,10 @@ export function CheckoutForm({ tenantSlug }: { tenantSlug: string }): React.JSX.
         </Button>
       </div>
     );
+  const quoteSupported = isCartQuoteWithinLimit(cartStore.items);
   const totalItems = cartStore.items.reduce((sum, item): number => sum + item.quantity, 0);
-  const subtotal = cartStore.items.reduce(
-    (sum, item): number => sum + Math.round(item.price * 100) * item.quantity,
-    0,
-  );
+  const cartCurrency = cartStore.items[0]?.currency;
+  const subtotal = quoteSupported ? quoteCartSubtotal(cartStore.items) : null;
   const cartPayload = cartStore.items.map((item): { productId: string; quantity: number } => ({
     productId: item.productId,
     quantity: item.quantity,
@@ -172,20 +177,25 @@ export function CheckoutForm({ tenantSlug }: { tenantSlug: string }): React.JSX.
                   </span>
                 </span>
                 <span className="shrink-0 tabular-nums">
-                  {formatMoney(Math.round(item.price * 100) * item.quantity, 'USD', locale)}
+                  {formatMoney(quoteCartLine(item).totalCents, item.currency, locale)}
                 </span>
               </li>
             ))}
           </ul>
           <div className="flex justify-between font-medium text-lg border-t pt-4">
             <span>{t('subtotal')}</span>
-            <span>{formatMoney(subtotal, 'USD', locale)}</span>
+            <span>
+              {quoteSupported && cartCurrency
+                ? formatMoney(subtotal, cartCurrency, locale)
+                : t('totalUnsupported')}
+            </span>
           </div>
           <p className="text-xs text-muted-foreground">{t('totalsWarning')}</p>
+          {!quoteSupported && <p role="alert">{t('totalUnsupported')}</p>}
           <Button
             type="submit"
             className="w-full min-h-11"
-            disabled={isPending || cartStore.items.length === 0}
+            disabled={isPending || cartStore.items.length === 0 || !quoteSupported}
           >
             {isPending ? t('processing') : t('submit')}
           </Button>

@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { DomainException, ApplicationException, UserPermission } from '@canaldigital/packages/core';
 import { createClient } from '@/lib/supabase/server';
+import { getAdminCatalogReadRepository } from '@/features/dashboard/di/dashboard.di';
 import { resolveActionTenant } from '@/features/dashboard/server/resolve-action-tenant';
 import { withTenant } from '@/features/dashboard/utils/tenant-scope';
 import { userHasAnyPermission } from '@/features/users/queries/member-permissions.query';
@@ -17,8 +18,8 @@ import {
   getStorageAdapter,
 } from '@/features/products/di/products.di';
 import {
-  productFormSchema,
-  updateProductFormSchema,
+  createProductFormSchema,
+  createUpdateProductFormSchema,
   extractProductFormValues,
   readFormString,
   uploadedImagePathsSchema,
@@ -46,6 +47,8 @@ function productFailure(
 ): Pick<ProductActionState, 'error' | 'fieldErrors'> {
   if (error instanceof DomainException || error instanceof ApplicationException) {
     switch (error.name) {
+      case 'InvalidMoneyException':
+        return { error: t('fixErrors'), fieldErrors: { price: [t('moneyRange')] } };
       case 'InvalidWholesaleRulesException':
         return {
           error: t('fixErrors'),
@@ -104,22 +107,6 @@ async function saveProduct(
     productId: readFormString(formData, 'productId'),
     expectedVersion: readFormString(formData, 'expectedVersion'),
   };
-  const parsed = editing
-    ? updateProductFormSchema.safeParse(input)
-    : productFormSchema.safeParse(input);
-  if (!parsed.success) {
-    const fieldErrors: Partial<Record<ProductFieldName, string[]>> = {};
-    for (const issue of parsed.error.issues) {
-      const rawField = String(issue.path[0]);
-      const field =
-        rawField === 'existingImages' || rawField === 'uploadedImagePaths' ? 'image' : rawField;
-      if (field === 'productId' || field === 'expectedVersion')
-        return { ...rejected, error: t('invalidRequest') };
-      const name = field as ProductFieldName;
-      fieldErrors[name] = [...(fieldErrors[name] ?? []), t(issue.message)];
-    }
-    return { ...rejected, error: t('fixErrors'), fieldErrors };
-  }
   let redirectTenantId: string | null = null;
   try {
     const client = await createClient();
@@ -133,6 +120,29 @@ async function saveProduct(
     redirectTenantId = tenantId;
     if (!(await userHasAnyPermission(user.id, tenantId, [UserPermission.MANAGE_CATALOG])))
       return { ...rejected, error: t('forbidden') };
+    // Currency is resolved server-side from the tenant; the client never supplies it.
+    const formContext = await getAdminCatalogReadRepository().findProductFormContextForManager(
+      user.id,
+      tenantId,
+    );
+    if (!formContext) return { ...rejected, error: t('forbidden') };
+    const currency = formContext.currency;
+    const parsed = editing
+      ? createUpdateProductFormSchema(currency).safeParse(input)
+      : createProductFormSchema(currency).safeParse(input);
+    if (!parsed.success) {
+      const fieldErrors: Partial<Record<ProductFieldName, string[]>> = {};
+      for (const issue of parsed.error.issues) {
+        const rawField = String(issue.path[0]);
+        const field =
+          rawField === 'existingImages' || rawField === 'uploadedImagePaths' ? 'image' : rawField;
+        if (field === 'productId' || field === 'expectedVersion')
+          return { ...rejected, error: t('invalidRequest') };
+        const name = field as ProductFieldName;
+        fieldErrors[name] = [...(fieldErrors[name] ?? []), t(issue.message)];
+      }
+      return { ...rejected, error: t('fixErrors'), fieldErrors };
+    }
     const pathsCheck = uploadedImagePathsSchema(tenantId).safeParse(parsed.data.uploadedImagePaths);
     if (!pathsCheck.success) {
       return imageRejection(rejected, t, pathsCheck.error.issues[0]?.message ?? 'imageFormat');

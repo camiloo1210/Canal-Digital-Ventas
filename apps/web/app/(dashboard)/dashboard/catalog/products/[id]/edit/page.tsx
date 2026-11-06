@@ -46,9 +46,9 @@ export default async function EditProductPage({
     sku: productData.sku,
     categoryId: productData.category_id,
     description: productData.description ?? '',
-    price: formatMinorUnitsForInput(productData.price_cents),
-    cost: formatMinorUnitsForInput(productData.cost_cents),
-    wholesalePrice: formatMinorUnitsForInput(productData.wholesale_price_cents),
+    price: formatMinorUnitsForInput(productData.price_cents, context.currency),
+    cost: formatMinorUnitsForInput(productData.cost_cents, context.currency),
+    wholesalePrice: formatMinorUnitsForInput(productData.wholesale_price_cents, context.currency),
     wholesaleMinQuantity:
       productData.wholesale_min_quantity === null ? '' : String(productData.wholesale_min_quantity),
     stock: String(productData.stock),

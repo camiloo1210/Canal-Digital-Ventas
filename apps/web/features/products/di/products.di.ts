@@ -5,6 +5,7 @@ import {
   SupabaseProductReadRepository,
   type ProductReadRepositoryPort,
   PostgresProductRepository,
+  PostgresProductCurrencyRepository,
   PostgresCategoryRepository,
   PostgresTransactionManagerAdapter,
   CreateProductUseCase,
@@ -48,6 +49,7 @@ export function getCreateProductUseCase(): CreateProductUseCase {
     getPostgresCategoryRepository(),
     getEventBus(),
     getTransactionManager(),
+    new PostgresProductCurrencyRepository(),
   );
 }
 
