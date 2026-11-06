@@ -1,3 +1,4 @@
+import { Currency } from '@/shared/domain/enums/currency.enum';
 import { describe, expect, it, vi } from 'vitest';
 import { Product } from '@/products/domain/entities/product.entity';
 import { ProductName } from '@/products/domain/value-objects/product-name.vo';
@@ -30,8 +31,8 @@ function setup(): {
   const product = Product.create(
     createProductId('550e8400-e29b-41d4-a716-446655440000'),
     ProductName.from('Original'),
-    Money.from(10000),
-    Money.from(1000),
+    Money.from(10000, Currency.USD),
+    Money.from(1000, Currency.USD),
     '',
     10,
     createCategoryId('650e8400-e29b-41d4-a716-446655440000'),
@@ -43,7 +44,7 @@ function setup(): {
     'old/path.png',
     [],
     false,
-    Money.from(7000),
+    Money.from(7000, Currency.USD),
     37,
   );
   product.updateImages('old/path.png', 'https://example.test/old.png');

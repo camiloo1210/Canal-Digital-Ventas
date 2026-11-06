@@ -22,9 +22,14 @@ export class ChangeProductPricingUseCase {
       throw new ProductNotFoundException(dto.productId);
     }
 
-    product.changePricing(Money.from(dto.price), Money.from(dto.cost));
+    product.changePricing(
+      Money.from(dto.price, product.getPrice().getCurrency()),
+      Money.from(dto.cost, product.getPrice().getCurrency()),
+    );
     product.changeWholesaleRules(
-      dto.wholesalePrice ? Money.from(dto.wholesalePrice) : Money.from(0),
+      dto.wholesalePrice
+        ? Money.from(dto.wholesalePrice, product.getPrice().getCurrency())
+        : Money.from(0, product.getPrice().getCurrency()),
       dto.wholesaleMinQuantity ?? 0,
     );
 
