@@ -101,11 +101,41 @@ describe('distributed request protection', (): void => {
       });
     },
   );
-  it('is disabled outside Vercel, where forwarded IP headers cannot be trusted', async (): Promise<void> => {
+  it('fails closed for mutations outside Vercel without an authenticated proxy', async (): Promise<void> => {
     vi.stubEnv('VERCEL', '');
     const { checkRequestRateLimit } = await import('@/lib/security/request-rate-limit');
-    expect(await checkRequestRateLimit(request())).toBeNull();
+    expect(await checkRequestRateLimit(request('/login', 'POST'))).toMatchObject({ status: 503 });
     expect(mocks.limit).not.toHaveBeenCalled();
+  });
+  it('enables protection by default in production', async (): Promise<void> => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('RATE_LIMIT_ENABLED', 'false');
+    mocks.limit.mockResolvedValue({ success: false, reset: Date.now() + 1000 });
+    const { checkRequestRateLimit } = await import('@/lib/security/request-rate-limit');
+    expect(await checkRequestRateLimit(request('/login', 'POST'))).toMatchObject({ status: 429 });
+  });
+  it('accepts a single proxy IP only with the configured proxy secret', async (): Promise<void> => {
+    vi.stubEnv('VERCEL', '');
+    vi.stubEnv('RATE_LIMIT_PROXY_SECRET', 'p'.repeat(32));
+    const { checkRequestRateLimit } = await import('@/lib/security/request-rate-limit');
+    const headers = { 'x-forwarded-for': '203.0.113.9', 'x-cdv-proxy-secret': 'p'.repeat(32) };
+    expect(
+      await checkRequestRateLimit(
+        new Request('https://app.test/login', { method: 'POST', headers }),
+      ),
+    ).toBeNull();
+    expect(mocks.limit).toHaveBeenCalledOnce();
+    for (const secret of ['', 'q'.repeat(32)]) {
+      expect(
+        await checkRequestRateLimit(
+          new Request('https://app.test/login', {
+            method: 'POST',
+            headers: { ...headers, 'x-cdv-proxy-secret': secret },
+          }),
+        ),
+      ).toMatchObject({ status: 503 });
+    }
+    expect(mocks.limit).toHaveBeenCalledOnce();
   });
   it.each(['RATE_LIMIT_KEY_SECRET', 'UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN'])(
     'fails closed when %s is missing',
