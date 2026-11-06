@@ -1,3 +1,4 @@
+import { Currency } from '@/shared/domain/enums/currency.enum';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import postgres from 'postgres';
 import { PostgresTransactionManagerAdapter } from '@/shared/infrastructure/adapters/postgres-transaction-manager.adapter';
@@ -46,8 +47,8 @@ describe('PostgresTransactionManagerAdapter Integration', () => {
     const initialProduct = Product.create(
       testProductId,
       ProductName.from(originalName),
-      Money.from(100),
-      Money.from(50),
+      Money.from(100, Currency.USD),
+      Money.from(50, Currency.USD),
       'Desc',
       10,
       createCategoryId('cat-1'),
@@ -59,7 +60,7 @@ describe('PostgresTransactionManagerAdapter Integration', () => {
       null,
       [],
       false,
-      Money.from(0),
+      Money.from(0, Currency.USD),
       null,
     );
     await productRepository.save(initialProduct);
@@ -127,8 +128,8 @@ describe('PostgresTransactionManagerAdapter Integration', () => {
     const initialProduct = Product.create(
       testProductId,
       ProductName.from('Old Name'),
-      Money.from(100),
-      Money.from(50),
+      Money.from(100, Currency.USD),
+      Money.from(50, Currency.USD),
       'Desc',
       10,
       createCategoryId('cat-1'),
@@ -140,7 +141,7 @@ describe('PostgresTransactionManagerAdapter Integration', () => {
       null,
       [],
       false,
-      Money.from(0),
+      Money.from(0, Currency.USD),
       null,
     );
     await productRepository.save(initialProduct);

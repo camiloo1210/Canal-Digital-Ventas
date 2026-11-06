@@ -17,7 +17,7 @@ export class Money {
     private readonly currency: Currency,
   ) {}
 
-  public static from(amount: number, currency: Currency = Currency.USD): Money {
+  public static from(amount: number, currency: Currency): Money {
     if (!Number.isSafeInteger(amount) || amount < 0 || amount > MAX_MONEY_CENTS) {
       throw new InvalidMoneyException(
         'Money amount must be a nonnegative safe integer within the commercial limit.',

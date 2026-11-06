@@ -1,3 +1,4 @@
+import { Currency } from '@/shared/domain/enums/currency.enum';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import postgres from 'postgres';
 import { PostgresTransactionManagerAdapter } from '@/shared/infrastructure/adapters/postgres-transaction-manager.adapter';
@@ -44,8 +45,8 @@ describe('RLS Cross-Tenant Security Integration', () => {
     const initialProduct = Product.create(
       testProductId,
       ProductName.from('Tenant B Product'),
-      Money.from(100),
-      Money.from(50),
+      Money.from(100, Currency.USD),
+      Money.from(50, Currency.USD),
       'Desc',
       10,
       createCategoryId('cat-1'),
@@ -57,7 +58,7 @@ describe('RLS Cross-Tenant Security Integration', () => {
       null,
       [],
       false,
-      Money.from(0),
+      Money.from(0, Currency.USD),
       null,
     );
 
