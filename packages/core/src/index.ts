@@ -3,6 +3,7 @@ export type {
   DashboardOverviewReadPort,
 } from '@/dashboard/application/ports/out/dashboard-overview-read.port';
 export { PostgresDashboardOverviewReadAdapter } from '@/dashboard/infrastructure/postgres-dashboard-overview-read.adapter';
+
 export type {
   ActiveMembershipSummary,
   ActiveTenantReadyContext,
@@ -83,6 +84,8 @@ export type { PaginatedResult, PaginationOptions } from '@/shared/domain/paginat
 export { DomainException } from '@/shared/domain/exceptions/domain.exception';
 export { InvalidTenantIdException } from '@/shared/domain/exceptions/invalid-tenant-id.exception';
 export { Money } from '@/shared/domain/value-objects/money.vo';
+export { RoundingMode } from '@/shared/domain/rounding-mode';
+
 export type { DomainEvent } from '@/shared/domain/events/domain-event.interface';
 
 export type { EventBusPort } from '@/shared/application/ports/out/event-bus.port';
@@ -300,8 +303,10 @@ export type {
   IntelligenceProductResult,
   IntelligenceSignal,
 } from '@/dashboard/domain/business-intelligence';
+
 export type { BusinessIntelligenceReadPort } from '@/dashboard/application/ports/out/business-intelligence-read.port';
 export { PostgresBusinessIntelligenceReadAdapter } from '@/dashboard/infrastructure/postgres-business-intelligence-read.adapter';
+
 export { ConfigureKiviWhatsAppUseCase } from '@/kivi/application/use-cases/configure-kivi-whatsapp.use-case';
 export { HttpKiviWhatsAppGateway } from '@/kivi/infrastructure/http-kivi-whatsapp.gateway';
 export { KiviCredentialResolver } from '@/kivi/infrastructure/kivi-credential.resolver';
@@ -601,3 +606,14 @@ export {
   PostgresMemberPermissionsReadRepository,
   PostgresOwnProfileReadRepository,
 } from '@/iam/infrastructure/postgres/postgres-user-management-read.repositories';
+export { MAX_MONEY_CENTS } from '@/shared/domain/value-objects/money.vo';
+
+export {
+  CURRENCY_EXPONENTS,
+  currencyExponent,
+  decimalStringToMinor,
+  isSupportedCurrencyCode,
+  minorToDecimalString,
+  minorUnitsPerMajor,
+  type SupportedCurrencyCode,
+} from '@/shared/domain/money-format';
