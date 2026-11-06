@@ -92,6 +92,14 @@ export async function DashboardOverview({
   ];
   return (
     <div className="space-y-6">
+      {kpis.excludedCurrencyOrders > 0 && (
+        <p
+          role="status"
+          className="rounded-lg border bg-muted/40 p-4 text-sm text-muted-foreground"
+        >
+          {t('currencyScope', { currency: kpis.currency, count: kpis.excludedCurrencyOrders })}
+        </p>
+      )}
       <section aria-label={t('kpiTitle')} className="space-y-3">
         <p className="text-sm font-medium">
           {t('kpiPeriod', {

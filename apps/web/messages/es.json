@@ -137,7 +137,8 @@
       "shipped": "Enviado",
       "delivered": "Entregado",
       "cancelled": "Cancelado",
-      "refunded": "Reembolsado"
+      "refunded": "Reembolsado",
+      "confirmed": "Confirmado"
     },
     "stagesTitle": "Tiempo promedio por etapa",
     "stageTo": "a",
@@ -171,7 +172,8 @@
       "pricing": "Precios y margen",
       "operations": "Operación",
       "growth": "Crecimiento"
-    }
+    },
+    "currencyScope": "Los importes y márgenes se calculan solo en {currency}. Se excluyeron {count} pedidos en otras monedas de esos importes, sin convertirlos; sus pedidos y unidades sí se incluyen en los conteos."
   },
   "AdminOverview": {
     "title": "Resumen",
@@ -235,7 +237,8 @@
     "kpiComparison": "{percent} frente al período anterior",
     "kpiLifetimeHelp": "{count, plural, one {Ventas netas de # pedido pagado desde siempre.} other {Ventas netas de # pedidos pagados desde siempre.}}",
     "kpiCustomersHelp": "{count, plural, =0 {Ningún cliente compró en el período.} one {# cliente compró en el período.} other {# clientes compraron en el período.}}",
-    "kpiOrdersHelp": "Pedidos pagados, en preparación, enviados o entregados."
+    "kpiOrdersHelp": "Pedidos pagados, en preparación, enviados o entregados.",
+    "currencyScope": "Hay {count} pedidos históricos en otras monedas. Los ingresos se muestran solo en {currency}, sin conversión; los conteos incluyen todos los pedidos."
   },
   "AdminShell": {
     "administration": "Administración de tienda",

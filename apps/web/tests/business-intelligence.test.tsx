@@ -201,4 +201,14 @@ describe('business intelligence delivery', (): void => {
     expect(html).toContain('value="2026-10-10"');
     expect(html).toContain('max="2026-10-25"');
   });
+  it('discloses excluded foreign-currency money while keeping order/unit counts explicit', (): void => {
+    const html = renderToStaticMarkup(
+      <NextIntlClientProvider locale="es" messages={es} timeZone="UTC">
+        <BusinessIntelligenceDashboard report={{ ...report, excludedCurrencyOrders: 1 }} />
+      </NextIntlClientProvider>,
+    );
+    expect(html).toContain('solo en USD');
+    expect(html).toContain('otras monedas');
+    expect(html).toContain('unidades sí se incluyen');
+  });
 });
