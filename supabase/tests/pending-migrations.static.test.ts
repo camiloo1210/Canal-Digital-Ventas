@@ -166,6 +166,24 @@ describe('pending migrations (static checks)', (): void => {
           );
           continue;
         }
+        if (name === '20261106192212_security_authorization_boundaries.sql') {
+          const grant = match[0].match(
+            /^GRANT\s+EXECUTE\s+ON\s+FUNCTION\s+([a-z_.]+)\(([^)]*)\)\s+TO\s+authenticated;$/i,
+          );
+          const allowed = new Set([
+            'public.upsert_tenant_transactional(jsonb)',
+            'public.upsert_user_transactional(jsonb)',
+            'core.onboard_tenant_transactional(uuid,uuid,jsonb,jsonb)',
+            'core.current_member_has_permission(uuid,text[])',
+          ]);
+          if (grant && allowed.has(`${grant[1]}(${grant[2].replace(/\s/g, '')})`)) {
+            const fn = functionsOf(sql).find((definition): boolean => definition.name === grant[1]);
+            expect(fn?.body, 'browser-callable definers must bind the actor').toMatch(
+              /auth\.uid\(\)/,
+            );
+            continue;
+          }
+        }
         expect(match[1]).not.toMatch(/\b(anon|authenticated|service_role|public)\b/i);
       }
       expect(sql).not.toMatch(/(?<![A-Za-z])(SUPERUSER|BYPASSRLS|REPLICATION)\b/);
