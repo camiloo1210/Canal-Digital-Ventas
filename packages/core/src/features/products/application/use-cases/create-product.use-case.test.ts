@@ -1,3 +1,5 @@
+import { Currency } from '@/shared/domain/enums/currency.enum';
+import { Product } from '@/products/domain/entities/product.entity';
 import { describe, expect, it, vi } from 'vitest';
 import { CreateProductUseCase } from '@/products/application/use-cases/create-product.use-case';
 import type { ProductRepositoryPort } from '@/products/application/ports/out/product-repository.port';
@@ -44,6 +46,7 @@ function setup(): {
     { findById: findCategory } as unknown as CategoryRepositoryPort,
     { publish },
     manager,
+    { getCurrency: vi.fn().mockResolvedValue(Currency.COP) },
   );
   const dto: CreateProductDto = {
     id: '550e8400-e29b-41d4-a716-446655440000',
@@ -64,6 +67,15 @@ function setup(): {
 }
 
 describe('CreateProductUseCase category integrity', (): void => {
+  it('uses the authoritative tenant currency for every product price', async (): Promise<void> => {
+    const test = setup();
+    await test.useCase.execute({ ...test.dto, wholesalePrice: 9000, wholesaleMinQuantity: 2 });
+    const product = test.save.mock.calls[0][0] as Product;
+    expect(product.getPrice().getCurrency()).toBe(Currency.COP);
+    expect(product.getCost().getCurrency()).toBe(Currency.COP);
+    expect(product.getWholesalePrice().getCurrency()).toBe(Currency.COP);
+    expect(product.getPrice().getValue()).toBe(test.dto.price);
+  });
   it('saves the product when the category belongs to the tenant', async (): Promise<void> => {
     const test = setup();
     await test.useCase.execute(test.dto);

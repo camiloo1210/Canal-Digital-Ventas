@@ -13,6 +13,7 @@ interface SnapshotRow {
   currency: string;
   products: IntelligenceSnapshot['products'];
   orders: IntelligenceSnapshot['orders'];
+  flow_orders: IntelligenceSnapshot['flowOrders'];
 }
 
 export class PostgresBusinessIntelligenceReadAdapter implements BusinessIntelligenceReadPort {
@@ -32,7 +33,9 @@ export class PostgresBusinessIntelligenceReadAdapter implements BusinessIntellig
             AND m.user_id=${userId}::uuid AND m.status='active' AND core.member_has_permission(m.user_id, m.tenant_id, ARRAY['VIEW_REPORTS']::text[]))
           AND t.id=${tenantId}::uuid
         ), bounds AS (
-          SELECT date_trunc('day',current_timestamp AT TIME ZONE 'UTC') AT TIME ZONE 'UTC' AS ends,
+          SELECT CASE WHEN ${query.endDate ?? null}::date IS NULL
+              THEN date_trunc('day',current_timestamp AT TIME ZONE 'UTC') AT TIME ZONE 'UTC'
+              ELSE ((${query.endDate ?? null}::date + 1)::timestamp AT TIME ZONE 'UTC') END AS ends,
             ${query.days}::int AS days
         )
         SELECT current_timestamp AS observed_at,a.base_currency AS currency,
@@ -43,14 +46,23 @@ export class PostgresBusinessIntelligenceReadAdapter implements BusinessIntellig
             JOIN catalog.categories c ON c.id=p.category_id AND c.tenant_id=p.tenant_id
             WHERE p.tenant_id=a.id),'[]'::jsonb) AS products,
           coalesce((SELECT jsonb_agg(jsonb_build_object(
-            'id',o.id,'createdAt',o.created_at,'discountCents',o.discount_amount_cents,
+            'id',o.id,'createdAt',o.created_at,'currency',o.currency,'discountCents',o.discount_amount_cents,
             'items',(SELECT coalesce(jsonb_agg(jsonb_build_object(
               'productId',i.product_id,'quantity',i.quantity,'subtotalCents',i.subtotal_cents
             ) ORDER BY i.id),'[]'::jsonb) FROM sales.order_items i WHERE i.order_id=o.id)
           ) ORDER BY o.created_at,o.id) FROM sales.orders o CROSS JOIN bounds b
             WHERE o.tenant_id=a.id AND o.status IN ('paid','processing','shipped','delivered')
               AND o.created_at>=b.ends - (b.days * 2) * interval '1 day' AND o.created_at<b.ends
-          ),'[]'::jsonb) AS orders
+          ),'[]'::jsonb) AS orders,
+          coalesce((SELECT jsonb_agg(jsonb_build_object(
+            'id',fo.id,'orderNumber',fo.order_number,'status',fo.status,'createdAt',fo.created_at,
+            'transitions',(SELECT coalesce(jsonb_agg(jsonb_build_object('status',h.to_status,'at',h.changed_at)
+              ORDER BY h.changed_at,h.id),'[]'::jsonb) FROM sales.order_status_history h WHERE h.order_id=fo.id)
+          ) ORDER BY fo.created_at,fo.id) FROM sales.orders fo CROSS JOIN bounds fb
+            WHERE fo.tenant_id=a.id AND (
+              (fo.created_at>=fb.ends - fb.days * interval '1 day' AND fo.created_at<fb.ends)
+              OR fo.status IN ('confirmed','pending_payment','paid','processing','shipped'))
+          ),'[]'::jsonb) AS flow_orders
         FROM authorized a`;
       const row = rows[0];
       return row
@@ -60,6 +72,7 @@ export class PostgresBusinessIntelligenceReadAdapter implements BusinessIntellig
               currency: row.currency,
               products: row.products,
               orders: row.orders,
+              flowOrders: row.flow_orders,
             },
             query,
           )

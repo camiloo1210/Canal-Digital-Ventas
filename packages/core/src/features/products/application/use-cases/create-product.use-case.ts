@@ -1,3 +1,4 @@
+import { ProductCurrencyRepositoryPort } from '@/products/application/ports/out/product-currency-repository.port';
 import { PRODUCT_AGGREGATE_TYPE } from '@/products/application/outbox/product-aggregate.constants';
 import { CreateProductDto } from '@/products/application/dtos/create-product.dto';
 import { Product } from '@/products/domain/entities/product.entity';
@@ -7,11 +8,11 @@ import { Money } from '@/shared/domain/value-objects/money.vo';
 import { ProductRepositoryPort } from '@/products/application/ports/out/product-repository.port';
 import { CategoryRepositoryPort } from '@/categories/application/ports/out/category-repository.port';
 import { CategoryNotFoundException } from '@/categories/application/exceptions/category-not-found.exception';
-import { EventBusPort } from '@/shared/application/ports/out/event-bus.port';
+import { EventBusPort, DomainEventEnvelope } from '@/shared/application/ports/out/event-bus.port';
 import { createProductId } from '@/products/domain/types/product-id.type';
 import { createCategoryId } from '@/products/domain/types/category-id.type';
 import { createTenantId } from '@/shared/domain/types/tenant-id.type';
-import { createSeasonId } from '@/products/domain/types/season-id.type';
+import { createSeasonId, SeasonId } from '@/products/domain/types/season-id.type';
 import { TransactionManagerPort } from '@/shared/application/ports/out/transaction-manager.port';
 
 export class CreateProductUseCase {
@@ -20,18 +21,23 @@ export class CreateProductUseCase {
     private readonly categoryRepository: CategoryRepositoryPort,
     private readonly eventBus: EventBusPort,
     private readonly transactionManager: TransactionManagerPort,
+    private readonly currencyRepository: ProductCurrencyRepositoryPort,
   ) {}
 
   async execute(dto: CreateProductDto): Promise<string> {
     let productIdToReturn = '';
 
     await this.transactionManager.runInTransaction(
-      async (tx) => {
+      async (tx): Promise<void> => {
+        const currency = await this.currencyRepository.getCurrency(
+          createTenantId(dto.tenantId),
+          tx,
+        );
         const name = ProductName.from(dto.name);
         const sku = Sku.from(dto.sku);
-        const price = Money.from(dto.price);
-        const cost = Money.from(dto.cost);
-        const wholesalePrice = dto.wholesalePrice ? Money.from(dto.wholesalePrice) : null;
+        const price = Money.from(dto.price, currency);
+        const cost = Money.from(dto.cost, currency);
+        const wholesalePrice = dto.wholesalePrice ? Money.from(dto.wholesalePrice, currency) : null;
 
         const imagePath = dto.imagePath || null;
         const imageUrl = dto.imageUrl || null;
@@ -58,7 +64,7 @@ export class CreateProductUseCase {
           tenantId,
           null, // expirationDate
           null, // status
-          dto.seasonIds.map((id) => createSeasonId(id)),
+          dto.seasonIds.map((id): SeasonId => createSeasonId(id)),
           imagePath,
           [], // variants
           dto.isVatExempt,
@@ -75,7 +81,7 @@ export class CreateProductUseCase {
         await this.productRepository.save(newProduct, tx);
 
         if (newProduct.domainEvents.length > 0) {
-          const envelopes = newProduct.domainEvents.map((event) => ({
+          const envelopes = newProduct.domainEvents.map((event): DomainEventEnvelope => ({
             event,
             context: {
               tenantId: dto.tenantId,

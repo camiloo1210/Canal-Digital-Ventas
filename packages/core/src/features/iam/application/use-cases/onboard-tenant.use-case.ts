@@ -8,7 +8,7 @@ import { TenantName } from '@/tenants/domain/value-objects/tenant-name.vo';
 import { TenantSlug } from '@/tenants/domain/value-objects/tenant-slug.vo';
 import { Email } from '@/shared/domain/value-objects/email.vo';
 import { PersonName } from '@/shared/domain/value-objects/person-name.vo';
-import { Currency } from '@/shared/domain/enums/currency.enum';
+import { parseCurrency } from '@/shared/domain/enums/currency.enum';
 import { createTenantId } from '@/shared/domain/types/tenant-id.type';
 import { createUserId } from '@/iam/domain/types/user-id.type';
 import { OnboardTenantDto } from '@/iam/application/dtos/onboard-tenant.dto';
@@ -32,7 +32,7 @@ export class OnboardTenantUseCase {
       TenantName.create(dto.name),
       TenantSlug.create(dto.slug),
       Email.create(dto.contactEmail),
-      (dto.baseCurrency as Currency) || Currency.USD,
+      parseCurrency(dto.baseCurrency),
     );
 
     // Since onboarding is a single step right now, we activate the tenant immediately

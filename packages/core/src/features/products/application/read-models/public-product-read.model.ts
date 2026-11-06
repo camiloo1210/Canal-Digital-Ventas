@@ -5,6 +5,7 @@ export interface PublicProductReadModel {
   id: string;
   name: string;
   priceCents: number;
+  currency: string;
   description: string;
   categoryId: string;
   sku: string;

@@ -16,7 +16,7 @@ export class PostgresBuyerOrderReadRepository implements BuyerOrderReadRepositor
         o.tenant_id,
         t.name as tenant_name,
         t.slug as tenant_slug,
-        t.base_currency as currency,
+        o.currency as currency,
         o.status,
         o.total_amount_cents,
         o.subtotal_cents,

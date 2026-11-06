@@ -6,8 +6,10 @@ import { requireDashboardPermission } from '@/features/dashboard/queries/dashboa
 import { UserPermission } from '@canaldigital/packages/core';
 import {
   parseIntelligenceQuery,
+  todayIso,
   type IntelligenceSearchParams,
 } from '@/features/dashboard/queries/business-intelligence-query';
+import { intelligenceQueryKey } from '@/features/dashboard/utils/business-intelligence-range';
 import { TenantScope } from '@/features/dashboard/components/tenant-scope';
 import { tenantParam } from '@/features/dashboard/utils/tenant-scope';
 import { BusinessIntelligenceFilters } from '@/features/dashboard/components/business-intelligence-filters';
@@ -43,9 +45,9 @@ export default async function BusinessIntelligencePage({
               {t('description')}
             </p>
           </header>
-          <BusinessIntelligenceFilters query={query} />
+          <BusinessIntelligenceFilters query={query} maxDate={todayIso()} />
           <React.Suspense
-            key={`${query.days}-${query.leadTimeDays}-${query.targetCoverageDays}`}
+            key={intelligenceQueryKey(query)}
             fallback={<BusinessIntelligenceSkeleton label={t('loading')} />}
           >
             <BusinessIntelligenceResults userId={userId} tenantId={tenantId} query={query} />

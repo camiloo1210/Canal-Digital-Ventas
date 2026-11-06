@@ -11,6 +11,7 @@ import {
 import { DomainException, ApplicationException } from '@canaldigital/packages/core';
 import { buyerAuthHref, safeAuthReturnPath } from '@/features/iam/utils/auth-return-path';
 import { createClient } from '@/lib/supabase/server';
+import { ONBOARDING_BASE_CURRENCY } from '@/features/iam/constants';
 
 export type ActionState = {
   success: boolean;
@@ -79,6 +80,7 @@ export async function signupBusinessAction(
         userEmail: validatedFields.data.email,
         firstName: validatedFields.data.firstName,
         lastName: validatedFields.data.lastName,
+        baseCurrency: ONBOARDING_BASE_CURRENCY,
       },
       currentUserId,
       idempotencyKey,

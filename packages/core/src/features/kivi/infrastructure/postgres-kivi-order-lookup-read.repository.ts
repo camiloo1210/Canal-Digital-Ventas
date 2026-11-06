@@ -13,6 +13,7 @@ import {
 import { KiviOrderLookupReadException } from '@/kivi/infrastructure/kivi-order-lookup-read.exception';
 
 interface OrderRow {
+  currency: string;
   id: string;
   order_number: string;
   status: string;
@@ -32,7 +33,6 @@ interface LineRow {
 const MAX_LINES_PER_ORDER = 20;
 const MAX_IMAGE_URL_LENGTH = 2048;
 // Same currency the catalog is sent to Kivi in.
-const CURRENCY = 'USD';
 
 /** Only a plain public https URL is shared; anything else is dropped rather than repaired. */
 function publicImageUrl(value: string | null): string | null {
@@ -45,6 +45,13 @@ function reference(value: string | null): string | null {
   if (value === null) return null;
   const normalized = normalizeOrderNumber(value);
   return normalized.length > 0 ? normalized : null;
+}
+
+function safeMinor(value: number | string | bigint): number {
+  const amount = Number(value);
+  if (!Number.isSafeInteger(amount))
+    throw new KiviOrderLookupReadException('Unsafe minor-unit amount from database');
+  return amount;
 }
 
 export class PostgresKiviOrderLookupReadRepository implements KiviOrderLookupReadPort {
@@ -67,7 +74,7 @@ export class PostgresKiviOrderLookupReadRepository implements KiviOrderLookupRea
         return [];
       }
       const rows = await this.sql<OrderRow[]>`
-        SELECT o.id, o.order_number, o.status, o.updated_at, o.created_at, o.total_amount_cents
+        SELECT o.currency, o.id, o.order_number, o.status, o.updated_at, o.created_at, o.total_amount_cents
         FROM sales.orders o
         JOIN sales.customers c ON c.id = o.customer_id AND c.tenant_id = o.tenant_id
         WHERE o.tenant_id = ${connection.tenant_id}
@@ -94,15 +101,15 @@ export class PostgresKiviOrderLookupReadRepository implements KiviOrderLookupRea
         status: row.status,
         updatedAt: new Date(row.updated_at).toISOString(),
         createdAt: new Date(row.created_at).toISOString(),
-        currency: CURRENCY,
-        total: centsToDecimalString(Number(row.total_amount_cents)),
+        currency: row.currency,
+        total: centsToDecimalString(safeMinor(row.total_amount_cents), row.currency),
         items: lines
           .filter((line): boolean => line.order_id === row.id)
           .slice(0, MAX_LINES_PER_ORDER)
           .map((line): KiviOrderLookupLine => ({
             name: line.product_name,
             quantity: Number(line.quantity),
-            unitPrice: centsToDecimalString(Number(line.unit_price_cents)),
+            unitPrice: centsToDecimalString(safeMinor(line.unit_price_cents), row.currency),
             imageUrl: publicImageUrl(line.image_url),
           })),
       }));

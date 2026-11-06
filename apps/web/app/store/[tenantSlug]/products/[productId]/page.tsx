@@ -79,14 +79,14 @@ export default async function ProductDetailPage(props: {
             >
               <div className="space-y-2">
                 <p className="text-3xl font-semibold tabular-nums text-foreground sm:text-4xl">
-                  {formatMoney(product.priceCents, 'USD', locale)}
+                  {formatMoney(product.priceCents, product.currency, locale)}
                 </p>
                 {product.wholesalePriceCents !== null && product.wholesaleMinQuantity !== null && (
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="secondary">{t('wholesaleBadge')}</Badge>
                     <span className="text-sm font-medium tabular-nums text-muted-foreground">
-                      {formatMoney(product.wholesalePriceCents, 'USD', locale)} ({t('wholesaleMin')}
-                      : {product.wholesaleMinQuantity})
+                      {formatMoney(product.wholesalePriceCents, product.currency, locale)} (
+                      {t('wholesaleMin')}: {product.wholesaleMinQuantity})
                     </span>
                   </div>
                 )}
@@ -106,7 +106,10 @@ export default async function ProductDetailPage(props: {
                 key={product.id}
                 productId={product.id}
                 name={product.name}
-                price={product.priceCents / 100}
+                retailPriceCents={product.priceCents}
+                currency={product.currency}
+                wholesalePriceCents={product.wholesalePriceCents}
+                wholesaleMinQuantity={product.wholesaleMinQuantity}
                 imageUrl={product.imageUrl ?? undefined}
                 inStock={product.inStock}
                 maxQuantity={maxQuantity}

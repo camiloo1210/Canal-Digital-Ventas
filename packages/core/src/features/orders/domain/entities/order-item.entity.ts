@@ -1,6 +1,6 @@
 import { Money } from '@/shared/domain/value-objects/money.vo';
 import { InvalidQuantityException } from '@/orders/domain/exceptions/invalid-quantity.exception';
-import { InvalidUnitPriceException } from '@/orders/domain/exceptions/invalid-unit-price.exception';
+import { InvalidOrderAttributeException } from '@/orders/domain/exceptions/invalid-order-attribute.exception';
 import { ProductId } from '@/orders/domain/types/product-id.type';
 import { OrderItemId } from '@/orders/domain/types/order-item-id.type';
 import { VariantId } from '@/orders/domain/types/variant-id.type';
@@ -37,7 +37,7 @@ export class OrderItem {
     sku: string,
     variantId?: VariantId,
   ): OrderItem {
-    if (quantity <= 0) throw new InvalidQuantityException();
+    OrderItem.validateQuantity(quantity);
     const subtotal = unitPrice.multiply(quantity);
     return new OrderItem(
       id,
@@ -52,6 +52,12 @@ export class OrderItem {
   }
   // Reconstitute
   public static reconstitute(props: OrderItemProps): OrderItem {
+    OrderItem.validateQuantity(props.quantity);
+    if (!props.unitPrice.multiply(props.quantity).equals(props.subtotal)) {
+      throw new InvalidOrderAttributeException(
+        'Item subtotal must equal unit price times quantity in the same currency.',
+      );
+    }
     return new OrderItem(
       props.id,
       props.productId,
@@ -65,10 +71,7 @@ export class OrderItem {
   }
   //Validations
   private static validateQuantity(quantity: number): void {
-    if (quantity <= 0) throw new InvalidQuantityException();
-  }
-  private static validateUnitPrice(unitPrice: number): void {
-    if (unitPrice <= 0) throw new InvalidUnitPriceException();
+    if (!Number.isSafeInteger(quantity) || quantity <= 0) throw new InvalidQuantityException();
   }
 
   //Actions
@@ -77,8 +80,9 @@ export class OrderItem {
 
   public changeQuantity(newQuantity: number): void {
     OrderItem.validateQuantity(newQuantity);
+    const subtotal = this.unitPrice.multiply(newQuantity);
     this.quantity = newQuantity;
-    this.subtotal = this.unitPrice.multiply(newQuantity);
+    this.subtotal = subtotal;
   }
 
   //Getters

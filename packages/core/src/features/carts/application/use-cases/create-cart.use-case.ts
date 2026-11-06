@@ -4,6 +4,7 @@ import { CreateCartDto } from '@/carts/application/dtos/create-cart.dto';
 import { Cart } from '@/carts/domain/entities/cart.entity';
 import { createCartId } from '@/carts/domain/types/cart-id.type';
 import { createTenantId } from '@/shared/domain/types/tenant-id.type';
+import { parseCurrency } from '@/shared/domain/enums/currency.enum';
 import { createCustomerId } from '@/carts/domain/types/customer-id.type';
 
 export class CreateCartUseCase {
@@ -18,7 +19,13 @@ export class CreateCartUseCase {
     const customerId = dto.customerId ? createCustomerId(dto.customerId) : null;
 
     const expiresAtDate = new Date(dto.expiresAt);
-    const cart = Cart.create(cartId, tenantId, customerId, expiresAtDate);
+    const cart = Cart.create(
+      cartId,
+      tenantId,
+      customerId,
+      expiresAtDate,
+      parseCurrency(dto.currency),
+    );
 
     await this.cartRepository.save(cart);
     await this.eventBus.publish(cart.domainEvents);

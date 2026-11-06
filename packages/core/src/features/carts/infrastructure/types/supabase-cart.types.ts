@@ -18,6 +18,7 @@ export interface DbCartRow {
   customer_id: string | null;
   status: string;
   subtotal_cents: number;
+  currency?: string | null;
   expires_at: string;
   created_at: string;
   updated_at: string;

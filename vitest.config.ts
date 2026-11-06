@@ -8,7 +8,20 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      '@canaldigital/packages/core/cart-pricing': path.resolve(
+        __dirname,
+        'packages/core/src/features/carts/application/services/cart-quote.ts',
+      ),
+      '@canaldigital/packages/core/money-format': path.resolve(
+        __dirname,
+        'packages/core/src/features/shared/domain/money-format.ts',
+      ),
+      '@canaldigital/packages/core/money-limits': path.resolve(
+        __dirname,
+        'packages/core/src/features/shared/domain/money-limits.ts',
+      ),
       'server-only': path.resolve(__dirname, 'apps/web/tests/stubs/server-only.ts'),
+      '@/next.config': path.resolve(__dirname, 'apps/web/next.config.ts'),
       '@/proxy': path.resolve(__dirname, 'apps/web/proxy.ts'),
       '@/scripts': path.resolve(__dirname, 'packages/core/scripts'),
       '@/tests': path.resolve(__dirname, 'apps/web/tests'),

@@ -2,6 +2,8 @@ import * as React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { NextIntlClientProvider, createTranslator } from 'next-intl';
+import { DashboardOverviewFilters } from '@/features/dashboard/components/dashboard-overview-filters';
+import { parseIntelligencePeriod } from '@/features/dashboard/queries/business-intelligence-query';
 import { BusinessIntelligenceFilters } from '@/features/dashboard/components/business-intelligence-filters';
 import { parseIntelligenceQuery } from '@/features/dashboard/queries/business-intelligence-query';
 import { visibleIntelligenceProducts } from '@/features/dashboard/components/business-intelligence-products';
@@ -9,6 +11,9 @@ import { BusinessIntelligenceDashboard } from '@/features/dashboard/components/b
 import { analyzeBusinessIntelligence } from '@/dashboard/domain/business-intelligence';
 import es from '@/messages/es.json';
 
+vi.mock('@/features/dashboard/actions/business-advice.actions', (): object => ({
+  generateBusinessAdviceAction: vi.fn(),
+}));
 vi.mock('next-intl/server', (): object => ({
   getTranslations: async (): Promise<
     ReturnType<typeof createTranslator<typeof es.BusinessIntelligence>>
@@ -20,6 +25,15 @@ const report = analyzeBusinessIntelligence(
     observedAt: '2026-10-25T12:00:00Z',
     currency: 'USD',
     orders: [],
+    flowOrders: [
+      {
+        id: 'o1',
+        orderNumber: 'ORD-1',
+        status: 'paid',
+        createdAt: '2026-10-01T00:00:00Z',
+        transitions: [{ status: 'paid', at: '2026-10-01T00:00:00Z' }],
+      },
+    ],
     products: [
       {
         id: 'a',
@@ -98,7 +112,7 @@ describe('business intelligence delivery', (): void => {
     expect(html).toContain('/dashboard/catalog/products/a/edit');
     const filters = renderToStaticMarkup(
       <NextIntlClientProvider locale="es" messages={es} timeZone="UTC">
-        <BusinessIntelligenceFilters query={report.query} />
+        <BusinessIntelligenceFilters query={report.query} maxDate="2026-10-25" />
       </NextIntlClientProvider>,
     );
     expect(filters).toContain('name="leadTimeDays"');
@@ -118,5 +132,83 @@ describe('business intelligence delivery', (): void => {
     expect(html).toContain('Rendimiento');
     expect(html).toContain('Inventario');
     expect(html).toContain('Cómo calculamos los indicadores');
+  });
+  it('accepts a valid custom date range and falls back to presets when it is invalid', (): void => {
+    const now = new Date('2026-10-25T12:00:00Z');
+    expect(
+      parseIntelligenceQuery({ from: '2026-10-01', to: '2026-10-10', days: '7' }, now),
+    ).toMatchObject({ days: 10, endDate: '2026-10-10' });
+    for (const bad of [
+      { from: '2026-10-10', to: '2026-10-01' },
+      { from: '2026-10-01', to: '2026-10-26' },
+      { from: '2025-01-01', to: '2026-10-25' },
+      { from: '2026-02-30', to: '2026-03-02' },
+      { from: 'x', to: '2026-10-10' },
+      { from: '2026-10-01' },
+    ])
+      expect(parseIntelligenceQuery({ ...bad, days: '7' }, now)).toEqual({
+        days: 7,
+        leadTimeDays: 7,
+        targetCoverageDays: 30,
+      });
+  });
+  it('renders the order flow section', (): void => {
+    const html = renderToStaticMarkup(
+      <NextIntlClientProvider locale="es" messages={es}>
+        <BusinessIntelligenceDashboard report={report} />
+      </NextIntlClientProvider>,
+    );
+    expect(html).toContain(es.BusinessIntelligence.flowTitle);
+    expect(html).toContain(es.BusinessIntelligence.flowStatus.paid);
+  });
+  it('renders the date range inputs bound to the active custom range', (): void => {
+    const html = renderToStaticMarkup(
+      <NextIntlClientProvider locale="es" messages={es}>
+        <BusinessIntelligenceFilters
+          query={{ days: 10, endDate: '2026-10-10', leadTimeDays: 7, targetCoverageDays: 30 }}
+          maxDate="2026-10-25"
+        />
+      </NextIntlClientProvider>,
+    );
+    expect(html).toContain('name="from"');
+    expect(html).toContain('value="2026-10-01"');
+    expect(html).toContain('value="2026-10-10"');
+    expect(html).toContain('max="2026-10-25"');
+  });
+  it('parses the overview period with the same range rules', (): void => {
+    const now = new Date('2026-10-25T12:00:00Z');
+    expect(parseIntelligencePeriod({ days: '90' }, now)).toEqual({ days: 90 });
+    expect(parseIntelligencePeriod({ from: '2026-10-01', to: '2026-10-10' }, now)).toEqual({
+      days: 10,
+      endDate: '2026-10-10',
+    });
+    expect(parseIntelligencePeriod({ from: '2026-10-10', to: '2026-10-01' }, now)).toEqual({
+      days: 30,
+    });
+  });
+  it('renders overview date filters bound to the active range', (): void => {
+    const html = renderToStaticMarkup(
+      <NextIntlClientProvider locale="es" messages={es}>
+        <DashboardOverviewFilters
+          period={{ days: 10, endDate: '2026-10-10' }}
+          maxDate="2026-10-25"
+        />
+      </NextIntlClientProvider>,
+    );
+    expect(html).toContain('action="/dashboard"');
+    expect(html).toContain('name="from"');
+    expect(html).toContain('value="2026-10-01"');
+    expect(html).toContain('value="2026-10-10"');
+    expect(html).toContain('max="2026-10-25"');
+  });
+  it('discloses excluded foreign-currency money while keeping order/unit counts explicit', (): void => {
+    const html = renderToStaticMarkup(
+      <NextIntlClientProvider locale="es" messages={es} timeZone="UTC">
+        <BusinessIntelligenceDashboard report={{ ...report, excludedCurrencyOrders: 1 }} />
+      </NextIntlClientProvider>,
+    );
+    expect(html).toContain('solo en USD');
+    expect(html).toContain('otras monedas');
+    expect(html).toContain('unidades sí se incluyen');
   });
 });

@@ -16,14 +16,18 @@ import { TenantParamField } from '@/features/dashboard/components/tenant-scope';
 import { CatalogSearchButton } from '@/features/dashboard/components/catalog-search-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { intelligenceRangeStart } from '@/features/dashboard/utils/business-intelligence-range';
 
 /** Stable client identity across query navigations; only individual uncontrolled fields reset. */
 export function BusinessIntelligenceFilters({
   query,
+  maxDate,
 }: {
   query: IntelligenceQuery;
+  maxDate: string;
 }): React.JSX.Element {
   const t = useTranslations('BusinessIntelligence');
+  const rangeFrom = intelligenceRangeStart(query);
   return (
     <Form
       action="/dashboard/business-intelligence"
@@ -56,11 +60,37 @@ export function BusinessIntelligenceFilters({
             </SelectContent>
           </Select>
         </div>
-        <p className="hidden max-w-72 flex-1 text-sm text-muted-foreground lg:block">
-          {t('filterHint')}
-        </p>
+        <div className="grid min-w-40 flex-1 gap-2 sm:max-w-48">
+          <Label htmlFor="bi-from">{t('dateFrom')}</Label>
+          <Input
+            key={`from-${rangeFrom ?? ''}`}
+            id="bi-from"
+            name="from"
+            type="date"
+            max={maxDate}
+            defaultValue={rangeFrom ?? ''}
+            className="min-h-11"
+            aria-describedby="bi-range-help"
+          />
+        </div>
+        <div className="grid min-w-40 flex-1 gap-2 sm:max-w-48">
+          <Label htmlFor="bi-to">{t('dateTo')}</Label>
+          <Input
+            key={`to-${query.endDate ?? ''}`}
+            id="bi-to"
+            name="to"
+            type="date"
+            max={maxDate}
+            defaultValue={query.endDate ?? ''}
+            className="min-h-11"
+            aria-describedby="bi-range-help"
+          />
+        </div>
         <CatalogSearchButton label={t('apply')} pendingLabel={t('updating')} />
       </div>
+      <p id="bi-range-help" className="mt-3 text-sm text-muted-foreground">
+        {t('rangeHelp')}
+      </p>
       <details className="group mt-4 border-t pt-3">
         <summary className="flex min-h-11 cursor-pointer list-none flex-wrap items-center gap-x-3 gap-y-1 rounded-md text-sm focus-visible:outline-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
           <SlidersHorizontal className="size-4 text-muted-foreground" aria-hidden="true" />

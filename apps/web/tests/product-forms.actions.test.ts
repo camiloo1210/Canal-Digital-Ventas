@@ -51,6 +51,14 @@ vi.mock('@/features/products/di/products.di', (): object => ({
     publicUrl: mocks.publicUrl,
   }),
 }));
+vi.mock('@/features/dashboard/di/dashboard.di', (): object => ({
+  getAdminCatalogReadRepository: (): object => ({
+    findProductFormContextForManager: async (): Promise<object> => ({
+      currency: 'USD',
+      categories: [],
+    }),
+  }),
+}));
 vi.mock('@/lib/supabase/server', (): object => ({
   createClient: async (): Promise<object> => ({ auth: { getUser: mocks.user } }),
 }));

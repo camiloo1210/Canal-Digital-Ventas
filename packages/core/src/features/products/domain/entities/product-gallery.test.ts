@@ -1,3 +1,4 @@
+import { Currency } from '@/shared/domain/enums/currency.enum';
 import { describe, expect, it } from 'vitest';
 import { Product } from '@/products/domain/entities/product.entity';
 import { ProductName } from '@/products/domain/value-objects/product-name.vo';
@@ -12,8 +13,8 @@ function product(): Product {
   return Product.create(
     createProductId('550e8400-e29b-41d4-a716-446655440000'),
     ProductName.from('Gallery product'),
-    Money.from(10000),
-    Money.from(1000),
+    Money.from(10000, Currency.USD),
+    Money.from(1000, Currency.USD),
     '',
     10,
     createCategoryId('650e8400-e29b-41d4-a716-446655440000'),

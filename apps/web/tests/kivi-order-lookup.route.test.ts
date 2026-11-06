@@ -80,6 +80,32 @@ describe('POST /api/kivi/order-lookup', (): void => {
     expect(findLatestOrders).not.toHaveBeenCalled();
   });
 
+  it('cancels an oversized chunked body before reading the remaining stream', async (): Promise<void> => {
+    let pulls = 0;
+    const cancel = vi.fn();
+    const stream = new ReadableStream<Uint8Array>(
+      {
+        pull(controller: ReadableStreamDefaultController<Uint8Array>): void {
+          pulls += 1;
+          controller.enqueue(new Uint8Array(5000));
+          if (pulls === 3) controller.close();
+        },
+        cancel,
+      },
+      { highWaterMark: 0 },
+    );
+    const options: RequestInit & { duplex: 'half' } = {
+      method: 'POST',
+      body: stream,
+      duplex: 'half',
+    };
+    const request = new Request('https://app.test/api/kivi/test', options);
+    const response = await POST(request);
+    expect(response.status).toBe(413);
+    expect(cancel).toHaveBeenCalledOnce();
+    expect(pulls).toBe(1);
+  });
+
   it('returns 413 for oversized bodies', async (): Promise<void> => {
     const response = await POST(signed(body({ orderNumber: 'a'.repeat(3000) })));
     expect(response.status).toBe(413);

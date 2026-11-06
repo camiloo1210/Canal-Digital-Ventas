@@ -8,12 +8,12 @@ import type {
 import { centsToDecimalString } from '@/kivi/application/kivi-product.mapper';
 import { KiviProductLookupReadException } from '@/kivi/infrastructure/kivi-product-lookup-read.exception';
 
-const CURRENCY = 'USD';
 const MAX_RESULTS = 5;
 /** Same thresholds as the storefront (get_public_products_by_slug). */
 const LOW_STOCK_CEILING = 20;
 
 interface ProductRow {
+  currency: string;
   name: string;
   sku: string;
   category: string;
@@ -46,9 +46,10 @@ export class PostgresKiviProductLookupReadRepository implements KiviProductLooku
     const prefix = `${escaped}%`;
     try {
       const rows = await this.sql<ProductRow[]>`
-        SELECT p.name, p.sku, c.name AS category, p.price_cents,
+        SELECT t.base_currency AS currency, p.name, p.sku, c.name AS category, p.price_cents,
                p.wholesale_price_cents, p.wholesale_min_quantity, p.stock
         FROM catalog.products p
+        JOIN core.tenants t ON t.id = p.tenant_id
         JOIN catalog.categories c ON c.id = p.category_id AND c.tenant_id = p.tenant_id
         WHERE p.tenant_id = ${query.tenantId}
           AND p.status IN ('active', 'out_of_stock')
@@ -66,9 +67,11 @@ export class PostgresKiviProductLookupReadRepository implements KiviProductLooku
           name: row.name,
           sku: row.sku,
           category: row.category,
-          price: centsToDecimalString(row.price_cents),
-          currency: CURRENCY,
-          wholesale_price: hasWholesale ? centsToDecimalString(row.wholesale_price_cents) : null,
+          price: centsToDecimalString(row.price_cents, row.currency),
+          currency: row.currency,
+          wholesale_price: hasWholesale
+            ? centsToDecimalString(row.wholesale_price_cents, row.currency)
+            : null,
           wholesale_min_quantity: hasWholesale ? row.wholesale_min_quantity : null,
           availability: availabilityOf(row.stock),
         };

@@ -110,11 +110,12 @@ export class PostgresBuyerCartRepository implements BuyerCartRepositoryPort {
           const created = await conn<{ id: string }[]>`
             INSERT INTO sales.carts (
               id, tenant_id, customer_id, buyer_user_id, status,
-              subtotal_cents, expires_at, created_at, updated_at, version
-            ) VALUES (
-              ${cartId}, ${params.tenantId}, NULL, ${params.buyerUserId}, 'active',
-              ${subtotal}, ${params.expiresAt}, ${params.now}, ${params.now}, 1
+              subtotal_cents, currency, expires_at, created_at, updated_at, version
             )
+            SELECT ${cartId}, t.id, NULL, ${params.buyerUserId}, 'active',
+              ${subtotal}, t.base_currency, ${params.expiresAt}, ${params.now}, ${params.now}, 1
+            FROM core.tenants t
+            WHERE t.id = ${params.tenantId}::uuid AND t.status = 'active'
             ON CONFLICT (tenant_id, buyer_user_id)
               WHERE status = 'active' AND buyer_user_id IS NOT NULL
             DO NOTHING

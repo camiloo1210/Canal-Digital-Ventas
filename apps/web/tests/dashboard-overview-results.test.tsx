@@ -13,13 +13,15 @@ vi.mock('@/features/dashboard/di/dashboard.di', (): object => ({
   getDashboardOverviewReadRepository: (): object => ({ findForManager: mocks.find }),
 }));
 
+const period = { days: 30 };
+
 describe('overview recovery and access', (): void => {
   it('does not present unauthorized data as zero activity', async (): Promise<void> => {
     mocks.find.mockResolvedValue(null);
     const html = renderToStaticMarkup(
-      await DashboardOverviewResults({ userId: 'actor', tenantId: 'tenant' }),
+      await DashboardOverviewResults({ userId: 'actor', tenantId: 'tenant', period }),
     );
-    expect(mocks.find).toHaveBeenLastCalledWith('actor', 'tenant');
+    expect(mocks.find).toHaveBeenLastCalledWith('actor', 'tenant', period);
     expect(html).toContain('Resumen no disponible para esta cuenta');
     expect(html).not.toContain('Todavía no hay pedidos');
   });
@@ -28,11 +30,12 @@ describe('overview recovery and access', (): void => {
     const spy = vi.spyOn(console, 'error').mockImplementation((): void => undefined);
     try {
       const html = renderToStaticMarkup(
-        await DashboardOverviewResults({ userId: 'actor', tenantId: 'tenant' }),
+        await DashboardOverviewResults({ userId: 'actor', tenantId: 'tenant', period }),
       );
       expect(html).toContain('No pudimos cargar el resumen');
       expect(html).toContain('action="/dashboard"');
       expect(html).toContain('method="get"');
+      expect(html).toContain('name="days" value="30"');
       expect(html).not.toContain('private database detail');
       expect(html).not.toContain('Todavía no hay pedidos');
     } finally {

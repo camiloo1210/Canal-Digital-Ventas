@@ -7,7 +7,10 @@ import type { BusinessIntelligenceReport } from '@canaldigital/packages/core';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { intelligenceMoney } from '@/features/dashboard/components/business-intelligence-format';
+import {
+  intelligenceMoney,
+  minorToChartScale,
+} from '@/features/dashboard/components/business-intelligence-format';
 
 export function BusinessIntelligenceRanking({
   report,
@@ -76,7 +79,9 @@ export function BusinessIntelligenceRanking({
                     new Intl.NumberFormat(locale, {
                       notation: 'compact',
                       maximumFractionDigits: 1,
-                    }).format(metric === 'revenue' ? value / 100 : value)
+                    }).format(
+                      metric === 'revenue' ? minorToChartScale(value, report.currency) : value,
+                    )
                   }
                 />
                 <YAxis

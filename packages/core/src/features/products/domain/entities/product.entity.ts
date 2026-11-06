@@ -70,7 +70,9 @@ export class Product {
     private isVatExempt: boolean,
     private updatedAt: Date,
     private version: number,
-  ) {}
+  ) {
+    this.variants = Product.snapshotVariants(variants);
+  }
 
   public static create(
     id: ProductId,
@@ -106,6 +108,7 @@ export class Product {
     const finalWholesalePrice = wholesalePrice ?? Money.from(0, price.getCurrency());
     const finalWholesaleMinQty = wholesaleMinQuantity ?? 0;
 
+    Product.validateCurrencies(price, cost, finalWholesalePrice, variants);
     Product.validateWholesaleRules(finalWholesalePrice, finalWholesaleMinQty);
 
     const product = new Product(
@@ -138,6 +141,7 @@ export class Product {
   }
 
   public static reconstitute(props: ProductProps): Product {
+    Product.validateCurrencies(props.price, props.cost, props.wholesalePrice, props.variants);
     return new Product(
       props.id,
       props.name,
@@ -164,7 +168,47 @@ export class Product {
     );
   }
 
+  private static snapshotVariants(variants: ProductVariant[]): ProductVariant[] {
+    return variants.map((variant): ProductVariant =>
+      ProductVariant.reconstitute({
+        id: variant.getId(),
+        productId: variant.getProductId(),
+        sku: Sku.from(variant.getSku()),
+        name: ProductName.from(variant.getName()),
+        attributes: variant.getAttributes(),
+        priceOverride: variant.getPriceOverride(),
+        stock: variant.getStock(),
+        status: variant.getStatus(),
+      }),
+    );
+  }
+
   // Validations
+  private static validateSameCurrency(reference: Money, amount: Money): void {
+    if (amount.getCurrency() !== reference.getCurrency()) {
+      throw new InvalidProductAttributeException(
+        'All product amounts must use the product currency.',
+      );
+    }
+  }
+
+  private static validateVariantCurrencies(price: Money, variants: ProductVariant[]): void {
+    for (const variant of variants) {
+      const override = variant.getPriceOverride();
+      if (override !== null) Product.validateSameCurrency(price, override);
+    }
+  }
+
+  private static validateCurrencies(
+    price: Money,
+    cost: Money,
+    wholesalePrice: Money,
+    variants: ProductVariant[],
+  ): void {
+    Product.validateSameCurrency(price, cost);
+    Product.validateSameCurrency(price, wholesalePrice);
+    Product.validateVariantCurrencies(price, variants);
+  }
   private static validateWholesaleRules(price: Money, minQuantity: number): void {
     if (price.getValue() === 0 && minQuantity > 0) {
       throw new InvalidWholesaleRulesException(
@@ -251,6 +295,8 @@ export class Product {
   }
 
   public changePricing(price: Money, cost: Money): void {
+    Product.validateSameCurrency(this.price, price);
+    Product.validateSameCurrency(this.price, cost);
     this.price = price;
     this.cost = cost;
     this.addDomainEvent(new ProductPricingChangedEvent(this.id));
@@ -258,6 +304,7 @@ export class Product {
   }
 
   public changeWholesaleRules(wholesalePrice: Money, wholesaleMinQuantity: number): void {
+    Product.validateSameCurrency(this.price, wholesalePrice);
     if (wholesalePrice.getValue() < 0) {
       throw new InvalidProductAttributeException('Wholesale price cannot be negative.');
     }
@@ -355,7 +402,8 @@ export class Product {
   }
 
   public setVariants(variants: ProductVariant[]): void {
-    this.variants = variants;
+    Product.validateVariantCurrencies(this.price, variants);
+    this.variants = Product.snapshotVariants(variants);
     this.hasVariants = variants.length > 0;
     this.updateUpdatedAt();
   }
@@ -427,7 +475,7 @@ export class Product {
     return this.hasVariants;
   }
   public getVariants(): ProductVariant[] {
-    return [...this.variants];
+    return Product.snapshotVariants(this.variants);
   }
   public getIsVatExempt(): boolean {
     return this.isVatExempt;

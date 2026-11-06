@@ -7,7 +7,8 @@ import { reportSecurityDecision } from '@/lib/security/security-telemetry';
 
 // Server Actions may be invoked at another page URL. Enforce auth attempts here too.
 export async function authenticationLimitMessage(): Promise<string | null> {
-  if (process.env.RATE_LIMIT_ENABLED !== 'true') return null;
+  if (process.env.RATE_LIMIT_ENABLED !== 'true' && process.env.NODE_ENV !== 'production')
+    return null;
   const decision = await checkRequestRateLimit(
     new Request('https://rate-limit.invalid/login', {
       method: 'POST',

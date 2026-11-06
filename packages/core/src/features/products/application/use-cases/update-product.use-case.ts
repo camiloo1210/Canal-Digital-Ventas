@@ -44,9 +44,11 @@ export class UpdateProductUseCase {
 
         const name = ProductName.from(dto.name);
         const sku = Sku.from(dto.sku);
-        const price = Money.from(dto.price);
-        const cost = Money.from(dto.cost);
-        const wholesalePrice = dto.wholesalePrice ? Money.from(dto.wholesalePrice) : Money.from(0);
+        const price = Money.from(dto.price, product.getPrice().getCurrency());
+        const cost = Money.from(dto.cost, product.getPrice().getCurrency());
+        const wholesalePrice = dto.wholesalePrice
+          ? Money.from(dto.wholesalePrice, product.getPrice().getCurrency())
+          : Money.from(0, product.getPrice().getCurrency());
         const wholesaleMinQuantity = dto.wholesaleMinQuantity ?? 0;
         const categoryId = createCategoryId(dto.categoryId);
         // Tenant-scoped lookup: a category of another tenant is indistinguishable from a missing one.

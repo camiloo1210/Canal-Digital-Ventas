@@ -3,7 +3,7 @@ import postgres from 'postgres';
 
 const DATABASE_URL = process.env.DATABASE_URL;
 
-describe('B2B Wholesale Authorization RPC Matrix', () => {
+describe.skipIf(!DATABASE_URL)('B2B Wholesale Authorization RPC Matrix', () => {
   let sql: postgres.Sql<Record<string, unknown>>;
 
   beforeAll(async () => {

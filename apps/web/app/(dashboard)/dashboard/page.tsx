@@ -5,6 +5,13 @@ import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { requireDashboardTenantSummary } from '@/features/dashboard/queries/dashboard-context.query';
 import { TenantScope } from '@/features/dashboard/components/tenant-scope';
+import {
+  parseIntelligencePeriod,
+  todayIso,
+  type IntelligenceSearchParams,
+} from '@/features/dashboard/queries/business-intelligence-query';
+import { intelligenceQueryKey } from '@/features/dashboard/utils/business-intelligence-range';
+import { DashboardOverviewFilters } from '@/features/dashboard/components/dashboard-overview-filters';
 import { tenantParam } from '@/features/dashboard/utils/tenant-scope';
 import { getMemberPermissionsQuery } from '@/features/users/queries/member-permissions.query';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -21,11 +28,12 @@ export async function generateMetadata(): Promise<{ title: string }> {
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ denied?: string | string[]; tenant?: string | string[] }>;
+  searchParams: Promise<IntelligenceSearchParams>;
 }): Promise<React.JSX.Element | null> {
   const params = await searchParams;
   const { context, tenant } = await requireDashboardTenantSummary(tenantParam(params.tenant));
   const t = await getTranslations('AdminOverview');
+  const period = parseIntelligencePeriod(params);
   const denied = params.denied !== undefined;
   const member = await getMemberPermissionsQuery(context.userId, tenant.tenantId);
   // The general overview (sales, orders) is its own permission, separate from the reports page.
@@ -59,9 +67,19 @@ export default async function DashboardPage({
             </Alert>
           )}
           {canViewOverview ? (
-            <React.Suspense fallback={<DashboardOverviewSkeleton label={t('loading')} />}>
-              <DashboardOverviewResults userId={context.userId} tenantId={tenant.tenantId} />
-            </React.Suspense>
+            <>
+              <DashboardOverviewFilters period={period} maxDate={todayIso()} />
+              <React.Suspense
+                key={intelligenceQueryKey(period)}
+                fallback={<DashboardOverviewSkeleton label={t('loading')} />}
+              >
+                <DashboardOverviewResults
+                  userId={context.userId}
+                  tenantId={tenant.tenantId}
+                  period={period}
+                />
+              </React.Suspense>
+            </>
           ) : (
             <p role="status" className="rounded-lg border bg-muted/40 p-4 text-sm">
               {t('limitedAccess')}

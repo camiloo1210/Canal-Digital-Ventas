@@ -3,6 +3,7 @@ import { PaymentRepositoryPort } from '@/payments/application/ports/out/payment-
 import { EventBusPort } from '@/shared/application/ports/out/event-bus.port';
 import { ProcessWebhookDto } from '@/payments/application/dtos/process-webhook.dto';
 import { PaymentNotFoundException } from '@/payments/application/exceptions/payment-not-found.exception';
+import { PaymentGatewayException } from '@/payments/application/exceptions/payment-gateway.exception';
 import { PaymentStatus } from '@/payments/domain/enums/payment-status.enum';
 import { parsePaymentGateway } from '@/payments/domain/enums/payment-gateway.enum';
 import { createTenantId } from '@/shared/domain/types/tenant-id.type';
@@ -34,6 +35,15 @@ export class ProcessPaymentWebhookUseCase {
     }
 
     if (webhookResult.status === PaymentStatus.COMPLETED) {
+      const expected = payment.getAmount();
+      if (
+        webhookResult.paidAmount !== expected.getValue() ||
+        webhookResult.paidCurrency !== expected.getCurrency()
+      ) {
+        throw new PaymentGatewayException(
+          'Webhook amount or currency does not match the stored payment; refusing to complete it.',
+        );
+      }
       payment.markAsCompleted(webhookResult.eventId);
     } else if (webhookResult.status === PaymentStatus.FAILED) {
       payment.markAsFailed(webhookResult.failureReason || 'Webhook reported failure');

@@ -18,7 +18,10 @@ import {
 interface AddToCartButtonProps {
   productId: string;
   name: string;
-  price: number;
+  retailPriceCents: number;
+  currency: string;
+  wholesalePriceCents: number | null;
+  wholesaleMinQuantity: number | null;
   imageUrl?: string;
   inStock: boolean;
   maxQuantity: number;
@@ -30,7 +33,10 @@ interface AddToCartButtonProps {
 export function AddToCartButton({
   productId,
   name,
-  price,
+  retailPriceCents,
+  currency,
+  wholesalePriceCents,
+  wholesaleMinQuantity,
   imageUrl,
   inStock,
   maxQuantity,
@@ -48,7 +54,21 @@ export function AddToCartButton({
   const inCartQuantity = cartStore.tenantSlug === tenantSlug ? (item?.quantity ?? 0) : 0;
   const limitReached = inCartQuantity >= maxQuantity;
   const add = (): void => {
-    cartStore.addItem({ productId, name, price, imageUrl, quantity: 1, maxQuantity }, tenantSlug);
+    cartStore.addItem(
+      {
+        productId,
+        name,
+        retailPriceCents,
+        unitPriceCents: retailPriceCents,
+        currency,
+        wholesalePriceCents,
+        wholesaleMinQuantity,
+        imageUrl,
+        quantity: 1,
+        maxQuantity,
+      },
+      tenantSlug,
+    );
     setAdded(true);
   };
   const handleAdd = (): void => {

@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { formatMoney } from '@/lib/money';
 import Link from 'next/link';
 import { useTranslations, useLocale } from 'next-intl';
 import type { BuyerOrderReadModel } from '@canaldigital/packages/core';
@@ -21,13 +22,6 @@ export function BuyerOrderCard({
 }: BuyerOrderCardProps): React.JSX.Element {
   const t = useTranslations('Orders.card');
   const locale = useLocale();
-
-  const formatMoney = (cents: number): string => {
-    return new Intl.NumberFormat(locale, {
-      style: 'currency',
-      currency: order.currency,
-    }).format(cents / 100);
-  };
 
   const formattedDate = new Intl.DateTimeFormat(locale, {
     dateStyle: 'medium',
@@ -75,7 +69,7 @@ export function BuyerOrderCard({
           <div className="text-right sm:self-center">
             <span className="text-xs text-muted-foreground block">{t('total')}</span>
             <span className="text-lg font-bold text-foreground">
-              {formatMoney(order.totalAmountCents)}
+              {formatMoney(order.totalAmountCents, order.currency, locale)}
             </span>
           </div>
         </div>
@@ -97,7 +91,7 @@ export function BuyerOrderCard({
                 </div>
                 <div className="text-right shrink-0">
                   <span className="text-sm font-medium text-foreground">
-                    {formatMoney(item.subtotalCents)}
+                    {formatMoney(item.subtotalCents, order.currency, locale)}
                   </span>
                 </div>
               </li>
@@ -108,21 +102,27 @@ export function BuyerOrderCard({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 text-xs text-muted-foreground border-t border-border/40">
           <div>
             <span>{t('subtotal')}: </span>
-            <span className="font-medium text-foreground">{formatMoney(order.subtotalCents)}</span>
+            <span className="font-medium text-foreground">
+              {formatMoney(order.subtotalCents, order.currency, locale)}
+            </span>
           </div>
           <div>
             <span>{t('tax')}: </span>
-            <span className="font-medium text-foreground">{formatMoney(order.taxAmountCents)}</span>
+            <span className="font-medium text-foreground">
+              {formatMoney(order.taxAmountCents, order.currency, locale)}
+            </span>
           </div>
           <div>
             <span>{t('shipping')}: </span>
             <span className="font-medium text-foreground">
-              {formatMoney(order.shippingCostCents)}
+              {formatMoney(order.shippingCostCents, order.currency, locale)}
             </span>
           </div>
           <div className="text-right sm:text-left">
             <span>{t('total')}: </span>
-            <span className="font-bold text-foreground">{formatMoney(order.totalAmountCents)}</span>
+            <span className="font-bold text-foreground">
+              {formatMoney(order.totalAmountCents, order.currency, locale)}
+            </span>
           </div>
         </div>
       </CardContent>
