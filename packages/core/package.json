@@ -12,9 +12,9 @@
     "./cart-pricing": "./src/features/carts/application/services/cart-quote.ts"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.110.8",
+    "@supabase/supabase-js": "2.119.0",
     "amqplib": "^0.10.9",
-    "nodemailer": "^10.1.2",
+    "nodemailer": "^10.3.1",
     "postgres": "^3.4.9"
   },
   "devDependencies": {
