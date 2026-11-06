@@ -1,9 +1,12 @@
 export type {
   DashboardOverviewReadModel,
+  DashboardOverviewKpis,
+  DashboardOverviewPeriod,
   DashboardOverviewReadPort,
 } from '@/dashboard/application/ports/out/dashboard-overview-read.port';
 export { PostgresDashboardOverviewReadAdapter } from '@/dashboard/infrastructure/postgres-dashboard-overview-read.adapter';
-
+export type { ProductCurrencyRepositoryPort } from '@/products/application/ports/out/product-currency-repository.port';
+export { PostgresProductCurrencyRepository } from '@/products/infrastructure/repositories/postgres-product-currency.repository';
 export type {
   ActiveMembershipSummary,
   ActiveTenantReadyContext,
@@ -302,11 +305,28 @@ export type {
   IntelligenceQuery,
   IntelligenceProductResult,
   IntelligenceSignal,
+  OrderFlowReport,
+  OrderFlowStage,
+  StuckOrder,
+  FlowStatus,
 } from '@/dashboard/domain/business-intelligence';
-
+export { MAX_INTELLIGENCE_DAYS } from '@/dashboard/domain/business-intelligence';
 export type { BusinessIntelligenceReadPort } from '@/dashboard/application/ports/out/business-intelligence-read.port';
 export { PostgresBusinessIntelligenceReadAdapter } from '@/dashboard/infrastructure/postgres-business-intelligence-read.adapter';
-
+export type {
+  AdviceCategory,
+  AdviceLocale,
+  BusinessAdvice,
+  BusinessAdviceTip,
+  BusinessAdvisorPort,
+} from '@/dashboard/application/ports/out/business-advisor.port';
+export { ADVICE_CATEGORIES } from '@/dashboard/application/ports/out/business-advisor.port';
+export {
+  BusinessAdvisorException,
+  BusinessAdviceAccessDeniedException,
+} from '@/dashboard/application/exceptions/business-advisor.exception';
+export { GenerateBusinessAdviceUseCase } from '@/dashboard/application/use-cases/generate-business-advice.use-case';
+export { GeminiBusinessAdvisorAdapter } from '@/dashboard/infrastructure/gemini-business-advisor.adapter';
 export { ConfigureKiviWhatsAppUseCase } from '@/kivi/application/use-cases/configure-kivi-whatsapp.use-case';
 export { HttpKiviWhatsAppGateway } from '@/kivi/infrastructure/http-kivi-whatsapp.gateway';
 export { KiviCredentialResolver } from '@/kivi/infrastructure/kivi-credential.resolver';
