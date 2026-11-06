@@ -1,14 +1,8 @@
 import 'server-only';
 
 import type {
-  PaginatedResult,
-  PaginationOptions,
   PublicCategoryReadModel,
   PublicCategoryReadRepositoryPort,
-  PublicProductDetailReadModel,
-  PublicProductFilters,
-  PublicProductReadModel,
-  PublicProductReadRepositoryPort,
   PublicTenantReadModel,
   PublicTenantReadRepositoryPort,
 } from '@canaldigital/packages/core';
@@ -32,41 +26,6 @@ export class CachedPublicCategoryReadRepository implements PublicCategoryReadRep
       tenantSlug,
       ['categories'],
       (): Promise<PublicCategoryReadModel[]> => this.source.searchActiveByTenantSlug(tenantSlug),
-    );
-  }
-}
-
-export class CachedPublicProductReadRepository implements PublicProductReadRepositoryPort {
-  constructor(private readonly source: PublicProductReadRepositoryPort) {}
-
-  public searchActiveByTenantSlug(
-    tenantSlug: string,
-    filters: PublicProductFilters,
-    pagination?: PaginationOptions,
-  ): Promise<PaginatedResult<PublicProductReadModel>> {
-    const normalizedFilters: PublicProductFilters = { ...filters, name: filters.name?.trim() };
-    return rememberPublicCatalogValue(
-      tenantSlug,
-      [
-        'products',
-        normalizedFilters.categorySlug ?? '',
-        normalizedFilters.name ?? '',
-        String(pagination?.page ?? ''),
-        String(pagination?.limit ?? ''),
-      ],
-      (): Promise<PaginatedResult<PublicProductReadModel>> =>
-        this.source.searchActiveByTenantSlug(tenantSlug, normalizedFilters, pagination),
-    );
-  }
-
-  public findDetail(params: {
-    tenantSlug: string;
-    productId: string;
-  }): Promise<PublicProductDetailReadModel | null> {
-    return rememberPublicCatalogValue(
-      params.tenantSlug,
-      ['product-detail', params.productId],
-      (): Promise<PublicProductDetailReadModel | null> => this.source.findDetail(params),
     );
   }
 }

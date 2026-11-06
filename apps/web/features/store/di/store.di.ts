@@ -3,7 +3,6 @@ import { createClient } from '@/lib/supabase/server';
 import { sql } from '@/lib/postgres/server';
 import {
   CachedPublicCategoryReadRepository,
-  CachedPublicProductReadRepository,
   CachedPublicTenantReadRepository,
 } from '@/features/store/infrastructure/cached-public-catalog-read.repositories';
 import {
@@ -29,7 +28,8 @@ export async function getStoreCategoryReadRepository(): Promise<PublicCategoryRe
 
 export async function getStoreProductReadRepository(): Promise<PublicProductReadRepositoryPort> {
   const supabase = await createClient();
-  return new CachedPublicProductReadRepository(new SupabasePublicProductReadRepository(supabase));
+  // Wholesale fields depend on the current session and membership; never share this projection.
+  return new SupabasePublicProductReadRepository(supabase);
 }
 
 export function getStorePurchaseInfoReadRepository(): PublicProductPurchaseInfoReadRepositoryPort {
