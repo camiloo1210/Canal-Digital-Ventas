@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { TenantLink as Link } from '@/features/dashboard/components/tenant-scope';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { ArrowRight, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Banknote, CheckCircle2, Landmark, ShoppingBag, Users } from 'lucide-react';
 import type { DashboardOverviewReadModel } from '@canaldigital/packages/core';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,6 +35,55 @@ export async function DashboardOverview({
     timeStyle: 'short',
     timeZone: 'America/Guayaquil',
   });
+  const kpis = overview.kpis;
+  const percent = new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 1 });
+  const shortDate = new Intl.DateTimeFormat(locale, {
+    day: 'numeric',
+    month: 'short',
+    timeZone: 'UTC',
+  });
+  const kpiCards = [
+    {
+      key: 'periodRevenue',
+      label: t('kpiPeriodRevenue'),
+      value: formatMoney(kpis.revenueCents, kpis.currency, locale),
+      help:
+        kpis.revenueChangeBps === null
+          ? t('kpiNoComparison')
+          : t('kpiComparison', { percent: percent.format(kpis.revenueChangeBps / 10000) }),
+      tone:
+        kpis.revenueChangeBps === null
+          ? 'text-muted-foreground'
+          : kpis.revenueChangeBps < 0
+            ? 'text-destructive'
+            : 'text-success',
+      icon: Banknote,
+    },
+    {
+      key: 'lifetimeRevenue',
+      label: t('kpiLifetimeRevenue'),
+      value: formatMoney(kpis.lifetimeRevenueCents, kpis.currency, locale),
+      help: t('kpiLifetimeHelp', { count: kpis.lifetimeOrderCount }),
+      tone: 'text-muted-foreground',
+      icon: Landmark,
+    },
+    {
+      key: 'customers',
+      label: t('kpiCustomers'),
+      value: number.format(kpis.totalCustomers),
+      help: t('kpiCustomersHelp', { count: kpis.buyingCustomers }),
+      tone: 'text-muted-foreground',
+      icon: Users,
+    },
+    {
+      key: 'periodOrders',
+      label: t('kpiPeriodOrders'),
+      value: number.format(kpis.orderCount),
+      help: t('kpiOrdersHelp'),
+      tone: 'text-muted-foreground',
+      icon: ShoppingBag,
+    },
+  ];
   const orderHref = (id: string): string => '/dashboard/orders?order=' + id;
   const queues = [
     { label: t('paid'), description: t('paidHelp'), count: overview.awaitingPreparation },
@@ -43,6 +92,38 @@ export async function DashboardOverview({
   ];
   return (
     <div className="space-y-6">
+      {kpis.excludedCurrencyOrders > 0 && (
+        <p
+          role="status"
+          className="rounded-lg border bg-muted/40 p-4 text-sm text-muted-foreground"
+        >
+          {t('currencyScope', { currency: kpis.currency, count: kpis.excludedCurrencyOrders })}
+        </p>
+      )}
+      <section aria-label={t('kpiTitle')} className="space-y-3">
+        <p className="text-sm font-medium">
+          {t('kpiPeriod', {
+            from: shortDate.format(new Date(kpis.periodStart)),
+            to: shortDate.format(new Date(kpis.periodEnd)),
+          })}
+        </p>
+        <dl className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {kpiCards.map((card): React.JSX.Element => (
+            <Card key={card.key} className="gap-3 shadow-none">
+              <CardHeader className="flex flex-row items-start justify-between gap-3">
+                <dt className="text-sm leading-5 text-muted-foreground">{card.label}</dt>
+                <card.icon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <dd className="break-words text-[1.65rem] leading-tight font-semibold tabular-nums tracking-tight">
+                  {card.value}
+                </dd>
+                <dd className={`mt-3 text-xs leading-relaxed ${card.tone}`}>{card.help}</dd>
+              </CardContent>
+            </Card>
+          ))}
+        </dl>
+      </section>
       <div className="grid items-stretch gap-6 xl:grid-cols-3">
         <Card className="gap-5 shadow-none xl:col-span-2">
           <CardHeader>

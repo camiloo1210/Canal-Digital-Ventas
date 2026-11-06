@@ -2,7 +2,7 @@ import { Order } from '@/orders/domain/entities/order.entity';
 import { OrderItem } from '@/orders/domain/entities/order-item.entity';
 import { DbOrderRow, DbOrderItemRow } from '@/orders/infrastructure/types/supabase-order.types';
 import { Money } from '@/shared/domain/value-objects/money.vo';
-import { Currency } from '@/shared/domain/enums/currency.enum';
+import { parseCurrency } from '@/shared/domain/enums/currency.enum';
 import { Address } from '@/shared/domain/value-objects/adress.vo';
 import { parseOrderStatus } from '@/orders/domain/enums/order-status.enum';
 import { OrderId } from '@/orders/domain/types/order-id.type';
@@ -15,16 +15,17 @@ import { VariantId } from '@/orders/domain/types/variant-id.type';
 
 export class SupabaseOrderMapper {
   static toDomain(row: DbOrderRow): Order {
-    const items = (row.order_items || []).map((itemRow: DbOrderItemRow) =>
+    const currency = parseCurrency(row.currency);
+    const items = (row.order_items || []).map((itemRow: DbOrderItemRow): OrderItem =>
       OrderItem.reconstitute({
         id: itemRow.id as OrderItemId,
         productId: itemRow.product_id as ProductId,
         variantId: itemRow.variant_id ? (itemRow.variant_id as VariantId) : null,
         productName: itemRow.product_name,
         sku: itemRow.sku,
-        unitPrice: Money.from(itemRow.unit_price_cents, Currency.USD),
+        unitPrice: Money.from(itemRow.unit_price_cents, currency),
         quantity: itemRow.quantity,
-        subtotal: Money.from(itemRow.subtotal_cents, Currency.USD),
+        subtotal: Money.from(itemRow.subtotal_cents, currency),
       }),
     );
 
@@ -47,11 +48,11 @@ export class SupabaseOrderMapper {
       tenantId: row.tenant_id as TenantId,
       items,
       status: parseOrderStatus(row.status),
-      subtotal: Money.from(row.subtotal_cents, Currency.USD),
-      taxAmount: Money.from(row.tax_amount_cents, Currency.USD),
-      discountAmount: Money.from(row.discount_amount_cents, Currency.USD),
-      shippingCost: Money.from(row.shipping_cost_cents, Currency.USD),
-      totalAmount: Money.from(row.total_amount_cents, Currency.USD),
+      subtotal: Money.from(row.subtotal_cents, currency),
+      taxAmount: Money.from(row.tax_amount_cents, currency),
+      discountAmount: Money.from(row.discount_amount_cents, currency),
+      shippingCost: Money.from(row.shipping_cost_cents, currency),
+      totalAmount: Money.from(row.total_amount_cents, currency),
       shippingAddress: shippingAddress as Address,
       paymentGatewayId: row.payment_gateway_id
         ? (row.payment_gateway_id as PaymentGatewayId)
@@ -68,6 +69,7 @@ export class SupabaseOrderMapper {
       order_number: order.getOrderNumber(),
       customer_id: order.getCustomerId(),
       tenant_id: order.getTenantId(),
+      currency: order.getTotalAmount().getCurrency(),
       status: order.getStatus(),
       subtotal_cents: order.getSubtotal().getValue(),
       tax_amount_cents: order.getTaxAmount().getValue(),
@@ -90,19 +92,21 @@ export class SupabaseOrderMapper {
       version: order.getVersion(),
     };
 
-    const orderItemsRows: DbOrderItemRow[] = order.getItems().map((item: OrderItem) => ({
-      id: item.getId(),
-      order_id: order.getId(),
-      product_id: item.getProductId(),
-      variant_id: item.getVariantId(),
-      product_name: item.getProductName(),
-      sku: item.getSku(),
-      unit_price_cents: item.getUnitPrice().getValue(),
-      quantity: item.getQuantity(),
-      subtotal_cents: item.getSubtotal().getValue(),
-      created_at: order.getCreatedAt().toISOString(),
-      updated_at: order.getUpdatedAt().toISOString(),
-    }));
+    const orderItemsRows: DbOrderItemRow[] = order
+      .getItems()
+      .map((item: OrderItem): DbOrderItemRow => ({
+        id: item.getId(),
+        order_id: order.getId(),
+        product_id: item.getProductId(),
+        variant_id: item.getVariantId(),
+        product_name: item.getProductName(),
+        sku: item.getSku(),
+        unit_price_cents: item.getUnitPrice().getValue(),
+        quantity: item.getQuantity(),
+        subtotal_cents: item.getSubtotal().getValue(),
+        created_at: order.getCreatedAt().toISOString(),
+        updated_at: order.getUpdatedAt().toISOString(),
+      }));
 
     return { orderRow, orderItemsRows };
   }

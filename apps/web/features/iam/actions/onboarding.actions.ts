@@ -10,6 +10,7 @@ import {
   ApplicationException,
 } from '@canaldigital/packages/core';
 import { redirect } from 'next/navigation';
+import { ONBOARDING_BASE_CURRENCY } from '@/features/iam/constants';
 import { createClient } from '@/lib/supabase/server';
 import { authenticationLimitMessage } from '@/lib/security/authentication-rate-limit';
 
@@ -84,6 +85,7 @@ export async function onboardBusinessAction(
         lastName: parsed.data.lastName,
         contactEmail: user.email!, // Use authenticated user's email
         userEmail: user.email!,
+        baseCurrency: ONBOARDING_BASE_CURRENCY,
       },
       user.id,
       idempotencyKey,

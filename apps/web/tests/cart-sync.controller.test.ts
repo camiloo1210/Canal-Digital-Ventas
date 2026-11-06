@@ -12,6 +12,10 @@ function apiItem(productId: string, quantity: number, maxQuantity = 10): CartApi
     name: `Name ${productId.slice(0, 2)}`,
     sku: 'sku',
     unitPriceCents: 1250,
+    retailPriceCents: 1250,
+    currency: 'COP',
+    wholesalePriceCents: null,
+    wholesaleMinQuantity: null,
     quantity,
     maxQuantity,
     imageUrl: null,
@@ -21,7 +25,17 @@ function apiCart(items: CartApiItem[], version: number): CartApiCart {
   return { items, version, updatedAt: 'u', expiresAt: 'e' };
 }
 function local(productId: string, quantity: number): CartItem {
-  return { productId, name: `Local ${productId.slice(0, 2)}`, price: 5, quantity, maxQuantity: 10 };
+  return {
+    productId,
+    name: `Local ${productId.slice(0, 2)}`,
+    unitPriceCents: 500,
+    retailPriceCents: 500,
+    currency: 'COP',
+    wholesalePriceCents: null,
+    wholesaleMinQuantity: null,
+    quantity,
+    maxQuantity: 10,
+  };
 }
 function reply(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), { status });
@@ -63,15 +77,17 @@ describe('cart sync controller', (): void => {
     calls.length = 0;
     queue.length = 0;
     hold = null;
-    fetchMock.mockReset().mockImplementation(async (url: string, init?: RequestInit) => {
-      if (hold) return hold;
-      calls.push({
-        url,
-        method: init?.method ?? 'GET',
-        body: init?.body ? JSON.parse(init.body as string) : undefined,
+    fetchMock
+      .mockReset()
+      .mockImplementation(async (url: string, init?: RequestInit): Promise<Response> => {
+        if (hold) return hold;
+        calls.push({
+          url,
+          method: init?.method ?? 'GET',
+          body: init?.body ? JSON.parse(init.body as string) : undefined,
+        });
+        return queue.shift() ?? reply(500, {});
       });
-      return queue.shift() ?? reply(500, {});
-    });
     sendBeacon.mockReset().mockReturnValue(true);
     useCartStore.setState({
       tenantSlug: null,
@@ -85,7 +101,7 @@ describe('cart sync controller', (): void => {
     vi.useRealTimers();
   });
 
-  it('hydrates with GET when the local cart is empty and maps cents to price', async (): Promise<void> => {
+  it('hydrates with GET when the local cart is empty and preserves cents and currency', async (): Promise<void> => {
     queue.push(reply(200, { cart: apiCart([apiItem(A, 2)], 4) }));
     await started(setup());
     expect(calls[0]).toMatchObject({ url: '/api/store/cart?tenant=shop', method: 'GET' });
@@ -94,7 +110,17 @@ describe('cart sync controller', (): void => {
     expect(state.serverVersion).toBe(4);
     expect(state.tenantSlug).toBe('shop');
     expect(state.items).toEqual([
-      { productId: A, name: 'Name 11', price: 12.5, quantity: 2, maxQuantity: 10 },
+      {
+        productId: A,
+        name: 'Name 11',
+        unitPriceCents: 1250,
+        retailPriceCents: 1250,
+        currency: 'COP',
+        wholesalePriceCents: null,
+        wholesaleMinQuantity: null,
+        quantity: 2,
+        maxQuantity: 10,
+      },
     ]);
   });
 

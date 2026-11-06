@@ -5,6 +5,9 @@ import { BusinessIntelligenceResults } from '@/features/dashboard/components/bus
 import es from '@/messages/es.json';
 
 const mocks = vi.hoisted((): { find: ReturnType<typeof vi.fn> } => ({ find: vi.fn() }));
+vi.mock('@/features/dashboard/actions/business-advice.actions', (): object => ({
+  generateBusinessAdviceAction: vi.fn(),
+}));
 vi.mock('next-intl/server', (): object => ({
   getTranslations: async (): Promise<
     ReturnType<typeof createTranslator<typeof es.BusinessIntelligence>>

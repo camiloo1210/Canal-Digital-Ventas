@@ -27,7 +27,7 @@ export class SetProductVariantsUseCase {
       throw new ProductNotFoundException(dto.productId);
     }
 
-    const domainVariants = dto.variants.map((v) =>
+    const domainVariants = dto.variants.map((v): ProductVariant =>
       ProductVariant.create(
         createVariantId(v.id),
         productId,
@@ -35,7 +35,7 @@ export class SetProductVariantsUseCase {
         ProductName.from(v.name),
         v.attributes,
         v.stock,
-        v.priceOverride ? Money.from(v.priceOverride) : undefined,
+        v.priceOverride ? Money.from(v.priceOverride, product.getPrice().getCurrency()) : undefined,
         v.status ? parseProductStatus(v.status) : undefined,
       ),
     );

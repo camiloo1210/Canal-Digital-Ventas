@@ -45,6 +45,7 @@ describe('PostgresKiviOrderLookupReadRepository', (): void => {
           updated_at: new Date('2026-10-01T10:00:00Z'),
           created_at: new Date('2026-09-30T08:00:00Z'),
           total_amount_cents: 3650,
+          currency: 'USD',
         },
       ],
       [
@@ -120,6 +121,7 @@ describe('PostgresKiviOrderLookupReadRepository', (): void => {
       updated_at: '2026-10-01T10:00:00Z',
       created_at: '2026-10-01T09:00:00Z',
       total_amount_cents: 100,
+      currency: 'USD',
     };
     const bad = [
       'http://cdn.example.test/a.jpg',
@@ -163,6 +165,7 @@ describe('PostgresKiviOrderLookupReadRepository', (): void => {
           updated_at: '2026-10-01T10:00:00Z',
           created_at: '2026-10-01T09:00:00Z',
           total_amount_cents: 100,
+          currency: 'USD',
         },
       ],
     ]);

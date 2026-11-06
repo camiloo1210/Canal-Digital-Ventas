@@ -52,6 +52,10 @@ describe('SyncBuyerCartUseCase', (): void => {
         name: 'Real',
         sku: 'SKU-1',
         unitPriceCents: 4200,
+        retailPriceCents: 4200,
+        currency: 'COP',
+        wholesalePriceCents: null,
+        wholesaleMinQuantity: null,
         quantity: 2,
         maxQuantity: 99,
         imageUrl: 'i.jpg',
@@ -87,7 +91,13 @@ describe('SyncBuyerCartUseCase', (): void => {
         { productId: 'not-a-uuid', quantity: 0 },
       ],
     });
-    expect(result.cart.items.map((i) => [i.productId, i.quantity, i.maxQuantity])).toEqual([
+    expect(
+      result.cart.items.map((i): [string, number, number] => [
+        i.productId,
+        i.quantity,
+        i.maxQuantity,
+      ]),
+    ).toEqual([
       [productId(1), 5, 5],
       [productId(3), MAX_LINE_QUANTITY, MAX_LINE_QUANTITY],
     ]);
@@ -109,21 +119,30 @@ describe('SyncBuyerCartUseCase', (): void => {
         { productId: productId(2), quantity: Number.NaN },
       ],
     });
-    expect(result.cart.items.map((i) => i.quantity)).toEqual([1, 1]);
+    expect(result.cart.items.map((i): number => i.quantity)).toEqual([1, 1]);
   });
 
   it('caps the cart at MAX_CART_LINES and reports the rest as limit', async (): Promise<void> => {
-    const products = Array.from({ length: MAX_CART_LINES + 3 }, (_v, i) => catalogProduct(i + 1));
+    const products = Array.from(
+      { length: MAX_CART_LINES + 3 },
+      (_v, i): ReturnType<typeof catalogProduct> => catalogProduct(i + 1),
+    );
     const h = harness(products);
     const result = await sync(h).execute({
       userId: USER_ID,
       tenantSlug: TENANT_SLUG,
       baseVersion: null,
-      items: products.map((p) => ({ productId: p.productId, quantity: 1 })),
+      items: products.map((p): { productId: string; quantity: number } => ({
+        productId: p.productId,
+        quantity: 1,
+      })),
     });
     expect(result.cart.items).toHaveLength(MAX_CART_LINES);
     expect(result.dropped).toEqual(
-      [51, 52, 53].map((n) => ({ productId: productId(n), reason: 'limit' })),
+      [51, 52, 53].map((n): { productId: string; reason: 'limit' } => ({
+        productId: productId(n),
+        reason: 'limit',
+      })),
     );
   });
 
@@ -162,7 +181,7 @@ describe('SyncBuyerCartUseCase', (): void => {
     ).rejects.toBeInstanceOf(CartVersionConflictException);
     const error = await sync(h)
       .execute({ ...base, baseVersion: 7, items: [] })
-      .catch((e: unknown) => e);
+      .catch((e: unknown): unknown => e);
     expect(error).toBeInstanceOf(CartVersionConflictException);
     expect((error as CartVersionConflictException).serverCart.version).toBe(1);
     expect((error as CartVersionConflictException).serverCart.items).toHaveLength(1);
@@ -287,7 +306,7 @@ describe('MergeBuyerCartUseCase', (): void => {
       { productId: productId(3), quantity: 1 },
     ];
     const merged = await merge(h).execute({ ...base, items: guest });
-    expect(merged.cart.items.map((i) => [i.productId, i.quantity])).toEqual([
+    expect(merged.cart.items.map((i): [string, number] => [i.productId, i.quantity])).toEqual([
       [productId(1), 5],
       [productId(2), 4],
       [productId(3), 1],
@@ -312,12 +331,15 @@ describe('MergeBuyerCartUseCase', (): void => {
         { productId: productId(2), quantity: 1 },
       ],
     });
-    expect(result.cart.items.map((i) => i.quantity)).toEqual([3]);
+    expect(result.cart.items.map((i): number => i.quantity)).toEqual([3]);
     expect(result.dropped).toEqual([{ productId: productId(2), reason: 'out_of_stock' }]);
   });
 
   it('keeps server lines first when the line cap is hit', async (): Promise<void> => {
-    const products = Array.from({ length: MAX_CART_LINES + 1 }, (_v, i) => catalogProduct(i + 1));
+    const products = Array.from(
+      { length: MAX_CART_LINES + 1 },
+      (_v, i): ReturnType<typeof catalogProduct> => catalogProduct(i + 1),
+    );
     const h = harness(products);
     const base = { userId: USER_ID, tenantSlug: TENANT_SLUG };
     await sync(h).execute({
@@ -325,7 +347,10 @@ describe('MergeBuyerCartUseCase', (): void => {
       baseVersion: null,
       items: products
         .slice(0, MAX_CART_LINES)
-        .map((p) => ({ productId: p.productId, quantity: 1 })),
+        .map((p): { productId: string; quantity: number } => ({
+          productId: p.productId,
+          quantity: 1,
+        })),
     });
     const merged = await merge(h).execute({
       ...base,

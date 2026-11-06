@@ -19,6 +19,9 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { BusinessIntelligenceChart } from '@/features/dashboard/components/business-intelligence-chart';
 import { BusinessIntelligenceRanking } from '@/features/dashboard/components/business-intelligence-ranking';
+import { BusinessIntelligenceAdvisor } from '@/features/dashboard/components/business-intelligence-advisor';
+import { BusinessIntelligenceOrders } from '@/features/dashboard/components/business-intelligence-orders';
+import { intelligenceQueryKey } from '@/features/dashboard/utils/business-intelligence-range';
 import { BusinessIntelligenceProducts } from '@/features/dashboard/components/business-intelligence-products';
 import {
   intelligenceMoney,
@@ -71,6 +74,14 @@ export function BusinessIntelligenceDashboard({
   ] as const;
   return (
     <div className="space-y-6">
+      {report.excludedCurrencyOrders > 0 && (
+        <p
+          role="status"
+          className="rounded-lg border bg-muted/40 p-4 text-sm text-muted-foreground"
+        >
+          {t('currencyScope', { currency: report.currency, count: report.excludedCurrencyOrders })}
+        </p>
+      )}
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
         <p className="font-medium">
           {t('appliedPeriod', {
@@ -125,6 +136,8 @@ export function BusinessIntelligenceDashboard({
         <BusinessIntelligenceChart report={report} />
         <BusinessIntelligenceRanking report={report} />
       </div>
+      <BusinessIntelligenceAdvisor query={report.query} />
+      <BusinessIntelligenceOrders flow={report.orderFlow} />
       <Card id="bi-priorities" className="scroll-mt-20 sm:[--card-spacing:--spacing(5)]">
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -175,7 +188,7 @@ export function BusinessIntelligenceDashboard({
         </CardContent>
       </Card>
       <BusinessIntelligenceProducts
-        key={`${report.query.days}-${report.query.leadTimeDays}-${report.query.targetCoverageDays}`}
+        key={intelligenceQueryKey(report.query)}
         products={report.products}
         currency={report.currency}
       />

@@ -153,6 +153,7 @@ describe('PostgresKiviSyncStoreAdapter', (): void => {
           tenant_id: 't',
           name: 'Cafe',
           price_cents: 350,
+          currency: 'USD',
           wholesale_price_cents: 275,
           wholesale_min_quantity: 12,
           description: null,
@@ -169,6 +170,7 @@ describe('PostgresKiviSyncStoreAdapter', (): void => {
     expect(found).toMatchObject({
       id: 'p1',
       priceCents: 350,
+      currency: 'USD',
       wholesalePriceCents: 275,
       wholesaleMinQuantity: 12,
       version: 3,

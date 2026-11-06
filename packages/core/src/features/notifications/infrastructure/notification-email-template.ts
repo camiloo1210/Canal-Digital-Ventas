@@ -1,3 +1,4 @@
+import { currencyExponent, minorUnitsPerMajor } from '@/shared/domain/money-format';
 import type { NotificationLocale } from '@/notifications/application/ports/out/notification.ports';
 import type {
   NotificationOrderDetails,
@@ -23,6 +24,38 @@ interface TemplateInput {
 export interface RenderedNotification {
   html: string;
   text: string;
+}
+
+/**
+ * Formats integer minor units with the currency's own exponent using integer math only (no
+ * division of floats): whole and fraction parts come from BigInt and the fraction digits are
+ * substituted back into Intl's output.
+ */
+export function formatMinorUnits(
+  minor: number,
+  currency: string | undefined,
+  locale: NotificationLocale,
+): string {
+  if (!currency) throw new Error('A currency is required to format a monetary amount.');
+  if (!Number.isSafeInteger(minor)) throw new Error('Invalid monetary value');
+  const exponent = currencyExponent(currency);
+  const negative = minor < 0;
+  const absolute = BigInt(Math.abs(minor));
+  const scale = minorUnitsPerMajor(currency);
+  const whole = Number(absolute / scale);
+  const signedWhole = negative ? -whole : whole;
+  const formatter = new Intl.NumberFormat(locale === 'es' ? 'es-CO' : 'en-US', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: exponent,
+    maximumFractionDigits: exponent,
+  });
+  if (exponent === 0) return formatter.format(signedWhole);
+  const fraction = (absolute % scale).toString().padStart(exponent, '0');
+  return formatter
+    .formatToParts(signedWhole)
+    .map((part): string => (part.type === 'fraction' ? fraction : part.value))
+    .join('');
 }
 
 export function escapeEmailHtml(value: string): string {
@@ -52,11 +85,10 @@ export function renderNotificationEmail(input: TemplateInput): RenderedNotificat
   const cancelled = input.kind === 'cancelled';
   const accent = cancelled || input.kind === 'low_stock' ? '#9a3412' : '#166534';
   const tint = cancelled || input.kind === 'low_stock' ? '#fff7ed' : '#f0fdf4';
-  const money = (cents: number): string =>
-    new Intl.NumberFormat(locale === 'es' ? 'es-CO' : 'en-US', {
-      style: 'currency',
-      currency: order?.currency ?? 'USD',
-    }).format(cents / 100);
+  if (order && !order.currency) {
+    throw new Error('Notification order is missing its currency; refusing to guess one.');
+  }
+  const money = (minor: number): string => formatMinorUnits(minor, order?.currency, locale);
   const logo = safeEmailImage(order?.logoUrl);
   const text: string[] = [intro];
   let details = '';

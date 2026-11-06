@@ -6,6 +6,7 @@ export interface DbPaymentRow {
   status: string;
   gateway: string;
   amount_cents: number;
+  currency: string | null;
   gateway_transaction_id: string | null;
   failure_reason: string | null;
   created_at: string;

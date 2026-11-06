@@ -1,3 +1,4 @@
+import { quoteCartLine } from '@/carts/application/services/cart-quote';
 import {
   MAX_CART_LINES,
   MAX_LINE_QUANTITY,
@@ -74,12 +75,20 @@ export function normalizeBuyerCart(
       return;
     }
     const maxQuantity = Math.min(available, MAX_LINE_QUANTITY);
+    const quantity = Math.min(sanitizeQuantity(candidate.quantity), maxQuantity);
+    const pricing = {
+      retailPriceCents: product.unitPriceCents,
+      currency: product.currency,
+      wholesalePriceCents: product.wholesalePriceCents,
+      wholesaleMinQuantity: product.wholesaleMinQuantity,
+    };
     items.push({
       productId: product.productId,
       name: product.name,
       sku: product.sku,
-      unitPriceCents: product.unitPriceCents,
-      quantity: Math.min(sanitizeQuantity(candidate.quantity), maxQuantity),
+      ...pricing,
+      unitPriceCents: quoteCartLine({ ...pricing, quantity }).unitPriceCents,
+      quantity,
       maxQuantity,
       imageUrl: product.imageUrl,
     });

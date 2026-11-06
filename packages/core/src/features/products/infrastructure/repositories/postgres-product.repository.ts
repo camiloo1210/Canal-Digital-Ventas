@@ -1,6 +1,7 @@
 import { ProductOutOfStockException } from '@/products/application/exceptions/product-out-of-stock.exception';
 import { ProductUnavailableException } from '@/products/application/exceptions/product-unavailable.exception';
 import postgres from 'postgres';
+import { Currency } from '@/shared/domain/enums/currency.enum';
 import { ProductRepositoryPort } from '@/products/application/ports/out/product-repository.port';
 import { Product } from '@/products/domain/entities/product.entity';
 import { ProductRepositoryException } from '@/products/application/exceptions/product-repository.exception';
@@ -33,10 +34,11 @@ export class PostgresProductRepository implements ProductRepositoryPort {
     tx?: TransactionContext,
   ): Promise<Product | null> {
     try {
-      return await this.executeSql(tx, async (conn) => {
+      return await this.executeSql(tx, async (conn): Promise<Product | null> => {
         const rows = await conn`
-          SELECT * FROM catalog.products
-          WHERE id = ${id} AND tenant_id = ${tenantId}
+          SELECT p.*, t.base_currency AS currency FROM catalog.products p
+          JOIN core.tenants t ON t.id = p.tenant_id
+          WHERE p.id = ${id} AND p.tenant_id = ${tenantId}
         `;
 
         if (rows.length === 0) return null;
@@ -44,7 +46,7 @@ export class PostgresProductRepository implements ProductRepositoryPort {
         const productRow = rows[0] as unknown as DbProductRow;
         productRow.product_variants = [];
 
-        return SupabaseProductMapper.toDomain(productRow);
+        return SupabaseProductMapper.toDomain(productRow, rows[0].currency as Currency);
       });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unknown error';
@@ -56,7 +58,7 @@ export class PostgresProductRepository implements ProductRepositoryPort {
     const productData = SupabaseProductMapper.toPersistence(product);
 
     try {
-      await this.executeSql(tx, async (conn) => {
+      await this.executeSql(tx, async (conn): Promise<void> => {
         await conn`
           INSERT INTO catalog.products (
             id, tenant_id, category_id, name, description, sku, price_cents, cost_cents,
@@ -96,7 +98,7 @@ export class PostgresProductRepository implements ProductRepositoryPort {
 
   async delete(id: ProductId, tenantId: TenantId, tx?: TransactionContext): Promise<void> {
     try {
-      await this.executeSql(tx, async (conn) => {
+      await this.executeSql(tx, async (conn): Promise<void> => {
         await conn`
           DELETE FROM catalog.products
           WHERE id = ${id} AND tenant_id = ${tenantId}
@@ -115,7 +117,7 @@ export class PostgresProductRepository implements ProductRepositoryPort {
     tx: TransactionContext,
   ): Promise<void> {
     try {
-      await this.executeSql(tx, async (conn) => {
+      await this.executeSql(tx, async (conn): Promise<void> => {
         const rows = await conn`
           UPDATE catalog.products
           SET stock = stock - ${quantity},
@@ -176,7 +178,7 @@ export class PostgresProductRepository implements ProductRepositoryPort {
     }
 
     try {
-      await this.executeSql(tx, async (conn) => {
+      await this.executeSql(tx, async (conn): Promise<void> => {
         const rows = await conn`
           UPDATE catalog.products
           SET stock = stock + ${quantity},

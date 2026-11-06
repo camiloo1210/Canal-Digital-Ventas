@@ -98,6 +98,11 @@ describe('PostgresBuyerCartRepository', (): void => {
     );
     expect(version).toBe(1);
     expect(calls[0].text).toContain('ON CONFLICT');
+    expect(calls[0].text).toContain('subtotal_cents, currency, expires_at');
+    expect(calls[0].text).toContain('t.base_currency');
+    expect(calls[0].text).toContain('FROM core.tenants t');
+    expect(calls[0].text).toContain("t.status = 'active'");
+    expect(calls[0].values).toContain(TENANT);
     expect(calls[0].values).toContain(3000);
     expect(calls[1].values).toContain(TENANT);
     expect(calls[1].text).toContain('p.tenant_id =');
@@ -174,7 +179,7 @@ describe('PostgresBuyerCartRepository', (): void => {
     >;
     const error = await new PostgresBuyerCartRepository(failing)
       .findActive({ tenantId: TENANT, buyerUserId: USER })
-      .catch((e: unknown) => e);
+      .catch((e: unknown): unknown => e);
     expect(error).toBeInstanceOf(BuyerCartRepositoryException);
     expect((error as Error).message).not.toContain('secret');
   });
@@ -198,6 +203,9 @@ describe('PostgresBuyerCartCatalogReadRepository', (): void => {
           name: 'N',
           sku: 'S',
           price_cents: 250,
+          currency: 'COP',
+          wholesale_price_cents: 200,
+          wholesale_min_quantity: 3,
           stock: -3,
           image_url: 'cover.jpg',
           gallery_urls: ['g1.jpg', 'g2.jpg'],
@@ -212,6 +220,9 @@ describe('PostgresBuyerCartCatalogReadRepository', (): void => {
         name: 'N',
         sku: 'S',
         unitPriceCents: 250,
+        currency: 'COP',
+        wholesalePriceCents: 200,
+        wholesaleMinQuantity: 3,
         availableQuantity: 0,
         imageUrl: 'g1.jpg',
       },

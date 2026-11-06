@@ -41,13 +41,16 @@ export class Cart {
     private readonly createdAt: Date,
     private updatedAt: Date,
     private version: number,
-  ) {}
+  ) {
+    this.items = items.map((item: CartItem): CartItem => Cart.snapshotItem(item));
+  }
 
   public static create(
     id: CartId,
     tenantId: TenantId,
     customerId: CustomerId | null,
     expiresAt: Date,
+    currency: Currency,
   ): Cart {
     Cart.validateId(id);
     Cart.validateTenantId(tenantId);
@@ -59,7 +62,7 @@ export class Cart {
       customerId,
       [],
       CartStatus.ACTIVE,
-      Money.from(0, Currency.USD), // Default currency, will adapt on first item added
+      Money.from(0, currency), // Tenant currency, fixed for the cart lifetime
       expiresAt,
       new Date(),
       new Date(),
@@ -94,11 +97,14 @@ export class Cart {
 
   // Reconstitute
   public static reconstitute(props: CartProps): Cart {
+    if (!Cart.calculateSubtotal(props.items, props.subtotal.getCurrency()).equals(props.subtotal)) {
+      throw new InvalidCartAttributeException('Cart subtotal must match its items and currency.');
+    }
     return new Cart(
       props.id,
       props.tenantId,
       props.customerId,
-      props.items,
+      [...props.items],
       props.status,
       props.subtotal,
       props.expiresAt,
@@ -113,38 +119,46 @@ export class Cart {
     this.ensureIsActive();
 
     const existingItem = this.items.find(
-      (i) => i.getProductId() === item.getProductId() && i.getVariantId() === item.getVariantId(),
+      (i: CartItem): boolean =>
+        i.getProductId() === item.getProductId() && i.getVariantId() === item.getVariantId(),
     );
 
-    if (existingItem) {
-      existingItem.changeQuantity(existingItem.getQuantity() + item.getQuantity());
-    } else {
-      this.items.push(item);
+    if (item.getUnitPrice().getCurrency() !== this.subtotal.getCurrency()) {
+      throw new InvalidCartAttributeException('Cart items must share one currency.');
     }
-
-    this.recalculateSubtotal();
-    this.updateUpdatedAt();
+    if (existingItem) {
+      this.changeItemQuantity(
+        existingItem.getId(),
+        existingItem.getQuantity() + item.getQuantity(),
+      );
+      return;
+    }
+    this.replaceItems([...this.items, item]);
   }
 
   public removeItem(itemId: CartItemId): void {
     this.ensureIsActive();
-
-    this.items = this.items.filter((i) => i.getId() !== itemId);
-    this.recalculateSubtotal();
-    this.updateUpdatedAt();
+    this.replaceItems(this.items.filter((item: CartItem): boolean => item.getId() !== itemId));
   }
 
   public changeItemQuantity(itemId: CartItemId, quantity: number): void {
     this.ensureIsActive();
-
-    const item = this.items.find((i) => i.getId() === itemId);
-    if (!item) {
-      throw new InvalidCartAttributeException('Item not found in cart.');
-    }
-
-    item.changeQuantity(quantity);
-    this.recalculateSubtotal();
-    this.updateUpdatedAt();
+    const item = this.items.find((candidate: CartItem): boolean => candidate.getId() === itemId);
+    if (!item) throw new InvalidCartAttributeException('Item not found in cart.');
+    const replacement = CartItem.create(
+      item.getId(),
+      item.getProductId(),
+      item.getProductName(),
+      quantity,
+      item.getUnitPrice(),
+      item.getSku(),
+      item.getVariantId() ?? undefined,
+    );
+    this.replaceItems(
+      this.items.map((candidate: CartItem): CartItem =>
+        candidate === item ? replacement : candidate,
+      ),
+    );
   }
 
   public clear(): void {
@@ -189,20 +203,40 @@ export class Cart {
     }
   }
 
+  private static calculateSubtotal(items: CartItem[], currency: Currency): Money {
+    let subtotal = Money.from(0, currency);
+    for (const item of items) {
+      subtotal = subtotal.add(item.getSubtotal());
+    }
+    return subtotal;
+  }
+
+  private static snapshotItem(item: CartItem): CartItem {
+    return CartItem.reconstitute({
+      id: item.getId(),
+      productId: item.getProductId(),
+      productName: item.getProductName(),
+      quantity: item.getQuantity(),
+      unitPrice: item.getUnitPrice(),
+      variantId: item.getVariantId(),
+      sku: item.getSku(),
+      subtotal: item.getSubtotal(),
+    });
+  }
+
+  private replaceItems(items: CartItem[]): void {
+    const currency = this.subtotal.getCurrency();
+    if (items.some((item: CartItem): boolean => item.getUnitPrice().getCurrency() !== currency)) {
+      throw new InvalidCartAttributeException('Cart items must share the cart currency.');
+    }
+    const subtotal = Cart.calculateSubtotal(items, currency);
+    this.items = items.map((item: CartItem): CartItem => Cart.snapshotItem(item));
+    this.subtotal = subtotal;
+    this.updateUpdatedAt();
+  }
+
   private recalculateSubtotal(): void {
-    if (this.items.length === 0) {
-      this.subtotal = Money.from(0, Currency.USD);
-      return;
-    }
-
-    const currency = this.items[0].getUnitPrice().getCurrency();
-    let newSubtotal = Money.from(0, currency);
-
-    for (const item of this.items) {
-      newSubtotal = newSubtotal.add(item.getSubtotal());
-    }
-
-    this.subtotal = newSubtotal;
+    this.subtotal = Cart.calculateSubtotal(this.items, this.subtotal.getCurrency());
   }
 
   private updateUpdatedAt(): void {
@@ -236,7 +270,7 @@ export class Cart {
     return this.customerId;
   }
   public getItems(): CartItem[] {
-    return [...this.items];
+    return this.items.map((item: CartItem): CartItem => Cart.snapshotItem(item));
   }
   public getStatus(): CartStatus {
     return this.status;

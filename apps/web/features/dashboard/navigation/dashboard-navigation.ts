@@ -7,7 +7,8 @@ export interface DashboardNavigationItem {
     | 'categories'
     | 'store'
     | 'integrations'
-    | 'users';
+    | 'users'
+    | 'profile';
   href: string;
   /** Any one of these permissions unlocks the destination; empty means every active member. */
   permissions: readonly string[];
@@ -36,6 +37,8 @@ export const dashboardNavigation: readonly DashboardNavigationItem[] = [
   { key: 'store', href: '/dashboard/store', permissions: ['MANAGE_STORE'] },
   { key: 'integrations', href: '/dashboard/integrations', permissions: [], ownerOnly: true },
   { key: 'users', href: '/dashboard/users', permissions: [], ownerOnly: true },
+  /** Personal area of every member, whatever their role. */
+  { key: 'profile', href: '/dashboard/profile', permissions: [] },
 ];
 
 /** Keys of the destinations a member may see; mirrors the page guards. */

@@ -1,6 +1,7 @@
 import { Product } from '@/products/domain/entities/product.entity';
 import { ProductVariant } from '@/products/domain/entities/product-variant.entity';
 import { ProductStatus } from '@/products/domain/enums/product-status.enum';
+import { Currency, parseCurrency } from '@/shared/domain/enums/currency.enum';
 import { Money } from '@/shared/domain/value-objects/money.vo';
 import { ProductName } from '@/products/domain/value-objects/product-name.vo';
 import { Sku } from '@/products/domain/value-objects/sku.vo';
@@ -12,13 +13,14 @@ import { ProductId, createProductId } from '@/products/domain/types/product-id.t
 import { CategoryId } from '@/products/domain/types/category-id.type';
 import { TenantId } from '@/shared/domain/types/tenant-id.type';
 import { createVariantId } from '@/products/domain/types/variant-id.type';
-import { createSeasonId } from '@/products/domain/types/season-id.type';
+import { createSeasonId, SeasonId } from '@/products/domain/types/season-id.type';
 
 export class SupabaseProductMapper {
-  public static toDomain(row: DbProductRow): Product {
+  public static toDomain(row: DbProductRow, currency: Currency): Product {
+    parseCurrency(currency);
     // 1. Map variants first when they are included in the JOIN.
     const variants =
-      row.product_variants?.map((v: DbProductVariantRow) =>
+      row.product_variants?.map((v: DbProductVariantRow): ProductVariant =>
         ProductVariant.reconstitute({
           id: createVariantId(v.id),
           productId: createProductId(v.product_id),
@@ -26,7 +28,7 @@ export class SupabaseProductMapper {
           name: ProductName.from(v.name),
           attributes: v.attributes,
           priceOverride:
-            v.price_override_cents !== null ? Money.from(v.price_override_cents) : null,
+            v.price_override_cents !== null ? Money.from(v.price_override_cents, currency) : null,
           stock: v.stock,
           status: v.status as ProductStatus,
         }),
@@ -35,9 +37,9 @@ export class SupabaseProductMapper {
     return Product.reconstitute({
       id: row.id as ProductId,
       name: ProductName.from(row.name),
-      price: Money.from(row.price_cents),
-      cost: Money.from(row.cost_cents),
-      wholesalePrice: Money.from(row.wholesale_price_cents),
+      price: Money.from(row.price_cents, currency),
+      cost: Money.from(row.cost_cents, currency),
+      wholesalePrice: Money.from(row.wholesale_price_cents, currency),
       wholesaleMinQuantity: row.wholesale_min_quantity,
       description: row.description,
       stock: row.stock,
@@ -46,7 +48,7 @@ export class SupabaseProductMapper {
       status: row.status as ProductStatus,
       sku: Sku.from(row.sku),
       tenantId: row.tenant_id as TenantId,
-      seasonIds: (row.season_ids || []).map((id: string) => createSeasonId(id)),
+      seasonIds: (row.season_ids || []).map((id: string): SeasonId => createSeasonId(id)),
       imagePath: row.image_path,
       imageUrl: row.image_url,
       galleryUrls: row.gallery_urls ?? [],

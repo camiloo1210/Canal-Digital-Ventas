@@ -6,6 +6,7 @@ import type {
 } from '@/shared/application/ports/out/transaction-manager.port';
 import { assertStoreOwner } from '@/iam/application/assert-store-owner';
 import { TenantRoleNotFoundException } from '@/iam/application/exceptions/tenant-role-not-found.exception';
+import { TenantRoleProtectedException } from '@/iam/application/exceptions/tenant-role-protected.exception';
 import { TenantRoleInUseException } from '@/iam/application/exceptions/tenant-role-in-use.exception';
 
 export interface DeleteTenantRoleDto {
@@ -27,6 +28,7 @@ export class DeleteTenantRoleUseCase {
         await assertStoreOwner(this.ownership, dto.userId, dto.tenantId, tx);
         const role = await this.roles.findById(dto.roleId, dto.tenantId, tx);
         if (!role) throw new TenantRoleNotFoundException();
+        if (role.isSystem()) throw new TenantRoleProtectedException();
         if ((await this.roles.countMembers(dto.roleId, dto.tenantId, tx)) > 0) {
           throw new TenantRoleInUseException();
         }

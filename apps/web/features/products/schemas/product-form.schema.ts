@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { currencyExponent } from '@canaldigital/packages/core/money-format';
 import { parseToMinorUnits } from '@/lib/money';
 
 export const PRODUCT_IMAGE_MIME_EXTENSIONS = {
@@ -30,22 +31,39 @@ export function uploadedImagePathsSchema(tenantId: string): z.ZodType<string[]> 
     .refine((paths): boolean => new Set(paths).size === paths.length, 'imageFormat');
 }
 
-const decimalPattern = /^\d+(\.\d{1,2})?$/;
-const decimalString = z
-  .string()
-  .regex(decimalPattern, 'moneyFormat')
-  .refine((value): boolean => {
-    if (!decimalPattern.test(value)) return true;
-    const [whole, fraction = ''] = value.split('.');
-    return (
-      BigInt(whole) * BigInt(100) + BigInt(fraction.padEnd(2, '0')) <=
-      BigInt(Number.MAX_SAFE_INTEGER)
-    );
-  }, 'moneyRange');
-const money = decimalString.transform((value): number => parseToMinorUnits(value));
-const optionalMoney = z
-  .union([z.literal(''), decimalString])
-  .transform((value): number | null => (value === '' ? null : parseToMinorUnits(value)));
+/**
+ * Currency-aware money string: at most `exponent` fraction digits (none for CLP), never rounded,
+ * bounded by MAX_MONEY_CENTS. All parsing is delegated to the single `parseToMinorUnits`.
+ */
+function moneyString(currency: string): z.ZodType<number, string> {
+  return z.string().transform((value, ctx): number => {
+    try {
+      return parseToMinorUnits(value, currency);
+    } catch (error: unknown) {
+      const range = error instanceof Error && error.message.includes('bounds');
+      ctx.addIssue({
+        code: 'custom',
+        message: range
+          ? 'moneyRange'
+          : currencyExponent(currency) === 0
+            ? 'moneyFormatWhole'
+            : 'moneyFormat',
+      });
+      return z.NEVER;
+    }
+  });
+}
+function optionalMoneyString(currency: string): z.ZodType<number | null, string> {
+  const money = moneyString(currency);
+  return z.union([z.literal(''), z.string()]).transform((value, ctx): number | null => {
+    if (value === '') return null;
+    const result = money.safeParse(value);
+    if (result.success) return result.data;
+    for (const issue of result.error.issues)
+      ctx.addIssue({ code: 'custom', message: issue.message });
+    return z.NEVER;
+  });
+}
 const integerString = z
   .string()
   .regex(/^\d+$/, 'integerFormat')
@@ -54,30 +72,38 @@ const optionalInteger = z
   .union([z.literal(''), integerString])
   .transform((value): number | null => (value === '' ? null : Number(value)));
 
-export const productFormSchema = z.object({
-  name: z.string().trim().min(2, 'nameMin').max(50, 'nameMax'),
-  sku: z
-    .string()
-    .trim()
-    .regex(/^[a-zA-Z0-9-]{5,20}$/, 'skuFormat'),
-  categoryId: z.string().uuid('categoryRequired'),
-  description: z.string().max(200, 'descriptionMax'),
-  price: money,
-  cost: money,
-  wholesalePrice: optionalMoney,
-  wholesaleMinQuantity: optionalInteger,
-  stock: integerString.transform((value): number => Number(value)),
-  isVatExempt: z
-    .enum(['', 'on', 'true', 'false'], { message: 'booleanFormat' })
-    .transform((value): boolean => value === 'on' || value === 'true'),
-  uploadedImagePaths: z.array(z.string()).max(PRODUCT_IMAGE_MAX_COUNT, 'imageCount'),
-  existingImages: z.array(z.string().url('imageFormat')).max(PRODUCT_IMAGE_MAX_COUNT, 'imageCount'),
-});
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- zod object type is inferred; spelling it out would duplicate the schema
+export function createProductFormSchema(currency: string) {
+  return z.object({
+    name: z.string().trim().min(2, 'nameMin').max(50, 'nameMax'),
+    sku: z
+      .string()
+      .trim()
+      .regex(/^[a-zA-Z0-9-]{5,20}$/, 'skuFormat'),
+    categoryId: z.string().uuid('categoryRequired'),
+    description: z.string().max(200, 'descriptionMax'),
+    price: moneyString(currency),
+    cost: moneyString(currency),
+    wholesalePrice: optionalMoneyString(currency),
+    wholesaleMinQuantity: optionalInteger,
+    stock: integerString.transform((value): number => Number(value)),
+    isVatExempt: z
+      .enum(['', 'on', 'true', 'false'], { message: 'booleanFormat' })
+      .transform((value): boolean => value === 'on' || value === 'true'),
+    uploadedImagePaths: z.array(z.string()).max(PRODUCT_IMAGE_MAX_COUNT, 'imageCount'),
+    existingImages: z
+      .array(z.string().url('imageFormat'))
+      .max(PRODUCT_IMAGE_MAX_COUNT, 'imageCount'),
+  });
+}
 
-export const updateProductFormSchema = productFormSchema.extend({
-  productId: z.string().uuid('invalidRequest'),
-  expectedVersion: integerString.transform((value): number => Number(value)),
-});
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- zod object type is inferred from createProductFormSchema
+export function createUpdateProductFormSchema(currency: string) {
+  return createProductFormSchema(currency).extend({
+    productId: z.string().uuid('invalidRequest'),
+    expectedVersion: integerString.transform((value): number => Number(value)),
+  });
+}
 
 export interface ProductFormValues {
   name: string;

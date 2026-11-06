@@ -13,6 +13,7 @@ import {
   Plug,
   ChartNoAxesCombined,
   UsersRound,
+  UserRound,
 } from 'lucide-react';
 import { NavUser } from '@/components/nav-user';
 import {
@@ -45,6 +46,7 @@ const icons = {
   store: Paintbrush,
   integrations: Plug,
   users: UsersRound,
+  profile: UserRound,
 };
 
 interface DashboardSidebarUser {

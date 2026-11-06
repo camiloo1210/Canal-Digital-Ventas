@@ -40,7 +40,7 @@ export class PostgresSellerOrderReadRepository implements SellerOrderReadReposit
           WHERE t.id=${tenant}::uuid AND m.user_id=${actor}::uuid AND m.status='active' AND core.member_has_permission(m.user_id, m.tenant_id, ARRAY['VIEW_ORDERS','MANAGE_ORDERS']::text[])
         ), filtered AS (
           SELECT o.id,o.order_number AS "orderNumber",o.status,o.version,o.total_amount_cents AS "totalAmountCents",
-            t.base_currency AS currency,o.created_at AS "createdAt",c.name AS "customerName",
+            o.currency AS currency,o.created_at AS "createdAt",c.name AS "customerName",
             concat_ws(', ',o.shipping_address_street,o.shipping_address_city,o.shipping_address_state,o.shipping_address_zip_code,o.shipping_address_country) AS "shippingAddress"
           FROM sales.orders o JOIN authorized t ON t.id=o.tenant_id
           JOIN sales.customers c ON c.id=o.customer_id AND c.tenant_id=o.tenant_id

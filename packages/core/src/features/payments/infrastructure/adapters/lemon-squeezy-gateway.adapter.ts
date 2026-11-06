@@ -4,10 +4,19 @@ import {
 } from '@/payments/application/ports/out/payment-gateway.port';
 import { Payment } from '@/payments/domain/entities/payment.entity';
 import { PaymentStatus } from '@/payments/domain/enums/payment-status.enum';
-import { PaymentId } from '@/payments/domain/types/payment-id.type';
+import { createPaymentId } from '@/payments/domain/types/payment-id.type';
 import { InvalidWebhookSignatureException } from '@/payments/application/exceptions/invalid-webhook-signature.exception';
 import { PaymentGatewayException } from '@/payments/application/exceptions/payment-gateway.exception';
 import * as crypto from 'crypto';
+import { toProviderMinorUnits } from '@/payments/infrastructure/lemon-squeezy-amount';
+import { Currency } from '@/shared/domain/enums/currency.enum';
+
+function providerRecord(value: unknown): Record<string, unknown> {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    throw new PaymentGatewayException('Malformed payment provider response.');
+  }
+  return value as Record<string, unknown>;
+}
 
 export class LemonSqueezyAdapter implements PaymentGatewayPort {
   constructor(
@@ -16,10 +25,17 @@ export class LemonSqueezyAdapter implements PaymentGatewayPort {
     private readonly webhookSecret: string,
     private readonly storeId: string,
     private readonly genericVariantId: string,
+    private readonly storeCurrency: Currency,
   ) {}
 
   async createCheckoutSession(payment: Payment): Promise<string> {
-    const amountInCents = Math.round(payment.getAmount().getValue() * 100);
+    const amountInCents = toProviderMinorUnits(
+      payment.getAmount().getValue(),
+      payment.getAmount().getCurrency(),
+    );
+    if (payment.getAmount().getCurrency() !== this.storeCurrency) {
+      throw new PaymentGatewayException('Payment currency does not match the configured store.');
+    }
 
     const response = await fetch(`${this.apiUrl}/v1/checkouts`, {
       method: 'POST',
@@ -32,6 +48,7 @@ export class LemonSqueezyAdapter implements PaymentGatewayPort {
         data: {
           type: 'checkouts',
           attributes: {
+            // Smallest currency unit (see toProviderMinorUnits).
             custom_price: amountInCents,
             checkout_data: {
               custom: {
@@ -66,8 +83,12 @@ export class LemonSqueezyAdapter implements PaymentGatewayPort {
       );
     }
 
-    const data = await response.json();
-    return data.data.attributes.url;
+    const body: unknown = await response.json();
+    const attributes = providerRecord(providerRecord(providerRecord(body).data).attributes);
+    if (typeof attributes.url !== 'string') {
+      throw new PaymentGatewayException('Checkout response is missing its URL.');
+    }
+    return attributes.url;
   }
 
   async processWebhook(payload: string, signature: string): Promise<WebhookResult> {
@@ -82,15 +103,25 @@ export class LemonSqueezyAdapter implements PaymentGatewayPort {
       throw new InvalidWebhookSignatureException('Invalid Lemon Squeezy webhook signature');
     }
 
-    const event = JSON.parse(payload);
-    const eventName = event.meta.event_name;
-    const customData = event.data.attributes.meta?.custom_data || event.meta.custom_data;
+    const parsed: unknown = JSON.parse(payload);
+    const event = providerRecord(parsed);
+    const meta = providerRecord(event.meta);
+    const data = providerRecord(event.data);
+    const attributes = providerRecord(data.attributes);
+    const eventName = meta.event_name;
+    const customData = providerRecord(
+      (attributes.meta ? providerRecord(attributes.meta).custom_data : undefined) ??
+        meta.custom_data,
+    );
 
     // custom_data from checkout is usually present in the order/subscription objects
-    const paymentId = customData?.payment_id as PaymentId;
-
-    if (!paymentId) {
+    if (typeof customData.payment_id !== 'string' || customData.payment_id.trim() === '') {
       throw new PaymentGatewayException('Webhook payload missing payment_id in custom_data');
+    }
+    const paymentId = createPaymentId(customData.payment_id);
+    const eventId = meta.webhook_id ?? data.id;
+    if (typeof eventId !== 'string' || eventId.length === 0) {
+      throw new PaymentGatewayException('Webhook payload missing its event ID.');
     }
 
     let status = PaymentStatus.PENDING;
@@ -113,11 +144,22 @@ export class LemonSqueezyAdapter implements PaymentGatewayPort {
         break;
     }
 
+    // order_created carries the amount actually charged (smallest currency unit) and its currency;
+    // the use case compares them with the stored payment before completing it.
+    const paidAmount =
+      typeof attributes.total === 'number' && Number.isSafeInteger(attributes.total)
+        ? attributes.total
+        : undefined;
+    const paidCurrency =
+      typeof attributes.currency === 'string' ? attributes.currency.toUpperCase() : undefined;
+
     return {
-      eventId: event.meta.webhook_id || event.data.id,
+      eventId,
       paymentId,
       status,
       failureReason,
+      paidAmount,
+      paidCurrency,
     };
   }
 }

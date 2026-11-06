@@ -133,7 +133,14 @@ export function RolesPanel({ roles }: { roles: TenantRoleReadModel[] }): React.J
               <TableBody>
                 {roles.map((role): React.JSX.Element => (
                   <TableRow key={role.id}>
-                    <TableCell className="font-medium">{role.name}</TableCell>
+                    <TableCell className="font-medium">
+                      {role.name}
+                      {role.isSystem && (
+                        <Badge variant="outline" className="ml-2">
+                          {t('roles.defaultBadge')}
+                        </Badge>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <div className="flex max-w-md flex-wrap gap-1">
                         {role.permissions.map((permission): React.JSX.Element => (
@@ -163,14 +170,16 @@ export function RolesPanel({ roles }: { roles: TenantRoleReadModel[] }): React.J
                         >
                           <Pencil aria-hidden="true" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          className="size-11"
-                          aria-label={t('roles.deleteLabel', { name: role.name })}
-                          onClick={(): void => setDeleting(role)}
-                        >
-                          <Trash2 aria-hidden="true" />
-                        </Button>
+                        {!role.isSystem && (
+                          <Button
+                            variant="ghost"
+                            className="size-11"
+                            aria-label={t('roles.deleteLabel', { name: role.name })}
+                            onClick={(): void => setDeleting(role)}
+                          >
+                            <Trash2 aria-hidden="true" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

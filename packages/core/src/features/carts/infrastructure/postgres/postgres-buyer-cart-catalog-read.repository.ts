@@ -10,6 +10,9 @@ interface ProductRow {
   name: string;
   sku: string;
   price_cents: number;
+  currency: string;
+  wholesale_price_cents: number | null;
+  wholesale_min_quantity: number | null;
   stock: number;
   image_url: string | null;
   gallery_urls: string[] | null;
@@ -41,7 +44,7 @@ export class PostgresBuyerCartCatalogReadRepository implements BuyerCartCatalogR
     try {
       // Same visibility as the storefront: active product, active store, active (or no) category.
       const rows = await this.sql<ProductRow[]>`
-        SELECT p.id, p.name, p.sku, p.price_cents, p.stock, p.image_url, p.gallery_urls
+        SELECT p.id, p.name, p.sku, p.price_cents, t.base_currency AS currency, p.wholesale_price_cents, p.wholesale_min_quantity, p.stock, p.image_url, p.gallery_urls
         FROM catalog.products p
         JOIN core.tenants t ON t.id = p.tenant_id AND t.status = 'active'
         LEFT JOIN catalog.categories c ON c.id = p.category_id AND c.tenant_id = p.tenant_id
@@ -54,6 +57,11 @@ export class PostgresBuyerCartCatalogReadRepository implements BuyerCartCatalogR
         name: row.name,
         sku: row.sku,
         unitPriceCents: Number(row.price_cents),
+        currency: row.currency,
+        wholesalePriceCents:
+          row.wholesale_price_cents === null ? null : Number(row.wholesale_price_cents),
+        wholesaleMinQuantity:
+          row.wholesale_min_quantity === null ? null : Number(row.wholesale_min_quantity),
         availableQuantity: Math.max(0, Math.trunc(Number(row.stock))),
         imageUrl: row.gallery_urls?.[0] ?? row.image_url ?? null,
       }));

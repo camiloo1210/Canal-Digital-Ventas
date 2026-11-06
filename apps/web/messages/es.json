@@ -122,7 +122,58 @@
     "catalogView": "Vista del catálogo",
     "performanceView": "Rendimiento",
     "inventoryView": "Inventario",
-    "inventoryViewHelp": "Cobertura y reposición estimadas con los ajustes seleccionados. Revisa las variantes por separado."
+    "inventoryViewHelp": "Cobertura y reposición estimadas con los ajustes seleccionados. Revisa las variantes por separado.",
+    "dateFrom": "Desde",
+    "dateTo": "Hasta",
+    "rangeHelp": "Elige fechas para un rango propio (máximo 366 días, en UTC, hasta hoy). Si las dejas vacías se usa el período predefinido.",
+    "flowTitle": "Flujo de pedidos",
+    "flowHelp": "{count, plural, one {# pedido creado en el período.} other {# pedidos creados en el período.}} Úsalo para encontrar dónde se frenan los pedidos.",
+    "flowStatusTitle": "Pedidos por estado",
+    "flowEmpty": "No se crearon pedidos en este período.",
+    "flowStatus": {
+      "pending_payment": "Pendiente de pago",
+      "paid": "Por preparar",
+      "processing": "En preparación",
+      "shipped": "Enviado",
+      "delivered": "Entregado",
+      "cancelled": "Cancelado",
+      "refunded": "Reembolsado",
+      "confirmed": "Confirmado"
+    },
+    "stagesTitle": "Tiempo promedio por etapa",
+    "stageTo": "a",
+    "noStageData": "Sin datos",
+    "stagesHelp": "Solo cuenta pedidos con cambios de estado registrados desde que existe el historial.",
+    "durationMinutes": "{count} min",
+    "durationHours": "{hours} h {minutes} min",
+    "durationDays": "{days} d {hours} h",
+    "stuckTitle": "Pedidos estancados",
+    "stuckCount": "{count, plural, =0 {Sin estancados} one {# estancado} other {# estancados}}",
+    "noStuck": "Ningún pedido abierto lleva más de {hours} horas en el mismo estado.",
+    "stuckFor": "{hours} horas en este estado",
+    "moreStuck": "{count, plural, one {Y # pedido estancado más.} other {Y # pedidos estancados más.}}",
+    "viewOrders": "Ver pedidos",
+    "advisorTitle": "Asesor con IA",
+    "advisorBeta": "Beta",
+    "advisorHelp": "Analiza las ventas, productos, inventario y pedidos del período aplicado y sugiere cuándo hacer promociones, qué productos impulsar y qué reponer.",
+    "advisorAnalyze": "Analizar con IA",
+    "advisorRetry": "Analizar de nuevo",
+    "advisorAnalyzing": "Analizando…",
+    "advisorPrivacy": "Se envía a Google Gemini solo un resumen de cifras y nombres de productos. Nunca datos de clientes.",
+    "advisorDisclaimer": "Sugerencias generadas por IA a partir de tus cifras. Son orientativas: revísalas antes de actuar.",
+    "advisorUnauthorized": "No tienes permiso para analizar los reportes de este negocio.",
+    "advisorNotConfigured": "El asesor con IA no está configurado todavía. Pide a un administrador de la plataforma que agregue la clave de Gemini.",
+    "advisorUnavailable": "No pudimos obtener el análisis ahora mismo. Inténtalo de nuevo en unos minutos.",
+    "advisorUnexpected": "Ocurrió un error inesperado al generar el análisis.",
+    "advisorCategory": {
+      "promotions": "Promociones",
+      "bestSellers": "Más vendidos",
+      "restock": "Reposición",
+      "pricing": "Precios y margen",
+      "operations": "Operación",
+      "growth": "Crecimiento"
+    },
+    "currencyScope": "Los importes y márgenes se calculan solo en {currency}. Se excluyeron {count} pedidos en otras monedas de esos importes, sin convertirlos; sus pedidos y unidades sí se incluyen en los conteos."
   },
   "AdminOverview": {
     "title": "Resumen",
@@ -167,7 +218,27 @@
     "accessDescription": "Este resumen requiere ser propietario o administrador de la tienda seleccionada.",
     "retry": "Volver a cargar",
     "denied": "No tienes permiso para abrir esa sección. Pide acceso al propietario de la tienda.",
-    "limitedAccess": "Tu rol no incluye reportes. Usa el menú para abrir las secciones a las que tienes acceso."
+    "limitedAccess": "Tu rol no incluye el resumen general. Usa el menú para abrir las secciones a las que tienes acceso.",
+    "filters": "Filtrar resumen",
+    "period": "Período",
+    "days": "Últimos {count} días",
+    "dateFrom": "Desde",
+    "dateTo": "Hasta",
+    "rangeHelp": "Elige fechas para un rango propio (máximo 366 días, en UTC, hasta hoy). Si las dejas vacías se usa el período predefinido. Afecta a los indicadores de ventas y clientes.",
+    "apply": "Aplicar período",
+    "updating": "Actualizando…",
+    "kpiTitle": "Indicadores del canal",
+    "kpiPeriod": "Período aplicado: {from} a {to} (días completos en UTC)",
+    "kpiPeriodRevenue": "Ingresos del período",
+    "kpiLifetimeRevenue": "Ingresos totales",
+    "kpiCustomers": "Clientes totales",
+    "kpiPeriodOrders": "Pedidos pagados del período",
+    "kpiNoComparison": "Sin base de comparación",
+    "kpiComparison": "{percent} frente al período anterior",
+    "kpiLifetimeHelp": "{count, plural, one {Ventas netas de # pedido pagado desde siempre.} other {Ventas netas de # pedidos pagados desde siempre.}}",
+    "kpiCustomersHelp": "{count, plural, =0 {Ningún cliente compró en el período.} one {# cliente compró en el período.} other {# clientes compraron en el período.}}",
+    "kpiOrdersHelp": "Pedidos pagados, en preparación, enviados o entregados.",
+    "currencyScope": "Hay {count} pedidos históricos en otras monedas. Los ingresos se muestran solo en {currency}, sin conversión; los conteos incluyen todos los pedidos."
   },
   "AdminShell": {
     "administration": "Administración de tienda",
@@ -378,6 +449,7 @@
       "items": "{count, plural, one {# artículo} other {# artículos}}",
       "subtotal": "Subtotal",
       "totalsWarning": "* El precio final y la disponibilidad son confirmados por el servidor.",
+      "totalUnsupported": "El total supera el importe permitido. Reduce las cantidades para continuar.",
       "processing": "Procesando...",
       "submit": "Confirmar Pedido",
       "successTitle": "¡Pedido Confirmado!",
@@ -433,6 +505,7 @@
       "dismiss": "Cerrar aviso"
     },
     "cartControls": {
+      "totalUnsupported": "El total supera el importe permitido. Reduce las cantidades para continuar.",
       "open": "Abrir carrito",
       "close": "Cerrar carrito",
       "remove": "Eliminar {name} del carrito",
@@ -524,7 +597,8 @@
     "navigation": {
       "label": "Navegación del comprador",
       "stores": "Tiendas",
-      "purchases": "Mis compras"
+      "purchases": "Mis compras",
+      "profile": "Mi perfil"
     },
     "directory": {
       "title": "Encuentra tu próxima tienda",
@@ -984,6 +1058,7 @@
     "categoryRequired": "Selecciona una categoría.",
     "descriptionMax": "La descripción no debe superar los 200 caracteres.",
     "moneyFormat": "Usa un importe válido con hasta 2 decimales, por ejemplo 40.00.",
+    "moneyFormatWhole": "Usa un importe entero sin decimales, por ejemplo 4000.",
     "moneyRange": "El importe supera el límite permitido.",
     "integerFormat": "Usa un número entero igual o mayor que 0.",
     "booleanFormat": "Revisa la selección de IVA.",
@@ -1110,6 +1185,12 @@
   },
   "KiviMessaging": {
     "title": "Canal WhatsApp",
+    "widgetEnabled": "El botón «Continuar en WhatsApp» del widget web quedó activo con este número.",
+    "widgetSkipped": "No se activó el botón de WhatsApp del widget web: crea primero el widget en Kivi.",
+    "connectedTitle": "WhatsApp ya está conectado en Kivi",
+    "connectedNumber": "Número conectado",
+    "tokenStored": "Token guardado cifrado en Kivi",
+    "replaceHint": "Para cambiar de número o renovar un token de prueba vencido, ingresa el nuevo ID y token y pulsa «Guardar y conectar». Reemplaza las credenciales guardadas en Kivi.",
     "description": "Conecta el número de tu negocio sin salir del panel. Kivi administra la conexión con Meta.",
     "security": "El token se transmite desde el servidor y Kivi lo almacena cifrado. Nunca se muestra de nuevo.",
     "linkFirst": "Vincula primero tu tienda con Kivi para configurar WhatsApp.",
@@ -1209,6 +1290,7 @@
       "new": "Nuevo rol",
       "edit": "Editar rol",
       "editLabel": "Editar el rol {name}",
+      "defaultBadge": "Predeterminado",
       "deleteLabel": "Eliminar el rol {name}",
       "name": "Nombre del rol",
       "namePlaceholder": "Por ejemplo: Vendedor",
@@ -1254,9 +1336,13 @@
           "label": "Gestionar catálogo",
           "help": "Crear, editar y archivar productos y categorías."
         },
+        "VIEW_OVERVIEW": {
+          "label": "Ver resumen general",
+          "help": "Cifras de ventas y pedidos recientes de la pantalla de inicio."
+        },
         "VIEW_REPORTS": {
           "label": "Ver reportes",
-          "help": "Resumen de ventas e inteligencia de negocio."
+          "help": "Pantalla de inteligencia de negocio (ventas, rentabilidad, reabastecimiento)."
         },
         "MANAGE_STORE": {
           "label": "Gestionar tienda",
@@ -1509,6 +1595,7 @@
       "roleNotFound": "El rol ya no existe.",
       "roleNameTaken": "Ya existe un rol con ese nombre.",
       "roleInUse": "No se puede eliminar un rol que todavía tiene miembros.",
+      "roleProtected": "Los roles predeterminados se pueden editar, pero no eliminar.",
       "invitationNotFound": "La invitación no existe.",
       "invitationNotUsable": "La invitación ya no es válida.",
       "memberNotFound": "La persona ya no es miembro de la tienda.",
@@ -1544,6 +1631,31 @@
     "saved": "Perfil actualizado.",
     "validation": {
       "nameRequired": "Este campo es obligatorio."
+    },
+    "unsaved": "Tienes cambios sin guardar.",
+    "upToDate": "Todo al día.",
+    "discard": "Descartar",
+    "sections": {
+      "personal": {
+        "title": "Información personal",
+        "description": "Así te ven las personas de tu equipo y las tiendas donde participas."
+      },
+      "privacy": {
+        "title": "Privacidad y datos demográficos",
+        "description": "Tú decides si tus datos generales ayudan a las estadísticas anónimas de la tienda.",
+        "sharedTitle": "Lo que se comparte, agrupado",
+        "neverTitle": "Lo que nunca se comparte",
+        "shared": {
+          "ageRange": "Rango de edad",
+          "gender": "Género",
+          "province": "Provincia"
+        },
+        "never": {
+          "identity": "Tu nombre y tu correo",
+          "link": "Ningún vínculo con tu cuenta",
+          "individual": "Datos individuales: solo cifras de grupos grandes"
+        }
+      }
     }
   },
   "BusinessSwitcher": {
