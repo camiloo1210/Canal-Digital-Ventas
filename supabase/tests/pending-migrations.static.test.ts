@@ -166,7 +166,7 @@ describe('pending migrations (static checks)', (): void => {
           );
           continue;
         }
-        if (name === '20261106192212_security_authorization_boundaries.sql') {
+        if (name === '20261107000002_security_authorization_boundaries.sql') {
           const grant = match[0].match(
             /^GRANT\s+EXECUTE\s+ON\s+FUNCTION\s+([a-z_.]+)\(([^)]*)\)\s+TO\s+authenticated;$/i,
           );
