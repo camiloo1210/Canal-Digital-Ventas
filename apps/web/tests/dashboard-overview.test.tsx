@@ -23,6 +23,7 @@ const overview: DashboardOverviewReadModel = {
     revenueCents: 250000,
     previousRevenueCents: 200000,
     revenueChangeBps: 2500,
+    excludedCurrencyOrders: 0,
     orderCount: 8,
     lifetimeRevenueCents: 987600,
     lifetimeOrderCount: 41,

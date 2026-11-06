@@ -49,6 +49,7 @@ export interface BusinessAdvisorDigest {
     readonly revenueChangeBps: number | null;
     readonly estimatedProfitCents: number;
     readonly marginBps: number | null;
+    readonly excludedCurrencyOrders: number;
     readonly orderCount: number;
     readonly unitsSold: number;
     readonly inventoryCostCents: number;

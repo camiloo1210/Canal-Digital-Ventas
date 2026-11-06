@@ -21,6 +21,7 @@ export default defineConfig({
         'packages/core/src/features/shared/domain/money-limits.ts',
       ),
       'server-only': path.resolve(__dirname, 'apps/web/tests/stubs/server-only.ts'),
+      '@/next.config': path.resolve(__dirname, 'apps/web/next.config.ts'),
       '@/proxy': path.resolve(__dirname, 'apps/web/proxy.ts'),
       '@/scripts': path.resolve(__dirname, 'packages/core/scripts'),
       '@/tests': path.resolve(__dirname, 'apps/web/tests'),

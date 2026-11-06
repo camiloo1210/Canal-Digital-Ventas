@@ -14,110 +14,113 @@ import { CreateProductDto } from '@/products/application/dtos/create-product.dto
 const DATABASE_URL = process.env.DATABASE_URL;
 const TEST_TENANT_ID = createTenantId('00000000-0000-0000-0000-000000000000');
 
-describe('CreateProductUseCase Integration (Transaction & Rollback)', (): void => {
-  let sql: postgres.Sql<Record<string, unknown>>;
-  let transactionManager: PostgresTransactionManagerAdapter;
-  let productRepository: PostgresProductRepository;
-  let eventBus: EventBusPort;
-  let useCase: CreateProductUseCase;
+describe.skipIf(!DATABASE_URL)(
+  'CreateProductUseCase Integration (Transaction & Rollback)',
+  (): void => {
+    let sql: postgres.Sql<Record<string, unknown>>;
+    let transactionManager: PostgresTransactionManagerAdapter;
+    let productRepository: PostgresProductRepository;
+    let eventBus: EventBusPort;
+    let useCase: CreateProductUseCase;
 
-  beforeAll(async (): Promise<void> => {
-    if (!DATABASE_URL) {
-      console.warn('DATABASE_URL is not set. Skipping real integration tests.');
-      return;
-    }
-    sql = postgres(DATABASE_URL);
-    transactionManager = new PostgresTransactionManagerAdapter(sql);
-    productRepository = new PostgresProductRepository(sql);
-    eventBus = { publish: vi.fn() };
-    useCase = new CreateProductUseCase(
-      productRepository,
-      new PostgresCategoryRepository(sql),
-      eventBus,
-      transactionManager,
-      new PostgresProductCurrencyRepository(),
-    );
-  });
+    beforeAll(async (): Promise<void> => {
+      if (!DATABASE_URL) {
+        console.warn('DATABASE_URL is not set. Skipping real integration tests.');
+        return;
+      }
+      sql = postgres(DATABASE_URL);
+      transactionManager = new PostgresTransactionManagerAdapter(sql);
+      productRepository = new PostgresProductRepository(sql);
+      eventBus = { publish: vi.fn() };
+      useCase = new CreateProductUseCase(
+        productRepository,
+        new PostgresCategoryRepository(sql),
+        eventBus,
+        transactionManager,
+        new PostgresProductCurrencyRepository(),
+      );
+    });
 
-  afterAll(async (): Promise<void> => {
-    if (sql) {
-      await sql.end();
-    }
-  });
+    afterAll(async (): Promise<void> => {
+      if (sql) {
+        await sql.end();
+      }
+    });
 
-  it('should completely ROLLBACK creation if an error occurs after saving', async (): Promise<void> => {
-    if (!DATABASE_URL) return;
+    it('should completely ROLLBACK creation if an error occurs after saving', async (): Promise<void> => {
+      if (!DATABASE_URL) return;
 
-    const testProductId = crypto.randomUUID();
-    const dto: CreateProductDto = {
-      id: testProductId,
-      tenantId: TEST_TENANT_ID,
-      categoryId: crypto.randomUUID(),
-      name: 'Rollback Test Product',
-      price: 100,
-      cost: 50,
-      wholesalePrice: null,
-      wholesaleMinQuantity: null,
-      description: 'Test',
-      sku: 'ROLLBACK-SKU-1',
-      stock: 10,
-      seasonIds: [],
-      isVatExempt: false,
-    };
+      const testProductId = crypto.randomUUID();
+      const dto: CreateProductDto = {
+        id: testProductId,
+        tenantId: TEST_TENANT_ID,
+        categoryId: crypto.randomUUID(),
+        name: 'Rollback Test Product',
+        price: 100,
+        cost: 50,
+        wholesalePrice: null,
+        wholesaleMinQuantity: null,
+        description: 'Test',
+        sku: 'ROLLBACK-SKU-1',
+        stock: 10,
+        seasonIds: [],
+        isVatExempt: false,
+      };
 
-    const publishSpy = vi
-      .spyOn(eventBus, 'publish')
-      .mockImplementationOnce(async (): Promise<void> => {
-        throw new TransactionException('Forced failure to trigger ROLLBACK during event publish');
-      });
+      const publishSpy = vi
+        .spyOn(eventBus, 'publish')
+        .mockImplementationOnce(async (): Promise<void> => {
+          throw new TransactionException('Forced failure to trigger ROLLBACK during event publish');
+        });
 
-    try {
-      await useCase.execute(dto);
-      expect.fail('UseCase should have thrown an exception');
-    } catch (error) {
-      expect(error).toBeInstanceOf(TransactionException);
-      expect((error as Error).message).toContain('Forced failure to trigger ROLLBACK');
-    }
+      try {
+        await useCase.execute(dto);
+        expect.fail('UseCase should have thrown an exception');
+      } catch (error) {
+        expect(error).toBeInstanceOf(TransactionException);
+        expect((error as Error).message).toContain('Forced failure to trigger ROLLBACK');
+      }
 
-    const productAfterRollback = await productRepository.findById(
-      createProductId(testProductId),
-      TEST_TENANT_ID,
-    );
-    expect(productAfterRollback).toBeNull();
+      const productAfterRollback = await productRepository.findById(
+        createProductId(testProductId),
+        TEST_TENANT_ID,
+      );
+      expect(productAfterRollback).toBeNull();
 
-    publishSpy.mockRestore();
-  });
+      publishSpy.mockRestore();
+    });
 
-  it('should COMMIT creation successfully if no error occurs', async (): Promise<void> => {
-    if (!DATABASE_URL) return;
+    it('should COMMIT creation successfully if no error occurs', async (): Promise<void> => {
+      if (!DATABASE_URL) return;
 
-    const testProductId = crypto.randomUUID();
-    const dto: CreateProductDto = {
-      id: testProductId,
-      tenantId: TEST_TENANT_ID,
-      categoryId: crypto.randomUUID(),
-      name: 'Commit Test Product',
-      price: 100,
-      cost: 50,
-      wholesalePrice: null,
-      wholesaleMinQuantity: null,
-      description: 'Test',
-      sku: 'COMMIT-SKU-1',
-      stock: 10,
-      seasonIds: [],
-      isVatExempt: false,
-    };
+      const testProductId = crypto.randomUUID();
+      const dto: CreateProductDto = {
+        id: testProductId,
+        tenantId: TEST_TENANT_ID,
+        categoryId: crypto.randomUUID(),
+        name: 'Commit Test Product',
+        price: 100,
+        cost: 50,
+        wholesalePrice: null,
+        wholesaleMinQuantity: null,
+        description: 'Test',
+        sku: 'COMMIT-SKU-1',
+        stock: 10,
+        seasonIds: [],
+        isVatExempt: false,
+      };
 
-    const returnedId = await useCase.execute(dto);
-    expect(returnedId).toBe(testProductId);
+      const returnedId = await useCase.execute(dto);
+      expect(returnedId).toBe(testProductId);
 
-    const productAfterCommit = await productRepository.findById(
-      createProductId(testProductId),
-      TEST_TENANT_ID,
-    );
-    expect(productAfterCommit).not.toBeNull();
-    expect(productAfterCommit!.getName()).toBe('Commit Test Product');
+      const productAfterCommit = await productRepository.findById(
+        createProductId(testProductId),
+        TEST_TENANT_ID,
+      );
+      expect(productAfterCommit).not.toBeNull();
+      expect(productAfterCommit!.getName()).toBe('Commit Test Product');
 
-    await productRepository.delete(createProductId(testProductId), TEST_TENANT_ID);
-  });
-});
+      await productRepository.delete(createProductId(testProductId), TEST_TENANT_ID);
+    });
+  },
+);

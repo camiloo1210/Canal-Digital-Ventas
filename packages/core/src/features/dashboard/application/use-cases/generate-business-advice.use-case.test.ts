@@ -39,6 +39,7 @@ const snapshot: IntelligenceSnapshot = {
     {
       id: 'o1',
       createdAt: '2026-10-24T12:00:00Z',
+      currency: 'USD',
       discountCents: 0,
       items: [{ productId: 'a', quantity: 7, subtotalCents: 2100 }],
     },

@@ -69,6 +69,7 @@ export function buildAdvisorDigest(
       revenueChangeBps: report.revenueChangeBps,
       estimatedProfitCents: report.estimatedProfitCents,
       marginBps: report.marginBps,
+      excludedCurrencyOrders: report.excludedCurrencyOrders,
       orderCount: report.orderCount,
       unitsSold: report.unitsSold,
       inventoryCostCents: report.inventoryCostCents,

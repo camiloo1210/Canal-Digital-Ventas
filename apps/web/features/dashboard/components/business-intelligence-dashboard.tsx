@@ -74,6 +74,14 @@ export function BusinessIntelligenceDashboard({
   ] as const;
   return (
     <div className="space-y-6">
+      {report.excludedCurrencyOrders > 0 && (
+        <p
+          role="status"
+          className="rounded-lg border bg-muted/40 p-4 text-sm text-muted-foreground"
+        >
+          {t('currencyScope', { currency: report.currency, count: report.excludedCurrencyOrders })}
+        </p>
+      )}
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
         <p className="font-medium">
           {t('appliedPeriod', {

@@ -309,6 +309,8 @@ REVOKE ALL ON FUNCTION core.kivi_sync_list_products_with_offset_v4(uuid,uuid,int
 GRANT EXECUTE ON FUNCTION core.kivi_sync_list_products_with_offset_v4(uuid,uuid,integer) TO kivi_sync_worker_role;
 
 -- Preserve all payment fences; choose currency from the order snapshot.
+GRANT payments_rpc_owner TO CURRENT_USER;
+
 CREATE OR REPLACE FUNCTION sales.create_pending_payment(
   p_order_id uuid, p_buyer_auth_id uuid, p_gateway text, p_environment text, p_ttl_seconds integer
 ) RETURNS TABLE (
@@ -376,8 +378,12 @@ BEGIN
   RETURN QUERY SELECT pay.id,result_outcome,pay.order_id,pay.tenant_id,pay.amount_cents,
     pay.currency,pay.store_id,pay.environment,pay.checkout_expires_at,pay.checkout_url,pay.checkout_creation_token;
 END $$;
+ALTER FUNCTION sales.create_pending_payment(uuid,uuid,text,text,integer) OWNER TO payments_rpc_owner;
 REVOKE ALL ON FUNCTION sales.create_pending_payment(uuid,uuid,text,text,integer) FROM PUBLIC, anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION sales.create_pending_payment(uuid,uuid,text,text,integer) TO payment_checkout_role;
+REVOKE payments_rpc_owner FROM CURRENT_USER;
+
+GRANT notification_rpc_owner TO CURRENT_USER;
 
 CREATE OR REPLACE FUNCTION core.read_order_notification_details(p_tenant_id uuid, p_order_id uuid)
 RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = core, pg_temp AS $$
@@ -408,7 +414,9 @@ BEGIN
   RETURN details;
 END;
 $$;
+ALTER FUNCTION core.read_order_notification_details(uuid,uuid) OWNER TO notification_rpc_owner;
 REVOKE ALL ON FUNCTION core.read_order_notification_details(uuid,uuid) FROM PUBLIC, anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION core.read_order_notification_details(uuid,uuid) TO notification_worker_role;
+REVOKE notification_rpc_owner FROM CURRENT_USER;
 
 COMMIT;

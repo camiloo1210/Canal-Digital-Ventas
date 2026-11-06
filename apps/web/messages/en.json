@@ -137,7 +137,8 @@
       "shipped": "Shipped",
       "delivered": "Delivered",
       "cancelled": "Cancelled",
-      "refunded": "Refunded"
+      "refunded": "Refunded",
+      "confirmed": "Confirmed"
     },
     "stagesTitle": "Average time per stage",
     "stageTo": "to",
@@ -171,7 +172,8 @@
       "pricing": "Pricing and margin",
       "operations": "Operations",
       "growth": "Growth"
-    }
+    },
+    "currencyScope": "Amounts and margins cover {currency} only. Money from {count} orders in other currencies was excluded without conversion; their orders and units remain included in counts."
   },
   "AdminOverview": {
     "title": "Overview",
@@ -235,7 +237,8 @@
     "kpiComparison": "{percent} vs. the previous period",
     "kpiLifetimeHelp": "{count, plural, one {Net sales from # paid order, all time.} other {Net sales from # paid orders, all time.}}",
     "kpiCustomersHelp": "{count, plural, =0 {No customer bought in the period.} one {# customer bought in the period.} other {# customers bought in the period.}}",
-    "kpiOrdersHelp": "Paid, processing, shipped or delivered orders."
+    "kpiOrdersHelp": "Paid, processing, shipped or delivered orders.",
+    "currencyScope": "There are {count} historical orders in other currencies. Revenue covers {currency} only, without conversion; counts include all orders."
   },
   "AdminShell": {
     "administration": "Store administration",

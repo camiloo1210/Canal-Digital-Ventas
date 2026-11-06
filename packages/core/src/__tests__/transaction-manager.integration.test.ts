@@ -15,7 +15,7 @@ import { TransactionException } from '@/shared/application/exceptions/transactio
 const DATABASE_URL = process.env.DATABASE_URL;
 const TEST_TENANT_ID = createTenantId('00000000-0000-0000-0000-000000000000'); // Assuming valid UUID
 
-describe('PostgresTransactionManagerAdapter Integration', () => {
+describe.skipIf(!DATABASE_URL)('PostgresTransactionManagerAdapter Integration', () => {
   let sql: postgres.Sql<Record<string, unknown>>;
   let transactionManager: PostgresTransactionManagerAdapter;
   let productRepository: PostgresProductRepository;

@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { createHmac } from 'node:crypto';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 import { isIP } from 'node:net';
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
@@ -76,7 +76,8 @@ export async function checkRequestRateLimit(
   request: Request,
   explicitPolicy?: TrafficPolicy,
 ): Promise<RateLimitDecision | null> {
-  if (process.env.RATE_LIMIT_ENABLED !== 'true' || process.env.VERCEL !== '1') return null;
+  if (process.env.RATE_LIMIT_ENABLED !== 'true' && process.env.NODE_ENV !== 'production')
+    return null;
   const policy = explicitPolicy ?? trafficPolicy(new URL(request.url).pathname, request.method);
   const unavailable: RateLimitDecision = {
     status: 503,
@@ -85,7 +86,7 @@ export async function checkRequestRateLimit(
     signal: 'unavailable',
   };
   const outage = policy === 'read' || policy === 'webhook' ? null : unavailable;
-  const ip = request.headers.get('x-vercel-forwarded-for')?.trim();
+  const ip = trustedClientIp(request);
   const secret = process.env.RATE_LIMIT_KEY_SECRET;
   if (
     !ip ||
@@ -110,6 +111,18 @@ export async function checkRequestRateLimit(
   } catch {
     return outage;
   }
+}
+
+/** Self-hosted ingress must overwrite both headers and keep its shared secret server-side. */
+function trustedClientIp(request: Request): string | undefined {
+  if (process.env.VERCEL === '1') return request.headers.get('x-vercel-forwarded-for')?.trim();
+  const expected = process.env.RATE_LIMIT_PROXY_SECRET;
+  const received = request.headers.get('x-cdv-proxy-secret');
+  if (!expected || expected.length < 32 || !received) return undefined;
+  const left = Buffer.from(expected);
+  const right = Buffer.from(received);
+  if (left.length !== right.length || !timingSafeEqual(left, right)) return undefined;
+  return request.headers.get('x-forwarded-for')?.trim();
 }
 export async function claimSecurityReport(decision: RateLimitDecision): Promise<boolean> {
   const key = `${decision.policy}:${decision.signal}`;

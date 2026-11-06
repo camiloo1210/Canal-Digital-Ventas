@@ -33,20 +33,27 @@
     }
   },
   "devDependencies": {
-    "@commitlint/cli": "^21.2.1",
-    "@commitlint/config-conventional": "^21.2.0",
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
     "commitizen": "^4.3.2",
     "cz-conventional-changelog": "^3.3.0",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.10",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "16.4.5",
     "eslint-import-resolver-typescript": "^4.4.5",
-    "eslint-plugin-boundaries": "^7.2.0",
+    "eslint-plugin-boundaries": "^7.4.2",
     "husky": "^9.1.7",
-    "lint-staged": "^17.2.0",
-    "prettier": "^3.9.6",
-    "supabase": "^2.116.0",
-    "typescript": "^5",
+    "lint-staged": "^17.6.0",
+    "prettier": "^3.9.10",
+    "supabase": "^2.122.1",
+    "typescript": "^5.9.3",
     "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.12",
+    "vite": "8.1.6"
+  },
+  "pnpm": {
+    "overrides": {
+      "vite": "8.1.6",
+      "@typescript-eslint/typescript-estree>minimatch": "11.0.1"
+    }
   }
 }
