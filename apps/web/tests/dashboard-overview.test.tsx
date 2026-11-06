@@ -16,6 +16,19 @@ vi.mock('@/features/orders/components/order-status-badge', (): object => ({
 }));
 
 const overview: DashboardOverviewReadModel = {
+  kpis: {
+    currency: 'USD',
+    periodStart: '2026-10-12',
+    periodEnd: '2026-10-18',
+    revenueCents: 250000,
+    previousRevenueCents: 200000,
+    revenueChangeBps: 2500,
+    orderCount: 8,
+    lifetimeRevenueCents: 987600,
+    lifetimeOrderCount: 41,
+    totalCustomers: 17,
+    buyingCustomers: 6,
+  },
   tenantName: 'Store',
   tenantSlug: 'store',
   observedAt: '2026-10-19T17:00:00Z',
@@ -31,6 +44,30 @@ const overview: DashboardOverviewReadModel = {
 };
 
 describe('dashboard overview presentation', (): void => {
+  it('shows channel KPIs: period and lifetime revenue, customers and paid orders', async (): Promise<void> => {
+    const html = renderToStaticMarkup(await DashboardOverview({ overview }));
+    expect(html).toContain('Ingresos del período');
+    expect(html).toContain('2500,00');
+    expect(html).toContain('Ingresos totales');
+    expect(html).toContain('9876,00');
+    expect(html).toContain('Clientes totales');
+    expect(html).toContain('>17<');
+    expect(html).toContain('25');
+  });
+  it('marks a revenue drop and a missing baseline honestly', async (): Promise<void> => {
+    const drop = renderToStaticMarkup(
+      await DashboardOverview({
+        overview: { ...overview, kpis: { ...overview.kpis, revenueChangeBps: -1000 } },
+      }),
+    );
+    expect(drop).toContain('text-destructive');
+    const none = renderToStaticMarkup(
+      await DashboardOverview({
+        overview: { ...overview, kpis: { ...overview.kpis, revenueChangeBps: null } },
+      }),
+    );
+    expect(none).toContain('Sin base de comparación');
+  });
   it('shows honest empty states and the first category action', async (): Promise<void> => {
     const html = renderToStaticMarkup(await DashboardOverview({ overview }));
     expect(html).toContain('Todavía no hay pedidos');

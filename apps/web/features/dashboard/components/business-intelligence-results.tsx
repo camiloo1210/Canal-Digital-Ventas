@@ -6,6 +6,7 @@ import { TenantParamField } from '@/features/dashboard/components/tenant-scope';
 import { BusinessIntelligenceDashboard } from '@/features/dashboard/components/business-intelligence-dashboard';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { intelligenceRangeStart } from '@/features/dashboard/utils/business-intelligence-range';
 
 export async function BusinessIntelligenceResults({
   userId,
@@ -34,7 +35,14 @@ export async function BusinessIntelligenceResults({
           {failed && (
             <form action="/dashboard/business-intelligence" method="get">
               <TenantParamField />
-              <input type="hidden" name="days" value={query.days} />
+              {query.endDate ? (
+                <>
+                  <input type="hidden" name="from" value={intelligenceRangeStart(query) ?? ''} />
+                  <input type="hidden" name="to" value={query.endDate} />
+                </>
+              ) : (
+                <input type="hidden" name="days" value={query.days} />
+              )}
               <input type="hidden" name="leadTimeDays" value={query.leadTimeDays} />
               <input type="hidden" name="targetCoverageDays" value={query.targetCoverageDays} />
               <Button type="submit" variant="outline" className="mt-3 min-h-11">
