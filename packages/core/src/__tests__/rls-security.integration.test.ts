@@ -15,7 +15,7 @@ const DATABASE_URL = process.env.DATABASE_URL;
 const TENANT_A_ID = createTenantId('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa');
 const TENANT_B_ID = createTenantId('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb');
 
-describe('RLS Cross-Tenant Security Integration', () => {
+describe.skipIf(!DATABASE_URL)('RLS Cross-Tenant Security Integration', () => {
   let sql: postgres.Sql<Record<string, unknown>>;
   let transactionManager: PostgresTransactionManagerAdapter;
   let productRepository: PostgresProductRepository;
