@@ -1,4 +1,25 @@
+/** Reporting period in whole UTC days. `endDate` is the inclusive last day; omitted means yesterday. */
+export interface DashboardOverviewPeriod {
+  readonly days: number;
+  readonly endDate?: string;
+}
+
+export interface DashboardOverviewKpis {
+  readonly currency: string;
+  readonly periodStart: string;
+  readonly periodEnd: string;
+  readonly revenueCents: number;
+  readonly previousRevenueCents: number;
+  readonly revenueChangeBps: number | null;
+  readonly orderCount: number;
+  readonly lifetimeRevenueCents: number;
+  readonly lifetimeOrderCount: number;
+  readonly totalCustomers: number;
+  readonly buyingCustomers: number;
+}
+
 export interface DashboardOverviewReadModel {
+  readonly kpis: DashboardOverviewKpis;
   readonly tenantName: string;
   readonly tenantSlug: string;
   readonly observedAt: string;
@@ -22,5 +43,9 @@ export interface DashboardOverviewReadModel {
 }
 
 export interface DashboardOverviewReadPort {
-  findForManager(userId: string, tenantId: string): Promise<DashboardOverviewReadModel | null>;
+  findForManager(
+    userId: string,
+    tenantId: string,
+    period: DashboardOverviewPeriod,
+  ): Promise<DashboardOverviewReadModel | null>;
 }

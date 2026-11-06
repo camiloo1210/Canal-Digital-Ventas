@@ -4,7 +4,7 @@ import {
   type IntelligenceSnapshot,
 } from '@/dashboard/domain/business-intelligence';
 
-const query = { days: 7 as const, leadTimeDays: 7, targetCoverageDays: 30 };
+const query = { days: 7, leadTimeDays: 7, targetCoverageDays: 30 };
 const snapshot: IntelligenceSnapshot = {
   observedAt: '2026-10-25T12:00:00.000Z',
   currency: 'USD',
@@ -49,6 +49,7 @@ const snapshot: IntelligenceSnapshot = {
       items: [{ productId: 'a', quantity: 1, subtotalCents: 300 }],
     },
   ],
+  flowOrders: [],
 };
 
 describe('business intelligence policy', (): void => {
@@ -250,5 +251,89 @@ describe('business intelligence policy', (): void => {
         query,
       ),
     ).toThrow();
+  });
+  it('supports a custom inclusive end date and rejects malformed ranges', (): void => {
+    const report = analyzeBusinessIntelligence(snapshot, {
+      ...query,
+      days: 3,
+      endDate: '2026-10-24',
+    });
+    expect(report.daily.map((point): string => point.date)).toEqual([
+      '2026-10-22',
+      '2026-10-23',
+      '2026-10-24',
+    ]);
+    expect(report.revenueCents).toBe(2199);
+    for (const bad of [
+      { ...query, days: 0 },
+      { ...query, days: 367 },
+      { ...query, endDate: '24-10-2026' },
+      { ...query, endDate: '2026-13-40' },
+      { ...query, endDate: '2026-02-30' },
+      { ...query, endDate: '2026-02-29' },
+      { ...query, endDate: '2026-04-31' },
+    ])
+      expect((): unknown => analyzeBusinessIntelligence(snapshot, bad)).toThrow();
+    expect(analyzeBusinessIntelligence(snapshot, { ...query, days: 366 }).daily).toHaveLength(366);
+  });
+  it('accepts a real leap day without normalizing it', (): void => {
+    const report = analyzeBusinessIntelligence(snapshot, {
+      ...query,
+      days: 1,
+      endDate: '2024-02-29',
+    });
+    expect(report.daily[0].date).toBe('2024-02-29');
+  });
+  it('measures stage durations and flags orders stuck beyond the threshold', (): void => {
+    const hour = 3600000;
+    const at = (offsetHours: number): string =>
+      new Date(Date.parse('2026-10-25T12:00:00.000Z') - offsetHours * hour).toISOString();
+    const report = analyzeBusinessIntelligence(
+      {
+        ...snapshot,
+        flowOrders: [
+          {
+            id: 'ok',
+            orderNumber: 'N1',
+            status: 'shipped',
+            createdAt: at(30),
+            transitions: [
+              { status: 'pending_payment', at: at(30) },
+              { status: 'paid', at: at(29) },
+              { status: 'processing', at: at(27) },
+              { status: 'shipped', at: at(3) },
+            ],
+          },
+          {
+            id: 'slow',
+            orderNumber: 'N2',
+            status: 'paid',
+            createdAt: at(100),
+            transitions: [{ status: 'paid', at: at(60) }],
+          },
+          {
+            id: 'old-open',
+            orderNumber: 'N3',
+            status: 'processing',
+            createdAt: '2026-01-01T00:00:00Z',
+            transitions: [{ status: 'processing', at: at(10) }],
+          },
+          { id: 'x', orderNumber: 'N4', status: 'cancelled', createdAt: at(20), transitions: [] },
+        ],
+      },
+      query,
+    );
+    const flow = report.orderFlow;
+    expect(flow.totalOrders).toBe(3);
+    expect(flow.statusCounts.find((row): boolean => row.status === 'cancelled')?.count).toBe(1);
+    expect(flow.stages[0]).toMatchObject({
+      from: 'pending_payment',
+      to: 'paid',
+      averageMinutes: 60,
+    });
+    expect(flow.stages[1]).toMatchObject({ averageMinutes: 120, samples: 1 });
+    expect(flow.stages[3].averageMinutes).toBeNull();
+    expect(flow.stuckCount).toBe(1);
+    expect(flow.stuckOrders[0]).toMatchObject({ id: 'slow', status: 'paid', hoursInStatus: 60 });
   });
 });
