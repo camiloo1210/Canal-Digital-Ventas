@@ -118,6 +118,24 @@ Para cada cola `Q` se declaran (todas durables):
 
 Código: `shared/infrastructure/messaging/reliable-queue-consumer.ts` y `notifications/infrastructure/rabbitmq-notification-consumer.ts`.
 
+### Patrón de mensajería: punto a punto (no pub/sub)
+
+RabbitMQ se usa como **cola punto a punto** (_work queue_), no como pub/sub:
+
+- Se publica con `sendToQueue` al exchange por defecto (`""`), que entrega el mensaje **solo** a la cola con ese nombre. No se declaran exchanges (`fanout`/`topic`) ni bindings.
+- Cada cola tiene **un único tipo de consumidor**. Si levantas varias réplicas del mismo worker, compiten por los mensajes y cada mensaje lo procesa **una sola** réplica (_competing consumers_); no reciben una copia cada una.
+
+Que un evento llegue a varios destinos no lo resuelve RabbitMQ, sino estas dos piezas:
+
+| Dónde                                      | Qué hace                                                                                                                                                                                   |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Base de datos (`core.outbox_relay_routes`) | Decide qué worker lee cada `aggregate_type`/`event_type` (`Order` → `outbox-worker`, `Payment` → `payment-relay`, `Product` → `kivi-sync`). Cada fila del outbox la publica un solo relay. |
+| Dentro del `notification-worker`           | Recibe el mensaje una vez y lo reparte en código a comprador, vendedor y Kivi (`DeliverOrderNotificationsUseCase`).                                                                        |
+
+Consecuencia práctica: **agregar un consumidor nuevo del mismo evento** (por ejemplo, analítica) obliga a tocar el publicador o el `notification-worker`. Además, como los destinos comparten un mismo mensaje, un fallo en uno reintenta el mensaje completo; las entregas que ya salieron no se duplican porque cada una queda registrada en la base de datos.
+
+Si en el futuro hiciera falta pub/sub, el cambio sería publicar a un exchange `topic` (por ejemplo `canaldigital.events`, con routing key igual a `eventType`) y darle a cada servicio su propia cola enlazada.
+
 ---
 
 ## 3. Catálogo de workers
