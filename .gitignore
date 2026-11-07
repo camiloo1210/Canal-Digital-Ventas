@@ -51,3 +51,8 @@ docs
 .tmp/
 .tmp-rf-nf-review/
 
+
+# AI agent skills (installed locally via `npx skills add`)
+.agents/
+.claude/skills/
+skills-lock.json
