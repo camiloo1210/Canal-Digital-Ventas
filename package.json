@@ -16,7 +16,8 @@
     "messaging:logs": "docker compose --env-file apps/worker/.env -f compose.rabbitmq.yml logs -f",
     "messaging:down": "docker compose --env-file apps/worker/.env -f compose.rabbitmq.yml down",
     "commit": "cz",
-    "kivi:provision-login": "node packages/core/scripts/provision-kivi-sync-login.mjs"
+    "kivi:provision-login": "node packages/core/scripts/provision-kivi-sync-login.mjs",
+    "test:e2e": "pnpm --filter @canaldigital/web test:e2e"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
@@ -43,12 +44,13 @@
     "eslint-plugin-boundaries": "^7.4.2",
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
+    "postgres": "^3.4.9",
     "prettier": "^3.9.10",
     "supabase": "^2.122.1",
     "typescript": "^5.9.3",
+    "vite": "8.1.6",
     "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "^4.1.12",
-    "vite": "8.1.6"
+    "vitest": "^4.1.12"
   },
   "pnpm": {
     "overrides": {

@@ -151,6 +151,9 @@ const eslintConfig = defineConfig([
     'out/**',
     'build/**',
     '.local/**',
+    // Third-party agent skills installed locally with `npx skills add` (gitignored).
+    '.agents/**',
+    '.claude/skills/**',
     '**/next-env.d.ts',
   ]),
 ]);
