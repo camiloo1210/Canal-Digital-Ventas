@@ -1,9 +1,11 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { defineConfig } from '@playwright/test';
 
-const ENV_FILE = path.resolve(__dirname, '.env.e2e');
+const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const EXAMPLE_FILE = path.resolve(__dirname, '.env.example');
+const SUPABASE_CACHE_VARIABLE = 'E2E_LOCAL_SUPABASE';
 const LOCAL_HOSTS = new Set(['127.0.0.1', 'localhost']);
 const LOCAL_ONLY_VARIABLES = [
   'NEXT_PUBLIC_SUPABASE_URL',
@@ -12,26 +14,54 @@ const LOCAL_ONLY_VARIABLES = [
   'PAYMENT_INGESTION_DATABASE_URL',
 ] as const;
 
-function parseEnvFile(file: string): Record<string, string> {
+function parseEnv(text: string): Record<string, string> {
   const values: Record<string, string> = {};
-  for (const line of readFileSync(file, 'utf8').split(/\r?\n/)) {
+  for (const line of text.split(/\r?\n/)) {
     const match = /^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=(.*)$/.exec(line);
     if (match) values[match[1]] = match[2].trim().replace(/^(['"])(.*)\1$/, '$2');
   }
   return values;
 }
 
-function loadE2eEnvironment(): Record<string, string> {
-  if (!existsSync(ENV_FILE)) {
-    throw new Error(
-      'Missing apps/web/.env.e2e. Run: cp apps/web/.env.e2e.example apps/web/.env.e2e (local Supabase only).',
-    );
+/** URL, keys and database of the local Supabase stack, read from the CLI so no .env file is needed. */
+function localSupabaseEnvironment(): Record<string, string> {
+  const cached = process.env[SUPABASE_CACHE_VARIABLE];
+  if (cached) return parseEnv(cached);
+  let output: string;
+  try {
+    output = execFileSync('pnpm', ['supabase', 'status', '-o', 'env'], {
+      cwd: REPO_ROOT,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+  } catch {
+    throw new Error('Local Supabase is not running. Start it first with: pnpm supabase start');
   }
-  const fromFile = parseEnvFile(ENV_FILE);
+  const status = parseEnv(output);
+  const values: Record<string, string> = {
+    NEXT_PUBLIC_SUPABASE_URL: status.API_URL ?? '',
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: status.ANON_KEY ?? '',
+    SUPABASE_SERVICE_ROLE_KEY: status.SERVICE_ROLE_KEY ?? '',
+    DATABASE_URL: status.DB_URL ?? '',
+  };
+  for (const [key, value] of Object.entries(values)) {
+    if (!value) throw new Error(`'pnpm supabase status' did not return a value for ${key}.`);
+  }
+  // Test workers are separate processes; they reuse the values instead of calling the CLI again.
+  process.env[SUPABASE_CACHE_VARIABLE] = Object.entries(values)
+    .map(([key, value]): string => `${key}=${value}`)
+    .join('\n');
+  return values;
+}
+
+function loadE2eEnvironment(): Record<string, string> {
   // Every key declared in .env.example is set explicitly so Next never falls back to .env.local.
   const env: Record<string, string> = {};
-  for (const key of Object.keys(parseEnvFile(EXAMPLE_FILE))) env[key] = fromFile[key] ?? '';
-  for (const [key, value] of Object.entries(fromFile)) env[key] = value;
+  for (const key of Object.keys(parseEnv(readFileSync(EXAMPLE_FILE, 'utf8')))) env[key] = '';
+  Object.assign(env, localSupabaseEnvironment());
+  env.PAYMENTS_ENVIRONMENT = 'test';
+  env.PAYMENT_CHECKOUT_RETURN_URL = 'http://localhost:3100/';
+  env.CATALOG_CACHE_TTL_SECONDS = '15';
   env.RATE_LIMIT_ENABLED = 'false';
   env.PAYMENTS_CHECKOUT_UI_ENABLED = 'false';
   env.KIVI_NOTIFICATIONS_ENABLED = 'false';
@@ -41,7 +71,7 @@ function loadE2eEnvironment(): Record<string, string> {
     const value = env[key];
     if (!value) {
       if (key === 'NEXT_PUBLIC_SUPABASE_URL' || key === 'DATABASE_URL') {
-        throw new Error(`${key} is required in apps/web/.env.e2e`);
+        throw new Error(`${key} is required (read from pnpm supabase status)`);
       }
       continue;
     }
@@ -49,7 +79,7 @@ function loadE2eEnvironment(): Record<string, string> {
     try {
       hostname = new URL(value).hostname;
     } catch {
-      throw new Error(`${key} in apps/web/.env.e2e is not a valid URL`);
+      throw new Error(`${key} from pnpm supabase status is not a valid URL`);
     }
     if (!LOCAL_HOSTS.has(hostname)) {
       throw new Error(`Refusing to run E2E: ${key} must point to 127.0.0.1 or localhost.`);

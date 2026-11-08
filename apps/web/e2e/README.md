@@ -8,11 +8,12 @@ same database.
 
 - Docker running and local Supabase started: `pnpm supabase start` (`pnpm supabase db reset` for a clean DB).
 - Browser: `pnpm --filter @canaldigital/web exec playwright install chromium`.
-- Environment file: `cp apps/web/.env.e2e.example apps/web/.env.e2e` (gitignored).
+- No `.env` file to create: the config reads the local Supabase URL, keys and database from
+  `pnpm supabase status -o env` by itself.
 
 ## Safety
 
-`playwright.config.ts` loads `apps/web/.env.e2e` itself and passes an explicit `env` to the web server for
+`playwright.config.ts` reads the local Supabase values from the CLI and passes an explicit `env` to the web server for
 every key in `apps/web/.env.example`, so `apps/web/.env.local` is never used. It refuses to run if
 `NEXT_PUBLIC_SUPABASE_URL`, `DATABASE_URL` or the payment database URLs do not point to
 `127.0.0.1`/`localhost`. Rate limiting, payments checkout UI, Kivi and Gemini are off.
