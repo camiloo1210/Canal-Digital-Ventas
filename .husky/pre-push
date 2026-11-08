@@ -1,4 +1,7 @@
 set -eu
 
-# Ejecutar pruebas antes de subir código
-pnpm test
+# Lint completo sin avisos (AGENTS.md exige 0 warnings), no solo sobre los archivos del commit
+pnpm lint
+
+# Pruebas + umbrales de cobertura (vitest.config.ts): una baja de cobertura bloquea el push
+pnpm test:coverage
