@@ -5,22 +5,30 @@ test.beforeEach(async ({ context, baseURL }): Promise<void> => {
   await withSpanishLocale(context, baseURL ?? 'http://localhost:3100');
 });
 
-test('home lists the store directory', async ({ page }): Promise<void> => {
-  const response = await page.goto('/');
-  expect(response?.status()).toBeLessThan(500);
-  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+const LOGIN_HEADING = 'Inicia sesión en tu cuenta';
+
+// The store directory is not public: an anonymous visitor is sent to the login (the directory itself
+// is covered with a signed-in buyer in buyer/purchase.e2e.ts).
+test('anonymous user visiting the home page is redirected to /login', async ({
+  page,
+}): Promise<void> => {
+  await page.goto('/');
+  await expect(page).toHaveURL(/\/login\?redirectTo=%2F$/);
+  await expect(page.getByRole('heading', { level: 1, name: LOGIN_HEADING })).toBeVisible();
 });
 
 test('anonymous user is redirected from /dashboard to /login', async ({ page }): Promise<void> => {
   await page.goto('/dashboard');
   await expect(page).toHaveURL(/\/login/);
+  await expect(page.getByRole('heading', { level: 1, name: LOGIN_HEADING })).toBeVisible();
 });
 
 test('anonymous user is redirected from /purchases to /login keeping redirectTo', async ({
   page,
 }): Promise<void> => {
   await page.goto('/purchases');
-  await expect(page).toHaveURL(/\/login.*purchases/);
+  await expect(page).toHaveURL(/\/login\?redirectTo=%2Fpurchases/);
+  await expect(page.getByRole('heading', { level: 1, name: LOGIN_HEADING })).toBeVisible();
 });
 
 // The proxy redirects anonymous requests for unknown top-level paths to /login, so the 404 is requested

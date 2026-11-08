@@ -1,94 +1,93 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { BUYER_STATE, SELLER_STATE } from '@/e2e/support/paths';
 import { gotoHydrated } from '@/e2e/support/navigation';
-import { withSpanishLocale } from '@/e2e/support/locale';
 import { markConfirmedOrdersPaidWithoutPayment } from '@/e2e/support/simulated-payment';
 import { actors, catalog, readRunId } from '@/e2e/support/test-data';
 
 const runId = readRunId();
 const data = catalog(runId);
 const slug = actors(runId).seller.storeSlug;
-const FALLBACK_BASE_URL = 'http://localhost:3100';
-
-test.describe.configure({ mode: 'serial', timeout: 180_000 });
+const NO_NEXT_STEP = 'Este pedido no tiene un avance logístico disponible.';
 
 /**
- * Sellers can only advance PAID orders with a settled payment (nextLogisticsStatus and
- * ChangeOrderStatusUseCase in packages/core). With the payment UI off, a checkout leaves the order
- * CONFIRMED. This test covers that state: both roles see the same order and no logistics step.
+ * One order, followed from both sides. Each step uses Playwright's own `page` (one role per test),
+ * so the UI mode shows every action. The tests share state and must run in this order.
+ *
+ * PAYMENT IS SIMULATED, NOT TESTED: step 3 marks the order paid directly in the local database
+ * (see support/simulated-payment.ts). Lemon Squeezy is NOT covered by this file.
  */
-test('seller and buyer both see the confirmed order awaiting payment', async ({
-  browser,
-  baseURL,
-}): Promise<void> => {
-  const url = baseURL ?? FALLBACK_BASE_URL;
-  const sellerContext = await browser.newContext({ storageState: SELLER_STATE });
-  const buyerContext = await browser.newContext({ storageState: BUYER_STATE });
-  await withSpanishLocale(sellerContext, url);
-  await withSpanishLocale(buyerContext, url);
-  const seller = await sellerContext.newPage();
-  const buyer = await buyerContext.newPage();
-  try {
-    await gotoHydrated(seller, '/dashboard/orders');
-    const row = seller.getByRole('row', { name: /Comprador Prueba/ });
-    await expect(row).toContainText('Confirmado');
-    await row.getByRole('link').first().click();
-    await expect(seller.getByText(data.productName).first()).toBeVisible();
-    await expect(
-      seller.getByText('Este pedido no tiene un avance logístico disponible.'),
-    ).toBeVisible();
+test.describe.configure({ mode: 'serial', timeout: 120_000 });
 
-    await gotoHydrated(buyer, '/purchases');
-    await expect(buyer.getByText(data.productName).first()).toBeVisible();
-    await expect(buyer.getByText('Confirmado').first()).toBeVisible();
-  } finally {
-    await sellerContext.close();
-    await buyerContext.close();
-  }
+type Role = 'seller' | 'buyer';
+
+function step(role: Role, title: string, body: (page: Page) => Promise<void>): void {
+  test.describe(title, (): void => {
+    test.use({ storageState: role === 'seller' ? SELLER_STATE : BUYER_STATE });
+    test(`as ${role}`, async ({ page }): Promise<void> => {
+      await body(page);
+    });
+  });
+}
+
+async function openSellerOrder(page: Page): Promise<void> {
+  await gotoHydrated(page, '/dashboard/orders');
+  await page
+    .getByRole('row', { name: /Comprador Prueba/ })
+    .getByRole('link')
+    .first()
+    .click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.waitForLoadState('networkidle');
+}
+
+async function sellerAdvances(page: Page, action: string, status: string): Promise<void> {
+  await openSellerOrder(page);
+  await page.getByRole('button', { name: action }).click();
+  // The success message disappears when the form re-renders; check the resulting status instead.
+  await expect(page.getByRole('dialog').getByText(status)).toBeVisible({ timeout: 30_000 });
+}
+
+async function buyerSees(page: Page, status: string): Promise<void> {
+  await gotoHydrated(page, '/purchases');
+  await expect(page.getByText(data.productName).first()).toBeVisible();
+  await expect(page.getByText(status).first()).toBeVisible();
+}
+
+step('seller', '1. seller sees the confirmed order and no logistics step', async (page) => {
+  await gotoHydrated(page, '/dashboard/orders');
+  await expect(page.getByRole('row', { name: /Comprador Prueba/ })).toContainText('Confirmado');
+  await openSellerOrder(page);
+  await expect(page.getByText(data.productName).first()).toBeVisible();
+  await expect(page.getByText(NO_NEXT_STEP)).toBeVisible();
 });
 
-/**
- * PAYMENT SIMULATED, NOT TESTED: the order is marked paid directly in the local database
- * (see support/simulated-payment.ts). Lemon Squeezy itself is NOT covered by this test.
- */
-test('with the payment simulated, seller advances the order and buyer sees each status', async ({
-  browser,
-  baseURL,
-}): Promise<void> => {
+step('buyer', '2. buyer sees the order as confirmed', (page) => buyerSees(page, 'Confirmado'));
+
+test('3. payment is simulated in the local database (NOT tested)', async (): Promise<void> => {
   expect(await markConfirmedOrdersPaidWithoutPayment(slug)).toBe(1);
-  const url = baseURL ?? FALLBACK_BASE_URL;
-  const sellerContext = await browser.newContext({ storageState: SELLER_STATE });
-  const buyerContext = await browser.newContext({ storageState: BUYER_STATE });
-  await withSpanishLocale(sellerContext, url);
-  await withSpanishLocale(buyerContext, url);
-  const seller = await sellerContext.newPage();
-  const buyer = await buyerContext.newPage();
-  const steps = [
-    { action: 'Comenzar preparación', status: 'En Proceso' },
-    { action: 'Marcar como enviado', status: 'Enviado' },
-    { action: 'Marcar como entregado', status: 'Entregado' },
-  ] as const;
-  try {
-    await gotoHydrated(buyer, '/purchases');
-    await expect(buyer.getByText('Pagado').first()).toBeVisible();
-    for (const step of steps) {
-      await gotoHydrated(seller, '/dashboard/orders');
-      await seller
-        .getByRole('row', { name: /Comprador Prueba/ })
-        .getByRole('link')
-        .first()
-        .click();
-      await seller.waitForLoadState('networkidle');
-      await seller.getByRole('button', { name: step.action }).click();
-      // The success message disappears when the form re-renders for the next step; check the result.
-      await expect(seller.getByRole('dialog').getByText(step.status)).toBeVisible({
-        timeout: 30_000,
-      });
-      await gotoHydrated(buyer, '/purchases');
-      await expect(buyer.getByText(step.status).first()).toBeVisible();
-    }
-  } finally {
-    await sellerContext.close();
-    await buyerContext.close();
-  }
+});
+
+step('buyer', '4. buyer sees the order as paid', (page) => buyerSees(page, 'Pagado'));
+
+step('seller', '5. seller starts preparing the order', (page) =>
+  sellerAdvances(page, 'Comenzar preparación', 'En Proceso'),
+);
+
+step('buyer', '6. buyer sees the order in process', (page) => buyerSees(page, 'En Proceso'));
+
+step('seller', '7. seller ships the order', (page) =>
+  sellerAdvances(page, 'Marcar como enviado', 'Enviado'),
+);
+
+step('buyer', '8. buyer sees the order shipped', (page) => buyerSees(page, 'Enviado'));
+
+step('seller', '9. seller marks the order delivered', (page) =>
+  sellerAdvances(page, 'Marcar como entregado', 'Entregado'),
+);
+
+step('buyer', '10. buyer sees the order delivered', (page) => buyerSees(page, 'Entregado'));
+
+step('seller', '11. a delivered order has no further logistics step', async (page) => {
+  await openSellerOrder(page);
+  await expect(page.getByText(NO_NEXT_STEP)).toBeVisible();
 });
