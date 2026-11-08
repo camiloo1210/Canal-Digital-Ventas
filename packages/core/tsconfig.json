@@ -21,7 +21,8 @@
       "@/iam/*": ["src/features/iam/*"],
       "@/sales/*": ["src/features/sales/*"],
       "@/notifications/*": ["src/features/notifications/*"],
-      "@/kivi/*": ["src/features/kivi/*"]
+      "@/kivi/*": ["src/features/kivi/*"],
+      "@/testing/*": ["src/testing/*"]
     },
     "types": ["node"]
   }

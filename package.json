@@ -6,6 +6,9 @@
     "lint": "eslint . --max-warnings=0",
     "prepare": "husky",
     "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --passWithNoTests --coverage",
+    "test:mutation": "stryker run",
+    "test:integration": "node scripts/test-integration.mjs",
     "worker:outbox": "pnpm --filter @canaldigital/worker start",
     "worker:notifications": "pnpm --filter @canaldigital/worker notifications",
     "worker:kivi-sync": "pnpm --filter @canaldigital/worker kivi-sync",
@@ -21,7 +24,7 @@
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
-      "eslint --fix",
+      "eslint --fix --max-warnings=0",
       "prettier --write"
     ],
     "*.{json,css,md}": [
@@ -36,12 +39,16 @@
   "devDependencies": {
     "@commitlint/cli": "^21.2.4",
     "@commitlint/config-conventional": "^21.2.4",
+    "@stryker-mutator/core": "10.1.1",
+    "@stryker-mutator/vitest-runner": "10.1.1",
+    "@vitest/coverage-v8": "4.1.12",
     "commitizen": "^4.3.2",
     "cz-conventional-changelog": "^3.3.0",
     "eslint": "^9.39.5",
     "eslint-config-next": "16.4.5",
     "eslint-import-resolver-typescript": "^4.4.5",
     "eslint-plugin-boundaries": "^7.4.2",
+    "fast-check": "4.10.2",
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
     "postgres": "^3.4.9",

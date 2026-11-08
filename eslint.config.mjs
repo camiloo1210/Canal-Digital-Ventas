@@ -151,6 +151,11 @@ const eslintConfig = defineConfig([
     'out/**',
     'build/**',
     '.local/**',
+    // Generated reports (gitignored).
+    'coverage/**',
+    'reports/**',
+    '.stryker-tmp/**',
+    'apps/web/playwright-report/**',
     // Third-party agent skills installed locally with `npx skills add` (gitignored).
     '.agents/**',
     '.claude/skills/**',

@@ -5,6 +5,46 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
+    coverage: {
+      provider: 'v8',
+      include: ['packages/core/src/**/*.ts'],
+      exclude: [
+        '**/*.test.ts',
+        '**/*.integration.test.ts',
+        '**/*.d.ts',
+        '**/index.ts',
+        '**/*.dto.ts',
+        '**/*.port.ts',
+        '**/*.fixture.ts',
+        'packages/core/src/testing/**',
+      ],
+      reporter: ['text-summary', 'json-summary', 'lcov'],
+      reportsDirectory: 'coverage',
+      thresholds: {
+        statements: 75,
+        branches: 70,
+        functions: 77,
+        lines: 76,
+        'packages/core/src/features/*/domain/**': {
+          statements: 93,
+          branches: 87,
+          functions: 96,
+          lines: 94,
+        },
+        'packages/core/src/features/*/application/**': {
+          statements: 92,
+          branches: 86,
+          functions: 90,
+          lines: 92,
+        },
+        'packages/core/src/features/*/infrastructure/**': {
+          statements: 50,
+          branches: 54,
+          functions: 49,
+          lines: 50,
+        },
+      },
+    },
   },
   resolve: {
     alias: {
@@ -45,6 +85,7 @@ export default defineConfig({
       '@/worker': path.resolve(__dirname, 'apps/worker/src'),
       '@/kivi': path.resolve(__dirname, 'packages/core/src/features/kivi'),
       '@/sales': path.resolve(__dirname, 'packages/core/src/features/sales'),
+      '@/testing': path.resolve(__dirname, 'packages/core/src/testing'),
     },
   },
 });
