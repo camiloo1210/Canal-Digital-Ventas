@@ -23,7 +23,7 @@ ${claims}"
 
 exec claude -p "$prompt" \
   --agent independent-verifier \
-  --model opus \
+  --model sonnet \
   --no-session-persistence \
   --permission-mode default \
   --allowedTools "Read" "Grep" "Glob" \
