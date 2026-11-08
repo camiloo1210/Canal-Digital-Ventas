@@ -61,4 +61,3 @@ skills-lock.json
 apps/web/e2e/.auth/
 apps/web/test-results/
 apps/web/playwright-report/
-apps/web/.env.e2e
