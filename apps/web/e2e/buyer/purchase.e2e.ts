@@ -19,6 +19,20 @@ async function openProduct(page: Page): Promise<void> {
   await expect(page).toHaveURL(/\/products\//, { timeout: 30_000 });
 }
 
+test('buyer finds the seller store in the store directory', async ({ page }): Promise<void> => {
+  await gotoHydrated(page, '/');
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Encuentra tu próxima tienda' }),
+  ).toBeVisible();
+  // The directory is paginated; search by name instead of relying on the first page.
+  await page
+    .getByPlaceholder('Busca por nombre o dirección de la tienda…')
+    .fill(actors(runId).seller.storeName);
+  await page.getByRole('button', { name: 'Buscar', exact: true }).click();
+  await expect(page).toHaveURL(/[?&]storeSearch=/);
+  await expect(page.getByText(actors(runId).seller.storeName).first()).toBeVisible();
+});
+
 test('empty cart cannot be checked out', async ({ page }): Promise<void> => {
   await gotoHydrated(page, `/store/${slug}/checkout`);
   await expect(page.getByText('0 artículos')).toBeVisible();
