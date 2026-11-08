@@ -54,12 +54,13 @@ docs
 .tmp-rf-nf-review/
 
 
-# AI agent skills (installed locally via `npx skills add`)
+# AI agent skills and Claude configurations
 .agents/
-.claude/skills/
+.claude/
 skills-lock.json
 
-# Playwright E2E output
+# Playwright E2E output and docs
 apps/web/e2e/.auth/
+apps/web/e2e/README.md
 apps/web/test-results/
 apps/web/playwright-report/
