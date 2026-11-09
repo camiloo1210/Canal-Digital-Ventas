@@ -343,7 +343,7 @@ INSERT INTO sales.shipment_tracking_environment (singleton, environment, deploym
 VALUES (true, 'sandbox', '00000000-0000-4000-8000-000000000001');
 ```
 
-No ejecutes la inserción si ya existe una marca; comprueba primero que coincida con el despliegue. Conceder `shipment_tracking_worker_role` solo al login técnico dedicado del worker. No proporcionar a ese login permisos generales de administración ni credenciales de otra base.
+No ejecutes la inserción si ya existe una marca; comprueba primero que coincida con el despliegue. La migración `20261109200544_provision_shipment_tracking_worker_login.sql` crea el login técnico `canaldigital_shipment_tracking` con `PASSWORD NULL` y le concede `shipment_tracking_worker_role`. El operador debe asignar una contraseña fuerte fuera del repositorio antes de construir `TRACKING_DATABASE_URL`. No proporcionar a ese login permisos generales de administración ni credenciales de otra base.
 
 Variables del servidor web de pruebas: `TRACKING_SANDBOX_ENABLED=true`, `DATABASE_URL` de la base de pruebas, opcionalmente `PRODUCTION_DATABASE_URL` con la identidad de una base de producción real para comparación sin usarla para conectarse, `TRACKING_DEPLOYMENT_ID` y `TRACKING_TENANT_REFS_JSON`, un objeto JSON que asocia cada UUID de tienda con una referencia no secreta. La conexión web debe tener los permisos de aplicación necesarios sobre las tablas de seguimiento y la función de fencing debe conservar su propietario autorizado. La selección de FedEx es explícita en el detalle de la tienda.
 
