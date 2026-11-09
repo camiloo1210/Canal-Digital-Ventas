@@ -66,6 +66,30 @@ function loadE2eEnvironment(): Record<string, string> {
   env.PAYMENTS_CHECKOUT_UI_ENABLED = 'false';
   env.KIVI_NOTIFICATIONS_ENABLED = 'false';
   env.GEMINI_API_KEY = '';
+  env.APP_ENV = '';
+  env.TRACKING_SANDBOX_ENABLED = '';
+  env.TRACKING_DEPLOYMENT_ID = '';
+  env.TRACKING_TENANT_REFS_JSON = '';
+  env.PRODUCTION_DATABASE_URL = '';
+  if (process.env.E2E_FEDEX_SANDBOX === '1') {
+    const deployment = process.env.E2E_TRACKING_DEPLOYMENT_ID ?? '';
+    const refs = process.env.E2E_TRACKING_TENANT_REFS_JSON ?? '';
+    const productionDatabase = process.env.E2E_PRODUCTION_DATABASE_URL ?? '';
+    if (
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(deployment) ||
+      !refs ||
+      !productionDatabase
+    ) {
+      throw new Error(
+        'FedEx E2E requires a sandbox deployment ID, tenant references and a production database identity.',
+      );
+    }
+    env.APP_ENV = 'test';
+    env.TRACKING_SANDBOX_ENABLED = 'true';
+    env.TRACKING_DEPLOYMENT_ID = deployment;
+    env.TRACKING_TENANT_REFS_JSON = refs;
+    env.PRODUCTION_DATABASE_URL = productionDatabase;
+  }
 
   for (const key of LOCAL_ONLY_VARIABLES) {
     const value = env[key];
