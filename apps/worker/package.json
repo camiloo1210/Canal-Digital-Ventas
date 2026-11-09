@@ -8,6 +8,7 @@
   "scripts": {
     "start": "tsx --tsconfig tsconfig.json src/main.ts",
     "notifications": "tsx --tsconfig tsconfig.json src/notifications.ts",
+    "shipment-tracking": "tsx --tsconfig tsconfig.json src/shipment-tracking.ts",
     "notifications:preview": "tsx --tsconfig tsconfig.json src/preview-notifications.ts",
     "kivi-sync": "tsx --tsconfig tsconfig.json src/kivi-sync.ts",
     "payments": "tsx --tsconfig tsconfig.json src/payments.ts",
