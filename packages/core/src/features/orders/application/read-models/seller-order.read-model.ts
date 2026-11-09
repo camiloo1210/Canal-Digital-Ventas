@@ -4,6 +4,13 @@ export interface SellerOrderReadModel {
   readonly status: string;
   readonly nextStatus: string | null;
   readonly version: number;
+  readonly shipmentAvailability?: 'available' | 'unavailable';
+  readonly shipment?: {
+    readonly carrier: string | null;
+    readonly trackingNumber: string | null;
+    readonly version: number;
+  } | null;
+  readonly canManageShipment?: boolean;
   readonly totalAmountCents: number;
   readonly currency: string;
   readonly createdAt: string;

@@ -57,7 +57,7 @@ export class PostgresBusinessIntelligenceReadAdapter implements BusinessIntellig
           coalesce((SELECT jsonb_agg(jsonb_build_object(
             'id',fo.id,'orderNumber',fo.order_number,'status',fo.status,'createdAt',fo.created_at,
             'transitions',(SELECT coalesce(jsonb_agg(jsonb_build_object('status',h.to_status,'at',h.changed_at)
-              ORDER BY h.changed_at,h.id),'[]'::jsonb) FROM sales.order_status_history h WHERE h.order_id=fo.id)
+              ORDER BY h.changed_at,h.id),'[]'::jsonb) FROM sales.order_status_history h WHERE h.order_id=fo.id AND h.from_status IS NOT NULL)
           ) ORDER BY fo.created_at,fo.id) FROM sales.orders fo CROSS JOIN bounds fb
             WHERE fo.tenant_id=a.id AND (
               (fo.created_at>=fb.ends - fb.days * interval '1 day' AND fo.created_at<fb.ends)

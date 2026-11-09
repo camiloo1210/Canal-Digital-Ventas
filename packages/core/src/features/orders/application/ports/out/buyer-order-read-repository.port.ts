@@ -2,4 +2,5 @@ import { BuyerOrderReadModel } from '@/orders/application/read-models/buyer-orde
 
 export interface BuyerOrderReadRepositoryPort {
   findOrdersByBuyerId(buyerAuthId: string): Promise<BuyerOrderReadModel[]>;
+  findOrderByBuyerId(buyerAuthId: string, orderId: string): Promise<BuyerOrderReadModel | null>;
 }

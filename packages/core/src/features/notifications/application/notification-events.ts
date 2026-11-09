@@ -3,8 +3,10 @@ export const ORDER_NOTIFICATION_EVENTS = {
   OrderPaidEvent: 'paid',
   OrderProcessingEvent: 'processing',
   OrderShippedEvent: 'shipped',
+  OrderShipmentUpdatedEvent: 'shipment_updated',
   OrderDeliveredEvent: 'delivered',
   OrderCancelledEvent: 'cancelled',
+  OrderRefundedEvent: 'refunded',
 } as const;
 
 export type OrderNotificationType =

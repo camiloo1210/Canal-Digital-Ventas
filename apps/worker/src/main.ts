@@ -1,14 +1,17 @@
-import {
-  loadMessagingWorkerConfig,
-  runOutboxWorker,
-  ORDER_NOTIFICATION_EVENT_TYPES,
-} from '@canaldigital/packages/core';
+import { loadMessagingWorkerConfig, runOutboxWorker } from '@canaldigital/packages/core';
 import { startWorkerHealth, loadWorkerHealthPort } from '@/worker/health';
 import { loadWorkerEnvironment } from '@/worker/environment';
+import { orderEventTypesForWorker, shouldPublishOrderEvent } from '@/worker/order-event-types';
+import type { IntegrationEvent } from '@canaldigital/packages/core';
 
 async function main(): Promise<void> {
   loadWorkerEnvironment();
   const config = loadMessagingWorkerConfig(process.env);
+  if (
+    process.env.REFUND_NOTIFICATIONS_ENABLED === 'true' &&
+    !orderEventTypesForWorker(process.env).includes('OrderRefundedEvent')
+  )
+    console.error('Refund notifications disabled: configure a valid UTC cutoff.');
   const health = await startWorkerHealth(loadWorkerHealthPort(process.env, 8081));
   const controller = new AbortController();
   const stop = (): void => {
@@ -21,8 +24,10 @@ async function main(): Promise<void> {
       config,
       controller.signal,
       console,
-      ORDER_NOTIFICATION_EVENT_TYPES,
+      orderEventTypesForWorker(process.env),
       health.setReady,
+      'Order',
+      (event: IntegrationEvent): boolean => shouldPublishOrderEvent(event, process.env),
     );
   } finally {
     process.removeListener('SIGINT', stop);

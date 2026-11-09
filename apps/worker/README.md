@@ -2,7 +2,7 @@
 
 `apps/worker` agrupa los procesos Node.js que corren **fuera de Next.js** y hacen el trabajo asíncrono del sistema: publicar eventos, enviar notificaciones, procesar pagos y reembolsos, sincronizar el catálogo con Kivi y limpiar datos vencidos.
 
-Cada archivo de `src/` es solo un **punto de entrada** (composition root): carga variables de entorno, abre el endpoint de salud y llama a una función `run*Worker` de `@canaldigital/packages/core`. Toda la lógica vive en el core.
+Cada archivo de `src/` es solo un **punto de entrada** (composition root): carga variables de entorno y llama a una función `run*Worker` de `@canaldigital/packages/core`. Toda la lógica vive en el core.
 
 > Para despliegue (Docker, Coolify, límites de recursos, verificación) ver [`docker/README.md`](docker/README.md).
 
@@ -21,6 +21,7 @@ flowchart LR
     OB[(core.outbox_events)]
     INB[(sales.payment_inbox_events)]
     PAY[(sales.payments / refunds)]
+    TRK[(guias y observaciones de seguimiento sandbox)]
   end
   subgraph MQ["RabbitMQ"]
     QN[[canaldigital.notifications]]
@@ -31,6 +32,9 @@ flowchart LR
   LS[Lemon Squeezy webhook] --> INB
   INB -- payment-inbox --> PAY
   PAY -- "RPC SQL inserta evento Payment" --> OB
+  SA -- "registra guia y activa seguimiento por pedido" --> TRK
+  TRACK[shipment-tracking - perfil fedex-sandbox] -- "reserva y guarda eventos; PostgreSQL" --> TRK
+  TRACK -- "consulta HTTPS" --> FEDEX[API FedEx sandbox]
 
   OB -- "outbox-worker (Order)" --> QN
   OB -- "payment-relay (Payment)" --> QP
@@ -288,3 +292,65 @@ No ejecutes workers locales y desplegados contra la misma base de datos: competi
 2. Crea una migración que inserte la ruta en `core.outbox_relay_routes` para el rol del worker que debe leerlo.
 3. Agrega el `event_type` a la constante TypeScript del worker (`ORDER_NOTIFICATION_EVENTS`, `PAYMENT_ORDER_EVENT_TYPES`, `KIVI_PRODUCT_EVENT_TYPES`).
 4. Si es un consumidor nuevo: crea una función `run*Worker` en el core que use `assertReliableQueueTopology` y `processReliableQueueMessage`, su entrada en `apps/worker/src/`, un script en `package.json` y un servicio en `compose.rabbitmq.yml` con su propio login de BD.
+
+### Avisos de cambios de guía
+
+Para activar avisos de cambios de guía, aplicar primero las migraciones de destinatario verificado y de ruta de outbox, verificar permisos del rol y configurar `SHIPMENT_NOTIFICATIONS_ENABLED=true` primero en el worker de outbox y después en la aplicación web. Mientras esté deshabilitado en web, no se generan avisos de guía retroactivos; los avisos existentes continúan. Validar el flujo de correo y credenciales en el entorno de destino antes de habilitarlo.
+
+Para avisos de reembolso, aplicar también la migración de ruta de reembolso y habilitar `REFUND_NOTIFICATIONS_ENABLED=true` y configurar `REFUND_NOTIFICATIONS_SINCE` con el instante de activación en ISO UTC (por ejemplo `2026-11-08T12:00:00Z`) en el worker de outbox. Los eventos anteriores al corte se completan sin enviarse; los eventos posteriores se notifican. Ambos indicadores se controlan de forma independiente.
+
+## Cómo se procesan las guías FedEx
+
+El worker `shipment-tracking` **no usa RabbitMQ ni consume los eventos del outbox**. La tienda registra una guía en el pedido y activa expresamente «FedEx de prueba»; la aplicación guarda una asociación por pedido y tienda en `sales.shipment_tracking_links`. Un pedido nuevo o una guía manual sin activación no entran automáticamente en el seguimiento.
+
+```mermaid
+sequenceDiagram
+  actor Seller as Vendedor
+  participant Web as Web / Core
+  participant DB as PostgreSQL
+  participant Worker as shipment-tracking
+  participant FedEx as FedEx sandbox
+  actor Buyer as Comprador
+  Seller->>Web: Registra guia y activa FedEx de prueba
+  Web->>DB: Guarda guia y asociacion por tienda / pedido
+  loop Consultas periodicas
+    Worker->>DB: Reserva una guia activa y vencida con lease
+    DB-->>Worker: Guia, tienda y referencia de credencial
+    Worker->>FedEx: Consulta autenticada por HTTPS
+    FedEx-->>Worker: Resultado y eventos disponibles
+    Worker->>DB: Valida lease y generacion, guarda y reprograma
+  end
+  Buyer->>Web: Abre detalle de su pedido
+  Web->>DB: Lee seguimiento autorizado del comprador
+  DB-->>Web: Estado y eventos guardados
+  Web-->>Buyer: Muestra cronologia de prueba
+```
+
+- El worker consulta una asociación a la vez con `FOR UPDATE SKIP LOCKED`; solo toma guías activas, no pausadas, pendientes y que sigan coincidiendo con la guía manual. La reserva vence a los dos minutos y puede recuperarse.
+- La referencia de credencial identifica la configuración de la tienda; los secretos se resuelven en el worker. Por defecto se programa otra consulta a los 30 minutos, con variación; para resultados terminales se usa el intervalo configurado (24 horas por defecto).
+- Una falla temporal reprograma con espera creciente; una falla de autorización pausa la asociación. Si la guía cambia o se desactiva mientras hay una consulta en curso, el control de generación y lease evita aplicar la respuesta antigua.
+- Las observaciones se almacenan en `sales.shipment_tracking_observations` y la web las consulta bajo autorización. Un evento de FedEx no cambia automáticamente el estado comercial del pedido. Las notificaciones de pedidos o cambios manuales de guía siguen sus propios flujos de outbox y RabbitMQ cuando están habilitados; los eventos de seguimiento FedEx no crean mensajes RabbitMQ.
+- El servicio `shipment-tracking` está en `compose.rabbitmq.yml` bajo el perfil opcional `fedex-sandbox`. Comparte la imagen y el healthcheck, pero no depende de RabbitMQ. El healthcheck indica que el worker completó un ciclo sin error; no garantiza que FedEx tenga eventos o que cada guía esté activa. Sin el perfil, Compose no lo inicia.
+- Con las variables y permisos preparados, usa `docker compose --env-file apps/worker/.env -f compose.rabbitmq.yml --profile fedex-sandbox up -d shipment-tracking`. En Coolify activa el perfil `fedex-sandbox` en la configuración del despliegue (por ejemplo, `COMPOSE_PROFILES=fedex-sandbox`) y establece las variables del servicio. La imagen compartida debe haberse construido previamente.
+
+## Seguimiento FedEx (solo sandbox)
+
+El sandbox de FedEx puede ejecutarse en un despliegue compilado con `NODE_ENV=production` si el despliegue y sus datos están destinados a pruebas. Tanto web como worker requieren `TRACKING_SANDBOX_ENABLED=true`; la API utilizada sigue siendo exclusivamente la de FedEx sandbox. La base debe llevar la marca sandbox coincidente. Si existe una base de producción real, debe estar físicamente separada y su identidad debe configurarse como `PRODUCTION_DATABASE_URL`; la comparación de URLs no detecta todos los alias de red, por lo que operación debe verificarlo independientemente. Las migraciones y la conexión con FedEx deben validarse en el entorno de destino.
+En el entorno de pruebas, aplicar las migraciones mediante el proceso habitual y validar RLS, propietario de la función de fencing y roles. Como administrador de la base de pruebas, insertar una única marca `sales.shipment_tracking_environment` con `environment = 'sandbox'` y un UUID nuevo `deployment_id`; ese mismo UUID es `TRACKING_DEPLOYMENT_ID` en web y worker. Ejemplo para una base de pruebas, sustituyendo el UUID generado:
+
+```sql
+INSERT INTO sales.shipment_tracking_environment (singleton, environment, deployment_id)
+VALUES (true, 'sandbox', '00000000-0000-4000-8000-000000000001');
+```
+
+No ejecutes la inserción si ya existe una marca; comprueba primero que coincida con el despliegue. La migración `20261109200544_provision_shipment_tracking_worker_login.sql` crea el login técnico `canaldigital_shipment_tracking` con `PASSWORD NULL` y le concede `shipment_tracking_worker_role`. El operador debe asignar una contraseña fuerte fuera del repositorio antes de construir `TRACKING_DATABASE_URL`. No proporcionar a ese login permisos generales de administración ni credenciales de otra base.
+
+Variables del servidor web de pruebas: `TRACKING_SANDBOX_ENABLED=true`, `DATABASE_URL` de la base de pruebas, opcionalmente `PRODUCTION_DATABASE_URL` con la identidad de una base de producción real para comparación sin usarla para conectarse, `TRACKING_DEPLOYMENT_ID` y `TRACKING_TENANT_REFS_JSON`, un objeto JSON que asocia cada UUID de tienda con una referencia no secreta. La conexión web debe tener los permisos de aplicación necesarios sobre las tablas de seguimiento y la función de fencing debe conservar su propietario autorizado. La selección de FedEx es explícita en el detalle de la tienda.
+
+Variables del worker: las mismas `TRACKING_SANDBOX_ENABLED`, `PRODUCTION_DATABASE_URL` (si existe) y `TRACKING_DEPLOYMENT_ID`; `TRACKING_DATABASE_URL` con el login técnico de pruebas; `TRACKING_CREDENTIALS_JSON`, objeto JSON cuyas claves son las referencias de cada tienda y cuyos valores contienen `clientId` y `clientSecret` de FedEx sandbox; opcionalmente `TRACKING_INTERVAL_MS` (mínimo 60000, predeterminado 1800000) y `TRACKING_MIN_SPACING_MS` (mínimo 1000) `TRACKING_TERMINAL_INTERVAL_MS` (por defecto 86400000, al menos el intervalo normal) y `TRACKING_RETENTION_DAYS` (90 a 3650 días, por defecto 90). Entregar secretos a través del sistema de secretos del despliegue; no guardarlos en archivos versionados ni incluirlos en registros o capturas. Las credenciales FedEx se obtienen en el portal de desarrolladores, con Basic Integrated Visibility habilitado para el proyecto de pruebas.
+
+Solo después de validar la configuración, iniciar el proceso en el entorno dedicado con `pnpm --filter @canaldigital/worker shipment-tracking`. Los registros `shipment_tracking_result` contienen únicamente `applied`, `stale`, `paused` o `error`; `shipment_tracking_metrics` registra cada cinco minutos conteos agregados de asociaciones activas, pausadas, con errores y pendientes, y la antigüedad máxima de una consulta exitosa. La antigüedad es null si ninguna ha tenido éxito. Configurar alertas por errores, pausas y antigüedad en la plataforma de observabilidad elegida; no hay un panel de alertas instalado por este cambio. Una falla de autorización persistente pausa la guía afectada y registra el resultado agregado `paused`; tras corregir las credenciales, la tienda puede reactivar la consulta. FedEx puede devolver eventos desconocidos o respuestas no compatibles; no se interpreta una consulta fallida como una entrega.
+
+Antes de cualquier activación real, probar con una guía sandbox documentada y verificar autenticación, evento confirmado, credenciales de otra tienda, permisos del comprador y vendedor, cambio de guía durante una consulta, duplicados y reintentos. Validar el SQL con dos conexiones reales y confirmar que ningún resultado de sandbox aparece en datos reales. El acceso, cobertura y límites de FedEx dependen de la cuenta y la región. El seguimiento autenticado FAD, que la API básica puede rechazar, aparece como no compatible; no hay webhooks ni cambio automático del estado comercial. El mantenimiento elimina observaciones vencidas y conserva la última recibida, la última con hora y la última con solo fecha de cada asociación activa; requiere validar SQL y permisos en la base de pruebas antes de iniciar el worker. Las alertas operativas y la validación real del proveedor aún requieren comprobación antes de producción.
+
+Para las pruebas de permisos, aplicar las migraciones únicamente en una base local dedicada llamada `cdv_tracking_test` en el puerto 55439 y ejecutar `pnpm exec vitest run supabase/tests/shipment-tracking.integration.test.ts` con `TRACKING_TEST_DATABASE_URL` apuntando a esa base. Para probar dos conexiones y recuperación de concesiones, preparar un pedido de prueba con guía y asociación sandbox, un comprador propietario y otro ajeno; configurar TRACKING_TEST_WORKER_DATABASE_URL, TRACKING_TEST_TENANT_ID, TRACKING_TEST_ORDER_ID, TRACKING_TEST_BUYER_ID, TRACKING_TEST_OTHER_BUYER_ID, TRACKING_TEST_DEPLOYMENT_ID y TRACKING_TEST_ALLOW_MUTATION=1, y ejecutar pnpm exec vitest run supabase/tests/shipment-tracking-fencing.integration.test.ts. La prueba modifica y restaura ese fixture; úsala únicamente en una base local desechable y nunca en producción. No valida el sandbox de FedEx.

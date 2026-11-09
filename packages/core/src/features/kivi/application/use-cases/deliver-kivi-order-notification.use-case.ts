@@ -20,6 +20,8 @@ export class DeliverKiviOrderNotificationUseCase {
       !resolveOrderNotificationType(event.eventType)
     )
       throw new NotificationPermanentException('INVALID_KIVI_ORDER_EVENT');
+    if (event.eventType === 'OrderShipmentUpdatedEvent' || event.eventType === 'OrderRefundedEvent')
+      return 'DUPLICATE';
     const source = await this.source.find(event);
     if (!source) return 'SENT';
     try {

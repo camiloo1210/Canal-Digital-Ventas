@@ -139,3 +139,13 @@ The tenth Compose worker (`src/kivi-sync.ts`) uses the same healthcheck and limi
 - **Legacy:** existing rows can still resolve `KIVI_CONNECTION_TOKEN_*` in `apps/worker/kivi-connections.env` or Coolify variables, with the database storing only the variable name. This mechanism is deprecated and no longer exposed in the interface. Retire it by disconnecting and pairing the store with a code.
 - **Exhausted events:** if a Product outbox event exhausts retries (`DEAD`, for example after an approximately 40-second Kivi outage), each scheduler cycle (30 seconds) detects it through `core.kivi_sync_flag_dead_events()` from `20261027000000_kivi_sync_dead_events_and_version_offsets.sql`. `core.kivi_dead_event_acks` makes flagging idempotent per event. The connection becomes `needs_reconcile`; reconciliation repairs the catalog without waiting for the periodic six-hour run, subject to `KIVI_RETRY_INTERVAL_MS` (five minutes by default).
 - **Kivi ahead of Canal:** if Kivi has a newer version after a manual change or version reset, reconciliation treats Canal as authoritative, resends above Kivi's version, and persists the per-product increment in `core.kivi_product_version_offsets` so later outbox deliveries remain monotonic. Normal outbox deliveries never bump blindly: a 409 marks `needs_reconcile`. Worker warnings contain counters without URLs or secrets.
+
+## Optional FedEx sandbox worker
+
+The `shipment-tracking` service is included in the shared image and uses the `fedex-sandbox` Compose profile. It is not started by the default stack and does not depend on RabbitMQ. After provisioning a test database, its sandbox marker, a restricted worker login, the web configuration and sandbox credentials as described in [the worker guide](../README.md#seguimiento-fedex-solo-sandbox), configure the tracking variables in `apps/worker/.env` or the deployment secret manager. Never use real shipment data or commit credentials.
+
+```sh
+docker compose --env-file apps/worker/.env -f compose.rabbitmq.yml --profile fedex-sandbox up -d shipment-tracking
+```
+
+For Coolify, enable the `fedex-sandbox` profile (for example via `COMPOSE_PROFILES=fedex-sandbox`) and configure the service variables. Its healthcheck is ready after a successful worker cycle; it is not a FedEx availability guarantee. Check aggregate tracking metrics and provider errors separately.
