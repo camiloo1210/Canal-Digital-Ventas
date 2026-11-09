@@ -32,7 +32,7 @@ function data(): FormData {
   form.set('tenantId', tenantId);
   form.set('orderId', orderId);
   form.set('version', '0');
-  form.set('carrier', 'Carrier');
+  form.set('carrier', 'FedEx');
   form.set('trackingNumber', 'ABC');
   return form;
 }
@@ -62,9 +62,20 @@ describe('manual shipment action', (): void => {
       tenantId,
       authenticatedSellerId: actor,
       expectedShipmentVersion: 0,
-      carrier: 'Carrier',
+      carrier: 'FedEx',
       trackingNumber: 'ABC',
     });
+  });
+  it('rejects carriers outside the supported list', async (): Promise<void> => {
+    const form = data();
+    form.set('carrier', 'Unsupported');
+    const result = await registerManualShipmentAction(
+      { success: false, message: '', values: { carrier: '', trackingNumber: '' } },
+      form,
+    );
+    expect(result.success).toBe(false);
+    expect(result.message).toBe('shipment.invalid');
+    expect(execute).not.toHaveBeenCalled();
   });
   it('explains invalid shipment data without losing input', async (): Promise<void> => {
     execute.mockRejectedValue(new InvalidOrderAttributeException('private'));
@@ -73,7 +84,7 @@ describe('manual shipment action', (): void => {
       data(),
     );
     expect(result.message).toBe('shipment.invalid');
-    expect(result.values).toEqual({ carrier: 'Carrier', trackingNumber: 'ABC' });
+    expect(result.values).toEqual({ carrier: 'FedEx', trackingNumber: 'ABC' });
   });
   it('retains entered data when the seller is unauthorized', async (): Promise<void> => {
     vi.mocked(userHasAnyPermission).mockResolvedValue(false);
@@ -82,7 +93,7 @@ describe('manual shipment action', (): void => {
       data(),
     );
     expect(result.success).toBe(false);
-    expect(result.values).toEqual({ carrier: 'Carrier', trackingNumber: 'ABC' });
+    expect(result.values).toEqual({ carrier: 'FedEx', trackingNumber: 'ABC' });
     expect(execute).not.toHaveBeenCalled();
   });
 });
