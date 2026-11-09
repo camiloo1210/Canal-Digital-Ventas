@@ -1,9 +1,49 @@
 {
+  "ShipmentTracking": {
+    "action": {
+      "title": "Seguimiento FedEx",
+      "description": "Activa la consulta de prueba para la guía registrada. No se crea un envío real.",
+      "activeDescription": "La consulta de prueba está activa. Puedes desactivarla en cualquier momento.",
+      "disable": "Desactivar seguimiento",
+      "disabling": "Desactivando...",
+      "disabled": "Seguimiento desactivado.",
+      "enable": "Activar FedEx de prueba",
+      "enabling": "Activando...",
+      "enabled": "Seguimiento de prueba activado.",
+      "failed": "No se pudo activar el seguimiento. Revisa la guía e inténtalo de nuevo.",
+      "unauthorized": "No tienes permiso para activar el seguimiento.",
+      "invalid": "La guía ha cambiado o no es válida.",
+      "unavailable": "El seguimiento de prueba no está disponible."
+    },
+    "unavailable": "El seguimiento no está disponible en este momento.",
+    "title": "Seguimiento del envío",
+    "sandbox": "Datos de prueba proporcionados por FedEx; no representan un envío real.",
+    "lastUpdated": "Última consulta: {date} (hora de Ecuador)",
+    "state": {
+      "unavailable": "El seguimiento no está disponible en este momento.",
+      "pending": "Esperando la primera consulta.",
+      "current": "Información consultada a FedEx.",
+      "stale": "La información puede estar desactualizada.",
+      "not_found": "FedEx aún no encuentra esta guía.",
+      "unsupported": "FedEx no permite consultar este envío mediante este servicio.",
+      "disabled": "El seguimiento está desactivado."
+    },
+    "event": {
+      "unknown": "Actualización recibida",
+      "label_created": "Guía creada",
+      "in_transit": "En tránsito",
+      "out_for_delivery": "En reparto",
+      "delivered": "Entregado",
+      "exception": "Incidencia en el envío",
+      "returned": "Devuelto"
+    }
+  },
   "Security": {
     "rateLimited": "Demasiadas solicitudes. Espera antes de volver a intentarlo.",
     "unavailable": "El servicio no está disponible temporalmente. Inténtalo de nuevo en unos momentos."
   },
   "BusinessIntelligence": {
+    "unknownSinceCount": "{count, plural, one {# pedido abierto no tiene una fecha de estado verificable.} other {# pedidos abiertos no tienen una fecha de estado verificable.}}",
     "title": "Business Intelligence",
     "metadata": "Inteligencia de negocio | Canal Digital",
     "eyebrow": "Decide con datos",
@@ -149,7 +189,7 @@
     "durationDays": "{days} d {hours} h",
     "stuckTitle": "Pedidos estancados",
     "stuckCount": "{count, plural, =0 {Sin estancados} one {# estancado} other {# estancados}}",
-    "noStuck": "Ningún pedido abierto lleva más de {hours} horas en el mismo estado.",
+    "noStuck": "Ningún pedido abierto con una fecha de estado verificable supera las {hours} horas en ese estado.",
     "stuckFor": "{hours} horas en este estado",
     "moreStuck": "{count, plural, one {Y # pedido estancado más.} other {Y # pedidos estancados más.}}",
     "viewOrders": "Ver pedidos",
@@ -618,6 +658,8 @@
     },
     "purchases": {
       "title": "Mis compras",
+      "detailTitle": "Detalle de tu compra",
+      "back": "Volver a mis compras",
       "description": "Consulta tus pedidos, sus estados y los detalles de cada compra.",
       "emptyDescription": "Explora las tiendas. Cuando hagas tu primera compra, podrás seguir tu pedido aquí."
     }
@@ -654,6 +696,34 @@
       "success": "Pedido cancelado con éxito"
     },
     "card": {
+      "shipmentUnavailable": "Los datos del envío no están disponibles en este momento.",
+      "shipmentMissing": "La tienda aún no ha registrado datos de envío.",
+      "helpUnavailable": "No hay un canal de ayuda confirmado para este pedido.",
+      "nextStepTitle": "Siguiente paso:",
+      "nextStep": {
+        "await_preparation": "La tienda puede comenzar a preparar tu pedido.",
+        "await_shipment": "La tienda debe registrar el envío cuando esté listo.",
+        "await_delivery": "Consulta la actividad para conocer las próximas novedades."
+      },
+      "paymentTitle": "Estado del pago",
+      "paymentStatus": {
+        "pending": "Pago pendiente",
+        "completed": "Pago confirmado",
+        "refunded": "Pago reembolsado",
+        "partially_refunded": "Pago parcialmente reembolsado",
+        "unavailable": "Información no disponible"
+      },
+      "deliveryAddress": "Dirección de entrega",
+      "shipmentTitle": "Datos del envío",
+      "shipmentManual": "Información registrada por la tienda. No es seguimiento en tiempo real.",
+      "shipmentCarrier": "Transportadora",
+      "shipmentTracking": "Número de guía",
+      "viewDetails": "Ver detalle del pedido",
+      "activityTitle": "Actividad del pedido",
+      "activityDisclaimer": "Es posible que no estén disponibles todas las actualizaciones anteriores. Horario de Ecuador continental.",
+      "activityEmpty": "Aún no hay actualizaciones disponibles.",
+      "activityUnavailable": "La actividad no está disponible en este momento.",
+      "statusAvailable": "Consulta la actividad para conocer las actualizaciones del pedido.",
       "order": "Pedido",
       "store": "Tienda",
       "date": "Fecha",
@@ -664,13 +734,23 @@
       "shipping": "Envío",
       "total": "Total",
       "paidNotice": "Pedido pagado. Por razones de seguridad contable, contacta a la tienda para tramitar cancelaciones o devoluciones.",
-      "inTransitNotice": "El pedido ya está en camino.",
-      "deliveredNotice": "El pedido ya fue entregado.",
+      "inTransitNotice": "La tienda marcó este pedido como enviado.",
+      "deliveredNotice": "La tienda marcó este pedido como entregado.",
       "cancelNotice": "¿Deseas anular esta compra? Puedes cancelarla antes de su despacho.",
       "currentStatusNotice": "Estado actual: {status}"
     }
   },
   "SellerOrders": {
+    "shipment": {
+      "invalid": "Ingresa una transportadora o un número de guía válido.",
+      "title": "Datos del envío",
+      "description": "Registra la información proporcionada por la tienda; esto no activa rastreo en tiempo real.",
+      "carrier": "Transportadora",
+      "tracking": "Número de guía",
+      "save": "Guardar envío",
+      "saving": "Guardando…",
+      "saved": "Datos de envío guardados."
+    },
     "title": "Pedidos",
     "description": "Gestiona la preparación, el envío y la entrega de los pedidos de tu negocio.",
     "empty": "No hay pedidos disponibles para gestionar en este negocio.",
@@ -755,6 +835,8 @@
     },
     "email": {
       "subjects": {
+        "shipment_updated": "Datos de envío actualizados: {orderNumber}",
+        "refunded": "Reembolso registrado: {orderNumber}",
         "processing": "Pedido en preparación: {orderNumber}",
         "confirmed": "Compra confirmada: pedido {orderNumber}",
         "shipped": "Pedido enviado: {orderNumber}",
@@ -764,6 +846,8 @@
       },
       "body": "{tenantName}: {status}. Puedes consultar los detalles de tu pedido en tu cuenta.",
       "intros": {
+        "shipment_updated": "La tienda actualizó los datos de envío de tu pedido. Consulta los detalles en tu cuenta.",
+        "refunded": "Se ha registrado el reembolso de tu pedido. Consulta los detalles en tu cuenta.",
         "confirmed": "¡Gracias por elegir {tenantName}! Recibimos tu pedido. Aquí tienes el resumen de tu compra y el acceso a sus detalles.",
         "paid": "Recibimos el pago de tu pedido. Gracias por tu compra en {tenantName}. Te avisaremos cuando haya novedades.",
         "processing": "En {tenantName} estamos preparando tu pedido con cuidado. Te avisaremos cuando salga de la tienda.",
@@ -1074,6 +1158,9 @@
     "contextChanged": "El negocio activo cambió o ya no tienes acceso a él. Recarga la página e inténtalo de nuevo."
   },
   "AdminOrders": {
+    "shipmentUnavailable": "Los datos del envío no están disponibles en este momento.",
+    "shipmentCarrier": "Transportadora",
+    "shipmentTracking": "Número de guía",
     "metadata": "Pedidos | Canal Digital",
     "title": "Pedidos",
     "description": "Encuentra un pedido y gestiona su preparación, envío y entrega.",

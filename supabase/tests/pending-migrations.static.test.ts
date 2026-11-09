@@ -7,6 +7,8 @@ import { KIVI_PRODUCT_EVENT_TYPES } from '@/kivi/application/kivi-events';
 const BASELINE_VERSION = '20261014000000';
 const SEED_TABLES: Readonly<Record<string, readonly string[]>> = {
   '20261105000000_order_status_history.sql': ['sales.order_status_history'],
+  '20261108192000_shipment_notification_route.sql': ['core.outbox_relay_routes'],
+  '20261108193000_refund_notification_route.sql': ['core.outbox_relay_routes'],
   '20261020000000_kivi_connections.sql': ['core.outbox_relay_routes'],
   '20261019000000_store_branding_storage.sql': ['storage.buckets'],
   '20261018183618_seller_order_delivery_notifications.sql': ['core.outbox_relay_routes'],
@@ -315,7 +317,7 @@ describe('pending migrations (static checks)', (): void => {
       (eventType: string): string => `kivi_sync_worker_role/Product/${eventType}`,
     );
     expect([...seeded].sort()).toEqual([...expected, ...kivi].sort());
-    expect(expected).toHaveLength(6);
+    expect(expected).toHaveLength(8);
     expect(kivi).toHaveLength(5);
   });
 });

@@ -20,7 +20,7 @@ const row = {
 
 describe('seller order search projection', (): void => {
   it('searches the complete tenant catalog and paginates deterministically with a full count', async (): Promise<void> => {
-    const sql = vi.fn().mockResolvedValue([{ total: 51, items: [row] }]);
+    const sql = vi.fn().mockResolvedValue([{ total: 51, canManage: true, items: [row] }]);
     const repository = new PostgresSellerOrderReadRepository(
       sql as unknown as postgres.Sql<Record<string, unknown>>,
     );
@@ -65,7 +65,49 @@ describe('seller order search projection', (): void => {
     expect(statement).toContain("o.status<>'draft'");
     expect(statement).toContain('SELECT count(*)::int FROM filtered');
     expect(statement).toContain('o.order_number ILIKE ? OR c.name ILIKE ?');
-    expect(sql).toHaveBeenCalledTimes(1);
+    expect(sql).toHaveBeenCalledTimes(2);
+  });
+  it('does not offer shipment editing to viewers without management permission', async (): Promise<void> => {
+    const sql = vi
+      .fn()
+      .mockResolvedValueOnce([{ total: 1, canManage: false, items: [row] }])
+      .mockResolvedValueOnce([]);
+    const repository = new PostgresSellerOrderReadRepository(
+      sql as unknown as postgres.Sql<Record<string, unknown>>,
+    );
+    const result = await repository.findBySeller(actor, tenant, 1);
+    expect(result.items[0]?.canManageShipment).toBe(false);
+    expect(result.items[0]?.nextStatus).toBeNull();
+  });
+  it('projects shipment details and enables editing for a manager', async (): Promise<void> => {
+    const sql = vi
+      .fn()
+      .mockResolvedValueOnce([{ total: 1, canManage: true, items: [row] }])
+      .mockResolvedValueOnce([
+        { order_id: row.id, carrier: 'Carrier', tracking_number: 'ABC', version: 2 },
+      ]);
+    const repository = new PostgresSellerOrderReadRepository(
+      sql as unknown as postgres.Sql<Record<string, unknown>>,
+    );
+    const result = await repository.findBySeller(actor, tenant, 1);
+    expect(result.items[0]).toMatchObject({
+      canManageShipment: true,
+      shipment: { carrier: 'Carrier', trackingNumber: 'ABC', version: 2 },
+    });
+  });
+  it('keeps the order list available when shipment storage is not accessible', async (): Promise<void> => {
+    const sql = vi
+      .fn()
+      .mockResolvedValueOnce([{ total: 1, canManage: true, items: [row] }])
+      .mockRejectedValueOnce({ code: '42501' });
+    const repository = new PostgresSellerOrderReadRepository(
+      sql as unknown as postgres.Sql<Record<string, unknown>>,
+    );
+    const result = await repository.findBySeller(actor, tenant, 1);
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0]?.shipmentAvailability).toBe('unavailable');
+    expect(result.items[0]?.canManageShipment).toBe(false);
+    expect(result.items[0]?.nextStatus).toBe('processing');
   });
   it('supports a scoped detail link independently of the current list filters', async (): Promise<void> => {
     const sql = vi

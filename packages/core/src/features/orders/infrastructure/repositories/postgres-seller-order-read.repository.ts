@@ -12,6 +12,7 @@ import { createGlobalAuthId } from '@/sales/domain/types/global-auth-id.type';
 
 interface SellerOrderProjection {
   total: number;
+  canManage: boolean;
   items: Omit<SellerOrderReadModel, 'nextStatus'>[];
 }
 
@@ -36,7 +37,7 @@ export class PostgresSellerOrderReadRepository implements SellerOrderReadReposit
     try {
       const rows = await this.sql<SellerOrderProjection[]>`
         WITH authorized AS (
-          SELECT t.id,t.base_currency FROM core.tenants t JOIN core.tenant_memberships m ON m.tenant_id=t.id
+          SELECT t.id,t.base_currency,core.member_has_permission(m.user_id,m.tenant_id,ARRAY['MANAGE_ORDERS']::text[]) AS can_manage FROM core.tenants t JOIN core.tenant_memberships m ON m.tenant_id=t.id
           WHERE t.id=${tenant}::uuid AND m.user_id=${actor}::uuid AND m.status='active' AND core.member_has_permission(m.user_id, m.tenant_id, ARRAY['VIEW_ORDERS','MANAGE_ORDERS']::text[])
         ), filtered AS (
           SELECT o.id,o.order_number AS "orderNumber",o.status,o.version,o.total_amount_cents AS "totalAmountCents",
@@ -48,7 +49,7 @@ export class PostgresSellerOrderReadRepository implements SellerOrderReadReposit
             AND (${query}='' OR o.order_number ILIKE ${pattern} OR c.name ILIKE ${pattern})
             AND (${filters.orderId ?? null}::uuid IS NULL OR o.id=${filters.orderId ?? null}::uuid)
         )
-        SELECT (SELECT count(*)::int FROM filtered) AS total,
+        SELECT (SELECT count(*)::int FROM filtered) AS total, (SELECT can_manage FROM authorized LIMIT 1) AS "canManage",
           coalesce((SELECT jsonb_agg(r ORDER BY r."createdAt" DESC,r.id DESC) FROM (
             SELECT f.*,coalesce((SELECT jsonb_agg(jsonb_build_object('id',i.id,'productName',i.product_name,'quantity',i.quantity) ORDER BY i.id)
               FROM sales.order_items i JOIN sales.orders own ON own.id=i.order_id
@@ -59,6 +60,37 @@ export class PostgresSellerOrderReadRepository implements SellerOrderReadReposit
       const row = rows[0];
       if (!row)
         return { authorized: false, items: [], totalItems: 0, totalPages: 1, page, hasNext: false };
+      let shipmentAvailable = true;
+      const shipments = new Map<
+        string,
+        { carrier: string | null; trackingNumber: string | null; version: number }
+      >();
+      if (row.items.length > 0) {
+        try {
+          const orderIds = row.items.map((item): string => item.id);
+          const values = await this
+            .sql`SELECT ms.order_id, ms.carrier, ms.tracking_number, ms.version FROM sales.manual_shipments ms
+            JOIN core.tenant_memberships m ON m.tenant_id = ms.tenant_id
+            WHERE ms.tenant_id = ${tenant}::uuid AND m.user_id = ${actor}::uuid AND m.status = 'active'
+              AND core.member_has_permission(m.user_id, m.tenant_id, ARRAY['VIEW_ORDERS','MANAGE_ORDERS']::text[])
+              AND ms.order_id = ANY(${orderIds}::uuid[])`;
+          for (const item of values)
+            shipments.set(item.order_id as string, {
+              carrier: item.carrier as string | null,
+              trackingNumber: item.tracking_number as string | null,
+              version: Number(item.version),
+            });
+        } catch (error: unknown) {
+          if (
+            typeof error !== 'object' ||
+            error === null ||
+            !('code' in error) ||
+            !['42501', '42P01'].includes(String(error.code))
+          )
+            throw error;
+          shipmentAvailable = false;
+        }
+      }
       const totalPages = Math.max(1, Math.ceil(row.total / 25));
       return {
         authorized: true,
@@ -68,7 +100,14 @@ export class PostgresSellerOrderReadRepository implements SellerOrderReadReposit
         hasNext: page < totalPages,
         items: row.items.map((order): SellerOrderReadModel => ({
           ...order,
-          nextStatus: nextLogisticsStatus(parseOrderStatus(order.status)),
+          nextStatus:
+            row.canManage === true ? nextLogisticsStatus(parseOrderStatus(order.status)) : null,
+          shipment: shipments.get(order.id) ?? null,
+          shipmentAvailability: shipmentAvailable ? 'available' : 'unavailable',
+          canManageShipment:
+            shipmentAvailable &&
+            row.canManage === true &&
+            ['paid', 'processing', 'shipped', 'delivered'].includes(order.status),
           totalAmountCents: Number(order.totalAmountCents),
           createdAt: new Date(order.createdAt).toISOString(),
         })),

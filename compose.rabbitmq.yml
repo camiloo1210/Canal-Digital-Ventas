@@ -1,4 +1,4 @@
-x-worker: &worker # Built once from this repository; shared by all eleven worker services.
+x-worker: &worker # Built once from this repository; shared by all worker services.
   image: canaldigital-messaging-worker:local
   pull_policy: never
   init: true
@@ -190,6 +190,24 @@ services:
       KIVI_CYCLE_INTERVAL_MS: ${KIVI_CYCLE_INTERVAL_MS:-2000}
       KIVI_RECONCILE_INTERVAL_MS: ${KIVI_RECONCILE_INTERVAL_MS:-21600000}
       KIVI_RETRY_INTERVAL_MS: ${KIVI_RETRY_INTERVAL_MS:-300000}
+
+  # Opt in only for a deployment containing test data. Does not consume RabbitMQ.
+  shipment-tracking:
+    <<: *worker
+    profiles: [fedex-sandbox]
+    depends_on: []
+    command: ['src/shipment-tracking.ts']
+    environment:
+      WORKER_HEALTH_PORT: '8081'
+      TRACKING_SANDBOX_ENABLED: ${TRACKING_SANDBOX_ENABLED:-false}
+      TRACKING_DATABASE_URL: ${TRACKING_DATABASE_URL:-}
+      PRODUCTION_DATABASE_URL: ${PRODUCTION_DATABASE_URL:-}
+      TRACKING_DEPLOYMENT_ID: ${TRACKING_DEPLOYMENT_ID:-}
+      TRACKING_CREDENTIALS_JSON: ${TRACKING_CREDENTIALS_JSON:-}
+      TRACKING_INTERVAL_MS: ${TRACKING_INTERVAL_MS:-1800000}
+      TRACKING_MIN_SPACING_MS: ${TRACKING_MIN_SPACING_MS:-1000}
+      TRACKING_TERMINAL_INTERVAL_MS: ${TRACKING_TERMINAL_INTERVAL_MS:-86400000}
+      TRACKING_RETENTION_DAYS: ${TRACKING_RETENTION_DAYS:-90}
 
   cart-retention:
     <<: *worker

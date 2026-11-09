@@ -33,6 +33,7 @@ describe('authorized business intelligence projection', (): void => {
     expect(statement).toContain("o.status IN ('paid','processing','shipped','delivered')");
     expect(statement).toContain('i.order_id=o.id');
     expect(statement).toContain('sales.order_status_history h');
+    expect(statement).toContain('h.from_status IS NOT NULL');
     expect(statement).toContain("date_trunc('day',current_timestamp AT TIME ZONE 'UTC')");
   });
   it('does not reveal data to an unauthorized tenant/manager pair', async (): Promise<void> => {

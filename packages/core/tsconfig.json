@@ -14,6 +14,7 @@
       "@/products/*": ["src/features/products/*"],
       "@/categories/*": ["src/features/categories/*"],
       "@/orders/*": ["src/features/orders/*"],
+      "@/shipment-tracking/*": ["src/features/shipment-tracking/*"],
       "@/customers/*": ["src/features/customers/*"],
       "@/carts/*": ["src/features/carts/*"],
       "@/payments/*": ["src/features/payments/*"],
@@ -21,7 +22,8 @@
       "@/iam/*": ["src/features/iam/*"],
       "@/sales/*": ["src/features/sales/*"],
       "@/notifications/*": ["src/features/notifications/*"],
-      "@/kivi/*": ["src/features/kivi/*"]
+      "@/kivi/*": ["src/features/kivi/*"],
+      "@/testing/*": ["src/testing/*"]
     },
     "types": ["node"]
   }

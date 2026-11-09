@@ -3,8 +3,9 @@ import { withTenant } from '@/features/dashboard/utils/tenant-scope';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { ChevronLeft, ChevronRight, PackageSearch } from 'lucide-react';
-import type { SellerOrderPage } from '@canaldigital/packages/core';
+import type { SellerOrderPage, TrackingReadModel } from '@canaldigital/packages/core';
 import { ordersDi } from '@/features/orders/di/orders.di';
+import { trackingSandboxConfig } from '@/features/orders/server/tracking-sandbox-config';
 import {
   sellerOrdersHref,
   type SellerOrdersQuery,
@@ -85,6 +86,25 @@ export async function SellerOrdersResults({
     redirect(sellerOrdersHref(query, { page: result.totalPages }));
   const filtered = Boolean(query.q || query.status !== 'all');
   const selected = detail?.items[0];
+  const trackingConfig = trackingSandboxConfig(process.env);
+  const trackingEnabled = Boolean(trackingConfig?.refs[tenantId]);
+  let tracking: TrackingReadModel | null = null;
+  let trackingUnavailable = false;
+  if (selected && trackingEnabled) {
+    const source = ordersDi.resolveSellerTracking();
+    if (source) {
+      try {
+        tracking = await source.repository.findBySeller(
+          userId,
+          tenantId,
+          selected.id,
+          source.deploymentId,
+        );
+      } catch {
+        trackingUnavailable = true;
+      }
+    }
+  }
   return (
     <>
       {query.order && !selected && (
@@ -196,7 +216,12 @@ export async function SellerOrdersResults({
           title={selected.orderNumber}
           closeHref={sellerOrdersHref(query, { order: null })}
         >
-          <SellerOrderDetails order={selected} />
+          <SellerOrderDetails
+            order={selected}
+            trackingEnabled={trackingEnabled}
+            tracking={tracking}
+            trackingUnavailable={trackingUnavailable}
+          />
         </SellerOrderDetailsDialog>
       )}
     </>

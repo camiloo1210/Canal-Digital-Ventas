@@ -1,0 +1,75 @@
+name: CI
+
+# CI DISABLED FOR NOW: the automatic triggers are commented out so this workflow never runs on its own.
+# To enable it again, uncomment `push` and `pull_request` and remove `workflow_dispatch` if not needed.
+# `workflow_dispatch` only keeps the file valid for GitHub; it runs only if someone starts it by hand.
+on:
+  # push:
+  # pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Node: workspaces declare engines.node ">=22.9.0" (apps/worker); development runs Node 24.
+  NODE_VERSION: '24'
+  # No "packageManager" field in package.json: pin the pnpm major used for pnpm-lock.yaml (v9 lockfile).
+  PNPM_VERSION: '10.26.1'
+
+jobs:
+  unit:
+    name: Lint, typecheck and unit tests with coverage gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      # Same typecheck as .husky/pre-commit
+      - run: pnpm --filter "./packages/core" exec tsc --noEmit
+      - run: pnpm --filter "./apps/web" exec tsc --noEmit
+      - run: pnpm --filter "./apps/worker" exec tsc --noEmit
+      # Fails when a coverage threshold in vitest.config.ts is missed
+      - run: pnpm test:coverage
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: ${{ !cancelled() }}
+        with:
+          name: coverage-lcov
+          path: coverage/lcov.info
+          if-no-files-found: warn
+
+  integration:
+    name: Integration tests against local Supabase
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # The Supabase CLI is the pinned "supabase" devDependency, so `pnpm supabase` is the install step.
+      - name: Start local Supabase
+        run: pnpm supabase start -x studio,realtime,edge-runtime,vector,logflare,imgproxy,postgres-meta,mailpit,inbucket,supavisor
+      - name: Apply migrations and seed
+        run: pnpm supabase db reset
+      - run: pnpm test:integration
+      - name: Stop local Supabase
+        if: ${{ always() }}
+        run: pnpm supabase stop --no-backup

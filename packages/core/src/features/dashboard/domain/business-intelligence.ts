@@ -94,6 +94,7 @@ export interface OrderFlowReport {
   readonly stages: readonly OrderFlowStage[];
   readonly stuckThresholdHours: number;
   readonly stuckCount: number;
+  readonly unknownSinceCount: number;
   readonly stuckOrders: readonly StuckOrder[];
 }
 
@@ -189,6 +190,7 @@ function analyzeOrderFlow(
   const sums = STAGES.map((): { total: number; samples: number } => ({ total: 0, samples: 0 }));
   const stuck: StuckOrder[] = [];
   let totalOrders = 0;
+  let unknownSinceCount = 0;
   for (const order of flowOrders) {
     const created = new Date(order.createdAt).getTime();
     if (!Number.isFinite(created)) throw new IntelligenceDataException();
@@ -213,7 +215,11 @@ function analyzeOrderFlow(
       });
     }
     if (OPEN_STATUSES.includes(status)) {
-      const since = entered.get(status) ?? created;
+      const since = entered.get(status);
+      if (since === undefined) {
+        unknownSinceCount++;
+        continue;
+      }
       const hours = Math.floor(Math.max(0, observedAt - since) / 3600000);
       if (hours >= STUCK_ORDER_HOURS)
         stuck.push({
@@ -240,6 +246,7 @@ function analyzeOrderFlow(
     })),
     stuckThresholdHours: STUCK_ORDER_HOURS,
     stuckCount: stuck.length,
+    unknownSinceCount,
     stuckOrders: stuck.slice(0, 5),
   };
 }

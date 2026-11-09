@@ -12,6 +12,8 @@
 
 # testing
 /coverage
+/reports
+/.stryker-tmp
 
 # next.js
 /.next/
@@ -51,3 +53,14 @@ docs
 .tmp/
 .tmp-rf-nf-review/
 
+
+# AI agent skills and Claude configurations
+.agents/
+.claude/
+skills-lock.json
+
+# Playwright E2E output and docs
+apps/web/e2e/.auth/
+apps/web/e2e/README.md
+apps/web/test-results/
+apps/web/playwright-report/

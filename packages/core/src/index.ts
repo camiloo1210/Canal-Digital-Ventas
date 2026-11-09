@@ -164,6 +164,8 @@ export * from '@/tenants/infrastructure/repositories/supabase-public-tenant-dire
 export { GenerateCommercialOrderUseCase } from '@/orders/application/use-cases/generate-commercial-order.use-case';
 export type { GenerateCommercialOrderDto } from '@/orders/application/dtos/generate-commercial-order.dto';
 export { CancelOrderUseCase } from '@/orders/application/use-cases/cancel-order.use-case';
+export { RegisterManualShipmentUseCase } from '@/orders/application/use-cases/register-manual-shipment.use-case';
+export { PostgresManualShipmentRepository } from '@/orders/infrastructure/repositories/postgres-manual-shipment.repository';
 export { ChangeOrderStatusUseCase } from '@/orders/application/use-cases/change-order-status.use-case';
 export { UnsupportedOrderStatusException } from '@/orders/application/exceptions/unsupported-order-status.exception';
 export { PostgresSellerOrderAccessAdapter } from '@/orders/infrastructure/repositories/postgres-seller-order-access.adapter';
@@ -176,6 +178,7 @@ export type {
 export type { CancelOrderDto } from '@/orders/application/dtos/cancel-order.dto';
 export { OrderNotFoundException } from '@/orders/application/exceptions/order-not-found.exception';
 export { InvalidOrderStateException } from '@/orders/domain/exceptions/invalid-order-state.exception';
+export { InvalidOrderAttributeException } from '@/orders/domain/exceptions/invalid-order-attribute.exception';
 export { PostgresOrderRepository } from '@/orders/infrastructure/repositories/postgres-order.repository';
 export { PostgresOrderPaymentCoordinationAdapter } from '@/orders/infrastructure/repositories/postgres-order-payment-coordination.adapter';
 export { PostgresOrderTenantRepository } from '@/orders/infrastructure/repositories/postgres-order-tenant.repository';
@@ -637,3 +640,15 @@ export {
   minorUnitsPerMajor,
   type SupportedCurrencyCode,
 } from '@/shared/domain/money-format';
+
+export { runFedexSandboxWorker } from '@/shipment-tracking/infrastructure/fedex-sandbox-worker';
+export type { TrackingReadModel } from '@/shipment-tracking/application/tracking-read-model';
+export { EnableTrackingUseCase } from '@/shipment-tracking/application/use-cases/enable-tracking.use-case';
+export { PostgresTrackingActivationAdapter } from '@/shipment-tracking/infrastructure/postgres-tracking-activation.adapter';
+export { PostgresTrackingInvalidationAdapter } from '@/shipment-tracking/infrastructure/postgres-tracking-invalidation.adapter';
+export { PostgresBuyerTrackingReadAdapter } from '@/shipment-tracking/infrastructure/postgres-buyer-tracking-read.adapter';
+export { assertSandboxEnvironment } from '@/shipment-tracking/application/use-cases/sandbox-environment';
+export type { BuyerTrackingReadPort } from '@/shipment-tracking/application/ports/out/buyer-tracking-read.port';
+export { PostgresSellerTrackingReadAdapter } from '@/shipment-tracking/infrastructure/postgres-seller-tracking-read.adapter';
+export type { SellerTrackingReadPort } from '@/shipment-tracking/application/ports/out/seller-tracking-read.port';
+export { DisableTrackingUseCase } from '@/shipment-tracking/application/use-cases/disable-tracking.use-case';
