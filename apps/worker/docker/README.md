@@ -142,10 +142,10 @@ The tenth Compose worker (`src/kivi-sync.ts`) uses the same healthcheck and limi
 
 ## Optional FedEx sandbox worker
 
-The `shipment-tracking` service is included in the shared image and uses the `fedex-sandbox` Compose profile. It is not started by the default stack and does not depend on RabbitMQ. After provisioning a test database, its sandbox marker, a restricted worker login, the web configuration and sandbox credentials as described in [the worker guide](../README.md#seguimiento-fedex-solo-sandbox), configure the tracking variables in `apps/worker/.env` or the deployment secret manager. Never use real shipment data or commit credentials.
+The `shipment-tracking` service is included in the shared image and has no Compose profile, so Coolify registers its (optional) variables. It stays idle and healthy, with no database or FedEx calls, until `TRACKING_SANDBOX_ENABLED=true`. It does not depend on RabbitMQ. After provisioning a test database, its sandbox marker, a restricted worker login, the web configuration and sandbox credentials as described in [the worker guide](../README.md#seguimiento-fedex-solo-sandbox), configure the tracking variables in `apps/worker/.env` or the deployment secret manager. Never use real shipment data or commit credentials.
 
 ```sh
-docker compose --env-file apps/worker/.env -f compose.rabbitmq.yml --profile fedex-sandbox up -d shipment-tracking
+docker compose --env-file apps/worker/.env -f compose.rabbitmq.yml up -d shipment-tracking
 ```
 
-For Coolify, enable the `fedex-sandbox` profile (for example via `COMPOSE_PROFILES=fedex-sandbox`) and configure the service variables. Its healthcheck is ready after a successful worker cycle; it is not a FedEx availability guarantee. Check aggregate tracking metrics and provider errors separately.
+For Coolify, configure the service variables and set `TRACKING_SANDBOX_ENABLED=true`; `COMPOSE_PROFILES` is not needed. Its healthcheck is ready after a successful worker cycle; it is not a FedEx availability guarantee. Check aggregate tracking metrics and provider errors separately.

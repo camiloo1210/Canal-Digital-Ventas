@@ -33,7 +33,7 @@ flowchart LR
   INB -- payment-inbox --> PAY
   PAY -- "RPC SQL inserta evento Payment" --> OB
   SA -- "registra guia y activa seguimiento por pedido" --> TRK
-  TRACK[shipment-tracking - perfil fedex-sandbox] -- "reserva y guarda eventos; PostgreSQL" --> TRK
+  TRACK[shipment-tracking - inactivo salvo TRACKING_SANDBOX_ENABLED=true] -- "reserva y guarda eventos; PostgreSQL" --> TRK
   TRACK -- "consulta HTTPS" --> FEDEX[API FedEx sandbox]
 
   OB -- "outbox-worker (Order)" --> QN
@@ -330,8 +330,8 @@ sequenceDiagram
 - La referencia de credencial identifica la configuración de la tienda; los secretos se resuelven en el worker. Por defecto se programa otra consulta a los 30 minutos, con variación; para resultados terminales se usa el intervalo configurado (24 horas por defecto).
 - Una falla temporal reprograma con espera creciente; una falla de autorización pausa la asociación. Si la guía cambia o se desactiva mientras hay una consulta en curso, el control de generación y lease evita aplicar la respuesta antigua.
 - Las observaciones se almacenan en `sales.shipment_tracking_observations` y la web las consulta bajo autorización. Un evento de FedEx no cambia automáticamente el estado comercial del pedido. Las notificaciones de pedidos o cambios manuales de guía siguen sus propios flujos de outbox y RabbitMQ cuando están habilitados; los eventos de seguimiento FedEx no crean mensajes RabbitMQ.
-- El servicio `shipment-tracking` está en `compose.rabbitmq.yml` bajo el perfil opcional `fedex-sandbox`. Comparte la imagen y el healthcheck, pero no depende de RabbitMQ. El healthcheck indica que el worker completó un ciclo sin error; no garantiza que FedEx tenga eventos o que cada guía esté activa. Sin el perfil, Compose no lo inicia.
-- Con las variables y permisos preparados, usa `docker compose --env-file apps/worker/.env -f compose.rabbitmq.yml --profile fedex-sandbox up -d shipment-tracking`. En Coolify activa el perfil `fedex-sandbox` en la configuración del despliegue (por ejemplo, `COMPOSE_PROFILES=fedex-sandbox`) y establece las variables del servicio. La imagen compartida debe haberse construido previamente.
+- El servicio `shipment-tracking` está en `compose.rabbitmq.yml` sin perfil, para que Coolify registre sus variables (todas opcionales). Comparte la imagen y el healthcheck, pero no depende de RabbitMQ. Mientras `TRACKING_SANDBOX_ENABLED` no sea `true`, queda inactivo y sano: no se conecta a la base ni a FedEx. Activado, el healthcheck indica que el worker completó un ciclo sin error; no garantiza que FedEx tenga eventos o que cada guía esté activa. Activado con configuración inválida, termina con error y Docker lo reinicia.
+- Con las variables y permisos preparados, usa `docker compose --env-file apps/worker/.env -f compose.rabbitmq.yml up -d shipment-tracking`. En Coolify establece las variables del servicio y `TRACKING_SANDBOX_ENABLED=true`; no hace falta `COMPOSE_PROFILES`. La imagen compartida debe haberse construido previamente.
 
 ## Seguimiento FedEx (solo sandbox)
 

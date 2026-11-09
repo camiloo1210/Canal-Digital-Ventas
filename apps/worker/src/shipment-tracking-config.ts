@@ -12,6 +12,12 @@ export interface TrackingWorkerConfig {
   readonly terminalIntervalMs: number;
   readonly retentionDays: number;
 }
+/** The service is always deployed; it only polls when explicitly switched on. */
+export function isTrackingSandboxEnabled(
+  env: Readonly<Record<string, string | undefined>>,
+): boolean {
+  return env.TRACKING_SANDBOX_ENABLED === 'true';
+}
 export function readTrackingWorkerConfig(
   env: Readonly<Record<string, string | undefined>>,
 ): TrackingWorkerConfig {

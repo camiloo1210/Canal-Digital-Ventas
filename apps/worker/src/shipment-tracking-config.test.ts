@@ -1,7 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { readTrackingWorkerConfig } from '@/worker/shipment-tracking-config';
+import {
+  isTrackingSandboxEnabled,
+  readTrackingWorkerConfig,
+} from '@/worker/shipment-tracking-config';
 
 describe('shipment tracking worker configuration', (): void => {
+  it.each([{}, { TRACKING_SANDBOX_ENABLED: '' }, { TRACKING_SANDBOX_ENABLED: 'false' }])(
+    'stays disabled unless explicitly enabled %o',
+    (env): void => {
+      expect(isTrackingSandboxEnabled(env)).toBe(false);
+    },
+  );
+  it('is enabled only by the exact value true', (): void => {
+    expect(isTrackingSandboxEnabled({ TRACKING_SANDBOX_ENABLED: 'true' })).toBe(true);
+    expect(isTrackingSandboxEnabled({ TRACKING_SANDBOX_ENABLED: 'TRUE' })).toBe(false);
+  });
   const valid = {
     NODE_ENV: 'production',
     TRACKING_SANDBOX_ENABLED: 'true',

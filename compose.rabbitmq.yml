@@ -191,10 +191,11 @@ services:
       KIVI_RECONCILE_INTERVAL_MS: ${KIVI_RECONCILE_INTERVAL_MS:-21600000}
       KIVI_RETRY_INTERVAL_MS: ${KIVI_RETRY_INTERVAL_MS:-300000}
 
-  # Opt in only for a deployment containing test data. Does not consume RabbitMQ.
+  # Always declared so Coolify registers its variables. Stays idle (healthy, no DB or
+  # FedEx calls) until TRACKING_SANDBOX_ENABLED=true; enable only with test data.
+  # Does not consume RabbitMQ.
   shipment-tracking:
     <<: *worker
-    profiles: [fedex-sandbox]
     depends_on: []
     command: ['src/shipment-tracking.ts']
     environment:
