@@ -7,6 +7,11 @@ export interface BuyerOrderItemReadModel {
   subtotalCents: number;
 }
 
+export interface BuyerOrderHistoryEntry {
+  status: string;
+  changedAt: string | null;
+}
+
 export interface BuyerOrderReadModel {
   id: string;
   orderNumber: string;
@@ -21,5 +26,11 @@ export interface BuyerOrderReadModel {
   shippingCostCents: number;
   createdAt: string;
   canCancel: boolean;
+  nextStep?: 'await_preparation' | 'await_shipment' | 'await_delivery' | null;
+  shippingAddress?: string;
+  paymentStatus?: 'pending' | 'completed' | 'refunded' | 'partially_refunded' | 'unavailable';
+  history: BuyerOrderHistoryEntry[] | null;
+  shipmentAvailability?: 'available' | 'unavailable';
+  shipment?: { carrier: string | null; trackingNumber: string | null } | null;
   items: BuyerOrderItemReadModel[];
 }
