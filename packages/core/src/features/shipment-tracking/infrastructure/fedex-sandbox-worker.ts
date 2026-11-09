@@ -17,7 +17,6 @@ export interface FedexSandboxWorkerConfig {
   readonly deploymentId: string;
   readonly nodeEnv: string;
   readonly sandboxEnabled: boolean;
-  readonly appEnv: string;
   readonly credentials: Readonly<
     Record<string, { readonly clientId: string; readonly clientSecret: string }>
   >;
@@ -38,11 +37,11 @@ export async function runFedexSandboxWorker(
   observeMetrics: (
     metrics: Awaited<ReturnType<PostgresTrackingRepository['readOperationalMetrics']>>,
   ) => void = (): void => {},
+  setReady: (ready: boolean) => void = (): void => {},
 ): Promise<void> {
   const guard = {
     nodeEnv: config.nodeEnv,
     sandboxEnabled: config.sandboxEnabled,
-    appEnv: config.appEnv,
     expectedDeploymentId: config.deploymentId,
     testDatabaseUrl: config.databaseUrl,
     productionDatabaseUrl: config.productionDatabaseUrl,
@@ -98,6 +97,7 @@ export async function runFedexSandboxWorker(
       undefined,
       undefined,
       (result): void => {
+        setReady(result !== 'error');
         if (result !== 'idle') observe(result);
       },
       config.minimumSpacingMs ?? 1000,
@@ -106,6 +106,7 @@ export async function runFedexSandboxWorker(
       async (): Promise<void> => observeMetrics(await repository.readOperationalMetrics()),
     );
   } finally {
+    setReady(false);
     await sql.end({ timeout: 5 });
   }
 }

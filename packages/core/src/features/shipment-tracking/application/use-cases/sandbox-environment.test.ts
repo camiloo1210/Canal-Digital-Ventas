@@ -7,7 +7,6 @@ describe('sandbox tracking environment', (): void => {
       assertSandboxEnvironment({
         nodeEnv: 'production',
         sandboxEnabled: true,
-        appEnv: 'test',
         expectedDeploymentId: 'test-id',
         databaseDeploymentId: 'test-id',
         databaseEnvironment: 'sandbox',
@@ -18,7 +17,6 @@ describe('sandbox tracking environment', (): void => {
   });
   it.each([
     { sandboxEnabled: false },
-    { appEnv: 'production' },
     { databaseEnvironment: 'production' },
     { databaseDeploymentId: 'wrong' },
     { productionDatabaseUrl: 'postgres://test' },
@@ -28,7 +26,6 @@ describe('sandbox tracking environment', (): void => {
       assertSandboxEnvironment({
         nodeEnv: 'production',
         sandboxEnabled: true,
-        appEnv: 'test',
         expectedDeploymentId: 'test-id',
         databaseDeploymentId: 'test-id',
         databaseEnvironment: 'sandbox',
@@ -43,7 +40,6 @@ describe('sandbox tracking environment', (): void => {
       assertSandboxEnvironment({
         nodeEnv: 'production',
         sandboxEnabled: true,
-        appEnv: 'test',
         expectedDeploymentId: 'test-id',
         databaseDeploymentId: 'test-id',
         databaseEnvironment: 'sandbox',

@@ -8,7 +8,6 @@ export class UnsafeTrackingEnvironmentException extends ApplicationException {
 export interface SandboxEnvironment {
   readonly nodeEnv: string;
   readonly sandboxEnabled: boolean;
-  readonly appEnv: string;
   readonly expectedDeploymentId: string;
   readonly databaseDeploymentId: string;
   readonly databaseEnvironment: string;
@@ -23,7 +22,6 @@ export function assertSandboxEnvironment(input: SandboxEnvironment): void {
       `${url.hostname.toLowerCase()}:${url.port || '5432'}${url.pathname}`;
     if (
       !input.sandboxEnabled ||
-      input.appEnv !== 'test' ||
       input.databaseEnvironment !== 'sandbox' ||
       !input.expectedDeploymentId ||
       input.expectedDeploymentId !== input.databaseDeploymentId ||
