@@ -1,9 +1,49 @@
 {
+  "ShipmentTracking": {
+    "action": {
+      "title": "FedEx tracking",
+      "description": "Enable test tracking for the saved tracking number. This does not create a real shipment.",
+      "activeDescription": "Test tracking is active. You can disable it at any time.",
+      "disable": "Disable tracking",
+      "disabling": "Disabling...",
+      "disabled": "Tracking disabled.",
+      "enable": "Enable FedEx test tracking",
+      "enabling": "Enabling...",
+      "enabled": "Test tracking enabled.",
+      "failed": "Tracking could not be enabled. Check the tracking number and try again.",
+      "unauthorized": "You cannot enable tracking for this order.",
+      "invalid": "The tracking number changed or is invalid.",
+      "unavailable": "Test tracking is unavailable."
+    },
+    "unavailable": "Tracking is currently unavailable.",
+    "title": "Shipment tracking",
+    "sandbox": "Test data from FedEx; this does not represent a real shipment.",
+    "lastUpdated": "Last checked: {date} (Ecuador time)",
+    "state": {
+      "unavailable": "Tracking is currently unavailable.",
+      "pending": "Waiting for the first check.",
+      "current": "Information checked with FedEx.",
+      "stale": "This information may be out of date.",
+      "not_found": "FedEx has not found this tracking number yet.",
+      "unsupported": "FedEx cannot track this shipment through this service.",
+      "disabled": "Tracking is disabled."
+    },
+    "event": {
+      "unknown": "Update received",
+      "label_created": "Label created",
+      "in_transit": "In transit",
+      "out_for_delivery": "Out for delivery",
+      "delivered": "Delivered",
+      "exception": "Shipment exception",
+      "returned": "Returned"
+    }
+  },
   "Security": {
     "rateLimited": "Too many requests. Please wait before trying again.",
     "unavailable": "The service is temporarily unavailable. Please try again shortly."
   },
   "BusinessIntelligence": {
+    "unknownSinceCount": "{count, plural, one {# open order has no verifiable status timestamp.} other {# open orders have no verifiable status timestamp.}}",
     "title": "Business Intelligence",
     "metadata": "Business Intelligence | Canal Digital",
     "eyebrow": "Decide with data",
@@ -149,7 +189,7 @@
     "durationDays": "{days} d {hours} h",
     "stuckTitle": "Stuck orders",
     "stuckCount": "{count, plural, =0 {None stuck} one {# stuck} other {# stuck}}",
-    "noStuck": "No open order has stayed in the same status for more than {hours} hours.",
+    "noStuck": "No open order with a verifiable status timestamp has exceeded {hours} hours in that status.",
     "stuckFor": "{hours} hours in this status",
     "moreStuck": "{count, plural, one {And # more stuck order.} other {And # more stuck orders.}}",
     "viewOrders": "View orders",
@@ -618,6 +658,8 @@
     },
     "purchases": {
       "title": "My purchases",
+      "detailTitle": "Purchase details",
+      "back": "Back to my purchases",
       "description": "Track your orders, their status and the details of each purchase.",
       "emptyDescription": "Explore the stores. After your first purchase, you can track your order here."
     }
@@ -654,6 +696,34 @@
       "success": "Order cancelled successfully"
     },
     "card": {
+      "shipmentUnavailable": "Shipping details are unavailable right now.",
+      "shipmentMissing": "The store has not added shipping details yet.",
+      "helpUnavailable": "There is no confirmed support channel for this order.",
+      "nextStepTitle": "Next step:",
+      "nextStep": {
+        "await_preparation": "The store can begin preparing your order.",
+        "await_shipment": "The store should record the shipment when it is ready.",
+        "await_delivery": "Check the activity for further updates."
+      },
+      "paymentTitle": "Payment status",
+      "paymentStatus": {
+        "pending": "Payment pending",
+        "completed": "Payment confirmed",
+        "refunded": "Payment refunded",
+        "partially_refunded": "Payment partially refunded",
+        "unavailable": "Information unavailable"
+      },
+      "deliveryAddress": "Delivery address",
+      "shipmentTitle": "Shipping details",
+      "shipmentManual": "Information entered by the store. This is not live tracking.",
+      "shipmentCarrier": "Carrier",
+      "shipmentTracking": "Tracking number",
+      "viewDetails": "View order details",
+      "activityTitle": "Order activity",
+      "activityDisclaimer": "Some earlier updates may not be available. Times shown in mainland Ecuador time.",
+      "activityEmpty": "No updates are available yet.",
+      "activityUnavailable": "Order activity is unavailable right now.",
+      "statusAvailable": "Check the activity for order updates.",
       "order": "Order",
       "store": "Store",
       "date": "Date",
@@ -664,13 +734,23 @@
       "shipping": "Shipping",
       "total": "Total",
       "paidNotice": "Paid order. For accounting security reasons, please contact the store to arrange cancellations or refunds.",
-      "inTransitNotice": "The order is already in transit.",
-      "deliveredNotice": "The order has been delivered.",
+      "inTransitNotice": "The store marked this order as shipped.",
+      "deliveredNotice": "The store marked this order as delivered.",
       "cancelNotice": "Would you like to cancel this purchase? You can cancel it before dispatch.",
       "currentStatusNotice": "Current status: {status}"
     }
   },
   "SellerOrders": {
+    "shipment": {
+      "invalid": "Enter a valid carrier or tracking number.",
+      "title": "Shipping details",
+      "description": "Record information provided by the store; this does not enable live tracking.",
+      "carrier": "Carrier",
+      "tracking": "Tracking number",
+      "save": "Save shipping details",
+      "saving": "Saving…",
+      "saved": "Shipping details saved."
+    },
     "title": "Orders",
     "description": "Manage preparation, shipping and delivery for your business orders.",
     "empty": "There are no orders available to manage for this business.",
@@ -755,6 +835,8 @@
     },
     "email": {
       "subjects": {
+        "shipment_updated": "Shipping details updated: {orderNumber}",
+        "refunded": "Refund recorded: {orderNumber}",
         "processing": "Order being prepared: {orderNumber}",
         "confirmed": "Purchase confirmed: order {orderNumber}",
         "shipped": "Order shipped: {orderNumber}",
@@ -764,6 +846,8 @@
       },
       "body": "{tenantName}: {status}. You can view your order details in your account.",
       "intros": {
+        "shipment_updated": "The store updated your shipping details. View your order for more information.",
+        "refunded": "Your order refund has been recorded. View your order for more information.",
         "confirmed": "Thank you for choosing {tenantName}! We received your order. Here is your purchase summary and access to the details.",
         "paid": "We received your order payment. Thank you for shopping at {tenantName}. We will keep you updated.",
         "processing": "At {tenantName}, we are carefully preparing your order. We will let you know when it leaves the store.",
@@ -1074,6 +1158,9 @@
     "contextChanged": "The active business changed or you no longer have access to it. Reload the page and try again."
   },
   "AdminOrders": {
+    "shipmentUnavailable": "Shipping details are unavailable right now.",
+    "shipmentCarrier": "Carrier",
+    "shipmentTracking": "Tracking number",
     "metadata": "Orders | Canal Digital",
     "title": "Orders",
     "description": "Find an order and manage preparation, shipping and delivery.",

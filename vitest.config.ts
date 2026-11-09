@@ -76,6 +76,10 @@ export default defineConfig({
       '@/products': path.resolve(__dirname, 'packages/core/src/features/products'),
       '@/categories': path.resolve(__dirname, 'packages/core/src/features/categories'),
       '@/orders': path.resolve(__dirname, 'packages/core/src/features/orders'),
+      '@/shipment-tracking': path.resolve(
+        __dirname,
+        'packages/core/src/features/shipment-tracking',
+      ),
       '@/customers': path.resolve(__dirname, 'packages/core/src/features/customers'),
       '@/carts': path.resolve(__dirname, 'packages/core/src/features/carts'),
       '@/payments': path.resolve(__dirname, 'packages/core/src/features/payments'),
