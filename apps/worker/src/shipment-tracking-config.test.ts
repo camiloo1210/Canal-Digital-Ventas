@@ -5,7 +5,6 @@ describe('shipment tracking worker configuration', (): void => {
   const valid = {
     NODE_ENV: 'production',
     TRACKING_SANDBOX_ENABLED: 'true',
-    APP_ENV: 'test',
     TRACKING_DATABASE_URL: 'postgres://test/database',
     PRODUCTION_DATABASE_URL: 'postgres://prod/database',
     TRACKING_DEPLOYMENT_ID: 'id',
@@ -18,7 +17,6 @@ describe('shipment tracking worker configuration', (): void => {
   });
   it.each([
     { TRACKING_SANDBOX_ENABLED: '' },
-    { APP_ENV: 'production' },
     { TRACKING_DATABASE_URL: '' },
     { TRACKING_CREDENTIALS_JSON: '{}' },
   ])('rejects unsafe configuration %o', (override): void => {

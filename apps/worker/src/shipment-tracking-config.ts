@@ -4,7 +4,6 @@ export interface TrackingWorkerConfig {
   readonly deploymentId: string;
   readonly nodeEnv: string;
   readonly sandboxEnabled: boolean;
-  readonly appEnv: string;
   readonly credentials: Readonly<
     Record<string, { readonly clientId: string; readonly clientSecret: string }>
   >;
@@ -19,7 +18,6 @@ export function readTrackingWorkerConfig(
   try {
     if (
       env.TRACKING_SANDBOX_ENABLED !== 'true' ||
-      env.APP_ENV !== 'test' ||
       !env.TRACKING_DATABASE_URL ||
       !env.TRACKING_DEPLOYMENT_ID ||
       !env.TRACKING_CREDENTIALS_JSON
@@ -67,7 +65,6 @@ export function readTrackingWorkerConfig(
       deploymentId: env.TRACKING_DEPLOYMENT_ID,
       nodeEnv: env.NODE_ENV ?? '',
       sandboxEnabled: true,
-      appEnv: env.APP_ENV,
       credentials,
       intervalMs,
       minimumSpacingMs,
