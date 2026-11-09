@@ -44,6 +44,22 @@ describe('RelayOutboxUseCase', (): void => {
     expect(await relay.execute()).toBe(false);
   });
 
+  it('completes explicitly excluded historical events without publishing them', async (): Promise<void> => {
+    const outbox = new MemoryOutbox();
+    let sent = 0;
+    const relay = new RelayOutboxUseCase(
+      outbox,
+      {
+        publish: async (): Promise<void> => {
+          sent++;
+        },
+      },
+      (): boolean => false,
+    );
+    expect(await relay.execute()).toBe(true);
+    expect(sent).toBe(0);
+    expect(outbox.completed).toEqual(['event-1']);
+  });
   it('leaves failed publications retryable without completing them', async (): Promise<void> => {
     const outbox = new MemoryOutbox();
     const relay = new RelayOutboxUseCase(outbox, {
