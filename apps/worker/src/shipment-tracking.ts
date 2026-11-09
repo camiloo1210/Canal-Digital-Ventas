@@ -1,17 +1,35 @@
 import { runFedexSandboxWorker } from '@canaldigital/packages/core';
-import { readTrackingWorkerConfig } from '@/worker/shipment-tracking-config';
+import {
+  isTrackingSandboxEnabled,
+  readTrackingWorkerConfig,
+} from '@/worker/shipment-tracking-config';
 import { loadWorkerEnvironment } from '@/worker/environment';
 import { loadWorkerHealthPort, startWorkerHealth } from '@/worker/health';
 
+function waitForAbort(signal: AbortSignal): Promise<void> {
+  return new Promise<void>((resolve): void => {
+    if (signal.aborted) resolve();
+    else signal.addEventListener('abort', (): void => resolve(), { once: true });
+  });
+}
+
 async function main(): Promise<void> {
   loadWorkerEnvironment();
-  const config = readTrackingWorkerConfig(process.env);
+  const enabled = isTrackingSandboxEnabled(process.env);
+  const config = enabled ? readTrackingWorkerConfig(process.env) : null;
   const health = await startWorkerHealth(loadWorkerHealthPort(process.env, 8093));
   const controller = new AbortController();
   const stop = (): void => controller.abort();
   process.once('SIGTERM', stop);
   process.once('SIGINT', stop);
   try {
+    if (!config) {
+      // Disabled deployments stay healthy and idle instead of restarting in a loop.
+      console.info('Sandbox shipment tracking is disabled; set TRACKING_SANDBOX_ENABLED=true.');
+      health.setReady(true);
+      await waitForAbort(controller.signal);
+      return;
+    }
     await runFedexSandboxWorker(
       config,
       controller.signal,
