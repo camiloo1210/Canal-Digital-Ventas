@@ -11,7 +11,6 @@ export function trackingSandboxConfig(
     assertSandboxEnvironment({
       nodeEnv: env.NODE_ENV ?? '',
       sandboxEnabled: env.TRACKING_SANDBOX_ENABLED === 'true',
-      appEnv: env.APP_ENV ?? '',
       expectedDeploymentId: deploymentId,
       databaseDeploymentId: deploymentId,
       databaseEnvironment: 'sandbox',

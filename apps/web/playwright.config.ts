@@ -66,7 +66,6 @@ function loadE2eEnvironment(): Record<string, string> {
   env.PAYMENTS_CHECKOUT_UI_ENABLED = 'false';
   env.KIVI_NOTIFICATIONS_ENABLED = 'false';
   env.GEMINI_API_KEY = '';
-  env.APP_ENV = '';
   env.TRACKING_SANDBOX_ENABLED = '';
   env.TRACKING_DEPLOYMENT_ID = '';
   env.TRACKING_TENANT_REFS_JSON = '';
@@ -84,7 +83,6 @@ function loadE2eEnvironment(): Record<string, string> {
         'FedEx E2E requires a sandbox deployment ID, tenant references and a production database identity.',
       );
     }
-    env.APP_ENV = 'test';
     env.TRACKING_SANDBOX_ENABLED = 'true';
     env.TRACKING_DEPLOYMENT_ID = deployment;
     env.TRACKING_TENANT_REFS_JSON = refs;

@@ -3,7 +3,6 @@ import { trackingSandboxConfig } from '@/features/orders/server/tracking-sandbox
 const good = {
   NODE_ENV: 'production',
   TRACKING_SANDBOX_ENABLED: 'true',
-  APP_ENV: 'test',
   DATABASE_URL: 'postgres://test/db',
   PRODUCTION_DATABASE_URL: 'postgres://prod/db',
   TRACKING_DEPLOYMENT_ID: '00000000-0000-4000-8000-000000000001',
