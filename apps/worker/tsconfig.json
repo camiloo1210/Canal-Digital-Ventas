@@ -10,6 +10,7 @@
       "@/categories/*": ["src/features/categories/*"],
       "@/orders/*": ["src/features/orders/*"],
       "@/shipment-tracking/*": ["src/features/shipment-tracking/*"],
+      "@/shipment-creation/*": ["src/features/shipment-creation/*"],
       "@/customers/*": ["src/features/customers/*"],
       "@/carts/*": ["src/features/carts/*"],
       "@/payments/*": ["src/features/payments/*"],
