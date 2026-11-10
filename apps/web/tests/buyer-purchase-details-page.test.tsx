@@ -43,8 +43,8 @@ vi.mock('@/features/store/queries/store-viewer.query', (): object => ({
 vi.mock('@/features/store-directory/components/buyer-shell', (): object => ({
   BuyerShell: (): null => null,
 }));
-vi.mock('@/features/orders/components/buyer-order-card', (): object => ({
-  BuyerOrderCard: (): null => null,
+vi.mock('@/features/orders/components/buyer-order-detail', (): object => ({
+  BuyerOrderDetail: (): null => null,
 }));
 const orderId = '550e8400-e29b-41d4-a716-446655440000';
 describe('private purchase details', (): void => {

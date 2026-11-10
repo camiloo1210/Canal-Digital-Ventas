@@ -5,8 +5,7 @@ import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getStoreViewerQuery } from '@/features/store/queries/store-viewer.query';
 import { BuyerShell } from '@/features/store-directory/components/buyer-shell';
-import { BuyerOrderCard } from '@/features/orders/components/buyer-order-card';
-import { BuyerTrackingTimeline } from '@/features/orders/components/buyer-tracking-timeline';
+import { BuyerOrderDetail } from '@/features/orders/components/buyer-order-detail';
 import type { TrackingReadModel } from '@canaldigital/packages/core';
 import { ordersDi } from '@/features/orders/di/orders.di';
 
@@ -41,7 +40,6 @@ export default async function BuyerPurchaseDetailsPage({
       trackingUnavailable = true;
     }
   }
-  const trackingText = await getTranslations('ShipmentTracking');
   return (
     <BuyerShell active="purchases" viewer={viewer}>
       <div className="space-y-6">
@@ -52,16 +50,11 @@ export default async function BuyerPurchaseDetailsPage({
           {t('back')}
         </Link>
         <h1 className="text-2xl font-semibold">{t('detailTitle')}</h1>
-        {tracking && <BuyerTrackingTimeline tracking={tracking} />}
-        {trackingUnavailable && (
-          <p className="rounded-lg border p-4 text-sm text-muted-foreground">
-            {trackingText('unavailable')}
-          </p>
-        )}
-        <BuyerOrderCard
+        <BuyerOrderDetail
           order={order}
+          tracking={tracking}
+          trackingUnavailable={trackingUnavailable}
           paymentsEnabled={process.env.PAYMENTS_CHECKOUT_UI_ENABLED === 'true'}
-          showDetailsLink={false}
         />
       </div>
     </BuyerShell>
