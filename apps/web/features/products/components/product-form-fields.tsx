@@ -44,6 +44,7 @@ function ProductInput({
   revision,
   clearField,
   money = false,
+  fractionDigits,
 }: {
   name: keyof ProductFormValues;
   label: string;
@@ -55,6 +56,7 @@ function ProductInput({
   revision: number;
   clearField: (name: string) => void;
   money?: boolean;
+  fractionDigits?: number;
 }): React.JSX.Element {
   return (
     <Field data-invalid={Boolean(error)} className="min-w-0">
@@ -77,11 +79,12 @@ function ProductInput({
         className="min-h-11 scroll-mt-6"
         onChange={(): void => clearField(name)}
         onBlur={
-          money
+          money || fractionDigits
             ? (event): void => {
-                if (/^\d+(\.\d{1,2})?$/.test(event.target.value)) {
+                const digits = fractionDigits ?? 2;
+                if (new RegExp(String.raw`^\d+(\.\d{1,${digits}})?$`).test(event.target.value)) {
                   const [whole, fraction = ''] = event.target.value.split('.');
-                  event.target.value = whole + '.' + fraction.padEnd(2, '0');
+                  event.target.value = whole + '.' + fraction.padEnd(digits, '0');
                 }
               }
             : undefined
@@ -297,6 +300,58 @@ export function ProductFormFields({
                 inputMode="numeric"
                 help={t('wholesaleQuantityHelp')}
                 error={errorFor('wholesaleMinQuantity')}
+              />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="shadow-none">
+          <CardHeader>
+            <CardTitle>
+              <h2>{t('packageTitle')}</h2>
+            </CardTitle>
+            <CardDescription>{t('packageHelp')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-6 md:grid-cols-2">
+              <ProductInput
+                {...common}
+                name="weightKg"
+                label={t('weightKg')}
+                value={defaultValues?.weightKg}
+                inputMode="decimal"
+                fractionDigits={3}
+                help={t('weightHelp')}
+                error={errorFor('weightKg')}
+              />
+              <ProductInput
+                {...common}
+                name="lengthCm"
+                label={t('lengthCm')}
+                value={defaultValues?.lengthCm}
+                inputMode="decimal"
+                fractionDigits={1}
+                help={t('dimensionHelp')}
+                error={errorFor('lengthCm')}
+              />
+              <ProductInput
+                {...common}
+                name="widthCm"
+                label={t('widthCm')}
+                value={defaultValues?.widthCm}
+                inputMode="decimal"
+                fractionDigits={1}
+                help={t('dimensionHelp')}
+                error={errorFor('widthCm')}
+              />
+              <ProductInput
+                {...common}
+                name="heightCm"
+                label={t('heightCm')}
+                value={defaultValues?.heightCm}
+                inputMode="decimal"
+                fractionDigits={1}
+                help={t('dimensionHelp')}
+                error={errorFor('heightCm')}
               />
             </div>
           </CardContent>

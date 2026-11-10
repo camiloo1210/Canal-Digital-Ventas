@@ -63,6 +63,10 @@ export function ProductForm({
     stock: t('stock'),
     image: p('form_image'),
     isVatExempt: p('form_vat'),
+    weightKg: t('weightKg'),
+    lengthCm: t('lengthCm'),
+    widthCm: t('widthCm'),
+    heightCm: t('heightCm'),
   };
   return (
     <form

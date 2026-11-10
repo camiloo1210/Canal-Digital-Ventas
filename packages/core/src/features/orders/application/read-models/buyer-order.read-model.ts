@@ -5,6 +5,7 @@ export interface BuyerOrderItemReadModel {
   quantity: number;
   unitPriceCents: number;
   subtotalCents: number;
+  imageUrl: string | null;
 }
 
 export interface BuyerOrderHistoryEntry {

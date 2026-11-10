@@ -5,6 +5,9 @@ import {
   PostgresTenantBrandingRepository,
   PostgresTenantBrandingReadRepository,
   UpdateTenantBrandingUseCase,
+  SaveShippingOriginUseCase,
+  PostgresShippingOriginRepository,
+  type ShippingOriginRepositoryPort,
   PostgresTransactionManagerAdapter,
   PostgresEventBusAdapter,
   type TenantBrandingReadRepositoryPort,
@@ -24,4 +27,15 @@ export function getUpdateStoreSettingsUseCase(): UpdateTenantBrandingUseCase {
 
 export function getStoreBrandingStorage(): SupabaseStorageAdapter {
   return new SupabaseStorageAdapter('store-branding');
+}
+
+export function getShippingOriginRepository(): ShippingOriginRepositoryPort {
+  return new PostgresShippingOriginRepository(sql);
+}
+
+export function getSaveShippingOriginUseCase(): SaveShippingOriginUseCase {
+  return new SaveShippingOriginUseCase(
+    new PostgresShippingOriginRepository(sql),
+    new PostgresTransactionManagerAdapter(sql),
+  );
 }

@@ -5,6 +5,7 @@ import { OrderStatusBadge } from '@/features/orders/components/order-status-badg
 import { SellerOrderStatusForm } from '@/features/orders/components/seller-order-status-form';
 import { formatMoney } from '@/lib/money';
 import { ManualShipmentForm } from '@/features/orders/components/manual-shipment-form';
+import { ShipmentJobStatus } from '@/features/orders/components/shipment-job-status';
 import { SellerTrackingForm } from '@/features/orders/components/seller-tracking-form';
 
 export async function SellerOrderDetails({
@@ -83,6 +84,9 @@ export async function SellerOrderDetails({
             </div>
           )}
         </dl>
+      )}
+      {order.shipmentJob && order.canManageShipment && (
+        <ShipmentJobStatus orderId={order.id} job={order.shipmentJob} />
       )}
       {order.canManageShipment && (
         <ManualShipmentForm

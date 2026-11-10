@@ -105,6 +105,98 @@ export function createUpdateProductFormSchema(currency: string) {
   });
 }
 
+export interface PackageUnits {
+  weightGrams: number;
+  lengthMm: number;
+  widthMm: number;
+  heightMm: number;
+}
+export interface PackageFormFields {
+  weightKg: string;
+  lengthCm: string;
+  widthCm: string;
+  heightCm: string;
+}
+const PACKAGE_MAX_UNITS = 100_000_000;
+const PACKAGE_FIELD_NAMES = ['weightKg', 'lengthCm', 'widthCm', 'heightCm'] as const;
+
+/** Converts a non-negative decimal string to integer units by digit concatenation (no float math). */
+function decimalToUnits(value: string, decimals: number): number | null {
+  const match = new RegExp(String.raw`^(\d+)(?:\.(\d{1,${decimals}}))?$`).exec(value);
+  if (!match) return null;
+  const units = Number((match[1] ?? '') + (match[2] ?? '').padEnd(decimals, '0'));
+  return Number.isSafeInteger(units) ? units : null;
+}
+
+function unitsToDecimal(units: number, decimals: number): string {
+  const digits = String(units).padStart(decimals + 1, '0');
+  return digits.slice(0, digits.length - decimals) + '.' + digits.slice(digits.length - decimals);
+}
+
+/**
+ * Converts the kg/cm form strings into integer grams/mm. All four empty yields `null`.
+ * Throws a RangeError on partial or malformed input; the Zod schema reports those per field.
+ */
+export function parsePackageFields(raw: PackageFormFields): PackageUnits | null {
+  const [weight, length, width, height] = PACKAGE_FIELD_NAMES.map((name): string =>
+    raw[name].trim(),
+  );
+  if (weight === '' && length === '' && width === '' && height === '') return null;
+  const weightGrams = decimalToUnits(weight ?? '', 3);
+  const lengthMm = decimalToUnits(length ?? '', 1);
+  const widthMm = decimalToUnits(width ?? '', 1);
+  const heightMm = decimalToUnits(height ?? '', 1);
+  if (weightGrams === null || lengthMm === null || widthMm === null || heightMm === null)
+    throw new RangeError('Invalid package fields');
+  return { weightGrams, lengthMm, widthMm, heightMm };
+}
+
+/** Inverse of parsePackageFields, used to prefill the edit form. */
+export function formatPackageFields(units: PackageUnits | null): PackageFormFields {
+  if (!units) return { weightKg: '', lengthCm: '', widthCm: '', heightCm: '' };
+  return {
+    weightKg: unitsToDecimal(units.weightGrams, 3),
+    lengthCm: unitsToDecimal(units.lengthMm, 1),
+    widthCm: unitsToDecimal(units.widthMm, 1),
+    heightCm: unitsToDecimal(units.heightMm, 1),
+  };
+}
+
+/**
+ * Package group syntax: all empty is valid (null), a partial group flags the empty fields, and
+ * filled fields must be positive decimals within the supported scale and range.
+ */
+export const packageFieldsSchema: z.ZodType<PackageUnits | null, PackageFormFields> = z
+  .object({
+    weightKg: z.string().trim(),
+    lengthCm: z.string().trim(),
+    widthCm: z.string().trim(),
+    heightCm: z.string().trim(),
+  })
+  .transform((raw, ctx): PackageUnits | null => {
+    if (PACKAGE_FIELD_NAMES.every((name): boolean => raw[name] === '')) return null;
+    let valid = true;
+    for (const name of PACKAGE_FIELD_NAMES) {
+      const decimals = name === 'weightKg' ? 3 : 1;
+      const units = raw[name] === '' ? null : decimalToUnits(raw[name], decimals);
+      const message =
+        raw[name] === ''
+          ? 'packageIncomplete'
+          : units === null || units <= 0
+            ? name === 'weightKg'
+              ? 'weightFormat'
+              : 'dimensionFormat'
+            : units > PACKAGE_MAX_UNITS
+              ? 'packageRange'
+              : null;
+      if (message) {
+        valid = false;
+        ctx.addIssue({ code: 'custom', path: [name], message });
+      }
+    }
+    return valid ? parsePackageFields(raw) : z.NEVER;
+  });
+
 export interface ProductFormValues {
   name: string;
   sku: string;
@@ -116,6 +208,10 @@ export interface ProductFormValues {
   wholesaleMinQuantity: string;
   stock: string;
   isVatExempt: string;
+  weightKg: string;
+  lengthCm: string;
+  widthCm: string;
+  heightCm: string;
 }
 export type ProductFieldName = keyof ProductFormValues | 'image';
 export interface ProductActionState {
@@ -149,5 +245,9 @@ export function extractProductFormValues(formData: FormData): ProductFormValues 
     wholesaleMinQuantity: readFormString(formData, 'wholesaleMinQuantity'),
     stock: readFormString(formData, 'stock'),
     isVatExempt: readFormString(formData, 'isVatExempt'),
+    weightKg: readFormString(formData, 'weightKg'),
+    lengthCm: readFormString(formData, 'lengthCm'),
+    widthCm: readFormString(formData, 'widthCm'),
+    heightCm: readFormString(formData, 'heightCm'),
   };
 }

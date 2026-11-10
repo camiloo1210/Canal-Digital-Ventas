@@ -75,16 +75,18 @@ export class PostgresBuyerOrderReadRepository implements BuyerOrderReadRepositor
     const orderIds = ordersData.map((o): string => o.id as string);
 
     const itemsData = await sql`
-      SELECT 
-        id,
-        order_id,
-        product_id,
-        product_name,
-        quantity,
-        unit_price_cents,
-        subtotal_cents
-      FROM sales.order_items
-      WHERE order_id IN ${sql(orderIds)};
+      SELECT
+        oi.id,
+        oi.order_id,
+        oi.product_id,
+        oi.product_name,
+        oi.quantity,
+        oi.unit_price_cents,
+        oi.subtotal_cents,
+        p.image_url
+      FROM sales.order_items oi
+      LEFT JOIN catalog.products p ON p.id = oi.product_id
+      WHERE oi.order_id IN ${sql(orderIds)};
     `;
 
     let historyAvailable = true;
@@ -172,6 +174,7 @@ export class PostgresBuyerOrderReadRepository implements BuyerOrderReadRepositor
         quantity: Number(item.quantity),
         unitPriceCents: Number(item.unit_price_cents),
         subtotalCents: Number(item.subtotal_cents),
+        imageUrl: typeof item.image_url === 'string' && item.image_url ? item.image_url : null,
       });
       itemsByOrderId.set(orderId, list);
     }

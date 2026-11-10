@@ -9,6 +9,7 @@ import {
   type DomainEventEnvelope,
 } from '@/shared/application/ports/out/event-bus.port';
 import { ProductName } from '@/products/domain/value-objects/product-name.vo';
+import { PackageData } from '@/products/domain/value-objects/package-data.vo';
 import { Sku } from '@/products/domain/value-objects/sku.vo';
 import { Money } from '@/shared/domain/value-objects/money.vo';
 import { createProductId } from '@/products/domain/types/product-id.type';
@@ -68,6 +69,10 @@ export class UpdateProductUseCase {
         );
         product.changePricing(price, cost);
         product.changeWholesaleRules(wholesalePrice, wholesaleMinQuantity);
+
+        if (dto.packageData !== undefined) {
+          product.changePackageData(dto.packageData ? PackageData.create(dto.packageData) : null);
+        }
 
         if (dto.gallery !== undefined) {
           product.changeGallery(dto.gallery.retainedUrls, dto.gallery.addedUrls);

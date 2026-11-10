@@ -11,6 +11,13 @@ export interface SellerOrderReadModel {
     readonly version: number;
   } | null;
   readonly canManageShipment?: boolean;
+  /** Carrier shipment creation job; never exposes the storage path of the label. */
+  readonly shipmentJob?: {
+    readonly state: 'queued' | 'creating' | 'done' | 'needs_attention' | 'failed';
+    readonly reason: string | null;
+    readonly hasLabel: boolean;
+    readonly providerTrackingNumber: string | null;
+  } | null;
   readonly totalAmountCents: number;
   readonly currency: string;
   readonly createdAt: string;

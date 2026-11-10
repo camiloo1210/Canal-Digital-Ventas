@@ -13,6 +13,7 @@ import { InvalidWholesaleRulesException } from '@/products/domain/exceptions/inv
 import { ProductPricingChangedEvent } from '@/products/domain/events/product-pricing-changed.event';
 import { ProductDetailsChangedEvent } from '@/products/domain/events/product-details-changed.event';
 import { ProductCreatedEvent } from '@/products/domain/events/product-created.event';
+import { PackageData } from '@/products/domain/value-objects/package-data.vo';
 import type { DomainEvent } from '@/shared/domain/events/domain-event.interface';
 
 // Targets mutants that survived the baseline Stryker run on product.entity.ts.
@@ -241,5 +242,27 @@ describe('Product mutation baseline', (): void => {
       ).toBe(true);
       expect(product.getIsVatExempt()).toBe(true);
     });
+  });
+});
+
+describe('package data', (): void => {
+  const data = PackageData.create({ weightGrams: 500, lengthMm: 300, widthMm: 200, heightMm: 100 });
+
+  it('defaults to null', (): void => {
+    expect(buildProduct().getPackageData()).toBeNull();
+  });
+
+  it('changePackageData sets and bumps the version', (): void => {
+    const product = buildProduct();
+    product.changePackageData(data);
+    expect(product.getPackageData()).toBe(data);
+    expect(product.getVersion()).toBe(4);
+  });
+
+  it('changePackageData(null) clears', (): void => {
+    const product = buildProduct({ packageData: data });
+    expect(product.getPackageData()).toBe(data);
+    product.changePackageData(null);
+    expect(product.getPackageData()).toBeNull();
   });
 });

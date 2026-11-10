@@ -3,6 +3,7 @@ import { PRODUCT_AGGREGATE_TYPE } from '@/products/application/outbox/product-ag
 import { CreateProductDto } from '@/products/application/dtos/create-product.dto';
 import { Product } from '@/products/domain/entities/product.entity';
 import { ProductName } from '@/products/domain/value-objects/product-name.vo';
+import { PackageData } from '@/products/domain/value-objects/package-data.vo';
 import { Sku } from '@/products/domain/value-objects/sku.vo';
 import { Money } from '@/shared/domain/value-objects/money.vo';
 import { ProductRepositoryPort } from '@/products/application/ports/out/product-repository.port';
@@ -70,6 +71,7 @@ export class CreateProductUseCase {
           dto.isVatExempt,
           wholesalePrice,
           dto.wholesaleMinQuantity !== undefined ? dto.wholesaleMinQuantity : null,
+          dto.packageData ? PackageData.create(dto.packageData) : null,
         );
 
         if (dto.galleryUrls !== undefined && dto.galleryUrls.length > 0) {

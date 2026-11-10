@@ -11,6 +11,7 @@ const SEED_TABLES: Readonly<Record<string, readonly string[]>> = {
   '20261108193000_refund_notification_route.sql': ['core.outbox_relay_routes'],
   '20261020000000_kivi_connections.sql': ['core.outbox_relay_routes'],
   '20261019000000_store_branding_storage.sql': ['storage.buckets'],
+  '20261110031000_shipment_labels_bucket.sql': ['storage.buckets'],
   '20261018183618_seller_order_delivery_notifications.sql': ['core.outbox_relay_routes'],
   '20261015000000_rabbitmq_outbox_relay.sql': [
     'core.outbox_relay_exclusions',

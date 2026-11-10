@@ -17,4 +17,8 @@ export interface ProductReadModel {
   version: number;
   image_url: string | null;
   gallery_urls?: string[] | null;
+  weight_grams?: number | null;
+  length_mm?: number | null;
+  width_mm?: number | null;
+  height_mm?: number | null;
 }

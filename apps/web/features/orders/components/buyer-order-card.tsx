@@ -2,14 +2,16 @@
 
 import * as React from 'react';
 import { formatMoney } from '@/lib/money';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useTranslations, useLocale } from 'next-intl';
 import type { BuyerOrderReadModel } from '@canaldigital/packages/core';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { OrderStatusBadge } from '@/features/orders/components/order-status-badge';
+import { BuyerOrderProgress } from '@/features/orders/components/buyer-order-progress';
 import { CancelOrderDialog } from '@/features/orders/components/cancel-order-dialog';
 import { PayOrderButton } from '@/features/payments/components/pay-order-button';
-import { Store, Calendar, Package, PackageCheck, AlertCircle, Truck } from 'lucide-react';
+import { Store, Calendar, Package, PackageCheck, AlertCircle, Truck, ImageOff } from 'lucide-react';
 
 interface BuyerOrderCardProps {
   order: BuyerOrderReadModel;
@@ -28,7 +30,7 @@ export function BuyerOrderCard({
   const formattedDate = new Intl.DateTimeFormat(locale, {
     dateStyle: 'medium',
     timeStyle: 'short',
-    timeZone: 'America/Guayaquil',
+    timeZone: 'America/Bogota',
   }).format(new Date(order.createdAt));
 
   const normalizedStatus = order.status.toLowerCase();
@@ -79,6 +81,7 @@ export function BuyerOrderCard({
       </CardHeader>
 
       <CardContent className="pt-4 space-y-3">
+        {!showDetailsLink && <BuyerOrderProgress status={order.status} />}
         {order.nextStep && (
           <p className="rounded-lg bg-muted/30 p-4 text-sm">
             <span className="font-semibold">{t('nextStepTitle')} </span>
@@ -93,13 +96,33 @@ export function BuyerOrderCard({
 
           <ul className="divide-y divide-border/60 rounded-lg border border-border/50 bg-background/50 px-3">
             {order.items.map((item): React.JSX.Element => (
-              <li key={item.id} className="py-2.5 flex items-center justify-between text-sm gap-2">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="font-medium text-foreground truncate">{item.productName}</span>
-                  <span className="text-xs text-muted-foreground shrink-0">× {item.quantity}</span>
+              <li key={item.id} className="flex items-center gap-3 py-3 text-sm">
+                <div className="relative size-16 shrink-0 overflow-hidden rounded-lg border border-border/50 bg-muted/40 sm:size-20">
+                  {item.imageUrl ? (
+                    <Image
+                      src={item.imageUrl}
+                      alt={item.productName}
+                      fill
+                      className="object-cover"
+                      sizes="80px"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center">
+                      <ImageOff className="size-5 opacity-30" aria-label={t('noImage')} />
+                    </div>
+                  )}
                 </div>
-                <div className="text-right shrink-0">
-                  <span className="text-sm font-medium text-foreground">
+                <div className="min-w-0 flex-1 space-y-0.5">
+                  <p className="font-medium text-foreground line-clamp-2">{item.productName}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t('quantityAt', {
+                      quantity: item.quantity,
+                      price: formatMoney(item.unitPriceCents, order.currency, locale),
+                    })}
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <span className="text-sm font-semibold text-foreground">
                     {formatMoney(item.subtotalCents, order.currency, locale)}
                   </span>
                 </div>
@@ -205,7 +228,7 @@ export function BuyerOrderCard({
                       {new Intl.DateTimeFormat(locale, {
                         dateStyle: 'medium',
                         timeStyle: 'short',
-                        timeZone: 'America/Guayaquil',
+                        timeZone: 'America/Bogota',
                       }).format(new Date(entry.changedAt))}
                     </time>
                   )}

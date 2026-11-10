@@ -16,6 +16,7 @@ import { UnsupportedOrderStatusException } from '@/orders/application/exceptions
 import { InvalidOrderStateException } from '@/orders/domain/exceptions/invalid-order-state.exception';
 import { OptimisticConcurrencyException } from '@/shared/application/exceptions/optimistic-concurrency.exception';
 import { createGlobalAuthId } from '@/sales/domain/types/global-auth-id.type';
+import type { ShipmentJobQueuePort } from '@/shipment-creation/application/ports/out/shipment-job-queue.port';
 import { ORDER_AGGREGATE_TYPE } from '@/orders/application/outbox/order-aggregate.constants';
 
 export class ChangeOrderStatusUseCase {
@@ -25,6 +26,7 @@ export class ChangeOrderStatusUseCase {
     private readonly coordination: OrderPaymentCoordinationPort,
     private readonly events: EventBusPort,
     private readonly transactions: TransactionManagerPort,
+    private readonly shipmentJobs?: ShipmentJobQueuePort,
   ) {}
 
   public async execute(dto: ChangeOrderStatusDto): Promise<void> {
@@ -70,6 +72,9 @@ export class ChangeOrderStatusUseCase {
           tx,
         );
         order.clearDomainEvents();
+        if (status === OrderStatus.PROCESSING && this.shipmentJobs) {
+          await this.shipmentJobs.enqueue(tenantId, orderId, tx);
+        }
       },
       { userId: actor, tenantId },
     );
