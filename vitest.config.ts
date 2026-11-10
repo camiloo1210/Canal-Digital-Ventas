@@ -80,6 +80,10 @@ export default defineConfig({
         __dirname,
         'packages/core/src/features/shipment-tracking',
       ),
+      '@/shipment-creation': path.resolve(
+        __dirname,
+        'packages/core/src/features/shipment-creation',
+      ),
       '@/customers': path.resolve(__dirname, 'packages/core/src/features/customers'),
       '@/carts': path.resolve(__dirname, 'packages/core/src/features/carts'),
       '@/payments': path.resolve(__dirname, 'packages/core/src/features/payments'),

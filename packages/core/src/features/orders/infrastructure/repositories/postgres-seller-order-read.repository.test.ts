@@ -65,12 +65,13 @@ describe('seller order search projection', (): void => {
     expect(statement).toContain("o.status<>'draft'");
     expect(statement).toContain('SELECT count(*)::int FROM filtered');
     expect(statement).toContain('o.order_number ILIKE ? OR c.name ILIKE ?');
-    expect(sql).toHaveBeenCalledTimes(2);
+    expect(sql).toHaveBeenCalledTimes(3);
   });
   it('does not offer shipment editing to viewers without management permission', async (): Promise<void> => {
     const sql = vi
       .fn()
       .mockResolvedValueOnce([{ total: 1, canManage: false, items: [row] }])
+      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([]);
     const repository = new PostgresSellerOrderReadRepository(
       sql as unknown as postgres.Sql<Record<string, unknown>>,
@@ -85,7 +86,8 @@ describe('seller order search projection', (): void => {
       .mockResolvedValueOnce([{ total: 1, canManage: true, items: [row] }])
       .mockResolvedValueOnce([
         { order_id: row.id, carrier: 'Carrier', tracking_number: 'ABC', version: 2 },
-      ]);
+      ])
+      .mockResolvedValueOnce([]);
     const repository = new PostgresSellerOrderReadRepository(
       sql as unknown as postgres.Sql<Record<string, unknown>>,
     );
@@ -95,11 +97,80 @@ describe('seller order search projection', (): void => {
       shipment: { carrier: 'Carrier', trackingNumber: 'ABC', version: 2 },
     });
   });
+  it('projects the shipment creation job scoped by tenant and order without exposing the label path', async (): Promise<void> => {
+    const sql = vi
+      .fn()
+      .mockResolvedValueOnce([{ total: 2, canManage: true, items: [row, { ...row, id: 'other' }] }])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        {
+          order_id: row.id,
+          state: 'needs_attention',
+          reason: 'AMBIGUOUS_RESULT',
+          label_path: null,
+          provider_tracking_number: '794600000001',
+        },
+      ]);
+    const repository = new PostgresSellerOrderReadRepository(
+      sql as unknown as postgres.Sql<Record<string, unknown>>,
+    );
+    const result = await repository.findBySeller(actor, tenant, 1);
+    expect(result.items[0]?.shipmentJob).toEqual({
+      state: 'needs_attention',
+      reason: 'AMBIGUOUS_RESULT',
+      hasLabel: false,
+      providerTrackingNumber: '794600000001',
+    });
+    expect(result.items[1]?.shipmentJob).toBeNull();
+    const [parts, ...parameters] = sql.mock.calls[2] as [TemplateStringsArray, ...unknown[]];
+    expect(parts.join('?')).toContain('j.tenant_id = ?::uuid');
+    expect(parameters).toContain(tenant);
+    expect(parameters).toContain(actor);
+  });
+  it('reports a done job with a stored label', async (): Promise<void> => {
+    const sql = vi
+      .fn()
+      .mockResolvedValueOnce([{ total: 1, canManage: true, items: [row] }])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        {
+          order_id: row.id,
+          state: 'done',
+          reason: null,
+          label_path: tenant + '/x.pdf',
+          provider_tracking_number: null,
+        },
+      ]);
+    const repository = new PostgresSellerOrderReadRepository(
+      sql as unknown as postgres.Sql<Record<string, unknown>>,
+    );
+    const result = await repository.findBySeller(actor, tenant, 1);
+    expect(result.items[0]?.shipmentJob).toEqual({
+      state: 'done',
+      reason: null,
+      hasLabel: true,
+      providerTrackingNumber: null,
+    });
+    expect(JSON.stringify(result)).not.toContain('x.pdf');
+  });
+  it('keeps the list available when the job table is not accessible', async (): Promise<void> => {
+    const sql = vi
+      .fn()
+      .mockResolvedValueOnce([{ total: 1, canManage: true, items: [row] }])
+      .mockResolvedValueOnce([])
+      .mockRejectedValueOnce({ code: '42P01' });
+    const repository = new PostgresSellerOrderReadRepository(
+      sql as unknown as postgres.Sql<Record<string, unknown>>,
+    );
+    const result = await repository.findBySeller(actor, tenant, 1);
+    expect(result.items[0]?.shipmentJob).toBeNull();
+  });
   it('keeps the order list available when shipment storage is not accessible', async (): Promise<void> => {
     const sql = vi
       .fn()
       .mockResolvedValueOnce([{ total: 1, canManage: true, items: [row] }])
-      .mockRejectedValueOnce({ code: '42501' });
+      .mockRejectedValueOnce({ code: '42501' })
+      .mockResolvedValueOnce([]);
     const repository = new PostgresSellerOrderReadRepository(
       sql as unknown as postgres.Sql<Record<string, unknown>>,
     );

@@ -16,6 +16,14 @@ interface SellerOrderProjection {
   items: Omit<SellerOrderReadModel, 'nextStatus'>[];
 }
 
+interface ShipmentJobRow {
+  order_id: string;
+  state: 'queued' | 'creating' | 'done' | 'needs_attention' | 'failed';
+  reason: string | null;
+  label_path: string | null;
+  provider_tracking_number: string | null;
+}
+
 export class PostgresSellerOrderReadRepository implements SellerOrderReadRepositoryPort {
   public constructor(private readonly sql: postgres.Sql<Record<string, unknown>>) {}
 
@@ -91,6 +99,34 @@ export class PostgresSellerOrderReadRepository implements SellerOrderReadReposit
           shipmentAvailable = false;
         }
       }
+      const jobs = new Map<string, NonNullable<SellerOrderReadModel['shipmentJob']>>();
+      if (row.items.length > 0) {
+        try {
+          const orderIds = row.items.map((item): string => item.id);
+          const values = await this.sql<ShipmentJobRow[]>`
+            SELECT j.order_id, j.state, j.reason, j.label_path, j.provider_tracking_number
+            FROM sales.shipment_creation_jobs j
+            JOIN core.tenant_memberships m ON m.tenant_id = j.tenant_id
+            WHERE j.tenant_id = ${tenant}::uuid AND m.user_id = ${actor}::uuid AND m.status = 'active'
+              AND core.member_has_permission(m.user_id, m.tenant_id, ARRAY['VIEW_ORDERS','MANAGE_ORDERS']::text[])
+              AND j.order_id = ANY(${orderIds}::uuid[])`;
+          for (const job of values)
+            jobs.set(job.order_id, {
+              state: job.state,
+              reason: job.reason,
+              hasLabel: job.label_path !== null,
+              providerTrackingNumber: job.provider_tracking_number,
+            });
+        } catch (error: unknown) {
+          if (
+            typeof error !== 'object' ||
+            error === null ||
+            !('code' in error) ||
+            !['42501', '42P01'].includes(String(error.code))
+          )
+            throw error;
+        }
+      }
       const totalPages = Math.max(1, Math.ceil(row.total / 25));
       return {
         authorized: true,
@@ -103,6 +139,7 @@ export class PostgresSellerOrderReadRepository implements SellerOrderReadReposit
           nextStatus:
             row.canManage === true ? nextLogisticsStatus(parseOrderStatus(order.status)) : null,
           shipment: shipments.get(order.id) ?? null,
+          shipmentJob: jobs.get(order.id) ?? null,
           shipmentAvailability: shipmentAvailable ? 'available' : 'unavailable',
           canManageShipment:
             shipmentAvailable &&
