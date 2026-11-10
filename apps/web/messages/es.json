@@ -746,6 +746,7 @@
       "title": "Datos del envío",
       "description": "Registra la información proporcionada por la tienda; esto no activa rastreo en tiempo real.",
       "carrier": "Transportadora",
+      "carrierPlaceholder": "Selecciona una transportadora",
       "tracking": "Número de guía",
       "save": "Guardar envío",
       "saving": "Guardando…",

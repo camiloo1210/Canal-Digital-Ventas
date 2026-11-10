@@ -746,6 +746,7 @@
       "title": "Shipping details",
       "description": "Record information provided by the store; this does not enable live tracking.",
       "carrier": "Carrier",
+      "carrierPlaceholder": "Select a carrier",
       "tracking": "Tracking number",
       "save": "Save shipping details",
       "saving": "Saving…",

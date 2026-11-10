@@ -4,6 +4,14 @@ import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { SHIPMENT_CARRIERS } from '@/features/orders/constants/shipment-carriers';
 import { TenantIdField } from '@/features/dashboard/components/tenant-scope';
 import {
   registerManualShipmentAction,
@@ -42,13 +50,26 @@ export function ManualShipmentForm({
       <input type="hidden" name="version" value={version} />
       <div className="space-y-2">
         <Label htmlFor={'carrier-' + orderId}>{t('carrier')}</Label>
-        <Input
-          id={'carrier-' + orderId}
+        <Select
           name="carrier"
-          maxLength={120}
-          defaultValue={state.values.carrier}
-          onChange={(): void => setEdited(true)}
-        />
+          defaultValue={state.values.carrier || null}
+          items={SHIPMENT_CARRIERS.map((value): { value: string; label: string } => ({
+            value,
+            label: value,
+          }))}
+          onValueChange={(): void => setEdited(true)}
+        >
+          <SelectTrigger id={'carrier-' + orderId} className="min-h-11 w-full">
+            <SelectValue placeholder={t('carrierPlaceholder')} />
+          </SelectTrigger>
+          <SelectContent>
+            {SHIPMENT_CARRIERS.map((value): React.JSX.Element => (
+              <SelectItem key={value} value={value}>
+                {value}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <div className="space-y-2">
         <Label htmlFor={'tracking-' + orderId}>{t('tracking')}</Label>
