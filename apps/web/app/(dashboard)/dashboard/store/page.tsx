@@ -3,8 +3,12 @@ import { UserPermission } from '@canaldigital/packages/core';
 import { headers } from 'next/headers';
 import { getMessages, getTranslations } from 'next-intl/server';
 import { NextIntlClientProvider } from 'next-intl';
-import { getStoreSettingsReadRepository } from '@/features/store-settings/di/store-settings.di';
+import {
+  getShippingOriginRepository,
+  getStoreSettingsReadRepository,
+} from '@/features/store-settings/di/store-settings.di';
 import { StoreSettingsForm } from '@/features/store-settings/components/store-settings-form';
+import { ShippingOriginForm } from '@/features/store-settings/components/shipping-origin-form';
 import { PublicStoreLink } from '@/features/store-settings/components/public-store-link';
 import { PageHeader } from '@/components/page-header';
 import { TenantScope } from '@/features/dashboard/components/tenant-scope';
@@ -22,6 +26,7 @@ export default async function StoreSettingsPage({
     tenantParam((await searchParams).tenant),
   );
   const settings = await getStoreSettingsReadRepository().findForManager(userId, tenantId);
+  const shippingOrigin = settings ? await getShippingOriginRepository().find(tenantId) : null;
 
   const requestHeaders = await headers();
   const host = requestHeaders.get('x-forwarded-host') ?? requestHeaders.get('host');
@@ -43,10 +48,12 @@ export default async function StoreSettingsPage({
               messages={{
                 StoreSettings: messages.StoreSettings,
                 CatalogForms: messages.CatalogForms,
+                ShippingOrigin: messages.ShippingOrigin,
               }}
             >
               {publicUrl && <PublicStoreLink url={publicUrl} />}
               <StoreSettingsForm initial={settings} />
+              <ShippingOriginForm initial={shippingOrigin} />
             </NextIntlClientProvider>
           ) : (
             <p role="alert">{t('unauthorized')}</p>
