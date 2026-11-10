@@ -35,6 +35,7 @@
       "@/categories/*": ["../../packages/core/src/features/categories/*"],
       "@/orders/*": ["../../packages/core/src/features/orders/*"],
       "@/shipment-tracking/*": ["../../packages/core/src/features/shipment-tracking/*"],
+      "@/shipment-creation/*": ["../../packages/core/src/features/shipment-creation/*"],
       "@/payments/*": ["../../packages/core/src/features/payments/*"],
       "@/iam/*": ["../../packages/core/src/features/iam/*"],
       "@/tenants/*": ["../../packages/core/src/features/tenants/*"],

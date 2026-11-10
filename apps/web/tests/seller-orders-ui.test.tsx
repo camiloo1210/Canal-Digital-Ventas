@@ -22,6 +22,11 @@ vi.mock('@/features/orders/components/buyer-tracking-timeline', (): object => ({
 vi.mock('@/features/orders/components/seller-tracking-form', (): object => ({
   SellerTrackingForm: (): React.JSX.Element => <span>tracking-control</span>,
 }));
+vi.mock('@/features/orders/components/shipment-job-status', (): object => ({
+  ShipmentJobStatus: ({ job }: { job: { state: string } }): React.JSX.Element => (
+    <span>job-{job.state}</span>
+  ),
+}));
 vi.mock('@/features/orders/components/manual-shipment-form', (): object => ({
   ManualShipmentForm: (): null => null,
 }));
@@ -56,6 +61,26 @@ describe('seller order URL and queue', (): void => {
     );
     expect(html).toContain('tracking-timeline');
     expect(html).not.toContain('tracking-control');
+  });
+  it('shows the shipment job status only to managers of orders that have a job', async (): Promise<void> => {
+    const job = {
+      state: 'done',
+      reason: null,
+      hasLabel: true,
+      providerTrackingNumber: null,
+    } as const;
+    const manager = renderToStaticMarkup(
+      await SellerOrderDetails({ order: { ...order, canManageShipment: true, shipmentJob: job } }),
+    );
+    expect(manager).toContain('job-done');
+    const viewer = renderToStaticMarkup(
+      await SellerOrderDetails({ order: { ...order, canManageShipment: false, shipmentJob: job } }),
+    );
+    expect(viewer).not.toContain('job-done');
+    const none = renderToStaticMarkup(
+      await SellerOrderDetails({ order: { ...order, canManageShipment: true, shipmentJob: null } }),
+    );
+    expect(none).not.toContain('job-');
   });
   it('only shows tracking activation to managers with a guide when the sandbox is configured', async (): Promise<void> => {
     const shipment = { carrier: 'FedEx', trackingNumber: '123', version: 2 };

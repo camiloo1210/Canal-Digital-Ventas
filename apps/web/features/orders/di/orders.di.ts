@@ -1,6 +1,8 @@
 import 'server-only';
 import { sql } from '@/lib/postgres/server';
+import { createClient as createSupabaseServerClient } from '@/lib/supabase/server';
 import { trackingSandboxConfig } from '@/features/orders/server/tracking-sandbox-config';
+import { isShipmentCreationEnabled } from '@/features/orders/server/shipment-creation-sandbox-config';
 import {
   CancelOrderUseCase,
   RegisterManualShipmentUseCase,
@@ -22,9 +24,15 @@ import {
   PostgresBuyerOrderReadRepository,
   BuyerOrderReadRepositoryPort,
   ChangeOrderStatusUseCase,
+  PostgresShipmentJobQueueAdapter,
   PostgresSellerOrderAccessAdapter,
   PostgresSellerOrderReadRepository,
   type SellerOrderReadRepositoryPort,
+  RetryShipmentUseCase,
+  GetLabelUrlUseCase,
+  PostgresShipmentJobRepository,
+  PostgresShipmentLabelReadAdapter,
+  SupabaseLabelStorageAdapter,
 } from '@canaldigital/packages/core';
 
 class OrdersDIContainer {
@@ -96,6 +104,30 @@ class OrdersDIContainer {
       new PostgresSellerOrderAccessAdapter(),
       new PostgresOrderPaymentCoordinationAdapter(),
       events,
+      new PostgresTransactionManagerAdapter(sql),
+      // Only the sandbox worker consumes jobs: never enqueue outside an opted-in sandbox deployment.
+      isShipmentCreationEnabled(process.env) ? new PostgresShipmentJobQueueAdapter() : undefined,
+    );
+  }
+
+  public resolveRetryShipmentUseCase(): RetryShipmentUseCase {
+    return new RetryShipmentUseCase(
+      new PostgresSellerOrderAccessAdapter(),
+      new PostgresShipmentJobRepository(sql),
+      new PostgresTransactionManagerAdapter(sql),
+    );
+  }
+
+  /**
+   * Signs with the seller's own session: the private label bucket only lets active members of the
+   * folder's tenant with VIEW/MANAGE_ORDERS read, so no service-role key is needed in the web app.
+   */
+  public async resolveGetLabelUrlUseCase(): Promise<GetLabelUrlUseCase> {
+    const supabase = await createSupabaseServerClient();
+    return new GetLabelUrlUseCase(
+      new PostgresSellerOrderAccessAdapter(),
+      new PostgresShipmentLabelReadAdapter(),
+      new SupabaseLabelStorageAdapter(supabase.storage),
       new PostgresTransactionManagerAdapter(sql),
     );
   }
