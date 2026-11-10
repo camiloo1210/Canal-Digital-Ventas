@@ -299,6 +299,25 @@ Para activar avisos de cambios de guía, aplicar primero las migraciones de dest
 
 Para avisos de reembolso, aplicar también la migración de ruta de reembolso y habilitar `REFUND_NOTIFICATIONS_ENABLED=true` y configurar `REFUND_NOTIFICATIONS_SINCE` con el instante de activación en ISO UTC (por ejemplo `2026-11-08T12:00:00Z`) en el worker de outbox. Los eventos anteriores al corte se completan sin enviarse; los eventos posteriores se notifican. Ambos indicadores se controlan de forma independiente.
 
+## Creación de guías FedEx (solo sandbox)
+
+El worker `shipment-creation` **no usa RabbitMQ**. Toma de uno en uno los trabajos de `sales.shipment_creation_jobs` en estado `queued` (o `creating` con la concesión vencida), crea la guía en FedEx sandbox, guarda la etiqueta PDF en el bucket privado `shipment-labels`, registra la guía en el pedido y activa el seguimiento, todo en una sola transacción. Un trabajo que quedó en `creating` tras un fallo del proceso pasa a `needs_attention` (`AMBIGUOUS_RESULT`) y nunca se reintenta automáticamente, porque FedEx podría haber creado ya la guía.
+
+- El servicio `shipment-creation` está en `compose.rabbitmq.yml` sin perfil, para que Coolify registre sus variables (todas opcionales). Mientras `SHIPMENT_CREATION_SANDBOX_ENABLED` no sea exactamente `true`, queda inactivo y sano: no se conecta a la base, a FedEx ni a Storage. Activado con configuración inválida, termina con error y Docker lo reinicia; el error no incluye valores. Un fallo del bucle deja el healthcheck en no listo.
+- Con SIGTERM termina el trabajo en curso y sale.
+- La base debe llevar la misma marca sandbox que el seguimiento (`TRACKING_DEPLOYMENT_ID`, y `PRODUCTION_DATABASE_URL` si existe una base de producción real).
+- La migración `20261110050000_provision_shipment_creation_worker_login.sql` crea el login técnico `canaldigital_shipment_creation` con `PASSWORD NULL` y le concede `shipment_creation_worker_role`. El operador debe asignar una contraseña fuerte una sola vez, fuera del repositorio, y construir `SHIPMENT_CREATION_DATABASE_URL` con ella:
+
+```sql
+ALTER ROLE canaldigital_shipment_creation WITH PASSWORD '<generated>';
+```
+
+Variables obligatorias al activar: `SHIPMENT_CREATION_SANDBOX_ENABLED=true`, `SHIPMENT_CREATION_DATABASE_URL`, `TRACKING_DEPLOYMENT_ID` (UUID), `TRACKING_CREDENTIALS_JSON` (el mismo formato que el seguimiento), `FEDEX_SANDBOX_ACCOUNT_NUMBER`, `FEDEX_SERVICE_TYPE` (por ejemplo `FEDEX_GROUND`), `SHIPMENT_CREATION_TENANT_REFS_JSON` (objeto JSON que asocia cada UUID de tienda con una referencia presente en `TRACKING_CREDENTIALS_JSON`), `SHIPMENT_CREATION_SYSTEM_ACTOR_ID` (UUID del actor que se registra en el historial de la guía), `SHIPMENT_CREATION_LABELS_SUPABASE_URL` y `SHIPMENT_CREATION_LABELS_SERVICE_ROLE_KEY` (solo para escribir etiquetas en Storage). Opcionales: `SHIPMENT_CREATION_POLL_INTERVAL_MS` (mínimo 1000, predeterminado 5000) y `SHIPMENT_CREATION_LEASE_SECONDS` (de 180 a 3600, predeterminado 180; el peor caso de un trabajo ronda los 140 s: token, llamada a FedEx con renovación por 401 y reintento, subida de la etiqueta y transacción final). Entregar los secretos mediante el sistema de secretos del despliegue.
+
+La web solo encola trabajos cuando tiene `SHIPMENT_CREATION_SANDBOX_ENABLED=true` (valor exacto) **y** una configuración sandbox de seguimiento válida (`TRACKING_SANDBOX_ENABLED=true`, `TRACKING_DEPLOYMENT_ID`, `TRACKING_TENANT_REFS_JSON`). Configurar esa variable en la web **del mismo despliegue** que ejecuta este worker; en cualquier otro entorno (por ejemplo producción) debe quedar desactivada, porque nada consumiría los trabajos.
+
+Inicio manual: `pnpm --filter @canaldigital/worker shipment-creation`. Los registros del bucle contienen solo la clase de la excepción y el identificador del pedido; nunca causas del controlador, tokens ni contenido de etiquetas.
+
 ## Cómo se procesan las guías FedEx
 
 El worker `shipment-tracking` **no usa RabbitMQ ni consume los eventos del outbox**. La tienda registra una guía en el pedido y activa expresamente «FedEx de prueba»; la aplicación guarda una asociación por pedido y tienda en `sales.shipment_tracking_links`. Un pedido nuevo o una guía manual sin activación no entran automáticamente en el seguimiento.

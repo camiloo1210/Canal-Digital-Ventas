@@ -140,6 +140,16 @@ The tenth Compose worker (`src/kivi-sync.ts`) uses the same healthcheck and limi
 - **Exhausted events:** if a Product outbox event exhausts retries (`DEAD`, for example after an approximately 40-second Kivi outage), each scheduler cycle (30 seconds) detects it through `core.kivi_sync_flag_dead_events()` from `20261027000000_kivi_sync_dead_events_and_version_offsets.sql`. `core.kivi_dead_event_acks` makes flagging idempotent per event. The connection becomes `needs_reconcile`; reconciliation repairs the catalog without waiting for the periodic six-hour run, subject to `KIVI_RETRY_INTERVAL_MS` (five minutes by default).
 - **Kivi ahead of Canal:** if Kivi has a newer version after a manual change or version reset, reconciliation treats Canal as authoritative, resends above Kivi's version, and persists the per-product increment in `core.kivi_product_version_offsets` so later outbox deliveries remain monotonic. Normal outbox deliveries never bump blindly: a 409 marks `needs_reconcile`. Worker warnings contain counters without URLs or secrets.
 
+## Optional FedEx sandbox shipment creation worker
+
+The `shipment-creation` service is included in the shared image and has no Compose profile, so Coolify registers its (optional) variables. It stays idle and healthy, with no database, FedEx or Storage calls, until `SHIPMENT_CREATION_SANDBOX_ENABLED=true`. It does not depend on RabbitMQ. It needs the same sandbox marker as tracking plus the restricted login `canaldigital_shipment_creation` (set its password out of band with `ALTER ROLE canaldigital_shipment_creation WITH PASSWORD '<generated>';`), as described in [the worker guide](../README.md#creación-de-guías-fedex-solo-sandbox). Never commit credentials.
+
+```sh
+docker compose --env-file apps/worker/.env -f compose.rabbitmq.yml up -d shipment-creation
+```
+
+For Coolify, configure the service variables and set `SHIPMENT_CREATION_SANDBOX_ENABLED=true`; `COMPOSE_PROFILES` is not needed. The web app of the same deployment must also set `SHIPMENT_CREATION_SANDBOX_ENABLED=true` (with a valid sandbox tracking configuration), otherwise it never queues jobs; never set it in any other environment. Keep `SHIPMENT_CREATION_LEASE_SECONDS` at 180 or more (the worker refuses lower values). A loop failure makes the healthcheck fail so the container is restarted.
+
 ## Optional FedEx sandbox worker
 
 The `shipment-tracking` service is included in the shared image and has no Compose profile, so Coolify registers its (optional) variables. It stays idle and healthy, with no database or FedEx calls, until `TRACKING_SANDBOX_ENABLED=true`. It does not depend on RabbitMQ. After provisioning a test database, its sandbox marker, a restricted worker login, the web configuration and sandbox credentials as described in [the worker guide](../README.md#seguimiento-fedex-solo-sandbox), configure the tracking variables in `apps/worker/.env` or the deployment secret manager. Never use real shipment data or commit credentials.
