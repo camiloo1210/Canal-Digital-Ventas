@@ -30,6 +30,10 @@ export interface DbProductRow {
   gallery_urls: string[];
   has_variants: boolean;
   is_vat_exempt: boolean;
+  weight_grams?: number | null;
+  length_mm?: number | null;
+  width_mm?: number | null;
+  height_mm?: number | null;
   version: number;
   updated_at: string;
   // Supabase JOIN generated relation

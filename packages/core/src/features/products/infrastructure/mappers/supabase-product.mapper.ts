@@ -4,6 +4,7 @@ import { ProductStatus } from '@/products/domain/enums/product-status.enum';
 import { Currency, parseCurrency } from '@/shared/domain/enums/currency.enum';
 import { Money } from '@/shared/domain/value-objects/money.vo';
 import { ProductName } from '@/products/domain/value-objects/product-name.vo';
+import { PackageData } from '@/products/domain/value-objects/package-data.vo';
 import { Sku } from '@/products/domain/value-objects/sku.vo';
 import {
   DbProductRow,
@@ -55,8 +56,26 @@ export class SupabaseProductMapper {
       hasVariants: row.has_variants,
       variants: variants,
       isVatExempt: row.is_vat_exempt,
+      packageData: SupabaseProductMapper.toPackageData(row),
       updatedAt: new Date(row.updated_at),
       version: row.version,
+    });
+  }
+
+  private static toPackageData(row: DbProductRow): PackageData | null {
+    if (
+      row.weight_grams == null ||
+      row.length_mm == null ||
+      row.width_mm == null ||
+      row.height_mm == null
+    ) {
+      return null;
+    }
+    return PackageData.create({
+      weightGrams: row.weight_grams,
+      lengthMm: row.length_mm,
+      widthMm: row.width_mm,
+      heightMm: row.height_mm,
     });
   }
 
@@ -81,6 +100,10 @@ export class SupabaseProductMapper {
       gallery_urls: product.getGalleryUrls(),
       has_variants: product.getHasVariants(),
       is_vat_exempt: product.getIsVatExempt(),
+      weight_grams: product.getPackageData()?.weightGrams ?? null,
+      length_mm: product.getPackageData()?.lengthMm ?? null,
+      width_mm: product.getPackageData()?.widthMm ?? null,
+      height_mm: product.getPackageData()?.heightMm ?? null,
       version: product.getVersion(),
       updated_at: product.getUpdatedAt().toISOString(),
     };

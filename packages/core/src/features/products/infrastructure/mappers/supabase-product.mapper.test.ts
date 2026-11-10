@@ -39,4 +39,25 @@ describe('product currency mapping', (): void => {
     expect(restored.getPrice().getCurrency()).toBe('COP');
     expect(restored.getWholesalePrice().getValue()).toBe(9000);
   });
+
+  it('round-trips the four package columns', (): void => {
+    const product = SupabaseProductMapper.toDomain(
+      { ...row, weight_grams: 500, length_mm: 300, width_mm: 200, height_mm: 100 },
+      Currency.COP,
+    );
+    expect(product.getPackageData()?.weightGrams).toBe(500);
+    const persisted = SupabaseProductMapper.toPersistence(product);
+    expect(persisted.weight_grams).toBe(500);
+    expect(persisted.length_mm).toBe(300);
+    expect(persisted.width_mm).toBe(200);
+    expect(persisted.height_mm).toBe(100);
+  });
+
+  it('maps absent package columns to null', (): void => {
+    const product = SupabaseProductMapper.toDomain(row, Currency.COP);
+    expect(product.getPackageData()).toBeNull();
+    const persisted = SupabaseProductMapper.toPersistence(product);
+    expect(persisted.weight_grams).toBeNull();
+    expect(persisted.height_mm).toBeNull();
+  });
 });

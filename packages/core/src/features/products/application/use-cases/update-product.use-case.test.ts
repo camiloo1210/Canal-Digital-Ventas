@@ -2,6 +2,7 @@ import { Currency } from '@/shared/domain/enums/currency.enum';
 import { describe, expect, it, vi } from 'vitest';
 import { Product } from '@/products/domain/entities/product.entity';
 import { ProductName } from '@/products/domain/value-objects/product-name.vo';
+import { PackageData } from '@/products/domain/value-objects/package-data.vo';
 import { Sku } from '@/products/domain/value-objects/sku.vo';
 import { Money } from '@/shared/domain/value-objects/money.vo';
 import { createProductId } from '@/products/domain/types/product-id.type';
@@ -143,5 +144,49 @@ describe('product edit transaction', (): void => {
     );
     expect(test.save).not.toHaveBeenCalled();
     expect(test.publish).not.toHaveBeenCalled();
+  });
+});
+
+describe('UpdateProductUseCase package data', (): void => {
+  const existing = {
+    weightGrams: 500,
+    lengthMm: 300,
+    widthMm: 200,
+    heightMm: 100,
+  };
+
+  function withExisting(): ReturnType<typeof setup> {
+    const test = setup();
+    test.product.changePackageData(PackageData.create(existing));
+    test.dto.expectedVersion = test.product.getVersion();
+    return test;
+  }
+
+  it('keeps the existing package data when packageData is undefined', async (): Promise<void> => {
+    const test = withExisting();
+    await test.useCase.execute(test.dto);
+    const saved = test.save.mock.calls[0][0] as Product;
+    expect(saved.getPackageData()?.weightGrams).toBe(500);
+    expect(saved.getPackageData()?.heightMm).toBe(100);
+  });
+
+  it('clears the package data when packageData is null', async (): Promise<void> => {
+    const test = withExisting();
+    await test.useCase.execute({ ...test.dto, packageData: null });
+    const saved = test.save.mock.calls[0][0] as Product;
+    expect(saved.getPackageData()).toBeNull();
+  });
+
+  it('replaces the package data when an object is given', async (): Promise<void> => {
+    const test = withExisting();
+    await test.useCase.execute({
+      ...test.dto,
+      packageData: { weightGrams: 900, lengthMm: 10, widthMm: 20, heightMm: 30 },
+    });
+    const saved = test.save.mock.calls[0][0] as Product;
+    expect(saved.getPackageData()?.weightGrams).toBe(900);
+    expect(saved.getPackageData()?.lengthMm).toBe(10);
+    expect(saved.getPackageData()?.widthMm).toBe(20);
+    expect(saved.getPackageData()?.heightMm).toBe(30);
   });
 });

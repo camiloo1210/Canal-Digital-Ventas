@@ -15,4 +15,10 @@ export interface CreateProductDto {
   imagePath?: string | null;
   imageUrl?: string | null;
   galleryUrls?: string[];
+  packageData?: {
+    weightGrams: number;
+    lengthMm: number;
+    widthMm: number;
+    heightMm: number;
+  } | null;
 }

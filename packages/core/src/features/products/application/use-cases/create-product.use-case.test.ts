@@ -92,3 +92,24 @@ describe('CreateProductUseCase category integrity', (): void => {
     expect(test.publish).not.toHaveBeenCalled();
   });
 });
+
+describe('CreateProductUseCase package data', (): void => {
+  it('persists the package data on the new product', async (): Promise<void> => {
+    const test = setup();
+    await test.useCase.execute({
+      ...test.dto,
+      packageData: { weightGrams: 500, lengthMm: 300, widthMm: 200, heightMm: 100 },
+    });
+    const product = test.save.mock.calls[0][0] as Product;
+    expect(product.getPackageData()?.weightGrams).toBe(500);
+    expect(product.getPackageData()?.lengthMm).toBe(300);
+    expect(product.getPackageData()?.widthMm).toBe(200);
+    expect(product.getPackageData()?.heightMm).toBe(100);
+  });
+
+  it('yields null package data when the DTO has none', async (): Promise<void> => {
+    const test = setup();
+    await test.useCase.execute(test.dto);
+    expect((test.save.mock.calls[0][0] as Product).getPackageData()).toBeNull();
+  });
+});
