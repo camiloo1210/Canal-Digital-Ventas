@@ -72,6 +72,7 @@ export interface MemberPermissionsReadModel {
 }
 
 export interface OwnProfileReadModel {
+  wholesaleEnabled: boolean;
   firstName: string;
   lastName: string;
   email: string;
