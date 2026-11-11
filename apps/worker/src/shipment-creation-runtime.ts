@@ -20,7 +20,7 @@ import type { ShipmentCreationConfig } from '@/worker/shipment-creation-config';
 import { runShipmentCreationLoop } from '@/worker/shipment-creation-loop';
 
 /** Remembers which leases attempted the `creating` commit, i.e. may have reached the carrier. */
-class TrackingShipmentJobRepository extends PostgresShipmentJobRepository {
+export class TrackingShipmentJobRepository extends PostgresShipmentJobRepository {
   private readonly creating = new Set<string>();
 
   public wasMarkedCreating(job: ClaimedJob): boolean {
