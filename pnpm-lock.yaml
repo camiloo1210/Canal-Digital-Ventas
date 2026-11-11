@@ -199,6 +199,9 @@ importers:
       '@canaldigital/packages/core':
         specifier: workspace:*
         version: link:../../packages/core
+      postgres:
+        specifier: ^3.4.9
+        version: 3.4.9
       tsx:
         specifier: ^4.23.15
         version: 4.23.15
