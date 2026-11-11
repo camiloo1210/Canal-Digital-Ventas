@@ -1,4 +1,4 @@
-/** Every reason code the shipment creation worker can store; each has an es/en message. */
+/** Localized shipment reason keys, including normalized carrier errors. */
 export const SHIPMENT_JOB_REASONS = [
   'MISSING_PACKAGE_DATA',
   'INVALID_PACKAGE_DATA',
@@ -8,6 +8,7 @@ export const SHIPMENT_JOB_REASONS = [
   'INTERNAL_ERROR',
   'INVALID_RECIPIENT_COUNTRY',
   'INVALID_ORIGIN_COUNTRY',
+  'INVALID_POSTAL_CODE',
   'ORDER_NOT_PROCESSING',
   'AUTHORIZATION',
   'PROVIDER_UNAVAILABLE',
@@ -26,5 +27,6 @@ export function isRetryableReason(reason: string | null): boolean {
 
 /** Unknown carrier codes (e.g. a sanitized FedEx error code) map to the generic message. */
 export function reasonMessageKey(reason: string | null): ShipmentJobReason | 'UNKNOWN' {
+  if (reason === 'COUNTRY.POSTALCODEORZIP.INVALID') return 'INVALID_POSTAL_CODE';
   return SHIPMENT_JOB_REASONS.find((code): boolean => code === reason) ?? 'UNKNOWN';
 }

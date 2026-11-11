@@ -30,7 +30,7 @@ export function BuyerOrderCard({
   const formattedDate = new Intl.DateTimeFormat(locale, {
     dateStyle: 'medium',
     timeStyle: 'short',
-    timeZone: 'America/Bogota',
+    timeZone: 'America/Guayaquil',
   }).format(new Date(order.createdAt));
 
   const normalizedStatus = order.status.toLowerCase();
@@ -228,7 +228,7 @@ export function BuyerOrderCard({
                       {new Intl.DateTimeFormat(locale, {
                         dateStyle: 'medium',
                         timeStyle: 'short',
-                        timeZone: 'America/Bogota',
+                        timeZone: 'America/Guayaquil',
                       }).format(new Date(entry.changedAt))}
                     </time>
                   )}
