@@ -54,7 +54,10 @@ function dto(items: GenerateCommercialOrderDto['items']): GenerateCommercialOrde
     },
   };
 }
-function fixture(products: Product[]): {
+function fixture(
+  products: Product[],
+  eligible = true,
+): {
   useCase: GenerateCommercialOrderUseCase;
   save: ReturnType<typeof vi.fn<(order: Order) => Promise<void>>>;
   decreaseStock: ReturnType<typeof vi.fn>;
@@ -102,6 +105,7 @@ function fixture(products: Product[]): {
         runInTransaction: async <T>(work: (tx: TransactionContext) => Promise<T>): Promise<T> =>
           work({ executeNative: vi.fn() }),
       },
+      { setEnabled: vi.fn(), isEligible: vi.fn().mockResolvedValue(eligible) },
     ),
   };
 }
@@ -134,6 +138,13 @@ describe('Commercial checkout monetary authority', (): void => {
     const order = h.save.mock.calls[0][0];
     expect(order.getItems()[0].getUnitPrice().getValue()).toBe(80);
     expect(order.getSubtotal().getValue()).toBe(400);
+  });
+  it('charges retail when the buyer has not enabled wholesale', async (): Promise<void> => {
+    const item = product('product', 125);
+    item.changeWholesaleRules(Money.from(80, Currency.COP), 5);
+    const h = fixture([item], false);
+    await h.useCase.execute(dto([{ productId: 'product', quantity: 5 }]));
+    expect(h.save.mock.calls[0][0].getItems()[0].getUnitPrice().getValue()).toBe(125);
   });
   it('does not persist a cart sum exceeding the commercial limit', async (): Promise<void> => {
     const h = fixture([product('a', MAX_MONEY_CENTS), product('b', 1)]);

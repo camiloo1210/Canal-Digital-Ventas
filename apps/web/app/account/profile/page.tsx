@@ -18,7 +18,7 @@ export default async function ProfilePage(): Promise<React.JSX.Element> {
   const viewer = await getStoreViewerQuery();
   return (
     <BuyerShell active="profile" viewer={viewer}>
-      <ProfileContent userId={user.id} email={user.email} />
+      <ProfileContent userId={user.id} email={user.email} buyer />
     </BuyerShell>
   );
 }

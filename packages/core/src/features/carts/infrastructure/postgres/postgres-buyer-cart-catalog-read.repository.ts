@@ -38,13 +38,15 @@ export class PostgresBuyerCartCatalogReadRepository implements BuyerCartCatalogR
   public async findProducts(
     tenantId: string,
     productIds: string[],
+    userId: string,
   ): Promise<BuyerCartCatalogProduct[]> {
     const ids = productIds.filter((id: string): boolean => UUID_PATTERN.test(id));
     if (ids.length === 0) return [];
     try {
       // Same visibility as the storefront: active product, active store, active (or no) category.
       const rows = await this.sql<ProductRow[]>`
-        SELECT p.id, p.name, p.sku, p.price_cents, t.base_currency AS currency, p.wholesale_price_cents, p.wholesale_min_quantity, p.stock, p.image_url, p.gallery_urls
+        SELECT p.id, p.name, p.sku, p.price_cents, t.base_currency AS currency, CASE WHEN EXISTS (SELECT 1 FROM core.users u WHERE u.id = ${userId}::uuid AND u.wholesale_enabled) OR EXISTS (SELECT 1 FROM core.tenant_memberships m WHERE m.user_id = ${userId}::uuid AND m.tenant_id = p.tenant_id AND m.status = 'active') THEN p.wholesale_price_cents ELSE NULL END AS wholesale_price_cents,
+          CASE WHEN EXISTS (SELECT 1 FROM core.users u WHERE u.id = ${userId}::uuid AND u.wholesale_enabled) OR EXISTS (SELECT 1 FROM core.tenant_memberships m WHERE m.user_id = ${userId}::uuid AND m.tenant_id = p.tenant_id AND m.status = 'active') THEN p.wholesale_min_quantity ELSE NULL END AS wholesale_min_quantity, p.stock, p.image_url, p.gallery_urls
         FROM catalog.products p
         JOIN core.tenants t ON t.id = p.tenant_id AND t.status = 'active'
         LEFT JOIN catalog.categories c ON c.id = p.category_id AND c.tenant_id = p.tenant_id

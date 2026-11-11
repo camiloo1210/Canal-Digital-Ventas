@@ -213,7 +213,7 @@ describe('PostgresBuyerCartCatalogReadRepository', (): void => {
       ],
     ]);
     const repo = new PostgresBuyerCartCatalogReadRepository(sql);
-    const products = await repo.findProducts(TENANT, [PRODUCT, "x'; DROP TABLE a;--"]);
+    const products = await repo.findProducts(TENANT, [PRODUCT, "x'; DROP TABLE a;--"], USER);
     expect(products).toEqual([
       {
         productId: PRODUCT,
@@ -236,7 +236,7 @@ describe('PostgresBuyerCartCatalogReadRepository', (): void => {
   it('skips the query when no id is valid', async (): Promise<void> => {
     const { sql, calls } = fakeSql([]);
     await expect(
-      new PostgresBuyerCartCatalogReadRepository(sql).findProducts(TENANT, ['nope']),
+      new PostgresBuyerCartCatalogReadRepository(sql).findProducts(TENANT, ['nope'], USER),
     ).resolves.toEqual([]);
     expect(calls).toHaveLength(0);
   });

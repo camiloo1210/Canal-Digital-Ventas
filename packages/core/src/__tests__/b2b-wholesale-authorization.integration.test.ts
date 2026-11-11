@@ -87,4 +87,40 @@ describe.skipIf(!DATABASE_URL)('B2B Wholesale Authorization RPC Matrix', (): voi
       expect(member[0].wholesale_min_quantity).toBe(10);
     });
   });
+  it('applies and revokes buyer mode across the public list and detail', async (): Promise<void> => {
+    await withRolledBackTenant(sql, async ({ tenantId, sql: tx }): Promise<void> => {
+      const [tenant] = await tx<
+        { slug: string }[]
+      >`SELECT slug FROM core.tenants WHERE id = ${tenantId}`;
+      await insertTestCategory(tx, tenantId, CATEGORY_ID);
+      await tx`INSERT INTO catalog.products (id, name, price_cents, cost_cents, wholesale_price_cents, wholesale_min_quantity, description, stock, category_id, status, sku, tenant_id)
+        VALUES (${PRODUCT_ID}, 'Wholesale item', 1000, 400, 800, 10, 'Item', 50, ${CATEGORY_ID}, 'active', 'WHOLESALE-1', ${tenantId})`;
+      await tx`INSERT INTO auth.users (id, email) VALUES (${STRANGER_ID}, 'buyer@example.test')`;
+      const readBuyer = async (): Promise<[PublicProductRow[], PublicProductRow[]]> =>
+        tx.savepoint(async (inner): Promise<[PublicProductRow[], PublicProductRow[]]> => {
+          await inner.unsafe('SET LOCAL ROLE authenticated');
+          await inner`SELECT set_config('request.jwt.claims', ${JSON.stringify({ sub: STRANGER_ID, role: 'authenticated' })}, true)`;
+          try {
+            const list = await inner<
+              PublicProductRow[]
+            >`SELECT * FROM public.get_public_products_by_slug_v2(${tenant.slug}::varchar)`;
+            const detail = await inner<
+              PublicProductRow[]
+            >`SELECT * FROM public.get_public_product_by_id_v2(${tenant.slug}::varchar, ${PRODUCT_ID}::uuid)`;
+            return [list, detail];
+          } finally {
+            await inner.unsafe('RESET ROLE');
+          }
+        });
+      expect((await readBuyer())[0][0].wholesale_price_cents).toBeNull();
+      await tx`UPDATE core.users SET wholesale_enabled = true WHERE id = ${STRANGER_ID}`;
+      const enabled = await readBuyer();
+      expect(enabled[0][0].wholesale_price_cents).toBe(800);
+      expect(enabled[1][0].wholesale_min_quantity).toBe(10);
+      await tx`UPDATE core.users SET wholesale_enabled = false WHERE id = ${STRANGER_ID}`;
+      const disabled = await readBuyer();
+      expect(disabled[0][0].wholesale_price_cents).toBeNull();
+      expect(disabled[1][0].wholesale_price_cents).toBeNull();
+    });
+  });
 });

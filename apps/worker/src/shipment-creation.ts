@@ -1,5 +1,6 @@
 import { readShipmentCreationConfig } from '@/worker/shipment-creation-config';
 import { runShipmentCreationWorker } from '@/worker/shipment-creation-runtime';
+import { describeStartupFailure } from '@/worker/shipment-creation-startup';
 import { loadWorkerEnvironment } from '@/worker/environment';
 import { loadWorkerHealthPort, startWorkerHealth } from '@/worker/health';
 
@@ -37,7 +38,8 @@ async function main(): Promise<void> {
     await health.close();
   }
 }
-void main().catch((): void => {
-  console.error('Sandbox shipment creation worker stopped; check configuration and permissions.');
+void main().catch((error: unknown): void => {
+  // Stage, variable name and driver code only: never a value, URL, credential or driver message.
+  console.error(describeStartupFailure(error));
   process.exitCode = 1;
 });

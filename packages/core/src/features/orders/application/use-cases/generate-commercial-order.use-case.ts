@@ -1,3 +1,4 @@
+import type { BuyerWholesalePort } from '@/iam/application/ports/out/buyer-wholesale.port';
 import { OrderRepositoryPort } from '@/orders/application/ports/out/order-repository.port';
 import { generateOrderNumber } from '@/orders/domain/value-objects/order-number.vo';
 import { StoreCustomerRepositoryPort } from '@/sales/application/ports/out/store-customer-repository.port';
@@ -33,6 +34,7 @@ export class GenerateCommercialOrderUseCase {
     private readonly orderTenantRepository: OrderTenantRepositoryPort,
     private readonly storeCustomerRepository: StoreCustomerRepositoryPort,
     private readonly transactionManager: TransactionManagerPort,
+    private readonly buyerWholesale: BuyerWholesalePort,
   ) {}
 
   async execute(dto: GenerateCommercialOrderDto): Promise<void> {
@@ -43,6 +45,7 @@ export class GenerateCommercialOrderUseCase {
           throw new TenantNotAvailableException();
         }
         const tenantId = tenantData.id;
+        const wholesaleEligible = await this.buyerWholesale.isEligible(dto.buyerId, tenantId, tx);
         const customerAddress = Address.create(
           dto.shippingAddress.street,
           dto.shippingAddress.city,
@@ -118,7 +121,7 @@ export class GenerateCommercialOrderUseCase {
           const authoritativePrice = selectUnitPriceCents(
             {
               retailPriceCents: product.getPrice().getValue(),
-              wholesalePriceCents: wholesalePrice?.getValue() ?? null,
+              wholesalePriceCents: wholesaleEligible ? (wholesalePrice?.getValue() ?? null) : null,
               wholesaleMinQuantity: product.getWholesaleMinQuantity(),
             },
             itemDto.quantity,

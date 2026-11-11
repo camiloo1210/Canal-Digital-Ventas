@@ -738,3 +738,7 @@ export type { ShippingOriginRepositoryPort } from '@/tenants/application/ports/o
 export { ShippingOriginForbiddenException } from '@/tenants/application/exceptions/shipping-origin-forbidden.exception';
 export { SaveShippingOriginUseCase } from '@/tenants/application/use-cases/save-shipping-origin.use-case';
 export { PostgresShippingOriginRepository } from '@/tenants/infrastructure/repositories/postgres-shipping-origin.repository';
+
+export { SetBuyerWholesaleUseCase } from '@/iam/application/use-cases/set-buyer-wholesale.use-case';
+export { PostgresBuyerWholesaleAdapter } from '@/iam/infrastructure/postgres/postgres-buyer-wholesale.adapter';
+export type { BuyerWholesalePort } from '@/iam/application/ports/out/buyer-wholesale.port';
