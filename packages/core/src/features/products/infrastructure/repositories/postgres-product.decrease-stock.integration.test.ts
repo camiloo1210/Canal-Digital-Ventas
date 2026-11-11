@@ -119,7 +119,7 @@ describe.skipIf(!DATABASE_URL)('PostgresProductRepository.decreaseStock (SQL)', 
     await withRolledBackTenant(sql, async (ctx): Promise<void> => {
       await seedProduct(ctx, 1);
       const repository = new PostgresProductRepository(sql);
-      const decrease = (): Promise<void> =>
+      const decrease = (): Promise<number> =>
         repository.decreaseStock(
           createProductId(PRODUCT_ID),
           createTenantId(ctx.tenantId),

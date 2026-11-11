@@ -61,13 +61,15 @@ describe('UnarchiveProductUseCase', (): void => {
     },
   );
 
-  it('publishes no event (the entity emits none on unarchive)', async (): Promise<void> => {
+  it('publishes ProductDetailsChangedEvent so Kivi sees it available again', async (): Promise<void> => {
     const { repo, bus, useCase } = setup();
     repo.seed(buildProduct({ status: ProductStatus.ARCHIVED }));
 
     await useCase.execute({ id: PRODUCT_ID, tenantId: TENANT });
 
-    expect(bus.published).toHaveLength(0);
+    expect(bus.published.map((envelope): string => envelope.event.eventName)).toEqual([
+      'ProductDetailsChangedEvent',
+    ]);
   });
 
   it('throws ProductNotFoundException for an unknown id and rolls back', async (): Promise<void> => {

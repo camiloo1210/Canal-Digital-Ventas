@@ -94,20 +94,20 @@ export class InMemoryProductRepository implements ProductRepositoryPort {
     this.store.delete(InMemoryProductRepository.key(tenantId, id));
   }
 
-  async decreaseStock(id: ProductId, tenantId: TenantId, quantity: number): Promise<void> {
+  async decreaseStock(id: ProductId, tenantId: TenantId, quantity: number): Promise<number> {
     const product = await this.findById(id, tenantId);
-    if (!product) return;
+    if (!product) return 0;
     product.decreaseStock(quantity);
     this.seed(product);
+    return product.getStock();
   }
 
-  async increaseStock(id: ProductId, tenantId: TenantId, quantity: number): Promise<void> {
+  async increaseStock(id: ProductId, tenantId: TenantId, quantity: number): Promise<number> {
     const props = this.store.get(InMemoryProductRepository.key(tenantId, id));
-    if (!props) return;
-    this.store.set(InMemoryProductRepository.key(tenantId, id), {
-      ...props,
-      stock: props.stock + quantity,
-    });
+    if (!props) return 0;
+    const stock = props.stock + quantity;
+    this.store.set(InMemoryProductRepository.key(tenantId, id), { ...props, stock });
+    return stock;
   }
 
   async findById(id: ProductId, tenantId: TenantId): Promise<Product | null> {

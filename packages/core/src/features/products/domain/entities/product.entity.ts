@@ -263,6 +263,7 @@ export class Product {
       throw new InvalidProductStateException('Only archived products can be unarchived.');
     }
     this.status = this.stock > 0 ? ProductStatus.ACTIVE : ProductStatus.OUT_OF_STOCK;
+    this.addDomainEvent(new ProductDetailsChangedEvent(this.id));
     this.version++;
   }
 
@@ -374,12 +375,14 @@ export class Product {
     }
 
     this.status = newStatus;
+    this.addDomainEvent(new ProductDetailsChangedEvent(this.id));
     this.updateUpdatedAt();
   }
 
   public updateImages(imagePath: string | null, imageUrl: string | null): void {
     this.imagePath = imagePath;
     this.imageUrl = imageUrl;
+    this.addDomainEvent(new ProductDetailsChangedEvent(this.id));
     this.updateUpdatedAt();
   }
 
@@ -395,6 +398,7 @@ export class Product {
     this.galleryUrls = [...urls];
     this.imageUrl = urls[0] ?? null;
     this.imagePath = urls[0] ?? null;
+    this.addDomainEvent(new ProductDetailsChangedEvent(this.id));
     this.updateUpdatedAt();
   }
 

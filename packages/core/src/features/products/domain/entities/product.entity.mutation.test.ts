@@ -243,6 +243,43 @@ describe('Product mutation baseline', (): void => {
       expect(product.getIsVatExempt()).toBe(true);
     });
   });
+
+  describe('changes that Kivi must see emit ProductDetailsChangedEvent', (): void => {
+    const detailsEvents = (product: Product): DomainEvent[] =>
+      product.domainEvents.filter(
+        (e: DomainEvent): boolean => e instanceof ProductDetailsChangedEvent,
+      );
+
+    it('updateGallery', (): void => {
+      const product = buildProduct();
+      product.updateGallery(['https://cdn.example/a.jpg']);
+      expect(detailsEvents(product)).toHaveLength(1);
+    });
+
+    it('updateImages', (): void => {
+      const product = buildProduct();
+      product.updateImages('a.jpg', 'https://cdn.example/a.jpg');
+      expect(detailsEvents(product)).toHaveLength(1);
+    });
+
+    it('changeGallery', (): void => {
+      const product = buildProduct();
+      product.changeGallery(null, ['https://cdn.example/a.jpg']);
+      expect(detailsEvents(product)).toHaveLength(1);
+    });
+
+    it('changeStatus when the status really changes', (): void => {
+      const product = buildProduct();
+      product.changeStatus(ProductStatus.INACTIVE);
+      expect(detailsEvents(product)).toHaveLength(1);
+    });
+
+    it('changeStatus does not emit when the status is unchanged', (): void => {
+      const product = buildProduct();
+      product.changeStatus(ProductStatus.ACTIVE);
+      expect(detailsEvents(product)).toHaveLength(0);
+    });
+  });
 });
 
 describe('package data', (): void => {

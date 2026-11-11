@@ -154,10 +154,10 @@ describe('SupabaseProductRepository (read side)', (): void => {
     it('are rejected because the adapter is read-only', async (): Promise<void> => {
       const { repo } = setup();
       for (const call of [
-        (): Promise<void> => repo.save(),
-        (): Promise<void> => repo.delete(),
-        (): Promise<void> => repo.decreaseStock(),
-        (): Promise<void> => repo.increaseStock(),
+        (): Promise<unknown> => repo.save(),
+        (): Promise<unknown> => repo.delete(),
+        (): Promise<unknown> => repo.decreaseStock(),
+        (): Promise<unknown> => repo.increaseStock(),
       ]) {
         await expect(call()).rejects.toBeInstanceOf(ProductRepositoryException);
         await expect(call()).rejects.toThrow(/read-only/);

@@ -61,9 +61,11 @@ function fixture(
   useCase: GenerateCommercialOrderUseCase;
   save: ReturnType<typeof vi.fn<(order: Order) => Promise<void>>>;
   decreaseStock: ReturnType<typeof vi.fn>;
+  publish: ReturnType<typeof vi.fn>;
 } {
   const save = vi.fn<(order: Order) => Promise<void>>().mockResolvedValue(undefined);
-  const decreaseStock = vi.fn().mockResolvedValue(undefined);
+  const decreaseStock = vi.fn().mockResolvedValue(95);
+  const publish = vi.fn().mockResolvedValue(undefined);
   const customer = StoreCustomer.create(
     createStoreCustomerId('customer'),
     tenantId,
@@ -77,6 +79,7 @@ function fixture(
   return {
     save,
     decreaseStock,
+    publish,
     useCase: new GenerateCommercialOrderUseCase(
       {
         save,
@@ -106,6 +109,7 @@ function fixture(
           work({ executeNative: vi.fn() }),
       },
       { setEnabled: vi.fn(), isEligible: vi.fn().mockResolvedValue(eligible) },
+      { publish },
     ),
   };
 }
@@ -124,6 +128,23 @@ describe('Commercial checkout monetary authority', (): void => {
     expect(order.getTotalAmount().getCurrency()).toBe(Currency.COP);
     expect(order.getItems()[0].getQuantity()).toBe(5);
     expect(h.decreaseStock).toHaveBeenCalledTimes(1);
+  });
+  it('publishes ProductStockAdjustedEvent with the remaining stock so Kivi syncs it', async (): Promise<void> => {
+    const h = fixture([product('product', 125)]);
+    await h.useCase.execute(dto([{ productId: 'product', quantity: 5 }]));
+    expect(h.publish).toHaveBeenCalledTimes(1);
+    const [envelopes] = h.publish.mock.calls[0];
+    expect(envelopes).toHaveLength(1);
+    expect(envelopes[0].event).toMatchObject({
+      eventName: 'ProductStockAdjustedEvent',
+      productId: 'product',
+      stock: 95,
+    });
+    expect(envelopes[0].context).toEqual({
+      tenantId,
+      aggregateType: 'Product',
+      aggregateId: 'product',
+    });
   });
   it('uses consolidated quantities to cross the wholesale threshold', async (): Promise<void> => {
     const catalogProduct = product('product', 125);
