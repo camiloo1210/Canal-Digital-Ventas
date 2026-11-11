@@ -36,7 +36,7 @@ export class SyncBuyerCartUseCase {
       );
     }
     const tenantId = await this.service.requireTenantId(dto.tenantSlug);
-    const normalized = await this.service.normalize(tenantId, dto.items);
+    const normalized = await this.service.normalize(tenantId, dto.items, dto.userId);
     return this.service.persist({
       userId: dto.userId,
       tenantId,
@@ -45,7 +45,9 @@ export class SyncBuyerCartUseCase {
         const stale =
           dto.baseVersion === null ? live !== null : dto.baseVersion !== (live ? live.version : 0);
         if (stale) {
-          throw new CartVersionConflictException(await this.service.viewOf(tenantId, live, now));
+          throw new CartVersionConflictException(
+            await this.service.viewOf(tenantId, live, now, dto.userId),
+          );
         }
       },
       resolve: async (): Promise<NormalizedBuyerCart> => normalized,
