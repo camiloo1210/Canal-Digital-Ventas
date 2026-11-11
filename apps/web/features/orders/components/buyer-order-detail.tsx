@@ -78,7 +78,7 @@ export function BuyerOrderDetail({
     : 'unknown';
   const placedOn = new Intl.DateTimeFormat(locale, {
     dateStyle: 'long',
-    timeZone: 'America/Bogota',
+    timeZone: 'America/Guayaquil',
   }).format(new Date(order.createdAt));
   const isPaid = normalized === 'paid';
   const isShipped = normalized === 'shipped';
@@ -270,7 +270,7 @@ export function BuyerOrderDetail({
                         {new Intl.DateTimeFormat(locale, {
                           dateStyle: 'medium',
                           timeStyle: 'short',
-                          timeZone: 'America/Bogota',
+                          timeZone: 'America/Guayaquil',
                         }).format(new Date(entry.changedAt))}
                       </time>
                     )}

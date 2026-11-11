@@ -18,7 +18,7 @@
     "unavailable": "Tracking is currently unavailable.",
     "title": "Shipment tracking",
     "sandbox": "Test data from FedEx; this does not represent a real shipment.",
-    "lastUpdated": "Last checked: {date} (Colombia time)",
+    "lastUpdated": "Last checked: {date} (mainland Ecuador time)",
     "state": {
       "unavailable": "Tracking is currently unavailable.",
       "pending": "Waiting for the first check.",
@@ -755,7 +755,7 @@
       "shipmentTracking": "Tracking number",
       "viewDetails": "View order details",
       "activityTitle": "Order activity",
-      "activityDisclaimer": "Some earlier updates may not be available. Times shown in Colombia time.",
+      "activityDisclaimer": "Some earlier updates may not be available. Times shown in mainland Ecuador time.",
       "activityEmpty": "No updates are available yet.",
       "activityUnavailable": "Order activity is unavailable right now.",
       "statusAvailable": "Check the activity for order updates.",

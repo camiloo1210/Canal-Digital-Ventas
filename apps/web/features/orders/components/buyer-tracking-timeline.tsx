@@ -13,7 +13,7 @@ export function BuyerTrackingTimeline({
   const formatter = new Intl.DateTimeFormat(locale, {
     dateStyle: 'medium',
     timeStyle: 'short',
-    timeZone: 'America/Bogota',
+    timeZone: 'America/Guayaquil',
   });
   return (
     <section className="space-y-3 rounded-lg border bg-muted/20 p-4" aria-label={t('title')}>

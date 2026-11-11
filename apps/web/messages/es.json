@@ -18,7 +18,7 @@
     "unavailable": "El seguimiento no está disponible en este momento.",
     "title": "Seguimiento del envío",
     "sandbox": "Datos de prueba proporcionados por FedEx; no representan un envío real.",
-    "lastUpdated": "Última consulta: {date} (hora de Colombia)",
+    "lastUpdated": "Última consulta: {date} (hora de Ecuador continental)",
     "state": {
       "unavailable": "El seguimiento no está disponible en este momento.",
       "pending": "Esperando la primera consulta.",
@@ -755,7 +755,7 @@
       "shipmentTracking": "Número de guía",
       "viewDetails": "Ver detalle del pedido",
       "activityTitle": "Actividad del pedido",
-      "activityDisclaimer": "Es posible que no estén disponibles todas las actualizaciones anteriores. Horario de Colombia.",
+      "activityDisclaimer": "Es posible que no estén disponibles todas las actualizaciones anteriores. Horario de Ecuador continental.",
       "activityEmpty": "Aún no hay actualizaciones disponibles.",
       "activityUnavailable": "La actividad no está disponible en este momento.",
       "statusAvailable": "Consulta la actividad para conocer las actualizaciones del pedido.",
