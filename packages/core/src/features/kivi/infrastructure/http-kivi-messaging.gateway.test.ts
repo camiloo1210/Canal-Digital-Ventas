@@ -157,6 +157,27 @@ describe('Kivi messaging HTTP contracts', (): void => {
       }),
     );
   });
+  it('adds the ready-made WhatsApp text to the order status when the source carries one', async (): Promise<void> => {
+    const opts = options({ status: 'processed', channels: { whatsapp: 'sent' } });
+    await new HttpKiviOrderNotificationGateway(opts).deliver(
+      { ...source, message: '*Pedido en preparación*' },
+      event,
+    );
+    expect(opts.fetch).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        body: JSON.stringify({
+          event_id: event.messageId,
+          external_order_id: event.aggregateId,
+          event_type: event.eventType,
+          occurred_at: event.occurredAt,
+          phone: source.phone,
+          order_number: source.orderNumber,
+          message: '*Pedido en preparación*',
+        }),
+      }),
+    );
+  });
   it('does not acknowledge malformed acceptance from Kivi', async (): Promise<void> => {
     await expect(
       new HttpKiviOrderNotificationGateway(options({ ok: true })).deliver(source, event),

@@ -97,7 +97,11 @@ export async function runNotificationWorker(
         );
         const kivi = kiviCipher
           ? new DeliverKiviOrderNotificationUseCase(
-              new PostgresKiviOrderNotificationAdapter(sql, kiviCipher),
+              new PostgresKiviOrderNotificationAdapter(sql, kiviCipher, {
+                copies,
+                locale: smtp.locale,
+                appUrl: smtp.appUrl,
+              }),
               new HttpKiviOrderNotificationGateway(),
             )
           : null;

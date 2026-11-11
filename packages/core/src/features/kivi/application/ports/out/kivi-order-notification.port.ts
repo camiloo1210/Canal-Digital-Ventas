@@ -5,6 +5,8 @@ export interface KiviOrderNotificationSource {
   target: KiviTarget;
   phone: string;
   orderNumber: string;
+  /** Ready-to-send WhatsApp text (no Meta template). Absent: Kivi writes its own short text. */
+  message?: string;
 }
 export interface KiviOrderNotificationReadPort {
   find(event: IntegrationEvent): Promise<KiviOrderNotificationSource | null>;

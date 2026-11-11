@@ -21,6 +21,7 @@ export class HttpKiviOrderNotificationGateway
       occurred_at: event.occurredAt,
       phone: source.phone,
       order_number: source.orderNumber,
+      ...(source.message === undefined ? {} : { message: source.message }),
     });
     if (
       typeof result !== 'object' ||
