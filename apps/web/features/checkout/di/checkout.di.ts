@@ -2,6 +2,7 @@ import 'server-only';
 import { sql } from '@/lib/postgres/server';
 import {
   GenerateCommercialOrderUseCase,
+  PostgresBuyerWholesaleAdapter,
   PostgresOrderRepository,
   PostgresProductRepository,
   PostgresEventBusAdapter,
@@ -29,6 +30,7 @@ class CheckoutDIContainer {
         orderTenantRepository,
         storeCustomerRepository,
         transactionManager,
+        new PostgresBuyerWholesaleAdapter(),
       );
     }
     return this.generateCommercialOrderUseCase;

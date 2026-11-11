@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { getTranslations } from 'next-intl/server';
 import { getOwnProfileReadRepository } from '@/features/users/di/users.di';
+import { WholesaleAccount } from '@/features/users/components/wholesale-account';
 import { ProfileForm } from '@/features/users/components/profile-form';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
@@ -16,9 +17,11 @@ function initialsOf(first: string, last: string, email: string): string {
 export async function ProfileContent({
   userId,
   email,
+  buyer = false,
 }: {
   userId: string;
   email: string;
+  buyer?: boolean;
 }): Promise<React.JSX.Element> {
   const [t, profile] = await Promise.all([
     getTranslations('Profile'),
@@ -42,6 +45,7 @@ export async function ProfileContent({
         </div>
       </header>
       <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">{t('subtitle')}</p>
+      {buyer && <WholesaleAccount enabled={profile?.wholesaleEnabled ?? false} />}
       <ProfileForm
         initial={{
           firstName,
