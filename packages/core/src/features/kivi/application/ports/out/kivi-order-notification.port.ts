@@ -3,7 +3,8 @@ import type { KiviTarget } from '@/kivi/application/ports/out/kivi-catalog-gatew
 
 export interface KiviOrderNotificationSource {
   target: KiviTarget;
-  phone: string;
+  /** International digits, or null when the checkout phone was not usable. */
+  phone: string | null;
   orderNumber: string;
   /** Ready-to-send WhatsApp text (no Meta template). Absent: Kivi writes its own short text. */
   message?: string;
