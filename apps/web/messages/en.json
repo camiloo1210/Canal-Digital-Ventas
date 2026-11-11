@@ -1824,6 +1824,19 @@
       "contextChanged": "The active business changed or you no longer have access to it. Reload the page and try again."
     }
   },
+  "WholesaleAccount": {
+    "title": "Wholesale account",
+    "description": "Activate your account to access available wholesale prices when you meet each product's minimum quantity. You can deactivate it at any time.",
+    "active": "Status: active",
+    "inactive": "Status: inactive",
+    "enable": "Activate wholesale account",
+    "disable": "Deactivate wholesale account",
+    "saving": "Saving…",
+    "activated": "Your wholesale account is active.",
+    "deactivated": "Your wholesale account is inactive.",
+    "error": "We couldn't save your changes. Please try again.",
+    "unauthorized": "Sign in to change your account."
+  },
   "Profile": {
     "metadata": "My profile | Canal Digital",
     "menu": "My profile",

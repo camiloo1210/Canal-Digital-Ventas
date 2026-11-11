@@ -1824,6 +1824,19 @@
       "contextChanged": "El negocio activo cambió o ya no tienes acceso a él. Recarga la página e inténtalo de nuevo."
     }
   },
+  "WholesaleAccount": {
+    "title": "Cuenta mayorista",
+    "description": "Activa tu cuenta para acceder a los precios mayoristas disponibles al cumplir la cantidad mínima de cada producto. Puedes desactivarla cuando quieras.",
+    "active": "Estado: activa",
+    "inactive": "Estado: inactiva",
+    "enable": "Activar cuenta mayorista",
+    "disable": "Desactivar cuenta mayorista",
+    "saving": "Guardando…",
+    "activated": "Tu cuenta mayorista está activa.",
+    "deactivated": "Tu cuenta mayorista está desactivada.",
+    "error": "No pudimos guardar el cambio. Inténtalo de nuevo.",
+    "unauthorized": "Inicia sesión para cambiar tu cuenta."
+  },
   "Profile": {
     "metadata": "Mi perfil | Canal Digital",
     "menu": "Mi perfil",
