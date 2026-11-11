@@ -153,7 +153,8 @@ describe('pending migrations (static checks)', (): void => {
     (name: string, sql: string): void => {
       for (const match of sql.matchAll(/\bGRANT\b[^;]*?\bTO\b\s+([^;]+);/gi)) {
         if (
-          name === '20261106014558_monetary_invariants_and_currency.sql' &&
+          (name === '20261106014558_monetary_invariants_and_currency.sql' ||
+            name === '20261110000000_buyer_wholesale.sql') &&
           /^GRANT\s+EXECUTE\s+ON\s+FUNCTION\s+public\.get_public_(products_by_slug|product_by_id)_v2\([^;]+\)\s+TO\s+anon,\s*authenticated;$/i.test(
             match[0],
           )
