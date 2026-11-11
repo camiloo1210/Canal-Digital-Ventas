@@ -114,6 +114,27 @@ describe('public cart capped by available units', (): void => {
     });
   });
 
+  it('applies wholesale to the combined quantity added in separate selections', (): void => {
+    const wholesale = {
+      ...item,
+      retailPriceCents: 1500,
+      wholesalePriceCents: 1000,
+      wholesaleMinQuantity: 5,
+      maxQuantity: 20,
+    };
+    useCartStore.getState().addItem({ ...wholesale, quantity: 3 }, 'shop');
+    expect(useCartStore.getState().items[0]).toMatchObject({ quantity: 3, unitPriceCents: 1500 });
+    useCartStore.getState().addItem({ ...wholesale, quantity: 2 }, 'shop');
+    expect(useCartStore.getState().items[0]).toMatchObject({ quantity: 5, unitPriceCents: 1000 });
+    useCartStore.getState().updateQuantity(item.productId, 4);
+    expect(useCartStore.getState().items[0]).toMatchObject({ quantity: 4, unitPriceCents: 1500 });
+  });
+
+  it('keeps retail pricing when wholesale terms are unavailable to the buyer', (): void => {
+    useCartStore.getState().addItem({ ...item, quantity: 8, maxQuantity: 20 }, 'shop');
+    expect(useCartStore.getState().items[0]).toMatchObject({ quantity: 8, unitPriceCents: 1500 });
+  });
+
   it('invalidates legacy decimal snapshots instead of interpreting them as cents', async (): Promise<void> => {
     expect(migrateLegacyCart()).toEqual({ tenantSlug: null, items: [] });
   });

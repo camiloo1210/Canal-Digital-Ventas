@@ -9,6 +9,7 @@ export const SHIPMENT_JOB_REASONS = [
   'INVALID_RECIPIENT_COUNTRY',
   'INVALID_ORIGIN_COUNTRY',
   'INVALID_POSTAL_CODE',
+  'SERVICE_UNAVAILABLE_FOR_DESTINATION',
   'ORDER_NOT_PROCESSING',
   'AUTHORIZATION',
   'PROVIDER_UNAVAILABLE',
@@ -28,5 +29,7 @@ export function isRetryableReason(reason: string | null): boolean {
 /** Unknown carrier codes (e.g. a sanitized FedEx error code) map to the generic message. */
 export function reasonMessageKey(reason: string | null): ShipmentJobReason | 'UNKNOWN' {
   if (reason === 'COUNTRY.POSTALCODEORZIP.INVALID') return 'INVALID_POSTAL_CODE';
+  if (reason === 'SELECTED.DESTINATION.SERVICETYPE.INVALID')
+    return 'SERVICE_UNAVAILABLE_FOR_DESTINATION';
   return SHIPMENT_JOB_REASONS.find((code): boolean => code === reason) ?? 'UNKNOWN';
 }
