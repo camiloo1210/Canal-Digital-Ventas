@@ -67,17 +67,35 @@ describe('Kivi notification recipient projection', (): void => {
       expect(result?.phone).toBe('593999999999');
     },
   );
-  it('does not guess a country code for a local number', async (): Promise<void> => {
-    const sql = vi.fn().mockResolvedValue([{ phone: '0999999999' }]) as unknown as postgres.Sql<
-      Record<string, unknown>
-    >;
-    await expect(
-      new PostgresKiviOrderNotificationAdapter(sql, { encrypt: vi.fn(), decrypt: vi.fn() }).find(
-        event,
-      ),
-    ).rejects.toMatchObject({ name: 'NotificationPermanentException' });
+  it('does not guess a country code: a local checkout phone is left out so Kivi uses the linked chat', async (): Promise<void> => {
+    const sql = vi
+      .fn()
+      .mockResolvedValueOnce([
+        {
+          base_url: 'https://api.kivi.example',
+          connection_id: crypto.randomUUID(),
+          token_ciphertext: 'encrypted',
+          token_key_version: 1,
+          phone: '0999999999',
+          order_number: 'ORD-1',
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
+          payload_ciphertext: JSON.stringify({ phone: null, orderNumber: 'ORD-1' }),
+          payload_key_version: 1,
+        },
+      ]) as unknown as postgres.Sql<Record<string, unknown>>;
+    const result = await new PostgresKiviOrderNotificationAdapter(sql, {
+      encrypt: (value: string): { ciphertext: string; keyVersion: number } => ({
+        ciphertext: value,
+        keyVersion: 1,
+      }),
+      decrypt: (encrypted): string =>
+        encrypted.ciphertext === 'encrypted' ? 'kc_test' : encrypted.ciphertext,
+    }).find(event);
+    expect(result).toMatchObject({ phone: null, orderNumber: 'ORD-1' });
   });
-
   describe('WhatsApp text', (): void => {
     const copies = {
       es: {

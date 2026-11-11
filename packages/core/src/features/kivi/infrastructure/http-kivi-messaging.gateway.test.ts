@@ -178,6 +178,22 @@ describe('Kivi messaging HTTP contracts', (): void => {
       }),
     );
   });
+  it('omits the phone when the checkout phone was not usable, so Kivi uses the linked chat', async (): Promise<void> => {
+    const opts = options({ status: 'processed', channels: { whatsapp: 'sent' } });
+    await new HttpKiviOrderNotificationGateway(opts).deliver({ ...source, phone: null }, event);
+    expect(opts.fetch).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        body: JSON.stringify({
+          event_id: event.messageId,
+          external_order_id: event.aggregateId,
+          event_type: event.eventType,
+          occurred_at: event.occurredAt,
+          order_number: source.orderNumber,
+        }),
+      }),
+    );
+  });
   it('does not acknowledge malformed acceptance from Kivi', async (): Promise<void> => {
     await expect(
       new HttpKiviOrderNotificationGateway(options({ ok: true })).deliver(source, event),
