@@ -1,5 +1,8 @@
 import { describe, expect, it, vi, type Mock } from 'vitest';
-import { FedexShipAdapter } from '@/shipment-creation/infrastructure/fedex/fedex-ship.adapter';
+import {
+  buildFedexShipmentRequest,
+  FedexShipAdapter,
+} from '@/shipment-creation/infrastructure/fedex/fedex-ship.adapter';
 import { ShipmentProviderRejectedException } from '@/shipment-creation/application/exceptions/shipment-provider-rejected.exception';
 import { ShipmentProviderAmbiguousException } from '@/shipment-creation/application/exceptions/shipment-provider-ambiguous.exception';
 import type { ShipmentProviderInput } from '@/shipment-creation/application/ports/out/shipment-provider.port';
@@ -62,6 +65,55 @@ const json = (status: number, payload: unknown): Response =>
   new Response(JSON.stringify(payload), { status });
 
 describe('FedEx ship adapter', (): void => {
+  it('converts domestic US packages to pounds and whole inches without understating measurements', (): void => {
+    const body = buildFedexShipmentRequest(
+      {
+        ...input,
+        origin: { ...input.origin, country: ' us ' },
+        recipient: { ...input.recipient, country: 'US' },
+        package: { weightGrams: 453, lengthMm: 254, widthMm: 255, heightMm: 1 },
+      },
+      now(),
+    ) as { requestedShipment: { requestedPackageLineItems: unknown[] } };
+    expect(body.requestedShipment.requestedPackageLineItems[0]).toEqual({
+      weight: { units: 'LB', value: 1 },
+      dimensions: { length: 10, width: 11, height: 1, units: 'IN' },
+    });
+  });
+
+  it('retains metric units when only the origin is in the US', (): void => {
+    const body = buildFedexShipmentRequest(
+      {
+        ...input,
+        origin: { ...input.origin, country: 'US' },
+      },
+      now(),
+    ) as { requestedShipment: { requestedPackageLineItems: unknown[] } };
+    expect(body.requestedShipment.requestedPackageLineItems[0]).toEqual({
+      weight: { units: 'KG', value: 1.24 },
+      dimensions: { length: 31, width: 20, height: 10, units: 'CM' },
+    });
+  });
+
+  it.each([
+    { grams: 1, pounds: 0.01 },
+    { grams: 454, pounds: 1.01 },
+    { grams: 1234, pounds: 2.73 },
+  ])('rounds $grams grams up to $pounds pounds', ({ grams, pounds }): void => {
+    const body = buildFedexShipmentRequest(
+      {
+        ...input,
+        origin: { ...input.origin, country: 'US' },
+        recipient: { ...input.recipient, country: 'US' },
+        package: { ...input.package, weightGrams: grams },
+      },
+      now(),
+    ) as { requestedShipment: { requestedPackageLineItems: { weight: unknown }[] } };
+    expect(body.requestedShipment.requestedPackageLineItems[0]?.weight).toEqual({
+      units: 'LB',
+      value: pounds,
+    });
+  });
   it('posts the documented shipment and returns tracking number and decoded label', async (): Promise<void> => {
     const fetcher = vi.fn().mockResolvedValue(json(200, success));
     const result = await new FedexShipAdapter(auth(), fetcher, now).create(input);
