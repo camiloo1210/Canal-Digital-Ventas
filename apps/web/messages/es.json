@@ -801,6 +801,7 @@
         "INTERNAL_ERROR": "Ocurrió un error interno al crear el envío.",
         "INVALID_RECIPIENT_COUNTRY": "El país del destinatario no es válido para FedEx.",
         "INVALID_ORIGIN_COUNTRY": "El país de la dirección de origen no es válido para FedEx.",
+        "INVALID_POSTAL_CODE": "FedEx rechazó el código postal. Revisa que el país, la ciudad y el código postal del origen y del destinatario coincidan.",
         "ORDER_NOT_PROCESSING": "El pedido ya no está en preparación.",
         "AUTHORIZATION": "FedEx rechazó las credenciales configuradas.",
         "PROVIDER_UNAVAILABLE": "FedEx no está disponible en este momento.",
