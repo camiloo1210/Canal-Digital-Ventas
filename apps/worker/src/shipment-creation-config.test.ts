@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readShipmentCreationConfig } from '@/worker/shipment-creation-config';
+import { describeStartupFailure } from '@/worker/shipment-creation-startup';
 
 const TENANT = '11111111-1111-4111-8111-111111111111';
 const valid: Record<string, string> = {
@@ -16,6 +17,15 @@ const valid: Record<string, string> = {
   SHIPMENT_CREATION_LABELS_SUPABASE_URL: 'https://example.supabase.co',
   SHIPMENT_CREATION_LABELS_SERVICE_ROLE_KEY: 'service-role-key-value',
 };
+
+function describeConfigFailure(env: Record<string, string>): string {
+  try {
+    readShipmentCreationConfig(env);
+  } catch (error: unknown) {
+    return describeStartupFailure(error);
+  }
+  return expect.unreachable();
+}
 
 function without(name: string): Record<string, string> {
   const copy = { ...valid };
@@ -58,6 +68,48 @@ describe('shipment creation worker configuration', (): void => {
     expect((): unknown => readShipmentCreationConfig(without(name))).toThrow(
       'Invalid sandbox shipment creation worker configuration',
     );
+  });
+
+  it.each([
+    'SHIPMENT_CREATION_DATABASE_URL',
+    'TRACKING_DEPLOYMENT_ID',
+    'TRACKING_CREDENTIALS_JSON',
+    'FEDEX_SANDBOX_ACCOUNT_NUMBER',
+    'FEDEX_SERVICE_TYPE',
+    'SHIPMENT_CREATION_TENANT_REFS_JSON',
+    'SHIPMENT_CREATION_SYSTEM_ACTOR_ID',
+    'SHIPMENT_CREATION_LABELS_SUPABASE_URL',
+    'SHIPMENT_CREATION_LABELS_SERVICE_ROLE_KEY',
+  ])('names only the variable %s when it is missing', (name): void => {
+    const error = describeConfigFailure(without(name));
+    expect(error).toBe(
+      `Sandbox shipment creation worker stopped at stage "config" (variable ${name}); check configuration and permissions.`,
+    );
+  });
+
+  it.each([
+    [{ SHIPMENT_CREATION_SYSTEM_ACTOR_ID: 'not-a-uuid' }, 'SHIPMENT_CREATION_SYSTEM_ACTOR_ID'],
+    [{ TRACKING_DEPLOYMENT_ID: 'not-a-uuid' }, 'TRACKING_DEPLOYMENT_ID'],
+    [{ SHIPMENT_CREATION_LABELS_SUPABASE_URL: 'ftp://x' }, 'SHIPMENT_CREATION_LABELS_SUPABASE_URL'],
+    [{ TRACKING_CREDENTIALS_JSON: '{bad' }, 'TRACKING_CREDENTIALS_JSON'],
+    [{ SHIPMENT_CREATION_TENANT_REFS_JSON: '{bad' }, 'SHIPMENT_CREATION_TENANT_REFS_JSON'],
+    [
+      { SHIPMENT_CREATION_TENANT_REFS_JSON: `{"${TENANT}":"unknown"}` },
+      'SHIPMENT_CREATION_TENANT_REFS_JSON',
+    ],
+    [{ SHIPMENT_CREATION_LEASE_SECONDS: '120' }, 'SHIPMENT_CREATION_LEASE_SECONDS'],
+    [{ SHIPMENT_CREATION_POLL_INTERVAL_MS: '999' }, 'SHIPMENT_CREATION_POLL_INTERVAL_MS'],
+  ])('names the invalid variable for %o', (override, name): void => {
+    expect(describeConfigFailure({ ...valid, ...override })).toContain(`(variable ${name})`);
+  });
+
+  it('never prints a configured value while naming the variable', (): void => {
+    const line = describeConfigFailure({
+      ...valid,
+      TRACKING_CREDENTIALS_JSON: '{"store": topsecret',
+    });
+    expect(line).not.toContain('topsecret');
+    expect(line).not.toContain('postgres://');
   });
 
   it('does not echo secret values in the error', (): void => {

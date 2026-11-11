@@ -18,6 +18,12 @@ import {
 } from '@canaldigital/packages/core';
 import type { ShipmentCreationConfig } from '@/worker/shipment-creation-config';
 import { runShipmentCreationLoop } from '@/worker/shipment-creation-loop';
+import {
+  ShipmentCreationStartupError,
+  requireAuthorizedMarker,
+  safeDriverCode,
+  type SandboxMarkerRow,
+} from '@/worker/shipment-creation-startup';
 
 /** Remembers which leases attempted the `creating` commit, i.e. may have reached the carrier. */
 export class TrackingShipmentJobRepository extends PostgresShipmentJobRepository {
@@ -55,27 +61,40 @@ export async function runShipmentCreationWorker(
     testDatabaseUrl: config.databaseUrl,
     productionDatabaseUrl: config.productionDatabaseUrl,
   };
-  assertSandboxEnvironment({
-    ...guard,
-    databaseEnvironment: 'sandbox',
-    databaseDeploymentId: config.deploymentId,
-  });
+  try {
+    assertSandboxEnvironment({
+      ...guard,
+      databaseEnvironment: 'sandbox',
+      databaseDeploymentId: config.deploymentId,
+    });
+  } catch {
+    throw new ShipmentCreationStartupError('sandbox-guard');
+  }
   const sql: postgres.Sql<Record<string, unknown>> = postgres(config.databaseUrl, {
     max: 1,
     prepare: false,
     connect_timeout: 10,
   });
   try {
-    const rows = await sql<
-      { environment: string; deployment_id: string; authorized: boolean }[]
-    >`SELECT environment, deployment_id::text, pg_catalog.pg_has_role(session_user, 'shipment_creation_worker_role', 'MEMBER') AS authorized FROM sales.shipment_tracking_environment WHERE singleton`;
-    const row = rows[0];
-    if (!row || !row.authorized) throw new Error('Shipment creation sandbox authorization failed');
-    assertSandboxEnvironment({
-      ...guard,
-      databaseEnvironment: row.environment,
-      databaseDeploymentId: row.deployment_id,
-    });
+    let rows: SandboxMarkerRow[];
+    try {
+      rows = await sql<
+        SandboxMarkerRow[]
+      >`SELECT environment, deployment_id::text, pg_catalog.pg_has_role(session_user, 'shipment_creation_worker_role', 'MEMBER') AS authorized FROM sales.shipment_tracking_environment WHERE singleton`;
+    } catch (error: unknown) {
+      const code = safeDriverCode(error);
+      throw new ShipmentCreationStartupError('database', code ? `code ${code}` : null);
+    }
+    const row = requireAuthorizedMarker(rows[0]);
+    try {
+      assertSandboxEnvironment({
+        ...guard,
+        databaseEnvironment: row.environment,
+        databaseDeploymentId: row.deployment_id,
+      });
+    } catch {
+      throw new ShipmentCreationStartupError('deployment');
+    }
     const auth = new FedexAuthAdapter({
       resolve: async (ref): Promise<{ clientId: string; clientSecret: string }> => {
         const credentials = config.credentials[ref];

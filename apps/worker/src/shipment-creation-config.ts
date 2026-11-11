@@ -1,3 +1,5 @@
+import { ShipmentCreationStartupError } from '@/worker/shipment-creation-startup';
+
 export interface ShipmentCreationConfig {
   readonly databaseUrl: string;
   readonly productionDatabaseUrl: string;
@@ -78,6 +80,8 @@ export function readShipmentCreationConfig(
   env: Readonly<Record<string, string | undefined>>,
 ): ShipmentCreationConfig | null {
   if (env.SHIPMENT_CREATION_SANDBOX_ENABLED !== 'true') return null;
+  // Name of the variable being checked. Only the name is ever reported, never its value.
+  let variable: string | null = null;
   try {
     const databaseUrl = env.SHIPMENT_CREATION_DATABASE_URL;
     const deploymentId = env.TRACKING_DEPLOYMENT_ID;
@@ -86,6 +90,22 @@ export function readShipmentCreationConfig(
     const systemActorId = env.SHIPMENT_CREATION_SYSTEM_ACTOR_ID;
     const labelsSupabaseUrl = env.SHIPMENT_CREATION_LABELS_SUPABASE_URL;
     const labelsServiceRoleKey = env.SHIPMENT_CREATION_LABELS_SERVICE_ROLE_KEY;
+    const required: readonly (readonly [string, string | undefined])[] = [
+      ['SHIPMENT_CREATION_DATABASE_URL', databaseUrl],
+      ['TRACKING_DEPLOYMENT_ID', deploymentId],
+      ['TRACKING_CREDENTIALS_JSON', env.TRACKING_CREDENTIALS_JSON],
+      ['FEDEX_SANDBOX_ACCOUNT_NUMBER', accountNumber],
+      ['FEDEX_SERVICE_TYPE', serviceType],
+      ['SHIPMENT_CREATION_TENANT_REFS_JSON', env.SHIPMENT_CREATION_TENANT_REFS_JSON],
+      ['SHIPMENT_CREATION_SYSTEM_ACTOR_ID', systemActorId],
+      ['SHIPMENT_CREATION_LABELS_SUPABASE_URL', labelsSupabaseUrl],
+      ['SHIPMENT_CREATION_LABELS_SERVICE_ROLE_KEY', labelsServiceRoleKey],
+    ];
+    const missing = required.find(([, value]): boolean => !value);
+    if (missing) {
+      variable = missing[0];
+      throw new Error();
+    }
     if (
       !databaseUrl ||
       !deploymentId ||
@@ -98,12 +118,20 @@ export function readShipmentCreationConfig(
       !labelsServiceRoleKey
     )
       throw new Error();
-    if (!UUID.test(deploymentId) || !UUID.test(systemActorId)) throw new Error();
+    variable = 'TRACKING_DEPLOYMENT_ID';
+    if (!UUID.test(deploymentId)) throw new Error();
+    variable = 'SHIPMENT_CREATION_SYSTEM_ACTOR_ID';
+    if (!UUID.test(systemActorId)) throw new Error();
+    variable = 'SHIPMENT_CREATION_LABELS_SUPABASE_URL';
     if (!/^https?:$/.test(new URL(labelsSupabaseUrl).protocol)) throw new Error();
+    variable = 'TRACKING_CREDENTIALS_JSON';
     const credentials = parseCredentials(env.TRACKING_CREDENTIALS_JSON);
+    variable = 'SHIPMENT_CREATION_TENANT_REFS_JSON';
     const tenantRefs = parseTenantRefs(env.SHIPMENT_CREATION_TENANT_REFS_JSON, credentials);
+    variable = 'SHIPMENT_CREATION_POLL_INTERVAL_MS';
     const pollIntervalMs = integer(env.SHIPMENT_CREATION_POLL_INTERVAL_MS, 5000);
     if (!Number.isSafeInteger(pollIntervalMs) || pollIntervalMs < 1000) throw new Error();
+    variable = 'SHIPMENT_CREATION_LEASE_SECONDS';
     const leaseSeconds = integer(env.SHIPMENT_CREATION_LEASE_SECONDS, 180);
     if (
       !Number.isSafeInteger(leaseSeconds) ||
@@ -127,6 +155,6 @@ export function readShipmentCreationConfig(
       leaseSeconds,
     };
   } catch {
-    throw new Error('Invalid sandbox shipment creation worker configuration');
+    throw new ShipmentCreationStartupError('config', variable ? `variable ${variable}` : null);
   }
 }
