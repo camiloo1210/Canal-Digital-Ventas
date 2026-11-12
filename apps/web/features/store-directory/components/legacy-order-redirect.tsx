@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 export function LegacyOrderRedirect(): null {
   const router = useRouter();
   useEffect((): void => {
+    if (window.location.pathname !== '/') return;
     const hash = window.location.hash;
     if (/^#order-[a-zA-Z0-9-]+$/.test(hash)) router.replace(`/purchases${hash}`);
   }, [router]);
