@@ -23,11 +23,13 @@ export function ManualShipmentForm({
   version,
   carrier,
   trackingNumber,
+  recoveryRequired = false,
 }: {
   readonly orderId: string;
   readonly version: number;
   readonly carrier: string;
   readonly trackingNumber: string;
+  readonly recoveryRequired?: boolean;
 }): React.JSX.Element {
   const t = useTranslations('SellerOrders.shipment');
   const initial: ManualShipmentActionState = {
@@ -71,16 +73,21 @@ export function ManualShipmentForm({
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-2">
-        <Label htmlFor={'tracking-' + orderId}>{t('tracking')}</Label>
-        <Input
-          id={'tracking-' + orderId}
-          name="trackingNumber"
-          maxLength={120}
-          defaultValue={state.values.trackingNumber}
-          onChange={(): void => setEdited(true)}
-        />
-      </div>
+      <details open={recoveryRequired}>
+        <summary className="min-h-11 cursor-pointer py-3 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+          {t('manualTrackingOption')}
+        </summary>
+        <div className="space-y-2">
+          <Label htmlFor={'tracking-' + orderId}>{t('tracking')}</Label>
+          <Input
+            id={'tracking-' + orderId}
+            name="trackingNumber"
+            maxLength={120}
+            defaultValue={state.values.trackingNumber}
+            onChange={(): void => setEdited(true)}
+          />
+        </div>
+      </details>
       <Button type="submit" disabled={pending} aria-busy={pending} className="min-h-11">
         {pending ? t('saving') : t('save')}
       </Button>

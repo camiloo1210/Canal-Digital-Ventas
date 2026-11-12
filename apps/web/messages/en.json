@@ -834,10 +834,11 @@
     "shipment": {
       "invalid": "Enter a valid carrier or tracking number.",
       "title": "Shipping details",
-      "description": "Record information provided by the store; this does not enable live tracking.",
+      "description": "Select the carrier. If FedEx creates the label, its tracking number will be added automatically.",
       "carrier": "Carrier",
       "carrierPlaceholder": "Select a carrier",
       "tracking": "Tracking number",
+      "manualTrackingOption": "Enter a tracking number manually",
       "save": "Save shipping details",
       "saving": "Saving…",
       "saved": "Shipping details saved."
