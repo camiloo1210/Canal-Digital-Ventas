@@ -712,6 +712,7 @@
       "viewProduct": "View {name} in the store",
       "buyAgain": "Buy it again",
       "print": "Print summary",
+      "printStatus": "Order status",
       "printNote": "This summary is informational and does not replace an invoice.",
       "headline": {
         "draft": "Draft order",

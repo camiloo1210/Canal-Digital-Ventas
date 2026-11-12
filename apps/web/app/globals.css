@@ -826,3 +826,29 @@ SOFTWARE.
   outline-offset: 3px;
   scroll-margin-block: 5rem;
 }
+
+@media print {
+  body:has(.buyer-order-print) {
+    background: white;
+    color: black;
+    color-scheme: light;
+  }
+
+  body:has(.buyer-order-print) > :not(:has(.buyer-order-print)) {
+    display: none !important;
+  }
+
+  body:has(.buyer-order-print) .buyer-space > header {
+    display: none;
+  }
+
+  body:has(.buyer-order-print) .buyer-space {
+    min-height: 0;
+    background: white;
+    color: black;
+  }
+
+  .buyer-order-print tr {
+    break-inside: avoid;
+  }
+}

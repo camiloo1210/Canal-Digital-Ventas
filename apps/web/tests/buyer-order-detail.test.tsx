@@ -6,6 +6,7 @@ import { NextIntlClientProvider, type AbstractIntlMessages } from 'next-intl';
 import { describe, expect, it, vi } from 'vitest';
 import type { BuyerOrderReadModel } from '@canaldigital/packages/core';
 import { BuyerOrderDetail } from '@/features/orders/components/buyer-order-detail';
+import { BuyerOrderPrintSummary } from '@/features/orders/components/buyer-order-print-summary';
 
 vi.mock('@/components/ui/card', (): Record<string, string> => ({
   Card: 'article',
@@ -103,6 +104,25 @@ describe('Buyer order detail', (): void => {
     expect(markup).toContain('Subtotal');
     expect(markup).toContain('Imprimir resumen');
     expect(markup).toContain('no reemplaza una factura');
+  });
+  it('provides a printable summary with items, totals, delivery and shipment details', (): void => {
+    const messages = JSON.parse(
+      readFileSync(resolve('apps/web/messages', 'es.json'), 'utf8'),
+    ) as AbstractIntlMessages;
+    const markup = renderToStaticMarkup(
+      <NextIntlClientProvider locale="es" messages={messages}>
+        <BuyerOrderPrintSummary order={order()} />
+      </NextIntlClientProvider>,
+    );
+    expect(markup).toContain('buyer-order-print hidden');
+    expect(markup).toContain('ORD-1');
+    expect(markup).toContain('Mi Tienda');
+    expect(markup).toContain('Camiseta azul');
+    expect(markup).toContain('Calle 1 #2-3, Bogotá');
+    expect(markup).toContain('ABC-123');
+    expect(markup).toContain('Subtotal');
+    expect(markup).toContain('no reemplaza una factura');
+    expect(markup).not.toContain('Comprar de nuevo');
   });
   it('renders the tracking timeline only when tracking data exists', (): void => {
     expect(render(order(), true)).toContain('tracking-timeline');

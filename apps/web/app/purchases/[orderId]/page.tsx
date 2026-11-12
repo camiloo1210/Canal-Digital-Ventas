@@ -42,14 +42,14 @@ export default async function BuyerPurchaseDetailsPage({
   }
   return (
     <BuyerShell active="purchases" viewer={viewer}>
-      <div className="space-y-6">
+      <div className="space-y-6 print:space-y-0">
         <Link
-          className="inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-4"
+          className="inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-4 print:hidden"
           href="/purchases"
         >
           {t('back')}
         </Link>
-        <h1 className="text-2xl font-semibold">{t('detailTitle')}</h1>
+        <h1 className="text-2xl font-semibold print:hidden">{t('detailTitle')}</h1>
         <BuyerOrderDetail
           order={order}
           tracking={tracking}

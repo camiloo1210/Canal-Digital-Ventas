@@ -24,7 +24,7 @@ export async function BuyerShell({
     <div className="buyer-space min-h-screen bg-background text-foreground">
       <Link
         href="#buyer-main"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[60] focus:flex focus:min-h-11 focus:items-center focus:rounded-lg focus:bg-primary focus:px-4 focus:text-primary-foreground"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[60] focus:flex focus:min-h-11 focus:items-center focus:rounded-lg focus:bg-primary focus:px-4 focus:text-primary-foreground print:hidden"
       >
         {t('accessibility.skipToContent')}
       </Link>
@@ -70,7 +70,7 @@ export async function BuyerShell({
       <main
         id="buyer-main"
         tabIndex={-1}
-        className="mx-auto w-full max-w-[1200px] scroll-mt-20 px-4 py-8 sm:px-6 sm:py-10 lg:px-8"
+        className="mx-auto w-full max-w-[1200px] scroll-mt-20 px-4 py-8 sm:px-6 sm:py-10 lg:px-8 print:max-w-none print:p-0"
       >
         {children}
       </main>
