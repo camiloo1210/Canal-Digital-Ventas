@@ -19,6 +19,8 @@
     "title": "Seguimiento del envío",
     "sandbox": "Datos de prueba proporcionados por FedEx; no representan un envío real.",
     "lastUpdated": "Última consulta: {date} (hora de Ecuador continental)",
+    "showEvents": "{count, plural, one {Ver # actualización de la transportadora} other {Ver # actualizaciones de la transportadora}}",
+    "hideEvents": "Ocultar actualizaciones de la transportadora",
     "state": {
       "unavailable": "El seguimiento no está disponible en este momento.",
       "pending": "Esperando la primera consulta.",
