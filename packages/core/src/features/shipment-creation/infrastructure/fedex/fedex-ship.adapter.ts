@@ -61,6 +61,19 @@ function kilograms(grams: number): number {
   return Number(`${Math.floor(centi / 100)}.${fraction}`);
 }
 
+/** Grams → pounds rounded up to 0.01 lb using the exact conversion factor. */
+function pounds(grams: number): number {
+  const numerator = BigInt(grams) * BigInt(10_000_000);
+  const divisor = BigInt(45_359_237);
+  const centi = (numerator + divisor - BigInt(1)) / divisor;
+  return Number(`${centi / BigInt(100)}.${String(centi % BigInt(100)).padStart(2, '0')}`);
+}
+
+/** Millimeters → whole inches, rounded up so the package is not understated. */
+function inches(millimeters: number): number {
+  return Number((BigInt(millimeters) * BigInt(10) + BigInt(253)) / BigInt(254));
+}
+
 function party(input: {
   readonly name: string;
   readonly phone: string;
@@ -91,6 +104,9 @@ export function buildFedexShipmentRequest(
   shipDate: Date,
 ): Record<string, unknown> {
   const pkg: ShipmentPackage = input.package;
+  const domesticUs =
+    input.origin.country.trim().toUpperCase() === 'US' &&
+    input.recipient.country.trim().toUpperCase() === 'US';
   return {
     labelResponseOptions: 'LABEL',
     accountNumber: { value: input.accountNumber },
@@ -105,13 +121,22 @@ export function buildFedexShipmentRequest(
       labelSpecification: { imageType: 'PDF', labelStockType: 'PAPER_4X6' },
       requestedPackageLineItems: [
         {
-          weight: { units: 'KG', value: kilograms(pkg.weightGrams) },
-          dimensions: {
-            length: ceilDiv(pkg.lengthMm, 10),
-            width: ceilDiv(pkg.widthMm, 10),
-            height: ceilDiv(pkg.heightMm, 10),
-            units: 'CM',
-          },
+          weight: domesticUs
+            ? { units: 'LB', value: pounds(pkg.weightGrams) }
+            : { units: 'KG', value: kilograms(pkg.weightGrams) },
+          dimensions: domesticUs
+            ? {
+                length: inches(pkg.lengthMm),
+                width: inches(pkg.widthMm),
+                height: inches(pkg.heightMm),
+                units: 'IN',
+              }
+            : {
+                length: ceilDiv(pkg.lengthMm, 10),
+                width: ceilDiv(pkg.widthMm, 10),
+                height: ceilDiv(pkg.heightMm, 10),
+                units: 'CM',
+              },
         },
       ],
     },

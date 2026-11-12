@@ -19,8 +19,9 @@ export class HttpKiviOrderNotificationGateway
       external_order_id: event.aggregateId,
       event_type: event.eventType,
       occurred_at: event.occurredAt,
-      phone: source.phone,
+      ...(source.phone === null ? {} : { phone: source.phone }),
       order_number: source.orderNumber,
+      ...(source.message === undefined ? {} : { message: source.message }),
     });
     if (
       typeof result !== 'object' ||

@@ -560,6 +560,10 @@
       "logo": "Logo de {name}"
     },
     "purchase": {
+      "quantity": "Cantidad",
+      "decreaseQuantity": "Reducir cantidad",
+      "increaseQuantity": "Aumentar cantidad",
+      "invalidQuantity": "Ingresa una cantidad entera dentro del límite disponible.",
       "maxReached": "Ya tienes en el carrito todas las unidades disponibles ({count}).",
       "maxReachedPublic": "Ya tienes en el carrito todas las unidades que podemos ofrecerte.",
       "limited": "Disponibles: {count}",
@@ -802,6 +806,7 @@
         "INVALID_RECIPIENT_COUNTRY": "El país del destinatario no es válido para FedEx.",
         "INVALID_ORIGIN_COUNTRY": "El país de la dirección de origen no es válido para FedEx.",
         "INVALID_POSTAL_CODE": "FedEx rechazó el código postal. Revisa que el país, la ciudad y el código postal del origen y del destinatario coincidan.",
+        "SERVICE_UNAVAILABLE_FOR_DESTINATION": "FedEx indicó que el tipo de servicio seleccionado no está disponible para el destino. Revisa el servicio configurado y su disponibilidad para esta ruta.",
         "ORDER_NOT_PROCESSING": "El pedido ya no está en preparación.",
         "AUTHORIZATION": "FedEx rechazó las credenciales configuradas.",
         "PROVIDER_UNAVAILABLE": "FedEx no está disponible en este momento.",

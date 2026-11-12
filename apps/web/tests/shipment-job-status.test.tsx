@@ -65,6 +65,19 @@ describe('shipment job status', (): void => {
     expect(html).toContain(locale === 'es' ? 'código postal' : 'postal code');
     expect(html).not.toContain(locale === 'es' ? 'motivo no identificado' : 'unknown reason');
   });
+  it.each(['es', 'en'] as const)(
+    'explains a FedEx service availability rejection (%s)',
+    (locale): void => {
+      const html = render(
+        { ...base, state: 'failed', reason: 'SELECTED.DESTINATION.SERVICETYPE.INVALID' },
+        locale,
+      );
+      expect(html).toContain(
+        locale === 'es' ? 'tipo de servicio seleccionado' : 'selected service type',
+      );
+      expect(html).not.toContain(locale === 'es' ? 'motivo no identificado' : 'unknown reason');
+    },
+  );
   it('warns before retrying an ambiguous result', (): void => {
     const html = render({ ...base, state: 'needs_attention', reason: 'AMBIGUOUS_RESULT' });
     expect(html).toContain('Reintentar');

@@ -120,9 +120,9 @@ export class PostgresProductRepository implements ProductRepositoryPort {
     tenantId: TenantId,
     quantity: number,
     tx: TransactionContext,
-  ): Promise<void> {
+  ): Promise<number> {
     try {
-      await this.executeSql(tx, async (conn): Promise<void> => {
+      return await this.executeSql(tx, async (conn): Promise<number> => {
         const rows = await conn`
           UPDATE catalog.products
           SET stock = stock - ${quantity},
@@ -158,6 +158,7 @@ export class PostgresProductRepository implements ProductRepositoryPort {
             'Failed to decrease stock due to an unknown conflict.',
           );
         }
+        return Number(rows[0].stock);
       });
     } catch (error: unknown) {
       if (
@@ -177,13 +178,13 @@ export class PostgresProductRepository implements ProductRepositoryPort {
     tenantId: TenantId,
     quantity: number,
     tx: TransactionContext,
-  ): Promise<void> {
+  ): Promise<number> {
     if (quantity <= 0) {
       throw new ProductRepositoryException('Quantity to increase must be strictly positive.');
     }
 
     try {
-      await this.executeSql(tx, async (conn): Promise<void> => {
+      return await this.executeSql(tx, async (conn): Promise<number> => {
         const rows = await conn`
           UPDATE catalog.products
           SET stock = stock + ${quantity},
@@ -197,6 +198,7 @@ export class PostgresProductRepository implements ProductRepositoryPort {
         if (rows.length === 0) {
           throw new ProductRepositoryException('Product not found for stock increase.');
         }
+        return Number(rows[0].stock);
       });
     } catch (error: unknown) {
       if (error instanceof ProductRepositoryException) {

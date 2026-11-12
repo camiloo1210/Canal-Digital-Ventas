@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { InMemoryProductRepository } from '@/testing/in-memory/in-memory-product.repository';
 import { FakeEventBus } from '@/testing/fakes/fake-event-bus';
+import { FakeTransactionManager } from '@/testing/fakes/fake-transaction-manager';
 import { buildProduct } from '@/testing/builders/product.builder';
 import { createProductId } from '@/products/domain/types/product-id.type';
 import { createTenantId } from '@/shared/domain/types/tenant-id.type';
@@ -25,7 +26,11 @@ function setup(): {
 } {
   const repo = new InMemoryProductRepository();
   const bus = new FakeEventBus();
-  return { repo, bus, useCase: new UpdateProductImagesUseCase(repo, bus) };
+  return {
+    repo,
+    bus,
+    useCase: new UpdateProductImagesUseCase(repo, bus, new FakeTransactionManager()),
+  };
 }
 
 describe('UpdateProductImagesUseCase', (): void => {
@@ -71,7 +76,7 @@ describe('UpdateProductImagesUseCase', (): void => {
     expect(product?.getImageUrl()).toBeNull();
   });
 
-  it('publishes nothing because the entity emits no event on image change', async (): Promise<void> => {
+  it('publishes ProductDetailsChangedEvent so Kivi re-syncs the photos', async (): Promise<void> => {
     const { repo, bus, useCase } = setup();
     repo.seed(buildProduct());
 
@@ -82,7 +87,14 @@ describe('UpdateProductImagesUseCase', (): void => {
       imageUrl: 'b',
     });
 
-    expect(bus.publishedLegacy).toHaveLength(0);
+    expect(bus.published.map((envelope): string => envelope.event.eventName)).toEqual([
+      'ProductDetailsChangedEvent',
+    ]);
+    expect(bus.published[0].context).toMatchObject({
+      tenantId: TENANT,
+      aggregateType: 'Product',
+      aggregateId: PRODUCT_ID,
+    });
   });
 
   it('throws ProductNotFoundException for an unknown id', async (): Promise<void> => {

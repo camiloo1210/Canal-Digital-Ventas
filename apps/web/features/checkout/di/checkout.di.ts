@@ -31,6 +31,7 @@ class CheckoutDIContainer {
         storeCustomerRepository,
         transactionManager,
         new PostgresBuyerWholesaleAdapter(),
+        eventBus,
       );
     }
     return this.generateCommercialOrderUseCase;

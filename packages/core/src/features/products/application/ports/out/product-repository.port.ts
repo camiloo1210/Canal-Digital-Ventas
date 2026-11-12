@@ -20,19 +20,21 @@ export interface ProductRepositoryPort {
 
   delete(id: ProductId, tenantId: TenantId, tx?: TransactionContext): Promise<void>;
 
+  /** Atomically removes stock and resolves with the stock that remains. */
   decreaseStock(
     id: ProductId,
     tenantId: TenantId,
     quantity: number,
     tx: TransactionContext,
-  ): Promise<void>;
+  ): Promise<number>;
 
+  /** Atomically adds stock and resolves with the resulting stock. */
   increaseStock(
     id: ProductId,
     tenantId: TenantId,
     quantity: number,
     tx: TransactionContext,
-  ): Promise<void>;
+  ): Promise<number>;
 
   findById(id: ProductId, tenantId: TenantId, tx?: TransactionContext): Promise<Product | null>;
 

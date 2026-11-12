@@ -9,11 +9,27 @@ import { MessagingException } from '@/shared/application/exceptions/messaging.ex
 import { NotificationPermanentException } from '@/notifications/application/exceptions/notification-permanent.exception';
 import { KiviNotificationRecipient } from '@/kivi/domain/value-objects/kivi-notification-recipient.vo';
 import { InvalidKiviNotificationRecipientException } from '@/kivi/domain/exceptions/invalid-kivi-notification-recipient.exception';
+import { renderKiviOrderMessage } from '@/kivi/infrastructure/kivi-order-message';
+import { parseNotificationOrder } from '@/notifications/infrastructure/notification-order-projection';
+import { resolveOrderNotificationType } from '@/notifications/application/notification-events';
+import type {
+  NotificationCopies,
+  NotificationLocale,
+} from '@/notifications/application/ports/out/notification.ports';
+import type { NotificationOrderDetails } from '@/notifications/application/ports/out/notification-order-details';
+
+/** Wording and links for the WhatsApp text: the same copies the SMTP email uses. */
+export interface KiviMessageOptions {
+  copies: NotificationCopies;
+  locale: NotificationLocale;
+  appUrl?: string;
+}
 
 export class PostgresKiviOrderNotificationAdapter implements KiviOrderNotificationReadPort {
   public constructor(
     private readonly sql: postgres.Sql<Record<string, unknown>>,
     private readonly cipher: KiviTokenCipherPort,
+    private readonly messageOptions?: KiviMessageOptions,
   ) {}
   public async find(event: IntegrationEvent): Promise<KiviOrderNotificationSource | null> {
     try {
@@ -52,6 +68,7 @@ export class PostgresKiviOrderNotificationAdapter implements KiviOrderNotificati
       }
       const captured: unknown = JSON.parse(this.cipher.decrypt(snapshot, aad));
       const recipient = KiviNotificationRecipient.reconstitute(captured);
+      const message = await this.composeMessage(event, recipient.toSnapshot().orderNumber);
       return {
         target: {
           baseUrl: row.base_url,
@@ -62,6 +79,7 @@ export class PostgresKiviOrderNotificationAdapter implements KiviOrderNotificati
           ),
         },
         ...recipient.toSnapshot(),
+        ...(message === undefined ? {} : { message }),
       };
     } catch (error: unknown) {
       if (error instanceof InvalidKiviNotificationRecipientException) {
@@ -70,5 +88,34 @@ export class PostgresKiviOrderNotificationAdapter implements KiviOrderNotificati
       if (error instanceof NotificationPermanentException) throw error;
       throw new MessagingException('Unable to read Kivi notification source');
     }
+  }
+  /**
+   * Builds the WhatsApp text from the same order projection the email uses. A projection that
+   * cannot be read must not block the notification: it degrades to headline and intro.
+   */
+  private async composeMessage(
+    event: IntegrationEvent,
+    orderNumber: string,
+  ): Promise<string | undefined> {
+    const options = this.messageOptions;
+    const type = resolveOrderNotificationType(event.eventType);
+    if (!options || !type) return undefined;
+    let order: NotificationOrderDetails | undefined;
+    try {
+      const [row] = await this.sql<{ details: unknown }[]>`
+        SELECT core.read_order_notification_details(${event.tenantId}::uuid, ${event.aggregateId}::uuid) AS details
+      `;
+      order = row?.details ? parseNotificationOrder(row.details) : undefined;
+    } catch {
+      order = undefined;
+    }
+    return renderKiviOrderMessage({
+      type,
+      locale: options.locale,
+      copy: options.copies[options.locale],
+      orderNumber,
+      order,
+      appUrl: options.appUrl,
+    });
   }
 }
