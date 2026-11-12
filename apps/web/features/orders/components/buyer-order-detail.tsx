@@ -21,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatMoney } from '@/lib/money';
 import { BuyerOrderProgress } from '@/features/orders/components/buyer-order-progress';
 import { BuyerTrackingTimeline } from '@/features/orders/components/buyer-tracking-timeline';
+import { BuyerOrderPrintSummary } from '@/features/orders/components/buyer-order-print-summary';
 import { CancelOrderDialog } from '@/features/orders/components/cancel-order-dialog';
 import { OrderStatusBadge } from '@/features/orders/components/order-status-badge';
 import { PayOrderButton } from '@/features/payments/components/pay-order-button';
@@ -87,10 +88,11 @@ export function BuyerOrderDetail({
   const itemCount = order.items.reduce((sum, item): number => sum + item.quantity, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 print:space-y-0">
+      <BuyerOrderPrintSummary order={order} />
       <section
         aria-label={t('summaryBar')}
-        className="grid gap-4 rounded-xl border bg-muted/30 p-4 sm:grid-cols-2 lg:grid-cols-4"
+        className="grid gap-4 rounded-xl border bg-muted/30 p-4 sm:grid-cols-2 lg:grid-cols-4 print:hidden"
       >
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -127,7 +129,7 @@ export function BuyerOrderDetail({
         </div>
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start print:hidden">
         <div className="space-y-6">
           <Card>
             <CardHeader className="gap-3">

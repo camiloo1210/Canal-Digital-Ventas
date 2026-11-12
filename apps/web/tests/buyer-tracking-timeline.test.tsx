@@ -30,6 +30,13 @@ describe('buyer tracking timeline', (): void => {
     expect(render('en')).toContain('may be out of date');
     expect(render('en')).toContain('Delivered');
   });
+  it('keeps carrier events collapsed with an accessible count in both languages', (): void => {
+    const spanish = render('es');
+    expect(spanish).toContain('<details');
+    expect(spanish).not.toMatch(/<details[^>]*\sopen(?:=|\s|>)/);
+    expect(spanish).toContain('Ver 1 actualización de la transportadora');
+    expect(render('en')).toContain('View 1 carrier update');
+  });
   it('shows pending without inventing events or a last successful consultation', (): void => {
     const html = render('es', { state: 'pending', lastSuccessfulAt: null, events: [] });
     expect(html).toContain('Esperando la primera consulta.');

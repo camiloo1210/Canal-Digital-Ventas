@@ -19,6 +19,8 @@
     "title": "Shipment tracking",
     "sandbox": "Test data from FedEx; this does not represent a real shipment.",
     "lastUpdated": "Last checked: {date} (mainland Ecuador time)",
+    "showEvents": "{count, plural, one {View # carrier update} other {View # carrier updates}}",
+    "hideEvents": "Hide carrier updates",
     "state": {
       "unavailable": "Tracking is currently unavailable.",
       "pending": "Waiting for the first check.",
@@ -710,6 +712,7 @@
       "viewProduct": "View {name} in the store",
       "buyAgain": "Buy it again",
       "print": "Print summary",
+      "printStatus": "Order status",
       "printNote": "This summary is informational and does not replace an invoice.",
       "headline": {
         "draft": "Draft order",
