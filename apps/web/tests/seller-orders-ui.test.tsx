@@ -28,7 +28,9 @@ vi.mock('@/features/orders/components/shipment-job-status', (): object => ({
   ),
 }));
 vi.mock('@/features/orders/components/manual-shipment-form', (): object => ({
-  ManualShipmentForm: (): null => null,
+  ManualShipmentForm: ({ recoveryRequired }: { recoveryRequired: boolean }): React.JSX.Element => (
+    <span>{recoveryRequired ? 'shipment-recovery' : 'shipment-form'}</span>
+  ),
 }));
 vi.mock('@/features/orders/components/seller-order-status-form', (): object => ({
   SellerOrderStatusForm: (): null => null,
@@ -81,6 +83,41 @@ describe('seller order URL and queue', (): void => {
       await SellerOrderDetails({ order: { ...order, canManageShipment: true, shipmentJob: null } }),
     );
     expect(none).not.toContain('job-');
+  });
+  it('keeps the shipment form available when automatic creation is in progress', async (): Promise<void> => {
+    const html = renderToStaticMarkup(
+      await SellerOrderDetails({
+        order: {
+          ...order,
+          canManageShipment: true,
+          shipmentJob: {
+            state: 'creating',
+            reason: null,
+            hasLabel: false,
+            providerTrackingNumber: null,
+          },
+        },
+      }),
+    );
+    expect(html).toContain('job-creating');
+    expect(html).toContain('shipment-form');
+  });
+  it('opens manual recovery when FedEx returned a tracking number that could not be recorded', async (): Promise<void> => {
+    const html = renderToStaticMarkup(
+      await SellerOrderDetails({
+        order: {
+          ...order,
+          canManageShipment: true,
+          shipmentJob: {
+            state: 'needs_attention',
+            reason: 'AMBIGUOUS_RESULT',
+            hasLabel: false,
+            providerTrackingNumber: '123',
+          },
+        },
+      }),
+    );
+    expect(html).toContain('shipment-recovery');
   });
   it('only shows tracking activation to managers with a guide when the sandbox is configured', async (): Promise<void> => {
     const shipment = { carrier: 'FedEx', trackingNumber: '123', version: 2 };
