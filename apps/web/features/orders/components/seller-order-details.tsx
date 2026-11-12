@@ -95,6 +95,10 @@ export async function SellerOrderDetails({
           version={order.shipment?.version ?? 0}
           carrier={order.shipment?.carrier ?? ''}
           trackingNumber={order.shipment?.trackingNumber ?? ''}
+          recoveryRequired={Boolean(
+            order.shipmentJob?.providerTrackingNumber &&
+            (order.shipmentJob.state === 'needs_attention' || order.shipmentJob.state === 'failed'),
+          )}
         />
       )}
       {tracking && <BuyerTrackingTimeline tracking={tracking} />}

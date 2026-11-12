@@ -834,10 +834,11 @@
     "shipment": {
       "invalid": "Ingresa una transportadora o un número de guía válido.",
       "title": "Datos del envío",
-      "description": "Registra la información proporcionada por la tienda; esto no activa rastreo en tiempo real.",
+      "description": "Selecciona la transportadora. Si FedEx genera la guía, el número se añadirá automáticamente.",
       "carrier": "Transportadora",
       "carrierPlaceholder": "Selecciona una transportadora",
       "tracking": "Número de guía",
+      "manualTrackingOption": "Registrar un número de guía manualmente",
       "save": "Guardar envío",
       "saving": "Guardando…",
       "saved": "Datos de envío guardados."
