@@ -63,4 +63,8 @@ skills-lock.json
 apps/web/e2e/.auth/
 apps/web/e2e/README.md
 apps/web/test-results/
+
+# Local artifacts
+output/
+tmp/
 apps/web/playwright-report/
