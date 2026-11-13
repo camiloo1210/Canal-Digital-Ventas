@@ -2,9 +2,7 @@ import * as React from 'react';
 import { Suspense } from 'react';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { getStoreViewerQuery } from '@/features/store/queries/store-viewer.query';
 import { getTranslations } from 'next-intl/server';
-import { BuyerShell } from '@/features/store-directory/components/buyer-shell';
 import { StoreDirectorySearch } from '@/features/store-directory/components/store-directory-search';
 import {
   StoreDirectoryResults,
@@ -32,10 +30,9 @@ export default async function BuyerHomePage(props: {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const viewer = await getStoreViewerQuery();
   const t = await getTranslations('BuyerDashboard.directory');
   return (
-    <BuyerShell active="stores" viewer={viewer}>
+    <>
       <LegacyOrderRedirect />
       <div className="space-y-8">
         <header className="max-w-2xl space-y-3">
@@ -52,6 +49,6 @@ export default async function BuyerHomePage(props: {
           <StoreDirectoryResults page={page} query={query} />
         </Suspense>
       </div>
-    </BuyerShell>
+    </>
   );
 }
