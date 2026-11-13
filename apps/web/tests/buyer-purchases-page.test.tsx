@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import BuyerPurchasesPage from '@/app/purchases/page';
+import BuyerPurchasesPage from '@/app/(buyer)/purchases/page';
 
 const mocks = vi.hoisted(
   (): { getUser: ReturnType<typeof vi.fn>; findOrders: ReturnType<typeof vi.fn> } => ({
@@ -25,12 +25,6 @@ vi.mock('@/features/orders/di/orders.di', (): object => ({
   ordersDi: {
     resolveBuyerOrderReadRepository: (): object => ({ findOrdersByBuyerId: mocks.findOrders }),
   },
-}));
-vi.mock('@/features/store/queries/store-viewer.query', (): object => ({
-  getStoreViewerQuery: async (): Promise<object> => ({ isAuthenticated: true }),
-}));
-vi.mock('@/features/store-directory/components/buyer-shell', (): object => ({
-  BuyerShell: (): null => null,
 }));
 vi.mock('@/features/orders/components/buyer-orders-list', (): object => ({
   BuyerOrdersList: (): null => null,

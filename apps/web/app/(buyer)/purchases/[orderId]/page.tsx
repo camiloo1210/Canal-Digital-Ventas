@@ -3,8 +3,6 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { getStoreViewerQuery } from '@/features/store/queries/store-viewer.query';
-import { BuyerShell } from '@/features/store-directory/components/buyer-shell';
 import { BuyerOrderDetail } from '@/features/orders/components/buyer-order-detail';
 import type { TrackingReadModel } from '@canaldigital/packages/core';
 import { ordersDi } from '@/features/orders/di/orders.di';
@@ -20,8 +18,7 @@ export default async function BuyerPurchaseDetailsPage({
     data: { user },
   } = await client.auth.getUser();
   if (!user) redirect('/login?redirectTo=' + encodeURIComponent('/purchases/' + orderId));
-  const [viewer, t, order] = await Promise.all([
-    getStoreViewerQuery(),
+  const [t, order] = await Promise.all([
     getTranslations('BuyerDashboard.purchases'),
     ordersDi.resolveBuyerOrderReadRepository().findOrderByBuyerId(user.id, orderId),
   ]);
@@ -41,7 +38,7 @@ export default async function BuyerPurchaseDetailsPage({
     }
   }
   return (
-    <BuyerShell active="purchases" viewer={viewer}>
+    <>
       <div className="space-y-6 print:space-y-0">
         <Link
           className="inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-4 print:hidden"
@@ -57,6 +54,6 @@ export default async function BuyerPurchaseDetailsPage({
           paymentsEnabled={process.env.PAYMENTS_CHECKOUT_UI_ENABLED === 'true'}
         />
       </div>
-    </BuyerShell>
+    </>
   );
 }

@@ -2,8 +2,6 @@ import * as React from 'react';
 import { getTranslations } from 'next-intl/server';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { getStoreViewerQuery } from '@/features/store/queries/store-viewer.query';
-import { BuyerShell } from '@/features/store-directory/components/buyer-shell';
 import { BuyerOrdersList } from '@/features/orders/components/buyer-orders-list';
 import { ordersDi } from '@/features/orders/di/orders.di';
 
@@ -17,13 +15,12 @@ export default async function BuyerPurchasesPage(): Promise<React.JSX.Element> {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect('/login?redirectTo=%2Fpurchases');
-  const [viewer, t, orders] = await Promise.all([
-    getStoreViewerQuery(),
+  const [t, orders] = await Promise.all([
     getTranslations('BuyerDashboard.purchases'),
     ordersDi.resolveBuyerOrderReadRepository().findOrdersByBuyerId(user.id),
   ]);
   return (
-    <BuyerShell active="purchases" viewer={viewer}>
+    <>
       <div className="space-y-8">
         <header className="space-y-3">
           <h1 className="text-2xl font-semibold tracking-tight sm:text-[2rem]">{t('title')}</h1>
@@ -36,6 +33,6 @@ export default async function BuyerPurchasesPage(): Promise<React.JSX.Element> {
           paymentsEnabled={process.env.PAYMENTS_CHECKOUT_UI_ENABLED === 'true'}
         />
       </div>
-    </BuyerShell>
+    </>
   );
 }

@@ -2,20 +2,17 @@ import * as React from 'react';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { AppHeader } from '@/components/app-header';
-import { UserNav } from '@/features/iam/components/user-nav';
+import { BuyerNav } from '@/features/store-directory/components/buyer-nav';
 import type { StoreViewer } from '@/features/store/queries/store-viewer.query';
-import { cn } from '@/lib/utils';
 import { BuyerKiviWidget } from '@/features/store-directory/components/buyer-kivi-widget';
 
 interface BuyerShellProps {
   children: React.ReactNode;
-  active: 'stores' | 'purchases' | 'profile';
   viewer: StoreViewer;
 }
 
 export async function BuyerShell({
   children,
-  active,
   viewer,
 }: BuyerShellProps): Promise<React.JSX.Element> {
   const t = await getTranslations('Storefront');
@@ -32,33 +29,11 @@ export async function BuyerShell({
         <Link href="/" className="shrink-0 text-sm font-semibold tracking-tight sm:text-lg">
           {t('auth.platform')}
         </Link>
-        <nav aria-label={tb('label')} className="ml-auto flex items-center gap-1 sm:gap-4">
-          {(
-            [
-              { href: '/', key: 'stores' },
-              { href: '/purchases', key: 'purchases' },
-              { href: '/account/profile', key: 'profile' },
-            ] as const
-          ).map((item): React.JSX.Element => (
-            <Link
-              key={item.key}
-              href={item.href}
-              aria-current={active === item.key ? 'page' : undefined}
-              className={cn(
-                'flex min-h-11 items-center whitespace-nowrap rounded-md px-2 text-xs transition-colors hover:text-foreground motion-reduce:transition-none sm:px-3 sm:text-sm',
-                active === item.key ? 'font-semibold text-foreground' : 'text-muted-foreground',
-              )}
-            >
-              {tb(item.key)}
-            </Link>
-          ))}
-        </nav>
-        <UserNav
+        <BuyerNav
           viewer={viewer}
-          redirectTo={
-            active === 'purchases' ? '/purchases' : active === 'profile' ? '/account/profile' : '/'
-          }
-          labels={{
+          navLabel={tb('label')}
+          tabLabels={{ stores: tb('stores'), purchases: tb('purchases'), profile: tb('profile') }}
+          userLabels={{
             login: t('login'),
             createAccount: t('createAccount'),
             logout: t('logout'),
