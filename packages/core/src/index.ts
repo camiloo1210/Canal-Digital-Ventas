@@ -559,6 +559,8 @@ export {
   StaffEmailGenerator,
   slugifyPersonName,
   isGeneratedStaffEmailOf,
+  staffLoginIdentifier,
+  resolveStaffLoginIdentifier,
   STAFF_EMAIL_DOMAIN_SUFFIX,
 } from '@/iam/domain/services/staff-email-generator';
 export {
