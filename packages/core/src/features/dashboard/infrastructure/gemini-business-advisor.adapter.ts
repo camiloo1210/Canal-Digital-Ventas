@@ -120,14 +120,15 @@ export class GeminiBusinessAdvisorAdapter implements BusinessAdvisorPort {
   ) {}
 
   async advise(digest: BusinessAdvisorDigest): Promise<BusinessAdvice> {
-    if (!this.apiKey) throw new BusinessAdvisorException('not_configured');
+    const key = this.apiKey?.trim();
+    if (!key) throw new BusinessAdvisorException('not_configured');
     let response: Response;
     try {
       response = await this.fetcher(
         `${ENDPOINT}/${encodeURIComponent(this.model)}:generateContent`,
         {
           method: 'POST',
-          headers: { 'content-type': 'application/json', 'x-goog-api-key': this.apiKey },
+          headers: { 'content-type': 'application/json', 'x-goog-api-key': key },
           signal: AbortSignal.timeout(TIMEOUT_MS),
           body: JSON.stringify({
             systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
@@ -141,7 +142,12 @@ export class GeminiBusinessAdvisorAdapter implements BusinessAdvisorPort {
           }),
         },
       );
-      if (!response.ok) throw new Error(`Gemini responded with HTTP ${response.status}`);
+      if (!response.ok) {
+        const detail = await response.text().catch((): string => '');
+        throw new Error(
+          `Gemini responded with HTTP ${response.status}${detail ? `: ${detail}` : ''}`,
+        );
+      }
     } catch (error: unknown) {
       throw new BusinessAdvisorException('unavailable', error);
     }
