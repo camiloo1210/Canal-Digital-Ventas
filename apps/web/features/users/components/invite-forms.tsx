@@ -4,6 +4,7 @@ import { useActionState, useState } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { Check, Copy, TriangleAlert } from 'lucide-react';
+import { staffLoginIdentifier } from '@canaldigital/packages/core';
 import {
   acceptInvitationAction,
   acceptInvitationAsCurrentUserAction,
@@ -126,7 +127,7 @@ function PasswordField({
 }
 
 /** Shown once the generated login email exists: the person must save it before moving on. */
-function GeneratedEmailNotice({
+export function GeneratedEmailNotice({
   email,
   succeeded,
 }: {
@@ -135,9 +136,10 @@ function GeneratedEmailNotice({
 }): React.JSX.Element {
   const t = useTranslations('Users.invite');
   const [copied, setCopied] = useState(false);
+  const identifier = staffLoginIdentifier(email);
   const copy = async (): Promise<void> => {
     try {
-      await navigator.clipboard.writeText(email);
+      await navigator.clipboard.writeText(identifier);
       setCopied(true);
     } catch {
       setCopied(false);
@@ -157,7 +159,7 @@ function GeneratedEmailNotice({
           <Input
             id="invite-generated-email"
             readOnly
-            value={email}
+            value={identifier}
             className="min-h-11 font-mono text-xs"
             onFocus={(event: React.FocusEvent<HTMLInputElement>): void =>
               event.currentTarget.select()

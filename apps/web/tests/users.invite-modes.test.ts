@@ -112,14 +112,11 @@ describe('accept invitation: GENERATED_EMAIL', (): void => {
     lastName: 'Perez',
   };
 
-  it('creates the account from the names and shows the email instead of redirecting', async (): Promise<void> => {
-    const result = await acceptInvitationAction(
-      initial,
-      form({ ...generated, email: 'evil@x.com' }),
-    );
-    expect(result.success).toBe(true);
-    expect(result.generatedEmail).toBe(GENERATED_EMAIL);
-    expect(mocks.redirect).not.toHaveBeenCalled();
+  it('redirects successful registration to a page independent of the consumed invitation', async (): Promise<void> => {
+    await expect(
+      acceptInvitationAction(initial, form({ ...generated, email: 'evil@x.com' })),
+    ).rejects.toThrow('NEXT_REDIRECT');
+    expect(mocks.redirect).toHaveBeenCalledWith('/invite/complete');
     expect(mocks.staffExecute).toHaveBeenCalledWith({
       firstName: 'Ana',
       lastName: 'Perez',
@@ -131,7 +128,6 @@ describe('accept invitation: GENERATED_EMAIL', (): void => {
     expect(mocks.accept).toHaveBeenCalledWith(
       expect.objectContaining({ token, userId, firstName: 'Ana', lastName: 'Perez' }),
     );
-    expect(JSON.stringify(result)).not.toContain('long-enough-1');
   });
 
   it('creates no user for a dead invitation', async (): Promise<void> => {
