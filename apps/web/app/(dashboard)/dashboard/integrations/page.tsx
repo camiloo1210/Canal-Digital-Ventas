@@ -1,3 +1,5 @@
+import { SectionNav } from '@/components/section-nav';
+import { INTEGRATIONS_SECTIONS } from '@/features/kivi/components/integrations-sections';
 import { getMessages, getTranslations } from 'next-intl/server';
 import { NextIntlClientProvider } from 'next-intl';
 import { requireDashboardOwner } from '@/features/dashboard/queries/dashboard-context.query';
@@ -29,6 +31,7 @@ export default async function IntegrationsPage({
   searchParams: Promise<TenantSearchParams>;
 }): Promise<React.JSX.Element> {
   const t = await getTranslations('KiviConnection');
+  const nav = await getTranslations('IntegrationsNav');
   const messages = await getMessages();
   const { userId, tenantId } = await requireDashboardOwner(
     tenantParam((await searchParams).tenant),
@@ -90,25 +93,47 @@ export default async function IntegrationsPage({
               KiviKnowledge: messages.KiviKnowledge,
             }}
           >
-            <KiviConnectionPanel connection={connection} />
-            <KiviKnowledgePanel
-              linked={connection !== null}
-              documents={knowledge}
-              available={knowledgeAvailable}
-              maxDocuments={KIVI_KNOWLEDGE_MAX_DOCUMENTS}
-            />
-            <KiviWhatsAppPanel
-              linked={connection !== null}
-              channel={messaging.channel}
-              account={messaging.account}
-            />
-            <KiviNotificationsPanel
-              settings={messaging.settings}
-              available={messaging.settings !== null}
-              workerEnabled={process.env.KIVI_NOTIFICATIONS_ENABLED === 'true'}
-              channel={messaging.channel}
-            />
-            <KiviDeliveriesPanel deliveries={messaging.deliveries} />
+            <div className="lg:grid lg:grid-cols-[12rem_minmax(0,1fr)] lg:items-start lg:gap-10">
+              <SectionNav
+                variant="rail"
+                label={nav('label')}
+                items={INTEGRATIONS_SECTIONS.map((section): { id: string; label: string } => ({
+                  id: section.id,
+                  label: nav(section.labelKey),
+                }))}
+              />
+              <div className="min-w-0 space-y-8">
+                <section id="integration-connection" className="scroll-mt-32">
+                  <KiviConnectionPanel connection={connection} />
+                </section>
+                <section id="integration-knowledge" className="scroll-mt-32">
+                  <KiviKnowledgePanel
+                    linked={connection !== null}
+                    documents={knowledge}
+                    available={knowledgeAvailable}
+                    maxDocuments={KIVI_KNOWLEDGE_MAX_DOCUMENTS}
+                  />
+                </section>
+                <section id="integration-whatsapp" className="scroll-mt-32">
+                  <KiviWhatsAppPanel
+                    linked={connection !== null}
+                    channel={messaging.channel}
+                    account={messaging.account}
+                  />
+                </section>
+                <section id="integration-notifications" className="scroll-mt-32">
+                  <KiviNotificationsPanel
+                    settings={messaging.settings}
+                    available={messaging.settings !== null}
+                    workerEnabled={process.env.KIVI_NOTIFICATIONS_ENABLED === 'true'}
+                    channel={messaging.channel}
+                  />
+                </section>
+                <section id="integration-deliveries" className="scroll-mt-32">
+                  <KiviDeliveriesPanel deliveries={messaging.deliveries} />
+                </section>
+              </div>
+            </div>
           </NextIntlClientProvider>
         </div>
       </div>

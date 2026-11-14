@@ -1055,6 +1055,14 @@
       "country": "Use a 2-letter uppercase country code, for example CO."
     }
   },
+  "IntegrationsNav": {
+    "label": "Integration sections",
+    "connection": "Connection",
+    "knowledge": "Knowledge",
+    "whatsapp": "WhatsApp",
+    "notifications": "Notifications",
+    "deliveries": "Deliveries"
+  },
   "KiviConnection": {
     "title": "Kivi integration",
     "subtitle": "Connect your store to Kivi to keep your catalog in sync, with nothing technical to set up.",
@@ -1201,6 +1209,12 @@
     "actionError": "Unable to save this change. Please try again."
   },
   "CatalogForms": {
+    "navLabel": "Product sections",
+    "navBasic": "Basics",
+    "navPricing": "Price & stock",
+    "navWholesale": "Wholesale",
+    "navPackage": "Package",
+    "navImages": "Images",
     "cancel": "Cancel",
     "back": "Back to {label}",
     "requiredHelp": "Fields marked with * are required.",
@@ -1283,6 +1297,7 @@
     "moneyFormat": "Use a valid amount with up to 2 decimal places, such as 40.00.",
     "moneyFormatWhole": "Use a whole amount without decimals, such as 4000.",
     "moneyRange": "The amount exceeds the allowed limit.",
+    "integerRange": "The value exceeds the maximum allowed (999,999,999).",
     "integerFormat": "Use a whole number of 0 or greater.",
     "booleanFormat": "Review the VAT selection.",
     "invalidRequest": "We could not identify this edit. Reload the page before saving.",

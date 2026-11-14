@@ -1055,6 +1055,14 @@
       "country": "Usa un código de país de 2 letras en mayúscula, por ejemplo CO."
     }
   },
+  "IntegrationsNav": {
+    "label": "Secciones de integraciones",
+    "connection": "Conexión",
+    "knowledge": "Conocimiento",
+    "whatsapp": "WhatsApp",
+    "notifications": "Notificaciones",
+    "deliveries": "Entregas"
+  },
   "KiviConnection": {
     "title": "Integración con Kivi",
     "subtitle": "Conecta tu tienda con Kivi para mantener tu catálogo sincronizado, sin configurar nada técnico.",
@@ -1201,6 +1209,12 @@
     "actionError": "No pudimos guardar el cambio. Vuelve a intentarlo."
   },
   "CatalogForms": {
+    "navLabel": "Secciones del producto",
+    "navBasic": "Datos básicos",
+    "navPricing": "Precio e inventario",
+    "navWholesale": "Mayorista",
+    "navPackage": "Paquete",
+    "navImages": "Imágenes",
     "cancel": "Cancelar",
     "back": "Volver a {label}",
     "requiredHelp": "Los campos con * son obligatorios.",
@@ -1283,6 +1297,7 @@
     "moneyFormat": "Usa un importe válido con hasta 2 decimales, por ejemplo 40.00.",
     "moneyFormatWhole": "Usa un importe entero sin decimales, por ejemplo 4000.",
     "moneyRange": "El importe supera el límite permitido.",
+    "integerRange": "El valor supera el máximo permitido (999 999 999).",
     "integerFormat": "Usa un número entero igual o mayor que 0.",
     "booleanFormat": "Revisa la selección de IVA.",
     "invalidRequest": "No pudimos identificar esta edición. Recarga la página antes de guardar.",
