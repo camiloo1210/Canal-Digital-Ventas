@@ -520,6 +520,11 @@
       "lineQuantity": "Cantidad: {count}"
     },
     "checkoutErrors": {
+      "invalidName": "Ingresa tu nombre completo usando solo letras.",
+      "invalidPhone": "Ingresa un teléfono válido: solo números, con código de país opcional (por ejemplo +593 99 123 4567).",
+      "invalidDocumentId": "Ingresa un documento válido de 5 a 20 caracteres, solo letras y números.",
+      "invalidZipCode": "Ingresa un código postal válido (3 a 10 letras o números).",
+      "invalidPlace": "Usa solo letras en este campo, sin números ni símbolos.",
       "outOfStock": "Uno o más productos en tu carrito están agotados.",
       "productUnavailable": "Uno o más productos en tu carrito no están disponibles.",
       "invalidCart": "Tu carrito es inválido. Por favor, recarga la página.",
@@ -616,6 +621,11 @@
       "offlineDescription": "Necesitas conexión a internet para iniciar sesión.",
       "confirmEmail": "Revisa tu correo para confirmar tu cuenta. Después, inicia sesión para continuar tu compra.",
       "errors": {
+        "firstNameInvalid": "Ingresa un nombre válido: solo letras, sin números.",
+        "lastNameInvalid": "Ingresa un apellido válido: solo letras, sin números.",
+        "storeNameInvalid": "El nombre de la tienda debe tener entre 3 y 100 caracteres.",
+        "storeSlugInvalid": "La URL de la tienda debe tener de 3 a 50 caracteres: minúsculas, números y guiones simples (por ejemplo mi-tienda).",
+        "passwordTooLong": "La contraseña no puede superar los 128 caracteres.",
         "email": "Introduce un correo o usuario de tienda válido.",
         "passwordRequired": "Introduce tu contraseña.",
         "passwordLength": "La contraseña debe tener al menos 6 caracteres.",
@@ -1261,6 +1271,7 @@
     "imageHelp": "Sube hasta 8 imágenes. Se mostrarán como un carrusel en la tienda.",
     "imagePreview": "Vista previa de la imagen del producto",
     "noImage": "Aún no hay imagen",
+    "imageDropHint": "Haz clic aquí o arrastra tus imágenes (JPG, PNG o WebP)",
     "imageFormats": "JPEG, PNG o WebP. Las imágenes grandes se optimizan automáticamente; máximo 5 MB tras optimizar.",
     "imageFormat": "Elige un archivo JPEG, PNG o WebP.",
     "imageSize": "La imagen no debe superar los 5 MB.",
