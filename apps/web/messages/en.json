@@ -520,6 +520,11 @@
       "lineQuantity": "Quantity: {count}"
     },
     "checkoutErrors": {
+      "invalidName": "Enter your full name using letters only.",
+      "invalidPhone": "Enter a valid phone number: digits only, with an optional country code (for example +593 99 123 4567).",
+      "invalidDocumentId": "Enter a valid ID of 5 to 20 characters, letters and numbers only.",
+      "invalidZipCode": "Enter a valid postal code (3 to 10 letters or numbers).",
+      "invalidPlace": "Use letters only in this field, with no numbers or symbols.",
       "outOfStock": "One or more items in your cart are out of stock.",
       "productUnavailable": "One or more items in your cart are unavailable.",
       "invalidCart": "Your cart is invalid. Please refresh the page.",
@@ -616,6 +621,11 @@
       "offlineDescription": "You need an internet connection to log in.",
       "confirmEmail": "Check your email to confirm your account. Then log in to continue shopping.",
       "errors": {
+        "firstNameInvalid": "Enter a valid first name: letters only, no numbers.",
+        "lastNameInvalid": "Enter a valid last name: letters only, no numbers.",
+        "storeNameInvalid": "The store name must be between 3 and 100 characters.",
+        "storeSlugInvalid": "The store URL must be 3 to 50 characters: lowercase letters, numbers and single hyphens (for example my-store).",
+        "passwordTooLong": "The password cannot be longer than 128 characters.",
         "email": "Enter a valid email address.",
         "passwordRequired": "Enter your password.",
         "passwordLength": "Your password must have at least 6 characters.",
@@ -1261,6 +1271,7 @@
     "imageHelp": "Upload up to 8 images. They appear as a carousel in the storefront.",
     "imagePreview": "Product image preview",
     "noImage": "No image yet",
+    "imageDropHint": "Click here or drag your images in (JPG, PNG or WebP)",
     "imageFormats": "JPEG, PNG or WebP. Large images are optimized automatically; maximum 5 MB after optimizing.",
     "imageFormat": "Choose a JPEG, PNG or WebP file.",
     "imageSize": "The image must not exceed 5 MB.",

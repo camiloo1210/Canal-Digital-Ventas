@@ -3,6 +3,7 @@
 import { useActionState } from 'react';
 import { signupClientAction } from '@/features/iam/actions/signup-client.actions';
 import { Input } from '@/components/ui/input';
+import { EMAIL_INPUT, NEW_PASSWORD_INPUT } from '@/lib/input-attributes';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useFormStatus } from 'react-dom';
@@ -42,6 +43,7 @@ export function SignupClientForm({
           name="email"
           type="email"
           autoComplete="email"
+          maxLength={EMAIL_INPUT.maxLength}
           required
           placeholder="buyer@example.com"
         />
@@ -49,7 +51,13 @@ export function SignupClientForm({
 
       <div className="space-y-2">
         <Label htmlFor="password">Password</Label>
-        <Input id="password" name="password" type="password" required placeholder="********" />
+        <Input
+          id="password"
+          name="password"
+          {...NEW_PASSWORD_INPUT}
+          required
+          placeholder="********"
+        />
       </div>
 
       <ConsentFields options={options} />

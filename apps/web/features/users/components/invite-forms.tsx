@@ -102,6 +102,7 @@ function PasswordField({
           autoComplete="new-password"
           required
           minLength={8}
+          maxLength={200}
           className="min-h-11"
           aria-invalid={Boolean(errors?.password)}
           aria-describedby="invite-password-help"
@@ -119,6 +120,7 @@ function PasswordField({
             autoComplete="new-password"
             required
             minLength={8}
+            maxLength={200}
             className="min-h-11"
             aria-invalid={Boolean(errors?.confirmPassword)}
           />
@@ -256,6 +258,7 @@ export function InviteSignupForm({
             name="email"
             type="email"
             autoComplete="email"
+            maxLength={254}
             required
             defaultValue={state.values?.email ?? ''}
             className="min-h-11"

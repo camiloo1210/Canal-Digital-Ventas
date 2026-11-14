@@ -33,6 +33,7 @@ export function CategoryFormFields({
           key={'name-' + revision}
           id="name"
           name="name"
+          maxLength={100}
           required
           defaultValue={defaultValues?.name ?? ''}
           aria-invalid={Boolean(fieldErrors.name?.length)}
@@ -52,6 +53,7 @@ export function CategoryFormFields({
           key={'description-' + revision}
           id="description"
           name="description"
+          maxLength={200}
           defaultValue={defaultValues?.description ?? ''}
           aria-invalid={Boolean(fieldErrors.description?.length)}
           aria-describedby={

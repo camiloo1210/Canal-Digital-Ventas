@@ -1,6 +1,5 @@
 'use server';
 
-import { z } from 'zod';
 import { getTranslations } from 'next-intl/server';
 import { authenticationLimitMessage } from '@/lib/security/authentication-rate-limit';
 import { redirect } from 'next/navigation';
@@ -10,11 +9,7 @@ import { resolveActiveTenantIdBySlugQuery } from '@/features/users/queries/tenan
 import { consentSchema } from '@/features/users/schemas/users.schema';
 import { DomainException, ApplicationException } from '@canaldigital/packages/core';
 import { ActionState } from '@/features/iam/actions/signup.actions';
-
-const signupClientSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-});
+import { clientSignupSchema } from '@/features/iam/schemas/auth.schema';
 
 export async function signupClientAction(
   prevState: ActionState,
@@ -26,12 +21,13 @@ export async function signupClientAction(
   const password = formData.get('password');
   const tenantSlug = formData.get('tenantSlug'); // Optional: Which store they came from
 
-  const validatedFields = signupClientSchema.safeParse({ email, password });
+  const validatedFields = clientSignupSchema.safeParse({ email, password });
 
   if (!validatedFields.success) {
+    const t = await getTranslations('Storefront.auth.errors');
     return {
       success: false,
-      error: validatedFields.error.issues[0]?.message || 'Invalid input provided.',
+      error: t(validatedFields.error.issues[0]?.message ?? 'email'),
     };
   }
 
