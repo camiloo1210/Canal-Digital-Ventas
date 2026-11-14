@@ -56,18 +56,20 @@ export function BusinessSwitcher({
             <SidebarMenuButton
               size="lg"
               aria-label={t('trigger', { name: current?.tenantName ?? t('none') })}
-              className="min-h-12 aria-expanded:bg-muted"
+              className="min-h-12 rounded-lg border border-sidebar-border bg-card shadow-(--shadow-card) transition-colors duration-200 hover:bg-card aria-expanded:bg-card motion-reduce:transition-none"
             />
           }
         >
-          {pending ? (
-            <Loader2
-              aria-hidden="true"
-              className="size-5 shrink-0 animate-spin motion-reduce:animate-none"
-            />
-          ) : (
-            <Store aria-hidden="true" className="size-5 shrink-0" />
-          )}
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-(--shadow-card)">
+            {pending ? (
+              <Loader2
+                aria-hidden="true"
+                className="size-[1.125rem] animate-spin motion-reduce:animate-none"
+              />
+            ) : (
+              <Store aria-hidden="true" className="size-[1.125rem]" />
+            )}
+          </span>
           <div className="min-w-0 flex-1 text-left">
             <p className="truncate font-semibold">{current?.tenantName ?? t('none')}</p>
             <p className="truncate text-xs text-muted-foreground">
