@@ -8,7 +8,7 @@ import {
 } from '@/dashboard/application/ports/out/business-advisor.port';
 import { BusinessAdvisorException } from '@/dashboard/application/exceptions/business-advisor.exception';
 
-export const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash';
+export const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash-lite';
 const ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
 const TIMEOUT_MS = 30_000;
 const MAX_TIPS = 8;
@@ -122,26 +122,24 @@ export class GeminiBusinessAdvisorAdapter implements BusinessAdvisorPort {
   async advise(digest: BusinessAdvisorDigest): Promise<BusinessAdvice> {
     const key = this.apiKey?.trim();
     if (!key) throw new BusinessAdvisorException('not_configured');
+    const model = (this.model || DEFAULT_GEMINI_MODEL).trim();
     let response: Response;
     try {
-      response = await this.fetcher(
-        `${ENDPOINT}/${encodeURIComponent(this.model)}:generateContent`,
-        {
-          method: 'POST',
-          headers: { 'content-type': 'application/json', 'x-goog-api-key': key },
-          signal: AbortSignal.timeout(TIMEOUT_MS),
-          body: JSON.stringify({
-            systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-            contents: [{ role: 'user', parts: [{ text: JSON.stringify(digest) }] }],
-            generationConfig: {
-              temperature: 0.4,
-              maxOutputTokens: 2048,
-              responseMimeType: 'application/json',
-              responseSchema: RESPONSE_SCHEMA,
-            },
-          }),
-        },
-      );
+      response = await this.fetcher(`${ENDPOINT}/${encodeURIComponent(model)}:generateContent`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-goog-api-key': key },
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+          contents: [{ role: 'user', parts: [{ text: JSON.stringify(digest) }] }],
+          generationConfig: {
+            ...(model.startsWith('gemini-3') ? {} : { temperature: 0.4 }),
+            maxOutputTokens: 2048,
+            responseMimeType: 'application/json',
+            responseSchema: RESPONSE_SCHEMA,
+          },
+        }),
+      });
       if (!response.ok) {
         const detail = await response.text().catch((): string => '');
         throw new Error(
