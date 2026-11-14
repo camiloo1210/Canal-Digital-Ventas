@@ -52,6 +52,10 @@ export default defineConfig({
         __dirname,
         'packages/core/src/features/carts/application/services/cart-quote.ts',
       ),
+      '@canaldigital/packages/core/staff-login': path.resolve(
+        __dirname,
+        'packages/core/src/features/iam/domain/services/staff-email-generator.ts',
+      ),
       '@canaldigital/packages/core/money-format': path.resolve(
         __dirname,
         'packages/core/src/features/shared/domain/money-format.ts',

@@ -4,7 +4,7 @@ import { useActionState } from 'react';
 import { useTranslations } from 'next-intl';
 import { UsersRound } from 'lucide-react';
 import type { MemberReadModel, TenantRoleReadModel } from '@canaldigital/packages/core';
-import { staffLoginIdentifier } from '@canaldigital/packages/core';
+import { staffLoginIdentifier } from '@canaldigital/packages/core/staff-login';
 import { assignMemberRoleAction } from '@/features/users/actions/members.actions';
 import { MemberAccountActions } from '@/features/users/components/member-account-actions';
 import { INITIAL_USERS_STATE } from '@/features/users/types';

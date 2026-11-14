@@ -4,7 +4,7 @@ import { useActionState, useState } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { Check, Copy, TriangleAlert } from 'lucide-react';
-import { staffLoginIdentifier } from '@canaldigital/packages/core';
+import { staffLoginIdentifier } from '@canaldigital/packages/core/staff-login';
 import {
   acceptInvitationAction,
   acceptInvitationAsCurrentUserAction,
