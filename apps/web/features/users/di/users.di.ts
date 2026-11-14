@@ -105,9 +105,7 @@ export async function getCreateStaffAccountUseCase(): Promise<CreateStaffAccount
   return new CreateStaffAccountUseCase(
     new SupabaseAuthAdapter(await createSupabaseServerClient()),
     getAdminAuthPort(),
-    new StaffEmailGenerator((length: number): Uint8Array =>
-      crypto.getRandomValues(new Uint8Array(length)),
-    ),
+    new StaffEmailGenerator(),
   );
 }
 

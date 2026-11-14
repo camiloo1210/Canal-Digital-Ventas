@@ -20,7 +20,7 @@ export interface CreateStaffAccountResult {
   email: string;
 }
 
-export const STAFF_EMAIL_MAX_ATTEMPTS = 5;
+export const STAFF_EMAIL_MAX_ATTEMPTS = 100;
 
 /**
  * Creates the Supabase Auth user for a GENERATED_EMAIL invitation. It REQUIRES the admin port: the
@@ -39,11 +39,14 @@ export class CreateStaffAccountUseCase {
     const admin = this.admin;
     if (!admin) throw new AdminAuthUnavailableException();
     for (let attempt = 0; attempt < this.maxAttempts; attempt += 1) {
-      const email = this.emails.generate({
-        firstName: dto.firstName,
-        lastName: dto.lastName,
-        tenantSlug: dto.tenantSlug,
-      });
+      const email = this.emails.generate(
+        {
+          firstName: dto.firstName,
+          lastName: dto.lastName,
+          tenantSlug: dto.tenantSlug,
+        },
+        attempt,
+      );
       try {
         const userId = await this.createUser(admin, email, dto.password, dto.tenantId);
         return { userId, email };

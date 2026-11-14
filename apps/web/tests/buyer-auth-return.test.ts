@@ -110,6 +110,18 @@ describe('buyer auth round trip', (): void => {
       'REDIRECT:/store/shop/checkout',
     );
   });
+  it('accepts a staff identifier and resolves it to the internal address', async (): Promise<void> => {
+    const data = new FormData();
+    data.set('email', 'juanda.brazales@tienda');
+    data.set('password', 'password');
+    await expect(loginWithEmailAction({ success: false, error: null }, data)).rejects.toThrow(
+      'REDIRECT:/login',
+    );
+    expect(mocks.execute).toHaveBeenCalledWith({
+      email: 'juanda.brazales@tienda.staff.invalid',
+      password: 'password',
+    });
+  });
   it('returns a signed in customer registration to checkout', async (): Promise<void> => {
     const data = new FormData();
     data.set('email', 'buyer@example.test');

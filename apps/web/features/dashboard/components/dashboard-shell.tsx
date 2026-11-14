@@ -42,7 +42,7 @@ export function DashboardShell({
       <SidebarInset
         id="dashboard-main"
         tabIndex={-1}
-        className="min-w-0 scroll-mt-16 focus:outline-none"
+        className="min-w-0 scroll-mt-16 bg-background focus:outline-none md:peer-data-[variant=inset]:rounded-2xl md:peer-data-[variant=inset]:border md:peer-data-[variant=inset]:border-border/70 md:peer-data-[variant=inset]:shadow-(--shadow-card)"
       >
         {children}
       </SidebarInset>

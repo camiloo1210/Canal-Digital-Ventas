@@ -9,6 +9,26 @@ import {
   UserPermission,
 } from '@canaldigital/packages/core';
 
+/** Digits only, so exponent ("1e1"), hex ("0x5"), signed and decimal forms never reach Number(). */
+function wholeNumberField(message: string, max: number): z.ZodType<number, string> {
+  return z
+    .string(message)
+    .trim()
+    .regex(/^\d+$/, message)
+    .transform((value): number => Number(value))
+    .pipe(z.number(message).int(message).min(1, message).max(max, message));
+}
+
+/** A person name: starts with a letter, no digits; letters, marks, spaces, apostrophes, dots, hyphens. */
+function personNameField(message: string): z.ZodType<string, string> {
+  return z
+    .string(message)
+    .trim()
+    .min(1, message)
+    .max(60, message)
+    .regex(/^\p{L}[\p{L}\p{M}' .-]*$/u, message);
+}
+
 const permissionValues = Object.values(UserPermission) as [UserPermission, ...UserPermission[]];
 
 export const roleFormSchema = z.object({
@@ -24,16 +44,8 @@ export const invitationAccountModeSchema = z.enum(INVITATION_ACCOUNT_MODES, 'acc
 export const createInvitationSchema = z.object({
   roleId: z.string().uuid('roleRequired'),
   accountMode: invitationAccountModeSchema.default('GENERATED_EMAIL'),
-  expiresInDays: z.coerce
-    .number('expiryInvalid')
-    .int('expiryInvalid')
-    .min(1, 'expiryInvalid')
-    .max(INVITATION_MAX_EXPIRY_DAYS, 'expiryInvalid'),
-  maxUses: z.coerce
-    .number('maxUsesInvalid')
-    .int('maxUsesInvalid')
-    .min(1, 'maxUsesInvalid')
-    .max(INVITATION_MAX_USES_LIMIT, 'maxUsesInvalid'),
+  expiresInDays: wholeNumberField('expiryInvalid', INVITATION_MAX_EXPIRY_DAYS),
+  maxUses: wholeNumberField('maxUsesInvalid', INVITATION_MAX_USES_LIMIT),
 });
 
 export const revokeInvitationSchema = z.object({ invitationId: z.string().uuid() });
@@ -55,8 +67,8 @@ export const resetMemberPasswordSchema = memberTargetSchema.extend({
 });
 
 export const renameMemberSchema = memberTargetSchema.extend({
-  firstName: z.string().trim().min(1).max(60),
-  lastName: z.string().trim().min(1).max(60),
+  firstName: personNameField('nameRequired'),
+  lastName: personNameField('nameRequired'),
 });
 
 const optionalBucket = <T extends readonly [string, ...string[]]>(
@@ -74,7 +86,7 @@ export const consentSchema = z.object({
   province: optionalBucket(PROVINCES),
 });
 
-const nameField = z.string().trim().min(1, 'nameRequired').max(60, 'nameRequired');
+const nameField = personNameField('nameRequired');
 
 const tokenField = z.string().trim().min(20).max(200);
 const passwordField = z.string().min(8, 'passwordLength').max(200, 'passwordLength');

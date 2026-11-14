@@ -38,13 +38,15 @@ export async function ProfileContent({
           <AvatarFallback>{initialsOf(firstName, lastName, shownEmail)}</AvatarFallback>
         </Avatar>
         <div className="min-w-0 space-y-1">
-          <h1 className="truncate text-2xl font-semibold tracking-tight sm:text-[2rem]">
+          <h1 className="truncate text-2xl font-semibold tracking-[-0.02em] text-balance sm:text-[1.75rem]">
             {fullName || t('title')}
           </h1>
           <p className="truncate text-sm text-muted-foreground">{shownEmail}</p>
         </div>
       </header>
-      <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">{t('subtitle')}</p>
+      <p className="max-w-2xl max-w-prose text-sm leading-relaxed text-pretty text-muted-foreground sm:text-[0.9375rem]">
+        {t('subtitle')}
+      </p>
       {buyer && <WholesaleAccount enabled={profile?.wholesaleEnabled ?? false} />}
       <ProfileForm
         initial={{

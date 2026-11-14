@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import type { ProductFormContextReadModel } from '@canaldigital/packages/core';
 import { Input } from '@/components/ui/input';
+import { DECIMAL_INPUT, WHOLE_NUMBER_INPUT } from '@/lib/input-attributes';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field';
@@ -70,7 +71,11 @@ function ProductInput({
         name={name}
         defaultValue={value ?? ''}
         required={required}
-        inputMode={inputMode}
+        {...(inputMode === 'numeric'
+          ? WHOLE_NUMBER_INPUT
+          : inputMode === 'decimal'
+            ? DECIMAL_INPUT
+            : {})}
         aria-invalid={Boolean(error)}
         aria-describedby={
           [help ? name + '-help' : '', error ? name + '-error' : ''].filter(Boolean).join(' ') ||
@@ -120,7 +125,7 @@ export function ProductFormFields({
   return (
     <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_18rem]">
       <div className="min-w-0 space-y-6">
-        <Card className="shadow-none">
+        <Card id="section-basic" className="scroll-mt-32 shadow-none">
           <CardHeader>
             <CardTitle>
               <h2>{t('basicTitle')}</h2>
@@ -208,7 +213,7 @@ export function ProductFormFields({
             </Field>
           </CardContent>
         </Card>
-        <Card className="shadow-none">
+        <Card id="section-pricing" className="scroll-mt-32 shadow-none">
           <CardHeader>
             <CardTitle>
               <h2>{t('pricingTitle')}</h2>
@@ -274,7 +279,7 @@ export function ProductFormFields({
             </Field>
           </CardContent>
         </Card>
-        <Card className="shadow-none">
+        <Card id="section-wholesale" className="scroll-mt-32 shadow-none">
           <CardHeader>
             <CardTitle>
               <h2>{t('wholesaleTitle')}</h2>
@@ -304,7 +309,7 @@ export function ProductFormFields({
             </div>
           </CardContent>
         </Card>
-        <Card className="shadow-none">
+        <Card id="section-package" className="scroll-mt-32 shadow-none">
           <CardHeader>
             <CardTitle>
               <h2>{t('packageTitle')}</h2>
@@ -357,7 +362,7 @@ export function ProductFormFields({
           </CardContent>
         </Card>
       </div>
-      <Card className="min-w-0 shadow-none">
+      <Card id="section-images" className="min-w-0 scroll-mt-32 shadow-none">
         <CardHeader>
           <CardTitle>
             <h2>{t('imageTitle')}</h2>

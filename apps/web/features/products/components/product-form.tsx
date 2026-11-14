@@ -21,6 +21,8 @@ import {
   useCatalogFormErrors,
 } from '@/features/dashboard/components/catalog-form-feedback';
 import { CatalogFormActions } from '@/features/dashboard/components/catalog-form-actions';
+import { SectionNav } from '@/components/section-nav';
+import { PRODUCT_FORM_SECTIONS } from '@/features/products/components/product-form-sections';
 
 const initialState: ProductActionState = { success: false, error: null };
 
@@ -98,6 +100,13 @@ export function ProductForm({
         fieldErrors={visibleErrors}
         labels={labels}
         revision={revision}
+      />
+      <SectionNav
+        label={t('navLabel')}
+        items={PRODUCT_FORM_SECTIONS.map((section): { id: string; label: string } => ({
+          id: section.id,
+          label: t(section.labelKey),
+        }))}
       />
       <fieldset disabled={pending} aria-busy={pending} className="min-w-0 disabled:opacity-70">
         <ProductFormFields

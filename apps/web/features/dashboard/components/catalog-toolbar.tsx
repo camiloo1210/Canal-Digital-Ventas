@@ -31,7 +31,7 @@ export async function CatalogToolbar({
       action={'/dashboard/catalog/' + kind}
       role="search"
       aria-label={t(kind === 'products' ? 'searchProducts' : 'searchCategories')}
-      className="flex flex-wrap items-end gap-3 rounded-xl border bg-card p-4"
+      className="flex flex-wrap items-end gap-3 rounded-xl border bg-card p-4 shadow-(--shadow-card)"
       key={query.q + ':' + query.status}
     >
       <TenantParamField />

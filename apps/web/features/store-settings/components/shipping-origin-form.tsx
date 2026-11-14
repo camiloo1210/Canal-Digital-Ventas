@@ -10,6 +10,7 @@ import {
 } from '@/features/store-settings/actions/shipping-origin.actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PHONE_INPUT, POSTAL_CODE_INPUT } from '@/lib/input-attributes';
 import { Label } from '@/components/ui/label';
 import { FieldError } from '@/components/ui/field';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -81,7 +82,11 @@ export function ShippingOriginForm({
                   id={`origin-${field}`}
                   name={field}
                   required
-                  maxLength={field === 'country' ? 2 : 120}
+                  {...(field === 'phone'
+                    ? PHONE_INPUT
+                    : field === 'zipCode'
+                      ? POSTAL_CODE_INPUT
+                      : { maxLength: field === 'country' ? 2 : 120 })}
                   autoCapitalize={field === 'country' ? 'characters' : undefined}
                   value={values[field]}
                   onChange={(event): void => setValues({ ...values, [field]: event.target.value })}

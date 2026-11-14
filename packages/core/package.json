@@ -9,6 +9,7 @@
     ".": "./src/index.ts",
     "./money-limits": "./src/features/shared/domain/money-limits.ts",
     "./money-format": "./src/features/shared/domain/money-format.ts",
+    "./staff-login": "./src/features/iam/domain/services/staff-email-generator.ts",
     "./cart-pricing": "./src/features/carts/application/services/cart-quote.ts"
   },
   "dependencies": {

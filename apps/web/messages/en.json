@@ -285,6 +285,10 @@
   "AdminShell": {
     "administration": "Store administration",
     "workspace": "Manage your store",
+    "groupOperation": "Operations",
+    "groupCatalog": "Catalog",
+    "groupStore": "Store",
+    "groupAccount": "Account & team",
     "navigation": "Administration navigation",
     "navigationDescription": "Open the available sections of your store.",
     "overview": "Overview",
@@ -589,7 +593,7 @@
       "platform": "Canal Digital",
       "logo": "Canal Digital logo",
       "loginTitle": "Log in to your account",
-      "loginDescription": "Enter your email and password to continue.",
+      "loginDescription": "Enter your email or store username and password to continue.",
       "signupTitle": "Create your account",
       "signupDescription": "Sign up to start shopping.",
       "loggingIn": "Logging in…",
@@ -597,6 +601,7 @@
       "creatingAccount": "Creating account…",
       "createAccount": "Create account",
       "email": "Email",
+      "loginIdentifier": "Email or store username",
       "emailPlaceholder": "name@example.com",
       "password": "Password",
       "orGoogle": "Or continue with Google",
@@ -647,6 +652,7 @@
       "profile": "My profile"
     },
     "directory": {
+      "eyebrow": "Discover stores",
       "title": "Find your next store",
       "description": "Explore their catalogs and choose where to shop.",
       "allStores": "All stores",
@@ -1049,6 +1055,14 @@
       "country": "Use a 2-letter uppercase country code, for example CO."
     }
   },
+  "IntegrationsNav": {
+    "label": "Integration sections",
+    "connection": "Connection",
+    "knowledge": "Knowledge",
+    "whatsapp": "WhatsApp",
+    "notifications": "Notifications",
+    "deliveries": "Deliveries"
+  },
   "KiviConnection": {
     "title": "Kivi integration",
     "subtitle": "Connect your store to Kivi to keep your catalog in sync, with nothing technical to set up.",
@@ -1195,6 +1209,12 @@
     "actionError": "Unable to save this change. Please try again."
   },
   "CatalogForms": {
+    "navLabel": "Product sections",
+    "navBasic": "Basics",
+    "navPricing": "Price & stock",
+    "navWholesale": "Wholesale",
+    "navPackage": "Package",
+    "navImages": "Images",
     "cancel": "Cancel",
     "back": "Back to {label}",
     "requiredHelp": "Fields marked with * are required.",
@@ -1277,6 +1297,7 @@
     "moneyFormat": "Use a valid amount with up to 2 decimal places, such as 40.00.",
     "moneyFormatWhole": "Use a whole amount without decimals, such as 4000.",
     "moneyRange": "The amount exceeds the allowed limit.",
+    "integerRange": "The value exceeds the maximum allowed (999,999,999).",
     "integerFormat": "Use a whole number of 0 or greater.",
     "booleanFormat": "Review the VAT selection.",
     "invalidRequest": "We could not identify this edit. Reload the page before saving.",
@@ -1619,8 +1640,8 @@
         "intro": "Choose once per invitation. You cannot change it afterwards.",
         "adminUnavailableWarning": "SUPABASE_SERVICE_ROLE_KEY is not configured on the server, so accounts with a generated email cannot be created. Choose another option or ask your administrator to configure it.",
         "GENERATED_EMAIL": {
-          "label": "Generated email (recommended)",
-          "help": "The person only types their name and a password. We create a sign-in email inside your store that cannot receive messages, so the password cannot be recovered by email: they must save it or ask you for help."
+          "label": "Store username (recommended)",
+          "help": "The person only types their name and a password. We create a store username that cannot receive messages, so the password cannot be recovered by email: they must save it or ask you for help."
         },
         "REAL_EMAIL": {
           "label": "Their own email",
@@ -1790,18 +1811,18 @@
         "unexpected": "An unexpected error occurred. Try again."
       },
       "description": {
-        "GENERATED_EMAIL": "You will have the {role} role. Enter your name and a password: we will create your sign-in email for you.",
+        "GENERATED_EMAIL": "You will have the {role} role. Enter your name and a password: we will create your username for you.",
         "REAL_EMAIL": "You will have the {role} role. Create your account with your own email to accept the invitation.",
         "GOOGLE": "You will have the {role} role. Continue with your Google account to accept the invitation."
       },
       "confirmPassword": "Confirm password",
-      "generatedEmailHint": "Your sign-in email is generated from your name inside this store. You will see it as soon as your account is created.",
+      "generatedEmailHint": "Your username is generated from your name and the store name. You will see it as soon as your account is created.",
       "generatedEmailTitle": "Your account is ready",
-      "generatedEmailPendingTitle": "Save your sign-in email",
-      "generatedEmailIntro": "This is the email you will use to sign in, together with the password you just chose.",
-      "generatedEmailLabel": "Your sign-in email",
+      "generatedEmailPendingTitle": "Save your username",
+      "generatedEmailIntro": "Use this username to sign in with the password you just chose.",
+      "generatedEmailLabel": "Your username",
       "generatedEmailWarningTitle": "Save it now",
-      "generatedEmailWarning": "This email cannot receive messages, so the password cannot be recovered by email. If you forget it, ask the store owner to help you. Write this email down or copy it before continuing.",
+      "generatedEmailWarning": "This username cannot receive messages, so the password cannot be recovered by email. If you forget it, ask the store owner to help you. Write down or copy your username before continuing.",
       "copy": "Copy",
       "copied": "Copied",
       "continueToDashboard": "Continue to the dashboard",

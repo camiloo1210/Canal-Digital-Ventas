@@ -68,8 +68,14 @@ const integerString = z
   .string()
   .regex(/^\d+$/, 'integerFormat')
   .refine((value): boolean => Number.isSafeInteger(Number(value)), 'integerFormat');
+/** Largest unit count a form accepts: 9 digits, matching the inputs' maxLength. */
+export const MAX_UNITS_INPUT = 999_999_999;
+const unitsString = integerString.refine(
+  (value): boolean => Number(value) <= MAX_UNITS_INPUT,
+  'integerRange',
+);
 const optionalInteger = z
-  .union([z.literal(''), integerString])
+  .union([z.literal(''), unitsString])
   .transform((value): number | null => (value === '' ? null : Number(value)));
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- zod object type is inferred; spelling it out would duplicate the schema
@@ -86,7 +92,7 @@ export function createProductFormSchema(currency: string) {
     cost: moneyString(currency),
     wholesalePrice: optionalMoneyString(currency),
     wholesaleMinQuantity: optionalInteger,
-    stock: integerString.transform((value): number => Number(value)),
+    stock: unitsString.transform((value): number => Number(value)),
     isVatExempt: z
       .enum(['', 'on', 'true', 'false'], { message: 'booleanFormat' })
       .transform((value): boolean => value === 'on' || value === 'true'),

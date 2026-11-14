@@ -44,17 +44,19 @@ export function NavUser({
               <SidebarMenuButton
                 size="lg"
                 aria-label={t('account')}
-                className="min-h-12 aria-expanded:bg-muted"
+                className="min-h-12 rounded-lg transition-colors duration-200 aria-expanded:bg-sidebar-accent motion-reduce:transition-none"
               />
             }
           >
-            <Avatar className="size-8 rounded-lg grayscale">
+            <Avatar className="size-9 rounded-lg ring-1 ring-sidebar-border">
               <AvatarImage src={user.avatar} alt={user.name} />
-              <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
+              <AvatarFallback className="rounded-lg bg-accent font-semibold text-accent-foreground">
+                {initials}
+              </AvatarFallback>
             </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-medium">{user.name}</span>
-              <span className="truncate text-xs text-foreground/70">{user.email}</span>
+              <span className="truncate font-semibold">{user.name}</span>
+              <span className="truncate text-xs text-sidebar-foreground/70">{user.email}</span>
             </div>
             <EllipsisVerticalIcon className="ml-auto size-4" />
           </DropdownMenuTrigger>
