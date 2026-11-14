@@ -18,6 +18,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { PERSON_NAME_INPUT } from '@/lib/input-attributes';
 
 const INITIAL: AcceptInvitationActionState = { success: false, message: null, revision: 0 };
 
@@ -54,7 +55,8 @@ function NameFields({ state }: { state: AcceptInvitationActionState }): React.JS
           name="firstName"
           autoComplete="given-name"
           required
-          maxLength={60}
+          maxLength={PERSON_NAME_INPUT.maxLength}
+          pattern={PERSON_NAME_INPUT.pattern}
           defaultValue={state.values?.firstName ?? ''}
           className="min-h-11"
           aria-invalid={Boolean(errors?.firstName)}
@@ -68,7 +70,8 @@ function NameFields({ state }: { state: AcceptInvitationActionState }): React.JS
           name="lastName"
           autoComplete="family-name"
           required
-          maxLength={60}
+          maxLength={PERSON_NAME_INPUT.maxLength}
+          pattern={PERSON_NAME_INPUT.pattern}
           defaultValue={state.values?.lastName ?? ''}
           className="min-h-11"
           aria-invalid={Boolean(errors?.lastName)}

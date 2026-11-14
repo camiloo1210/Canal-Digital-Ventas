@@ -29,6 +29,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { PERSON_NAME_INPUT } from '@/lib/input-attributes';
 import { Label } from '@/components/ui/label';
 import { TenantIdField } from '@/features/dashboard/components/tenant-scope';
 
@@ -159,7 +160,8 @@ function RenameFields({ member }: { member: MemberReadModel }): React.JSX.Elemen
           name="firstName"
           className="min-h-11"
           value={firstName}
-          maxLength={60}
+          maxLength={PERSON_NAME_INPUT.maxLength}
+          pattern={PERSON_NAME_INPUT.pattern}
           required
           autoComplete="off"
           onChange={(event): void => setFirstName(event.target.value)}
@@ -172,7 +174,8 @@ function RenameFields({ member }: { member: MemberReadModel }): React.JSX.Elemen
           name="lastName"
           className="min-h-11"
           value={lastName}
-          maxLength={60}
+          maxLength={PERSON_NAME_INPUT.maxLength}
+          pattern={PERSON_NAME_INPUT.pattern}
           required
           autoComplete="off"
           onChange={(event): void => setLastName(event.target.value)}

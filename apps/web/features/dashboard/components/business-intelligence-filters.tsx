@@ -111,8 +111,10 @@ export function BusinessIntelligenceFilters({
               id="bi-lead"
               name="leadTimeDays"
               type="number"
+              inputMode="numeric"
               min={1}
               max={90}
+              step={1}
               required
               defaultValue={query.leadTimeDays}
               className="min-h-11"
@@ -129,8 +131,10 @@ export function BusinessIntelligenceFilters({
               id="bi-coverage"
               name="targetCoverageDays"
               type="number"
+              inputMode="numeric"
               min={1}
               max={90}
+              step={1}
               required
               defaultValue={query.targetCoverageDays}
               className="min-h-11"

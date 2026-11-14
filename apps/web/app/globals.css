@@ -935,6 +935,11 @@ SOFTWARE.
   outline: none;
 }
 
+:root:has(.admin-space) [data-slot='input']:user-invalid {
+  border-color: var(--destructive);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--destructive) 18%, transparent);
+}
+
 :root:has(.admin-space)
   :is([data-slot='input'], [data-slot='select-trigger'])[aria-invalid='true'] {
   border-color: var(--destructive);
