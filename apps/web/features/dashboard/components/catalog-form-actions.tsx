@@ -22,7 +22,7 @@ export function CatalogFormActions({
   const { pending } = useFormStatus();
   const t = useTranslations('CatalogForms');
   return (
-    <div className="sticky bottom-0 z-10 flex flex-wrap items-center justify-end gap-3 border-t bg-background/95 py-4 backdrop-blur-sm">
+    <div className="sticky bottom-3 z-10 flex flex-wrap items-center justify-end gap-3 rounded-xl border border-border/80 bg-card/90 px-4 py-3 shadow-(--shadow-raised) backdrop-blur-md supports-[backdrop-filter]:bg-card/80">
       <Button
         nativeButton={false}
         role="link"

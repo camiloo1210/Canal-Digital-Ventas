@@ -40,8 +40,10 @@ export default async function BusinessIntelligencePage({
         <div className="space-y-6 px-4 py-6 lg:px-6 lg:py-8">
           <header className="space-y-3">
             <Badge variant="outline">{t('eyebrow')}</Badge>
-            <h1 className="text-2xl font-semibold tracking-tight sm:text-[2rem]">{t('title')}</h1>
-            <p className="max-w-3xl text-base leading-relaxed text-muted-foreground">
+            <h1 className="text-2xl font-semibold tracking-[-0.02em] text-balance sm:text-[1.75rem]">
+              {t('title')}
+            </h1>
+            <p className="max-w-3xl max-w-prose text-sm leading-relaxed text-pretty text-muted-foreground sm:text-[0.9375rem]">
               {t('description')}
             </p>
           </header>

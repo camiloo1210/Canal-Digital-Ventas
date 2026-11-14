@@ -40,7 +40,9 @@ export default async function StoreSettingsPage({
         <PageHeader breadcrumbs={[{ label: t('title'), href: null }]} />
         <div className="mx-auto w-full max-w-6xl space-y-8 px-4 py-6 lg:px-6 lg:py-10">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight sm:text-[2rem]">{t('title')}</h1>
+            <h1 className="text-2xl font-semibold tracking-[-0.02em] text-balance sm:text-[1.75rem]">
+              {t('title')}
+            </h1>
             <p className="mt-2 text-muted-foreground">{t('subtitle')}</p>
           </div>
           {settings ? (

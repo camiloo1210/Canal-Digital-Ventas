@@ -101,7 +101,7 @@ export async function DashboardOverview({
         </p>
       )}
       <section aria-label={t('kpiTitle')} className="space-y-3">
-        <p className="text-sm font-medium">
+        <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
           {t('kpiPeriod', {
             from: shortDate.format(new Date(kpis.periodStart)),
             to: shortDate.format(new Date(kpis.periodEnd)),
@@ -109,25 +109,31 @@ export async function DashboardOverview({
         </p>
         <dl className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {kpiCards.map((card): React.JSX.Element => (
-            <Card key={card.key} className="gap-3 shadow-none">
-              <CardHeader className="flex flex-row items-start justify-between gap-3">
-                <dt className="text-sm leading-5 text-muted-foreground">{card.label}</dt>
-                <card.icon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
+            <Card key={card.key} className="gap-4">
+              <CardHeader className="flex flex-row items-center justify-between gap-3">
+                <dt className="text-sm leading-5 font-medium text-muted-foreground">
+                  {card.label}
+                </dt>
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
+                  <card.icon aria-hidden="true" className="size-[1.125rem]" />
+                </span>
               </CardHeader>
               <CardContent>
-                <dd className="break-words text-[1.65rem] leading-tight font-semibold tabular-nums tracking-tight">
+                <dd className="text-[1.75rem] leading-tight font-semibold tracking-[-0.02em] break-words tabular-nums">
                   {card.value}
                 </dd>
-                <dd className={`mt-3 text-xs leading-relaxed ${card.tone}`}>{card.help}</dd>
+                <dd className={`mt-2.5 text-xs leading-relaxed font-medium ${card.tone}`}>
+                  {card.help}
+                </dd>
               </CardContent>
             </Card>
           ))}
         </dl>
       </section>
       <div className="grid items-stretch gap-6 xl:grid-cols-3">
-        <Card className="gap-5 shadow-none xl:col-span-2">
+        <Card className="gap-5 xl:col-span-2">
           <CardHeader>
-            <CardTitle className="text-lg">
+            <CardTitle className="text-base font-semibold tracking-tight">
               <h2>{t('ordersTitle')}</h2>
             </CardTitle>
             <CardDescription>{t('ordersDescription')}</CardDescription>
@@ -135,7 +141,10 @@ export async function DashboardOverview({
           <CardContent className="space-y-6">
             <dl className="grid grid-cols-3 gap-3 sm:gap-5">
               {queues.map((queue): React.JSX.Element => (
-                <div key={queue.label} className="space-y-2">
+                <div
+                  key={queue.label}
+                  className="space-y-2 rounded-xl border bg-muted/40 p-3 sm:p-4"
+                >
                   <dt className="min-h-10 text-sm font-medium leading-snug sm:min-h-0">
                     {queue.label}
                   </dt>
@@ -170,9 +179,9 @@ export async function DashboardOverview({
             </div>
           </CardContent>
         </Card>
-        <Card className="gap-5 shadow-none">
+        <Card className="gap-5">
           <CardHeader>
-            <CardTitle className="text-lg">
+            <CardTitle className="text-base font-semibold tracking-tight">
               <h2>{t('catalogTitle')}</h2>
             </CardTitle>
             <CardDescription>{t('catalogDescription')}</CardDescription>
@@ -238,10 +247,10 @@ export async function DashboardOverview({
           </CardContent>
         </Card>
       </div>
-      <Card className="gap-5 shadow-none">
+      <Card className="gap-5">
         <CardHeader className="flex flex-wrap items-start justify-between gap-4 sm:flex-row">
           <div className="space-y-1.5">
-            <CardTitle className="text-lg">
+            <CardTitle className="text-base font-semibold tracking-tight">
               <h2>{t('recentTitle')}</h2>
             </CardTitle>
             <CardDescription>{t('recentDescription')}</CardDescription>

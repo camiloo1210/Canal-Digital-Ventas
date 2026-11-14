@@ -42,8 +42,12 @@ export async function CatalogFormPage({
             {t('back', { label: backLabel })}
           </Link>
           <div className="space-y-2">
-            <h1 className="text-2xl font-semibold tracking-tight sm:text-[2rem]">{title}</h1>
-            <p className="text-base leading-relaxed text-muted-foreground">{description}</p>
+            <h1 className="text-2xl font-semibold tracking-[-0.02em] text-balance sm:text-[1.75rem]">
+              {title}
+            </h1>
+            <p className="max-w-prose text-sm leading-relaxed text-pretty text-muted-foreground sm:text-[0.9375rem]">
+              {description}
+            </p>
             <p className="text-sm text-muted-foreground">{t('requiredHelp')}</p>
           </div>
         </header>

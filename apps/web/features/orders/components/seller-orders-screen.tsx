@@ -45,11 +45,13 @@ export async function SellerOrdersScreen({
             <h1
               id="orders-heading"
               tabIndex={-1}
-              className="text-2xl font-semibold tracking-tight outline-none sm:text-[2rem]"
+              className="text-2xl font-semibold tracking-[-0.02em] text-balance outline-none sm:text-[1.75rem]"
             >
               {t('title')}
             </h1>
-            <p className="text-base leading-relaxed text-muted-foreground">{t('description')}</p>
+            <p className="max-w-prose text-sm leading-relaxed text-pretty text-muted-foreground sm:text-[0.9375rem]">
+              {t('description')}
+            </p>
           </header>
           <Form
             action="/dashboard/orders"

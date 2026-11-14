@@ -40,8 +40,10 @@ export async function AdminCatalogScreen({
         <div className="space-y-6 px-4 py-6 lg:px-6 lg:py-8">
           <header className="flex flex-wrap items-start justify-between gap-4">
             <div className="space-y-2">
-              <h1 className="text-2xl font-semibold tracking-tight sm:text-[2rem]">{title}</h1>
-              <p className="text-base leading-relaxed text-muted-foreground">
+              <h1 className="text-2xl font-semibold tracking-[-0.02em] text-balance sm:text-[1.75rem]">
+                {title}
+              </h1>
+              <p className="max-w-prose text-sm leading-relaxed text-pretty text-muted-foreground sm:text-[0.9375rem]">
                 {t(kind === 'products' ? 'productsDescription' : 'categoriesDescription')}
               </p>
             </div>
