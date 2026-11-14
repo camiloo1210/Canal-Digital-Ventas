@@ -285,6 +285,10 @@
   "AdminShell": {
     "administration": "Administración de tienda",
     "workspace": "Gestiona tu tienda",
+    "groupOperation": "Operación",
+    "groupCatalog": "Catálogo",
+    "groupStore": "Tienda",
+    "groupAccount": "Cuenta y equipo",
     "navigation": "Navegación de administración",
     "navigationDescription": "Accede a las secciones disponibles de tu tienda.",
     "overview": "Resumen",

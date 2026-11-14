@@ -59,3 +59,41 @@ export function visibleDashboardNavigationKeys(
 export function isDashboardDestinationActive(pathname: string, href: string): boolean {
   return pathname === href || (href !== '/dashboard' && pathname.startsWith(href + '/'));
 }
+
+export type DashboardNavigationGroupKey = 'operation' | 'catalog' | 'store' | 'account';
+
+export interface DashboardNavigationGroup {
+  key: DashboardNavigationGroupKey;
+  items: DashboardNavigationItem[];
+}
+
+const GROUP_OF: Record<DashboardNavigationItem['key'], DashboardNavigationGroupKey> = {
+  overview: 'operation',
+  businessIntelligence: 'operation',
+  orders: 'operation',
+  products: 'catalog',
+  categories: 'catalog',
+  store: 'store',
+  integrations: 'store',
+  users: 'account',
+  profile: 'account',
+};
+
+const GROUP_ORDER: readonly DashboardNavigationGroupKey[] = [
+  'operation',
+  'catalog',
+  'store',
+  'account',
+];
+
+/** Sidebar sections for the destinations a member may see; empty sections are omitted. */
+export function groupDashboardNavigation(
+  visibleKeys: readonly string[],
+): DashboardNavigationGroup[] {
+  return GROUP_ORDER.map((key): DashboardNavigationGroup => ({
+    key,
+    items: dashboardNavigation.filter(
+      (item): boolean => GROUP_OF[item.key] === key && visibleKeys.includes(item.key),
+    ),
+  })).filter((group): boolean => group.items.length > 0);
+}

@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
   dashboardNavigation,
+  groupDashboardNavigation,
   isDashboardDestinationActive,
 } from '@/features/dashboard/navigation/dashboard-navigation';
 
@@ -34,5 +35,19 @@ describe('dashboard navigation', (): void => {
     expect(isDashboardDestinationActive('/dashboard/orders-other', '/dashboard/orders')).toBe(
       false,
     );
+  });
+  it('groups every destination exactly once, preserving order and hiding empty groups', (): void => {
+    const all = groupDashboardNavigation(dashboardNavigation.map((item): string => item.key));
+    expect(all.map((group): string => group.key)).toEqual([
+      'operation',
+      'catalog',
+      'store',
+      'account',
+    ]);
+    expect(all.flatMap((group): string[] => group.items.map((item): string => item.key))).toEqual(
+      dashboardNavigation.map((item): string => item.key),
+    );
+    const limited = groupDashboardNavigation(['overview', 'profile']);
+    expect(limited.map((group): string => group.key)).toEqual(['operation', 'account']);
   });
 });

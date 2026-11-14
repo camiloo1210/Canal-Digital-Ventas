@@ -285,6 +285,10 @@
   "AdminShell": {
     "administration": "Store administration",
     "workspace": "Manage your store",
+    "groupOperation": "Operations",
+    "groupCatalog": "Catalog",
+    "groupStore": "Store",
+    "groupAccount": "Account & team",
     "navigation": "Administration navigation",
     "navigationDescription": "Open the available sections of your store.",
     "overview": "Overview",
