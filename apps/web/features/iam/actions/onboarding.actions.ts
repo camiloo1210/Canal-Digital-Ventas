@@ -1,6 +1,6 @@
 'use server';
 
-import { z } from 'zod';
+import { onboardingSchema } from '@/features/iam/schemas/auth.schema';
 import { getTranslations } from 'next-intl/server';
 import { getOnboardTenantUseCase } from '@/features/iam/di/iam.di';
 import { getBusinessAccountReadRepository } from '@/features/iam/di/business-account.di';
@@ -20,15 +20,6 @@ export type ActionState = {
 };
 
 // Parse, Don't Validate: Only validates the shape of the UI payload
-const onboardingSchema = z.object({
-  firstName: z.string().min(2, 'First name must be at least 2 characters'),
-  lastName: z.string().min(2, 'Last name must be at least 2 characters'),
-  storeName: z.string().min(3, 'Store name must be at least 3 characters'),
-  storeSlug: z
-    .string()
-    .min(3, 'Store slug must be at least 3 characters')
-    .regex(/^[a-z0-9-]+$/, 'Slug can only contain lowercase letters, numbers, and hyphens'),
-});
 
 export async function onboardBusinessAction(
   prevState: ActionState,
@@ -41,9 +32,10 @@ export async function onboardBusinessAction(
   const parsed = onboardingSchema.safeParse(Object.fromEntries(formData));
 
   if (!parsed.success) {
+    const t = await getTranslations('Storefront.auth.errors');
     return {
       success: false,
-      error: parsed.error.issues[0]?.message || 'Invalid input provided.',
+      error: t(parsed.error.issues[0]?.message ?? 'email'),
     };
   }
 
