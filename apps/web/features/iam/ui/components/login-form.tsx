@@ -83,11 +83,12 @@ export function LoginForm({
             </Alert>
           )}
           <Field>
-            <FieldLabel htmlFor="email">{t('email')}</FieldLabel>
+            <FieldLabel htmlFor="email">{t('loginIdentifier')}</FieldLabel>
             <Input
               id="email"
               name="email"
-              type="email"
+              type="text"
+              inputMode="email"
               autoComplete="email"
               className="min-h-11"
               placeholder={t('emailPlaceholder')}
