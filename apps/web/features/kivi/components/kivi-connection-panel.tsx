@@ -1,5 +1,6 @@
 'use client';
 
+import { KIVI_CODE_PATTERN } from '@/features/kivi/schemas/kivi-input-patterns';
 import { useActionState, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations, useFormatter } from 'next-intl';
@@ -66,6 +67,8 @@ function PairForm(): React.JSX.Element {
           <Input
             id="kivi-code"
             name="code"
+            pattern={KIVI_CODE_PATTERN}
+            maxLength={210}
             type="text"
             required
             key={`code-${revision}`}

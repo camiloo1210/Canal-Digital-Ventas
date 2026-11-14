@@ -3,7 +3,12 @@
 import { useTranslations } from 'next-intl';
 import type { ProductFormContextReadModel } from '@canaldigital/packages/core';
 import { Input } from '@/components/ui/input';
-import { DECIMAL_INPUT, WHOLE_NUMBER_INPUT } from '@/lib/input-attributes';
+import {
+  DECIMAL_INPUT,
+  SKU_INPUT,
+  WHOLE_NUMBER_INPUT,
+  type TextInputAttributes,
+} from '@/lib/input-attributes';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field';
@@ -46,6 +51,7 @@ function ProductInput({
   clearField,
   money = false,
   fractionDigits,
+  limits,
 }: {
   name: keyof ProductFormValues;
   label: string;
@@ -58,6 +64,8 @@ function ProductInput({
   clearField: (name: string) => void;
   money?: boolean;
   fractionDigits?: number;
+  /** Native length/pattern limits that mirror the schema. */
+  limits?: Partial<Pick<TextInputAttributes, 'minLength' | 'maxLength' | 'pattern'>>;
 }): React.JSX.Element {
   return (
     <Field data-invalid={Boolean(error)} className="min-w-0">
@@ -76,6 +84,7 @@ function ProductInput({
           : inputMode === 'decimal'
             ? DECIMAL_INPUT
             : {})}
+        {...limits}
         aria-invalid={Boolean(error)}
         aria-describedby={
           [help ? name + '-help' : '', error ? name + '-error' : ''].filter(Boolean).join(' ') ||
@@ -123,7 +132,7 @@ export function ProductFormFields({
       category.name + (category.status !== 'active' ? ' (' + t('unavailableCategory') + ')' : ''),
   }));
   return (
-    <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_18rem]">
+    <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_26rem]">
       <div className="min-w-0 space-y-6">
         <Card id="section-basic" className="scroll-mt-32 shadow-none">
           <CardHeader>
@@ -137,6 +146,7 @@ export function ProductFormFields({
               <ProductInput
                 {...common}
                 name="name"
+                limits={{ minLength: 2, maxLength: 50 }}
                 label={p('form_name')}
                 value={defaultValues?.name}
                 required
@@ -146,6 +156,11 @@ export function ProductFormFields({
               <ProductInput
                 {...common}
                 name="sku"
+                limits={{
+                  minLength: SKU_INPUT.minLength,
+                  maxLength: SKU_INPUT.maxLength,
+                  pattern: SKU_INPUT.pattern,
+                }}
                 label={p('form_sku')}
                 value={defaultValues?.sku}
                 required
@@ -198,6 +213,7 @@ export function ProductFormFields({
                 key={'description-' + revision}
                 id="description"
                 name="description"
+                maxLength={200}
                 defaultValue={defaultValues?.description ?? ''}
                 className="min-h-28 scroll-mt-6"
                 aria-invalid={Boolean(errorFor('description'))}

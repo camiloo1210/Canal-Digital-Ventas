@@ -122,3 +122,12 @@ export const STORE_SLUG_INPUT: TextInputAttributes = {
   maxLength: 50,
   autoComplete: 'off',
 };
+
+/** Product SKU: letters, digits and hyphens, 5 to 20 characters. */
+export const SKU_INPUT: TextInputAttributes = {
+  inputMode: 'text',
+  pattern: String.raw`[a-zA-Z0-9\-]{5,20}`,
+  minLength: 5,
+  maxLength: 20,
+  autoComplete: 'off',
+};

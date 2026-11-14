@@ -1,5 +1,6 @@
 'use client';
 
+import { KIVI_PHONE_NUMBER_ID_PATTERN } from '@/features/kivi/schemas/kivi-input-patterns';
 import { useActionState, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { CheckCircle2, KeyRound, MessageCircle, ShieldCheck } from 'lucide-react';
@@ -133,6 +134,7 @@ export function KiviWhatsAppPanel({
               <Input
                 id="whatsapp-phone-id"
                 name="phoneNumberId"
+                pattern={KIVI_PHONE_NUMBER_ID_PATTERN}
                 className="min-h-11"
                 value={phone}
                 onChange={(event): void => setPhone(event.target.value)}

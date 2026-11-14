@@ -4,6 +4,7 @@ import { useActionState } from 'react';
 import { signupCustomerAction } from '@/features/iam/actions/signup.actions';
 import { loginWithGoogleAction } from '@/features/iam/actions/login.actions';
 import { Input } from '@/components/ui/input';
+import { EMAIL_INPUT, NEW_PASSWORD_INPUT } from '@/lib/input-attributes';
 import { Button } from '@/components/ui/button';
 import {
   Field,
@@ -62,6 +63,7 @@ export function SignupCustomerForm({
               name="email"
               type="email"
               autoComplete="email"
+              maxLength={EMAIL_INPUT.maxLength}
               required
               placeholder={t('emailPlaceholder')}
             />
@@ -71,8 +73,7 @@ export function SignupCustomerForm({
             <Input
               id="password"
               name="password"
-              type="password"
-              autoComplete="new-password"
+              {...NEW_PASSWORD_INPUT}
               className="min-h-11"
               required
               placeholder="********"
