@@ -9,6 +9,7 @@ import {
   StoreDirectorySkeleton,
 } from '@/features/store-directory/components/store-directory-results';
 import { LegacyOrderRedirect } from '@/features/store-directory/components/legacy-order-redirect';
+import { Compass } from 'lucide-react';
 
 export async function generateMetadata(): Promise<{ title: string }> {
   const t = await getTranslations('BuyerDashboard.directory');
@@ -34,14 +35,30 @@ export default async function BuyerHomePage(props: {
   return (
     <>
       <LegacyOrderRedirect />
-      <div className="space-y-8">
-        <header className="max-w-2xl space-y-3">
-          <h1 className="text-2xl font-semibold leading-tight tracking-tight sm:text-[2rem]">
-            {t('title')}
-          </h1>
-          <p className="text-base leading-relaxed text-muted-foreground">{t('description')}</p>
+      <div className="space-y-10 sm:space-y-12">
+        <header className="relative overflow-hidden rounded-3xl border border-border/70 bg-muted/35 px-6 py-8 sm:px-10 sm:py-10 lg:px-12 lg:py-12">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -right-20 -top-28 size-72 rounded-full border border-foreground/[0.06] sm:size-96"
+          />
+          <div className="relative max-w-3xl space-y-7">
+            <div className="space-y-4">
+              <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                <Compass aria-hidden="true" className="size-4" />
+                {t('eyebrow')}
+              </span>
+              <div className="space-y-3">
+                <h1 className="max-w-2xl text-3xl font-semibold leading-[1.12] tracking-tight sm:text-4xl lg:text-5xl">
+                  {t('title')}
+                </h1>
+                <p className="max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+                  {t('description')}
+                </p>
+              </div>
+            </div>
+            <StoreDirectorySearch query={query} />
+          </div>
         </header>
-        <StoreDirectorySearch query={query} />
         <Suspense
           key={`${query}-${page}`}
           fallback={<StoreDirectorySkeleton label={t('loading')} />}
