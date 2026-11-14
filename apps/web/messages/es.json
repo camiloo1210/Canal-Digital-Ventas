@@ -589,7 +589,7 @@
       "platform": "Canal Digital",
       "logo": "Logo de Canal Digital",
       "loginTitle": "Inicia sesión en tu cuenta",
-      "loginDescription": "Introduce tu correo y contraseña para continuar.",
+      "loginDescription": "Introduce tu correo o usuario de tienda y contraseña para continuar.",
       "signupTitle": "Crea tu cuenta",
       "signupDescription": "Regístrate para empezar a comprar.",
       "loggingIn": "Iniciando sesión…",
@@ -597,6 +597,7 @@
       "creatingAccount": "Creando cuenta…",
       "createAccount": "Crear cuenta",
       "email": "Correo electrónico",
+      "loginIdentifier": "Correo o usuario de tienda",
       "emailPlaceholder": "nombre@ejemplo.com",
       "password": "Contraseña",
       "orGoogle": "O continúa con Google",
@@ -611,7 +612,7 @@
       "offlineDescription": "Necesitas conexión a internet para iniciar sesión.",
       "confirmEmail": "Revisa tu correo para confirmar tu cuenta. Después, inicia sesión para continuar tu compra.",
       "errors": {
-        "email": "Introduce un correo electrónico válido.",
+        "email": "Introduce un correo o usuario de tienda válido.",
         "passwordRequired": "Introduce tu contraseña.",
         "passwordLength": "La contraseña debe tener al menos 6 caracteres.",
         "credentials": "No pudimos iniciar sesión. Revisa tus credenciales y confirma tu correo si es necesario.",
@@ -647,6 +648,7 @@
       "profile": "Mi perfil"
     },
     "directory": {
+      "eyebrow": "Descubre tiendas",
       "title": "Encuentra tu próxima tienda",
       "description": "Explora sus catálogos y elige dónde comprar.",
       "allStores": "Todas las tiendas",
@@ -1619,8 +1621,8 @@
         "intro": "Se elige una vez por invitación y no se puede cambiar después.",
         "adminUnavailableWarning": "Falta SUPABASE_SERVICE_ROLE_KEY en el servidor, por lo que no se pueden crear cuentas con correo generado. Elige otra opción o pide a tu administrador que la configure.",
         "GENERATED_EMAIL": {
-          "label": "Correo generado (recomendado)",
-          "help": "La persona solo escribe su nombre y una contraseña. Creamos un correo de acceso dentro de tu tienda que no puede recibir mensajes, así que la contraseña no se puede recuperar por correo: debe guardarla o pedirte ayuda."
+          "label": "Usuario de tienda (recomendado)",
+          "help": "La persona escribe su nombre y una contraseña. Creamos un usuario de acceso para tu tienda que no puede recibir mensajes, así que la contraseña no se puede recuperar por correo: debe guardarla o pedirte ayuda."
         },
         "REAL_EMAIL": {
           "label": "Su propio correo",
@@ -1790,18 +1792,18 @@
         "unexpected": "Ocurrió un error inesperado. Inténtalo de nuevo."
       },
       "description": {
-        "GENERATED_EMAIL": "Tendrás el rol {role}. Escribe tu nombre y una contraseña: nosotros creamos tu correo de acceso.",
+        "GENERATED_EMAIL": "Tendrás el rol {role}. Escribe tu nombre y una contraseña: nosotros creamos tu usuario de acceso.",
         "REAL_EMAIL": "Tendrás el rol {role}. Crea tu cuenta con tu propio correo para aceptar la invitación.",
         "GOOGLE": "Tendrás el rol {role}. Continúa con tu cuenta de Google para aceptar la invitación."
       },
       "confirmPassword": "Confirmar contraseña",
-      "generatedEmailHint": "Tu correo de acceso se genera a partir de tu nombre dentro de esta tienda. Lo verás en cuanto se cree tu cuenta.",
+      "generatedEmailHint": "Tu usuario de acceso se genera a partir de tu nombre y el nombre de la tienda. Lo verás en cuanto se cree tu cuenta.",
       "generatedEmailTitle": "Tu cuenta está lista",
-      "generatedEmailPendingTitle": "Guarda tu correo de acceso",
-      "generatedEmailIntro": "Este es el correo con el que iniciarás sesión, junto con la contraseña que acabas de elegir.",
-      "generatedEmailLabel": "Tu correo de acceso",
+      "generatedEmailPendingTitle": "Guarda tu usuario de acceso",
+      "generatedEmailIntro": "Este es el usuario con el que iniciarás sesión, junto con la contraseña que acabas de elegir.",
+      "generatedEmailLabel": "Tu usuario de acceso",
       "generatedEmailWarningTitle": "Guárdalo ahora",
-      "generatedEmailWarning": "Este correo no puede recibir mensajes, por lo que la contraseña no se puede recuperar por correo. Si la olvidas, pide ayuda al dueño de la tienda. Anota o copia este correo antes de continuar.",
+      "generatedEmailWarning": "Este usuario no puede recibir mensajes, por lo que la contraseña no se puede recuperar por correo. Si la olvidas, pide ayuda al dueño de la tienda. Anota o copia el usuario antes de continuar.",
       "copy": "Copiar",
       "copied": "Copiado",
       "continueToDashboard": "Continuar al panel",
