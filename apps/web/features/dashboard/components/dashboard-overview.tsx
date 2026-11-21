@@ -1,7 +1,8 @@
 import * as React from 'react';
+import NextLink from 'next/link';
 import { TenantLink as Link } from '@/features/dashboard/components/tenant-scope';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { ArrowRight, Banknote, CheckCircle2, Landmark, ShoppingBag, Users } from 'lucide-react';
+import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import type { DashboardOverviewReadModel } from '@canaldigital/packages/core';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,10 +24,20 @@ import {
 import { OrderStatusBadge } from '@/features/orders/components/order-status-badge';
 import { formatMoney } from '@/lib/money';
 
+export interface DashboardOverviewAccess {
+  orders: boolean;
+  catalog: boolean;
+  manageCatalog: boolean;
+}
+
 export async function DashboardOverview({
   overview,
+  access,
+  salesFilters,
 }: {
   overview: DashboardOverviewReadModel;
+  access: DashboardOverviewAccess;
+  salesFilters?: React.ReactNode;
 }): Promise<React.JSX.Element> {
   const [t, locale] = await Promise.all([getTranslations('AdminOverview'), getLocale()]);
   const number = new Intl.NumberFormat(locale);
@@ -42,7 +53,7 @@ export async function DashboardOverview({
     month: 'short',
     timeZone: 'UTC',
   });
-  const kpiCards = [
+  const periodMetrics = [
     {
       key: 'periodRevenue',
       label: t('kpiPeriodRevenue'),
@@ -57,23 +68,6 @@ export async function DashboardOverview({
           : kpis.revenueChangeBps < 0
             ? 'text-destructive'
             : 'text-success',
-      icon: Banknote,
-    },
-    {
-      key: 'lifetimeRevenue',
-      label: t('kpiLifetimeRevenue'),
-      value: formatMoney(kpis.lifetimeRevenueCents, kpis.currency, locale),
-      help: t('kpiLifetimeHelp', { count: kpis.lifetimeOrderCount }),
-      tone: 'text-muted-foreground',
-      icon: Landmark,
-    },
-    {
-      key: 'customers',
-      label: t('kpiCustomers'),
-      value: number.format(kpis.totalCustomers),
-      help: t('kpiCustomersHelp', { count: kpis.buyingCustomers }),
-      tone: 'text-muted-foreground',
-      icon: Users,
     },
     {
       key: 'periodOrders',
@@ -81,172 +75,223 @@ export async function DashboardOverview({
       value: number.format(kpis.orderCount),
       help: t('kpiOrdersHelp'),
       tone: 'text-muted-foreground',
-      icon: ShoppingBag,
+    },
+    {
+      key: 'buyingCustomers',
+      label: t('kpiBuyingCustomers'),
+      value: number.format(kpis.buyingCustomers),
+      help: t('kpiBuyingCustomersHelp'),
+      tone: 'text-muted-foreground',
     },
   ];
-  const orderHref = (id: string): string => '/dashboard/orders?order=' + id;
   const queues = [
-    { label: t('paid'), description: t('paidHelp'), count: overview.awaitingPreparation },
-    { label: t('processing'), description: t('processingHelp'), count: overview.processing },
-    { label: t('shipped'), description: t('shippedHelp'), count: overview.shipped },
+    {
+      status: 'paid',
+      label: t('paid'),
+      description: t('paidHelp'),
+      count: overview.awaitingPreparation,
+    },
+    {
+      status: 'processing',
+      label: t('processing'),
+      description: t('processingHelp'),
+      count: overview.processing,
+    },
+    {
+      status: 'pending_payment',
+      label: t('pendingPayment'),
+      description: t('pendingPaymentHelp'),
+      count: overview.pendingPayment,
+    },
   ];
+  const catalogAction =
+    access.manageCatalog && overview.activeCategories === 0
+      ? { href: '/dashboard/catalog/categories/new', label: t('createCategory') }
+      : access.manageCatalog && overview.activeProducts === 0
+        ? { href: '/dashboard/catalog/products/new', label: t('createProduct') }
+        : { href: '/dashboard/catalog/products', label: t('reviewCatalog') };
+  const orderName = (id: string, label: string): React.JSX.Element =>
+    access.orders ? (
+      <Link
+        href={'/dashboard/orders?order=' + id}
+        className="inline-flex min-h-11 items-center font-semibold underline-offset-4 hover:underline"
+      >
+        {label}
+      </Link>
+    ) : (
+      <span className="font-semibold">{label}</span>
+    );
   return (
     <div className="space-y-6">
-      {kpis.excludedCurrencyOrders > 0 && (
-        <p
-          role="status"
-          className="rounded-lg border bg-muted/40 p-4 text-sm text-muted-foreground"
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <section
+          aria-labelledby="dashboard-order-queues"
+          className="min-w-0 rounded-xl border border-primary/15 bg-accent/75 p-4 sm:p-5"
         >
-          {t('currencyScope', { currency: kpis.currency, count: kpis.excludedCurrencyOrders })}
-        </p>
-      )}
-      <section aria-label={t('kpiTitle')} className="space-y-3">
-        <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-          {t('kpiPeriod', {
-            from: shortDate.format(new Date(kpis.periodStart)),
-            to: shortDate.format(new Date(kpis.periodEnd)),
-          })}
-        </p>
-        <dl className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {kpiCards.map((card): React.JSX.Element => (
-            <Card key={card.key} className="gap-4">
-              <CardHeader className="flex flex-row items-center justify-between gap-3">
-                <dt className="text-sm leading-5 font-medium text-muted-foreground">
-                  {card.label}
-                </dt>
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
-                  <card.icon aria-hidden="true" className="size-[1.125rem]" />
-                </span>
-              </CardHeader>
-              <CardContent>
-                <dd className="text-[1.75rem] leading-tight font-semibold tracking-[-0.02em] break-words tabular-nums">
-                  {card.value}
-                </dd>
-                <dd className={`mt-2.5 text-xs leading-relaxed font-medium ${card.tone}`}>
-                  {card.help}
-                </dd>
-              </CardContent>
-            </Card>
-          ))}
-        </dl>
-      </section>
-      <div className="grid items-stretch gap-6 xl:grid-cols-3">
-        <Card className="gap-5 xl:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-base font-semibold tracking-tight">
-              <h2>{t('ordersTitle')}</h2>
-            </CardTitle>
-            <CardDescription>{t('ordersDescription')}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <dl className="grid grid-cols-3 gap-3 sm:gap-5">
-              {queues.map((queue): React.JSX.Element => (
-                <div
-                  key={queue.label}
-                  className="space-y-2 rounded-xl border bg-muted/40 p-3 sm:p-4"
-                >
-                  <dt className="min-h-10 text-sm font-medium leading-snug sm:min-h-0">
-                    {queue.label}
-                  </dt>
-                  <dd className="text-3xl font-semibold tabular-nums tracking-tight">
+          <h2 id="dashboard-order-queues" className="text-lg font-semibold tracking-tight">
+            {t('ordersTitle')}
+          </h2>
+          <ul className="mt-4 divide-y divide-primary/15 border-y border-primary/15">
+            {queues.map((queue): React.JSX.Element => {
+              const rowClass =
+                'grid min-h-16 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-md px-1.5 py-2.5';
+              const row = (
+                <>
+                  <span
+                    className={
+                      'min-w-10 rounded-md px-2 py-1 text-center text-base font-semibold tabular-nums ' +
+                      (queue.status === 'paid' && queue.count > 0
+                        ? 'bg-warning/25 text-foreground'
+                        : 'bg-primary/10 text-accent-foreground')
+                    }
+                  >
                     {number.format(queue.count)}
-                  </dd>
-                  <dd className="sr-only sm:not-sr-only sm:text-sm sm:leading-relaxed sm:text-muted-foreground">
-                    {queue.description}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-            {overview.awaitingPreparation === 0 && overview.processing === 0 && (
-              <p className="flex items-start gap-2 text-sm text-muted-foreground">
-                <CheckCircle2 aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-success" />
-                {t('caughtUp')}
-              </p>
-            )}
-            <div className="flex flex-wrap items-center justify-between gap-4 border-t pt-5">
-              <p className="text-sm text-muted-foreground">
-                {t('pendingPayment', { count: overview.pendingPayment })}
-              </p>
-              <Button
-                nativeButton={false}
-                role="link"
-                className="min-h-11 w-full sm:w-auto"
-                render={<Link href="/dashboard/orders" />}
-              >
-                {t('manageOrders')}
-                <ArrowRight aria-hidden="true" className="size-4" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="gap-5">
-          <CardHeader>
-            <CardTitle className="text-base font-semibold tracking-tight">
-              <h2>{t('catalogTitle')}</h2>
-            </CardTitle>
-            <CardDescription>{t('catalogDescription')}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <dl className="grid grid-cols-2 gap-4">
-              <div>
-                <dt className="text-sm text-muted-foreground">{t('activeProducts')}</dt>
-                <dd className="mt-2 text-2xl font-semibold tabular-nums">
-                  {number.format(overview.activeProducts)}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-sm text-muted-foreground">{t('activeCategories')}</dt>
-                <dd className="mt-2 text-2xl font-semibold tabular-nums">
-                  {number.format(overview.activeCategories)}
-                </dd>
-              </div>
-            </dl>
-            <ul className="space-y-3 border-t pt-4 text-sm">
-              <li className="flex justify-between gap-4">
-                <span>{t('outOfStock')}</span>
-                <span className="font-medium tabular-nums">
-                  {number.format(overview.outOfStock)}
-                </span>
-              </li>
-              <li className="flex justify-between gap-4">
-                <span>{t('withoutImage')}</span>
-                <span className="font-medium tabular-nums">
-                  {number.format(overview.withoutImage)}
-                </span>
-              </li>
-            </ul>
-            {overview.activeCategories === 0 ? (
-              <Button
-                nativeButton={false}
-                role="link"
-                variant="outline"
-                className="min-h-11 w-full"
-                render={<Link href="/dashboard/catalog/categories/new" />}
-              >
-                {t('createCategory')}
-              </Button>
-            ) : overview.activeProducts === 0 ? (
-              <Button
-                nativeButton={false}
-                role="link"
-                variant="outline"
-                className="min-h-11 w-full"
-                render={<Link href="/dashboard/catalog/products/new" />}
-              >
-                {t('createProduct')}
-              </Button>
-            ) : (
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block font-semibold">{queue.label}</span>
+                    <span className="block text-sm text-muted-foreground">{queue.description}</span>
+                  </span>
+                  {access.orders && (
+                    <ArrowRight aria-hidden="true" className="size-4 text-primary" />
+                  )}
+                </>
+              );
+
+              return (
+                <li key={queue.status}>
+                  {access.orders ? (
+                    <Link
+                      href={'/dashboard/orders?status=' + queue.status}
+                      className={
+                        rowClass +
+                        ' transition-colors hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none motion-reduce:transition-none'
+                      }
+                    >
+                      {row}
+                    </Link>
+                  ) : (
+                    <div className={rowClass}>{row}</div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+          {overview.awaitingPreparation === 0 && overview.processing === 0 && (
+            <p className="mt-3 flex items-start gap-2 text-sm text-muted-foreground">
+              <CheckCircle2 aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-success" />
+              {t('caughtUp')}
+            </p>
+          )}
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-x-4 text-sm">
+            <p className="py-2 text-muted-foreground">
+              {t('shippedCount', { count: overview.shipped })}
+            </p>
+            {access.orders && (
               <Link
-                href="/dashboard/catalog/products"
-                className="flex min-h-11 items-center justify-between gap-3 font-medium hover:underline"
+                href="/dashboard/orders"
+                className="inline-flex min-h-11 items-center gap-2 font-semibold text-primary underline-offset-4 hover:underline"
               >
-                {t('reviewCatalog')}
+                {t('allOrders')}
                 <ArrowRight aria-hidden="true" className="size-4" />
               </Link>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </section>
+
+        <section
+          aria-labelledby="dashboard-catalog-health"
+          className="min-w-0 rounded-xl border bg-card p-4 sm:p-5"
+        >
+          <h2 id="dashboard-catalog-health" className="text-lg font-semibold tracking-tight">
+            {t('catalogTitle')}
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">{t('catalogDescription')}</p>
+          <dl className="mt-4 divide-y divide-border border-y text-sm">
+            <div className="flex items-center justify-between gap-4 py-3">
+              <dt>{t('outOfStock')}</dt>
+              <dd className="font-semibold tabular-nums">{number.format(overview.outOfStock)}</dd>
+            </div>
+            <div className="flex items-center justify-between gap-4 py-3">
+              <dt>{t('withoutImage')}</dt>
+              <dd className="font-semibold tabular-nums">{number.format(overview.withoutImage)}</dd>
+            </div>
+          </dl>
+          <dl className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
+            <div className="flex flex-wrap items-baseline gap-x-2">
+              <dt>{t('activeProducts')}</dt>
+              <dd className="font-semibold text-foreground tabular-nums">
+                {number.format(overview.activeProducts)}
+              </dd>
+            </div>
+            <div className="flex flex-wrap items-baseline gap-x-2">
+              <dt>{t('activeCategories')}</dt>
+              <dd className="font-semibold text-foreground tabular-nums">
+                {number.format(overview.activeCategories)}
+              </dd>
+            </div>
+          </dl>
+          {access.catalog && (
+            <Link
+              href={catalogAction.href}
+              className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary underline-offset-4 hover:underline"
+            >
+              {catalogAction.label}
+              <ArrowRight aria-hidden="true" className="size-4" />
+            </Link>
+          )}
+        </section>
       </div>
+
+      <section aria-labelledby="dashboard-sales-title" className="space-y-3">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+          <h2 id="dashboard-sales-title" className="text-lg font-semibold tracking-tight">
+            {t('kpiTitle')}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {t('kpiPeriod', {
+              from: shortDate.format(new Date(kpis.periodStart)),
+              to: shortDate.format(new Date(kpis.periodEnd)),
+            })}
+          </p>
+        </div>
+        {kpis.excludedCurrencyOrders > 0 && (
+          <p role="status" className="rounded-lg border bg-card p-3 text-sm text-muted-foreground">
+            {t('currencyScope', { currency: kpis.currency, count: kpis.excludedCurrencyOrders })}
+          </p>
+        )}
+        <div className="rounded-xl border bg-card">
+          <dl className="grid divide-y sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+            {periodMetrics.map((metric): React.JSX.Element => (
+              <div key={metric.key} className="min-w-0 space-y-1 px-4 py-3 sm:p-4">
+                <dt className="text-sm text-muted-foreground">{metric.label}</dt>
+                <dd className="text-2xl font-semibold tracking-tight tabular-nums [overflow-wrap:anywhere]">
+                  {metric.value}
+                </dd>
+                <dd className={'text-sm ' + metric.tone}>{metric.help}</dd>
+              </div>
+            ))}
+          </dl>
+          <dl
+            aria-label={t('lifetimeTitle')}
+            className="flex flex-wrap gap-x-8 gap-y-3 border-t px-4 py-3 text-sm"
+          >
+            <div className="flex flex-wrap items-baseline gap-x-2">
+              <dt className="text-muted-foreground">{t('kpiLifetimeRevenue')}</dt>
+              <dd className="font-semibold tabular-nums">
+                {formatMoney(kpis.lifetimeRevenueCents, kpis.currency, locale)}
+              </dd>
+              <dd className="basis-full text-xs text-muted-foreground">
+                {t('kpiLifetimeHelp', { count: kpis.lifetimeOrderCount })}
+              </dd>
+            </div>
+            <div className="flex flex-wrap items-baseline gap-x-2">
+              <dt className="text-muted-foreground">{t('kpiCustomers')}</dt>
+              <dd className="font-semibold tabular-nums">{number.format(kpis.totalCustomers)}</dd>
+            </div>
+          </dl>
+        </div>
+        {salesFilters}
+      </section>
       <Card className="gap-5">
         <CardHeader className="flex flex-wrap items-start justify-between gap-4 sm:flex-row">
           <div className="space-y-1.5">
@@ -255,13 +300,6 @@ export async function DashboardOverview({
             </CardTitle>
             <CardDescription>{t('recentDescription')}</CardDescription>
           </div>
-          <Link
-            href="/dashboard/orders"
-            className="flex min-h-11 items-center gap-2 text-sm font-medium hover:underline"
-          >
-            {t('allOrders')}
-            <ArrowRight aria-hidden="true" className="size-4" />
-          </Link>
         </CardHeader>
         <CardContent>
           {overview.recentOrders.length === 0 ? (
@@ -276,7 +314,7 @@ export async function DashboardOverview({
                   role="link"
                   variant="outline"
                   className="min-h-11"
-                  render={<Link href={'/store/' + overview.tenantSlug} />}
+                  render={<NextLink href={'/store/' + overview.tenantSlug} />}
                 >
                   {t('viewStore')}
                 </Button>
@@ -301,18 +339,13 @@ export async function DashboardOverview({
                     {overview.recentOrders.map((order): React.JSX.Element => (
                       <TableRow key={order.id}>
                         <TableCell>
-                          <Link
-                            href={orderHref(order.id)}
-                            className="inline-flex min-h-11 flex-col justify-center gap-1 font-medium underline-offset-4 hover:underline"
+                          {orderName(order.id, order.orderNumber)}
+                          <time
+                            dateTime={order.createdAt}
+                            className="block text-xs text-muted-foreground"
                           >
-                            {order.orderNumber}
-                            <time
-                              dateTime={order.createdAt}
-                              className="block text-xs font-normal text-muted-foreground"
-                            >
-                              {date.format(new Date(order.createdAt))}
-                            </time>
-                          </Link>
+                            {date.format(new Date(order.createdAt))}
+                          </time>
                         </TableCell>
                         <TableCell className="max-w-64 whitespace-normal break-words">
                           {order.customerName}
@@ -332,12 +365,7 @@ export async function DashboardOverview({
                 {overview.recentOrders.map((order): React.JSX.Element => (
                   <li key={order.id} className="space-y-2 py-4 first:pt-0 last:pb-0">
                     <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-                      <Link
-                        href={orderHref(order.id)}
-                        className="flex min-h-11 items-center text-sm font-semibold underline-offset-4 hover:underline"
-                      >
-                        {order.orderNumber}
-                      </Link>
+                      {orderName(order.id, order.orderNumber)}
                       <span className="text-sm font-medium tabular-nums">
                         {formatMoney(order.totalAmountCents, order.currency, locale)}
                       </span>
