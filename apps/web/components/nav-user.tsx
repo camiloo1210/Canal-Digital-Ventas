@@ -21,9 +21,12 @@ import {
 import { EllipsisVerticalIcon, LogOutIcon, StoreIcon, UserRoundIcon } from 'lucide-react';
 import { LogoutForm } from '@/features/iam/components/logout-form';
 import { LocaleSwitcher } from '@/components/locale-switcher';
+import { withTenant } from '@/features/dashboard/utils/tenant-scope';
 
 export function NavUser({
   user,
+  tenantId,
+  onNavigate,
 }: {
   user: {
     name: string;
@@ -31,6 +34,8 @@ export function NavUser({
     avatar: string;
     tenantSlug?: string | null;
   };
+  tenantId?: string;
+  onNavigate?: () => void;
 }): React.JSX.Element {
   const { isMobile } = useSidebar();
   const t = useTranslations('AdminShell');
@@ -104,7 +109,8 @@ export function NavUser({
               <DropdownMenuItem
                 render={
                   <Link
-                    href="/dashboard/profile"
+                    href={withTenant('/dashboard/profile', tenantId)}
+                    onNavigate={onNavigate}
                     className="flex w-full items-center gap-2 cursor-pointer"
                   />
                 }

@@ -775,7 +775,7 @@ SOFTWARE.
 /* Seller dashboard theme. Scoped with :root:has(.admin-space) so it also reaches portaled
    dialogs, menus and toasts (they mount on <body>) without touching storefront or buyer areas. */
 :root:has(.admin-space) {
-  --background: oklch(0.982 0.004 255);
+  --background: oklch(0.97 0.012 258);
   --foreground: oklch(0.21 0.03 262);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.21 0.03 262);
@@ -801,14 +801,14 @@ SOFTWARE.
   --chart-4: oklch(0.76 0.15 75);
   --chart-5: oklch(0.62 0.2 320);
   --radius: 0.75rem;
-  --sidebar: oklch(0.99 0.003 255);
-  --sidebar-foreground: oklch(0.32 0.035 260);
-  --sidebar-primary: oklch(0.52 0.2 263);
-  --sidebar-primary-foreground: oklch(0.99 0.005 263);
-  --sidebar-accent: oklch(0.955 0.025 263);
-  --sidebar-accent-foreground: oklch(0.38 0.14 263);
-  --sidebar-border: oklch(0.92 0.01 258);
-  --sidebar-ring: oklch(0.52 0.2 263 / 55%);
+  --sidebar: oklch(0.235 0.055 263);
+  --sidebar-foreground: oklch(0.955 0.02 258);
+  --sidebar-primary: oklch(0.9 0.06 263);
+  --sidebar-primary-foreground: oklch(0.31 0.12 263);
+  --sidebar-accent: oklch(0.4 0.092 263);
+  --sidebar-accent-foreground: oklch(0.98 0.008 263);
+  --sidebar-border: oklch(0.97 0.02 258 / 18%);
+  --sidebar-ring: oklch(0.8 0.1 263);
   --shadow-card: 0 1px 2px oklch(0.25 0.04 262 / 6%), 0 1px 1px oklch(0.25 0.04 262 / 4%);
   --shadow-raised: 0 8px 24px -8px oklch(0.25 0.06 262 / 18%), 0 2px 6px oklch(0.25 0.04 262 / 6%);
 }

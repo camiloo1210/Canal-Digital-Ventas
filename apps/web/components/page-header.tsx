@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
+import { DashboardBusinessName } from '@/features/dashboard/components/dashboard-shell';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -27,10 +28,11 @@ export async function PageHeader({
   const current = breadcrumbs[breadcrumbs.length - 1];
   const back = [...breadcrumbs].reverse().find((crumb): boolean => Boolean(crumb.href));
   return (
-    <header className="sticky top-0 z-20 flex min-h-(--header-height) shrink-0 items-center border-b border-border/70 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/70 md:rounded-t-2xl">
-      <div className="flex min-w-0 w-full items-center gap-3 px-4 py-2 lg:px-6">
+    <header className="sticky top-0 z-20 flex min-h-(--header-height) shrink-0 items-center border-b bg-card">
+      <div className="mx-auto flex w-full max-w-7xl min-w-0 items-center gap-2 px-4 py-2 sm:gap-3 lg:px-8">
         <SidebarTrigger className="size-11 shrink-0" aria-label={t('toggleNavigation')} />
         <Separator orientation="vertical" className="h-5 data-vertical:self-auto" />
+        <DashboardBusinessName />
         <div className="min-w-0 flex-1 md:hidden">
           {back?.href ? (
             <Link href={back.href} className="flex min-h-11 items-center gap-2 text-sm font-medium">

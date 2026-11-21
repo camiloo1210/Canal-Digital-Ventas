@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import {
   LayoutDashboard,
@@ -13,7 +13,6 @@ import {
   Plug,
   ChartNoAxesCombined,
   UsersRound,
-  UserRound,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NavUser } from '@/components/nav-user';
@@ -31,8 +30,8 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { BusinessSwitcher } from '@/features/dashboard/components/business-switcher';
-import { currentBusiness, type BusinessOption } from '@/features/dashboard/utils/current-business';
-import { TENANT_PARAM, withTenant } from '@/features/dashboard/utils/tenant-scope';
+import type { BusinessOption } from '@/features/dashboard/utils/current-business';
+import { withTenant } from '@/features/dashboard/utils/tenant-scope';
 import {
   groupDashboardNavigation,
   isDashboardDestinationActive,
@@ -47,14 +46,12 @@ const icons = {
   store: Paintbrush,
   integrations: Plug,
   users: UsersRound,
-  profile: UserRound,
 };
 
 const GROUP_LABELS = {
   operation: 'groupOperation',
   catalog: 'groupCatalog',
-  store: 'groupStore',
-  account: 'groupAccount',
+  business: 'groupBusiness',
 } as const;
 
 interface DashboardSidebarUser {
@@ -66,18 +63,15 @@ interface DashboardSidebarUser {
 export function AppSidebar({
   user,
   businesses,
-  defaultTenantId,
+  current,
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
   user: DashboardSidebarUser;
   businesses: readonly BusinessOption[];
-  defaultTenantId: string | null;
+  current: BusinessOption | null;
 }): React.JSX.Element {
   const t = useTranslations('AdminShell');
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  // Every link below names its business (?tenant=); the server validates it on each request.
-  const current = currentBusiness(businesses, searchParams.get(TENANT_PARAM), defaultTenantId);
   const visibleKeys = current?.visibleKeys ?? [];
   const { isMobile, setOpenMobile } = useSidebar();
   const focusAfterNavigation = React.useRef(false);
@@ -111,7 +105,7 @@ export function AppSidebar({
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
-      <SidebarHeader className="border-b border-sidebar-border/70 p-3 pr-14 md:pr-3">
+      <SidebarHeader className="border-b border-sidebar-border p-4 pr-14 md:pr-4">
         <SidebarMenu>
           <SidebarMenuItem>
             <BusinessSwitcher
@@ -123,10 +117,10 @@ export function AppSidebar({
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <nav aria-label={t('navigation')} className="flex flex-col gap-1 px-1">
+        <nav aria-label={t('navigation')} className="flex flex-col gap-2 px-2 pt-2">
           {groupDashboardNavigation(visibleKeys).map((group): React.JSX.Element => (
             <SidebarGroup key={group.key} className="py-1.5">
-              <SidebarGroupLabel className="h-7 text-[0.6875rem] font-semibold tracking-wider text-sidebar-foreground/55 uppercase">
+              <SidebarGroupLabel className="h-7 px-3 text-xs font-semibold text-sidebar-foreground/80">
                 {t(GROUP_LABELS[group.key])}
               </SidebarGroupLabel>
               <SidebarGroupContent>
@@ -139,10 +133,9 @@ export function AppSidebar({
                         <SidebarMenuButton
                           isActive={active}
                           className={cn(
-                            'relative min-h-11 gap-3 [&_svg]:size-[1.125rem] rounded-lg px-3 text-sm font-medium text-sidebar-foreground/80 transition-colors duration-200 motion-reduce:transition-none',
+                            'min-h-11 gap-3 rounded-lg px-3 text-sm font-medium text-sidebar-foreground transition-colors duration-150 motion-reduce:transition-none [&_svg]:size-[1.125rem]',
                             'hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground',
                             'data-active:bg-sidebar-accent data-active:font-semibold data-active:text-sidebar-accent-foreground',
-                            'data-active:before:absolute data-active:before:top-2.5 data-active:before:bottom-2.5 data-active:before:left-0 data-active:before:w-[3px] data-active:before:rounded-full data-active:before:bg-sidebar-primary',
                           )}
                           render={
                             <Link
@@ -164,8 +157,12 @@ export function AppSidebar({
           ))}
         </nav>
       </SidebarContent>
-      <SidebarFooter className="border-t border-sidebar-border/70 p-3">
-        <NavUser user={{ ...user, tenantSlug: current?.tenantSlug ?? null }} />
+      <SidebarFooter className="border-t border-sidebar-border p-4">
+        <NavUser
+          user={{ ...user, tenantSlug: current?.tenantSlug ?? null }}
+          tenantId={current?.tenantId}
+          onNavigate={(): void => setOpenMobile(false)}
+        />
       </SidebarFooter>
     </Sidebar>
   );
