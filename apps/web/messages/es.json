@@ -1322,6 +1322,7 @@
     "contextChanged": "El negocio activo cambió o ya no tienes acceso a él. Recarga la página e inténtalo de nuevo."
   },
   "AdminOrders": {
+    "quickFilters": "Colas de pedidos",
     "shipmentUnavailable": "Los datos del envío no están disponibles en este momento.",
     "shipmentCarrier": "Transportadora",
     "shipmentTracking": "Número de guía",
@@ -1364,7 +1365,7 @@
     "orderUnavailable": "No encontramos un pedido disponible para tu cuenta.",
     "views": {
       "all": "Todos los estados",
-      "paid": "Por preparar",
+      "paid": "Listos para preparar",
       "processing": "En preparación",
       "shipped": "Enviados",
       "delivered": "Entregados",

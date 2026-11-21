@@ -6,6 +6,7 @@ import { requireDashboardPermission } from '@/features/dashboard/queries/dashboa
 import { UserPermission } from '@canaldigital/packages/core';
 import {
   parseSellerOrdersQuery,
+  sellerOrdersHref,
   sellerOrderStatuses,
   type SellerOrdersSearchParams,
 } from '@/features/orders/queries/seller-orders-query';
@@ -25,6 +26,8 @@ import { tenantParam, withTenant } from '@/features/dashboard/utils/tenant-scope
 import { CatalogSearchButton } from '@/features/dashboard/components/catalog-search-button';
 import { CatalogResultsSkeleton } from '@/features/dashboard/components/catalog-results';
 
+const quickOrderStatuses = ['all', 'paid', 'processing', 'pending_payment'] as const;
+
 export async function SellerOrdersScreen({
   searchParams,
 }: {
@@ -40,12 +43,12 @@ export async function SellerOrdersScreen({
     <TenantScope tenantId={tenantId}>
       <div className="flex min-w-0 flex-1 flex-col">
         <PageHeader breadcrumbs={[{ label: t('title'), href: null }]} />
-        <div className="space-y-6 px-4 py-6 lg:px-6 lg:py-8">
+        <div className="mx-auto w-full max-w-7xl min-w-0 space-y-6 px-4 py-6 lg:px-8 lg:py-8">
           <header className="space-y-2">
             <h1
               id="orders-heading"
               tabIndex={-1}
-              className="text-2xl font-semibold tracking-[-0.02em] text-balance outline-none sm:text-[1.75rem]"
+              className="text-3xl font-semibold tracking-tight text-balance outline-none lg:text-4xl"
             >
               {t('title')}
             </h1>
@@ -53,6 +56,18 @@ export async function SellerOrdersScreen({
               {t('description')}
             </p>
           </header>
+          <nav aria-label={t('quickFilters')} className="flex flex-wrap gap-2">
+            {quickOrderStatuses.map((status): React.JSX.Element => (
+              <Link
+                key={status}
+                href={sellerOrdersHref(query, { status, page: 1, order: null })}
+                aria-current={query.status === status ? 'page' : undefined}
+                className="inline-flex min-h-11 items-center rounded-lg border bg-card px-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none aria-[current=page]:border-primary/40 aria-[current=page]:bg-accent aria-[current=page]:font-semibold aria-[current=page]:text-accent-foreground motion-reduce:transition-none"
+              >
+                {t('views.' + status)}
+              </Link>
+            ))}
+          </nav>
           <Form
             action="/dashboard/orders"
             role="search"

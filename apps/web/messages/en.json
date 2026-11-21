@@ -1322,6 +1322,7 @@
     "contextChanged": "The active business changed or you no longer have access to it. Reload the page and try again."
   },
   "AdminOrders": {
+    "quickFilters": "Order queues",
     "shipmentUnavailable": "Shipping details are unavailable right now.",
     "shipmentCarrier": "Carrier",
     "shipmentTracking": "Tracking number",
@@ -1364,8 +1365,8 @@
     "orderUnavailable": "No order is available for your account at this address.",
     "views": {
       "all": "All statuses",
-      "paid": "To prepare",
-      "processing": "Preparing",
+      "paid": "Ready to prepare",
+      "processing": "In preparation",
       "shipped": "Shipped",
       "delivered": "Delivered",
       "pending_payment": "Awaiting payment",
