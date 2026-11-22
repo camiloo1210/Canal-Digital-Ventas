@@ -330,6 +330,7 @@ export type { PublicTenantDirectorySearchRepositoryPort } from '@/tenants/applic
 export type {
   CatalogStatus,
   AdminCatalogQuery,
+  AdminCatalogCategoryOption,
   AdminProductCatalogItem,
   AdminCategoryCatalogItem,
   AdminCatalogPage,
