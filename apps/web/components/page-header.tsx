@@ -29,7 +29,7 @@ export async function PageHeader({
   const back = [...breadcrumbs].reverse().find((crumb): boolean => Boolean(crumb.href));
   return (
     <header className="sticky top-0 z-20 flex min-h-(--header-height) shrink-0 items-center border-b bg-card">
-      <div className="mx-auto flex w-full max-w-7xl min-w-0 items-center gap-2 px-4 py-2 sm:gap-3 lg:px-8">
+      <div className="flex w-full min-w-0 items-center gap-2 py-2 ps-2 pe-4 sm:gap-3 sm:pe-6">
         <SidebarTrigger className="size-11 shrink-0" aria-label={t('toggleNavigation')} />
         <Separator orientation="vertical" className="h-5 data-vertical:self-auto" />
         <DashboardBusinessName />
