@@ -90,7 +90,7 @@ function chain(result: { data: unknown; error: unknown }): Chain {
 
 function multiSetup(
   memberships: { tenant_id: string; role: string }[],
-  tenants: { id: string; name: string; slug: string }[],
+  tenants: { id: string; name: string; slug: string; logo_url?: string | null }[],
   error: unknown = null,
 ): {
   adapter: SupabaseActiveTenantContextReadAdapter;
@@ -112,13 +112,19 @@ describe('all active memberships of a user', (): void => {
         { tenant_id: 'two', role: 'ADMIN' },
       ],
       [
-        { id: 'two', name: 'Beta', slug: 'beta' },
-        { id: 'one', name: 'Alpha', slug: 'alpha' },
+        { id: 'two', name: 'Beta', slug: 'beta', logo_url: null },
+        { id: 'one', name: 'Alpha', slug: 'alpha', logo_url: 'https://example.com/alpha.png' },
       ],
     );
     expect(await adapter.findAllActiveForUser('actor')).toEqual([
-      { tenantId: 'one', tenantName: 'Alpha', tenantSlug: 'alpha', role: 'OWNER' },
-      { tenantId: 'two', tenantName: 'Beta', tenantSlug: 'beta', role: 'ADMIN' },
+      {
+        tenantId: 'one',
+        tenantName: 'Alpha',
+        tenantSlug: 'alpha',
+        logoUrl: 'https://example.com/alpha.png',
+        role: 'OWNER',
+      },
+      { tenantId: 'two', tenantName: 'Beta', tenantSlug: 'beta', logoUrl: null, role: 'ADMIN' },
     ]);
     expect(membership.eq).toHaveBeenCalledWith('user_id', 'actor');
     expect(membership.eq).toHaveBeenCalledWith('status', 'active');

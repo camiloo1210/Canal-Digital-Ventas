@@ -3,6 +3,7 @@ import type {
   AdminCatalogReadPort,
   AdminCatalogQuery,
   AdminCatalogPage,
+  AdminCatalogCategoryOption,
   AdminProductCatalogItem,
   AdminCategoryCatalogItem,
   ProductFormContextReadModel,
@@ -34,6 +35,24 @@ function toPage<T>(
 export class PostgresAdminCatalogReadAdapter implements AdminCatalogReadPort {
   constructor(private readonly sql: postgres.Sql<Record<string, unknown>>) {}
 
+  async listProductCategoriesForManager(
+    userId: string,
+    tenantId: string,
+  ): Promise<AdminCatalogCategoryOption[]> {
+    try {
+      return await this.sql<AdminCatalogCategoryOption[]>`
+        SELECT c.id, c.name
+        FROM catalog.categories c
+        JOIN core.tenant_memberships m ON m.tenant_id=c.tenant_id
+        WHERE c.tenant_id=${tenantId}::uuid AND m.user_id=${userId}::uuid
+          AND m.status='active'
+          AND core.member_has_permission(m.user_id, m.tenant_id, ARRAY['VIEW_CATALOG','MANAGE_CATALOG']::text[])
+        ORDER BY c.name, c.id`;
+    } catch (error: unknown) {
+      throw new AdminCatalogReadException(error);
+    }
+  }
+
   async findProductFormContextForManager(
     userId: string,
     tenantId: string,
@@ -61,6 +80,7 @@ export class PostgresAdminCatalogReadAdapter implements AdminCatalogReadPort {
     query: AdminCatalogQuery,
   ): Promise<AdminCatalogPage<AdminProductCatalogItem> | null> {
     try {
+      const categoryId = query.categoryId ?? null;
       const rows = await this.sql<CatalogRow<AdminProductCatalogItem>[]>`
         WITH authorized AS (
           SELECT t.id,t.base_currency FROM core.tenants t
@@ -74,6 +94,7 @@ export class PostgresAdminCatalogReadAdapter implements AdminCatalogReadPort {
           JOIN catalog.categories c ON c.id=p.category_id AND c.tenant_id=p.tenant_id
           WHERE (${query.status}='all' OR p.status=${query.status})
             AND (${query.q}='' OR p.name ILIKE ${pattern(query.q)} OR p.sku ILIKE ${pattern(query.q)})
+            AND (${categoryId}::uuid IS NULL OR c.id=${categoryId}::uuid)
         )
         SELECT (SELECT count(*)::int FROM filtered) AS total,
           coalesce((SELECT jsonb_agg(r ORDER BY r.created_at DESC,r.id DESC) FROM (

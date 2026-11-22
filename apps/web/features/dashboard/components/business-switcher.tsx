@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Check, ChevronsUpDown, Loader2, Store } from 'lucide-react';
+import { Check, ChevronsUpDown, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
@@ -17,6 +17,10 @@ import { SidebarMenuButton } from '@/components/ui/sidebar';
 import { switchTenantAction } from '@/features/iam/actions/switch-tenant.actions';
 import { withTenant } from '@/features/dashboard/utils/tenant-scope';
 import type { BusinessOption } from '@/features/dashboard/utils/current-business';
+import {
+  publicLogoSource,
+  StoreIdentityLogo,
+} from '@/features/dashboard/components/store-identity-logo';
 
 export function BusinessSwitcher({
   businesses,
@@ -55,28 +59,27 @@ export function BusinessSwitcher({
           render={
             <SidebarMenuButton
               size="lg"
+              aria-busy={pending}
               aria-label={t('trigger', { name: current?.tenantName ?? t('none') })}
               className="min-h-12 rounded-lg border border-sidebar-border text-sidebar-foreground transition-colors duration-150 aria-expanded:bg-sidebar-accent motion-reduce:transition-none"
             />
           }
         >
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-            {pending ? (
-              <Loader2
-                aria-hidden="true"
-                className="size-[1.125rem] animate-spin motion-reduce:animate-none"
-              />
-            ) : (
-              <Store aria-hidden="true" className="size-[1.125rem]" />
-            )}
-          </span>
+          <StoreIdentityLogo logoUrl={publicLogoSource(current?.logoUrl)} />
           <div className="min-w-0 flex-1 text-left">
             <p className="truncate font-semibold">{current?.tenantName ?? t('none')}</p>
             <p className="truncate text-xs text-sidebar-foreground/80">
               {current ? t('roles.' + current.role) : t('choose')}
             </p>
           </div>
-          <ChevronsUpDown aria-hidden="true" className="ml-auto size-4 shrink-0" />
+          {pending ? (
+            <Loader2
+              aria-hidden="true"
+              className="ml-auto size-4 shrink-0 animate-spin motion-reduce:animate-none"
+            />
+          ) : (
+            <ChevronsUpDown aria-hidden="true" className="ml-auto size-4 shrink-0" />
+          )}
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="min-w-64">
           <DropdownMenuGroup>

@@ -3,6 +3,7 @@ import { createTranslator } from 'next-intl';
 import { describe, expect, it, vi } from 'vitest';
 import es from '@/messages/es.json';
 import { CatalogPagination } from '@/features/dashboard/components/catalog-pagination';
+import { CatalogToolbar } from '@/features/dashboard/components/catalog-toolbar';
 import { ProductCatalogTable } from '@/features/dashboard/components/product-catalog-table';
 import { CategoryCatalogTable } from '@/features/dashboard/components/category-catalog-table';
 import { parseCatalogQuery } from '@/features/dashboard/queries/catalog-query';
@@ -20,17 +21,40 @@ vi.mock('@/features/categories/components/category-card-actions', (): object => 
 }));
 
 describe('catalog presentation', (): void => {
+  it('shows the selected product category by name and keeps it in the search form', async (): Promise<void> => {
+    const id = '550e8400-e29b-41d4-a716-446655440000';
+    const html = renderToStaticMarkup(
+      await CatalogToolbar({
+        kind: 'products',
+        query: parseCatalogQuery({ category: id }, 'products'),
+        categoryOptions: [{ id, name: 'Útiles escolares' }],
+      }),
+    );
+    expect(html).toContain('Útiles escolares');
+    expect(html).toContain(`name="category" value="${id}"`);
+    expect(html).toContain('Limpiar filtros');
+  });
   it('makes record 51 reachable and preserves filters in the next page URL', async (): Promise<void> => {
     const html = renderToStaticMarkup(
       await CatalogPagination({
         kind: 'products',
-        query: parseCatalogQuery({ q: 'A&B', status: 'active', page: '2' }, 'products'),
+        query: parseCatalogQuery(
+          {
+            q: 'A&B',
+            status: 'active',
+            page: '2',
+            category: '550e8400-e29b-41d4-a716-446655440000',
+          },
+          'products',
+        ),
         totalItems: 51,
         totalPages: 3,
       }),
     );
     expect(html).toContain('26–50 de 51 resultados');
-    expect(html).toContain('q=A%26B&amp;status=active&amp;page=3');
+    expect(html).toContain(
+      'q=A%26B&amp;status=active&amp;category=550e8400-e29b-41d4-a716-446655440000&amp;page=3',
+    );
     expect(html).toContain('Página siguiente');
     expect(html).not.toContain('aria-current="page"');
   });

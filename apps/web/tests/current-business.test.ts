@@ -7,6 +7,7 @@ const make = (tenantId: string): BusinessOption => ({
   tenantId,
   tenantName: tenantId,
   tenantSlug: tenantId,
+  logoUrl: null,
   role: 'OWNER',
   visibleKeys: [],
 });

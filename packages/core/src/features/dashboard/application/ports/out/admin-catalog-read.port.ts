@@ -5,6 +5,12 @@ export interface AdminCatalogQuery {
   status: CatalogStatus | 'all';
   page: number;
   limit: number;
+  categoryId?: string;
+}
+
+export interface AdminCatalogCategoryOption {
+  id: string;
+  name: string;
 }
 
 export interface AdminProductCatalogItem {
@@ -40,6 +46,10 @@ export interface ProductFormContextReadModel {
 }
 
 export interface AdminCatalogReadPort {
+  listProductCategoriesForManager(
+    userId: string,
+    tenantId: string,
+  ): Promise<AdminCatalogCategoryOption[]>;
   findProductFormContextForManager(
     userId: string,
     tenantId: string,

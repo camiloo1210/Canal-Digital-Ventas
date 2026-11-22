@@ -31,6 +31,8 @@ describe('admin catalog read projection', (): void => {
       query.q,
       '%50\\%\\_\\\\%',
       '%50\\%\\_\\\\%',
+      null,
+      null,
       25,
       50,
     ]);
@@ -46,6 +48,17 @@ describe('admin catalog read projection', (): void => {
     expect(statement).toContain('ORDER BY created_at DESC,id DESC');
     expect(statement).not.toContain('50%_');
     expect(sql).toHaveBeenCalledTimes(1);
+  });
+  it('binds the category in the tenant-scoped filtered set before counting or pagination', async (): Promise<void> => {
+    const categoryId = '550e8400-e29b-41d4-a716-446655440000';
+    const sql = vi.fn().mockResolvedValue([{ total: 0, items: [] }]);
+    const repository = new PostgresAdminCatalogReadAdapter(
+      sql as unknown as postgres.Sql<Record<string, unknown>>,
+    );
+    await repository.findProductsForManager('actor', 'tenant', { ...query, categoryId });
+    const [parts, ...values] = sql.mock.calls[0] as [TemplateStringsArray, ...unknown[]];
+    expect(parts.join('?')).toContain('(?::uuid IS NULL OR c.id=?::uuid)');
+    expect(values.slice(-4)).toEqual([categoryId, categoryId, 25, 50]);
   });
   it('scopes category counts and product associations to the same tenant', async (): Promise<void> => {
     const sql = vi.fn().mockResolvedValue([{ total: 0, items: [] }]);

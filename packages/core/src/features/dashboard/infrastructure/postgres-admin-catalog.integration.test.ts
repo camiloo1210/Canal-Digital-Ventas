@@ -95,6 +95,33 @@ describe.skipIf(!databaseUrl)('Admin catalog PostgreSQL (all fixtures rolled bac
           page: 1,
         });
         expect(archived?.totalItems).toBe(1);
+        const options = await reader.listProductCategoriesForManager(
+          manager.user_id,
+          manager.tenant_id,
+        );
+        const emptyCategory = options.find((item): boolean => item.name === prefix + '-category-2');
+        expect(emptyCategory).toBeDefined();
+        expect(
+          await reader.listProductCategoriesForManager(crypto.randomUUID(), manager.tenant_id),
+        ).toEqual([]);
+        const inCategory = await reader.findProductsForManager(manager.user_id, manager.tenant_id, {
+          ...query,
+          categoryId: category.id,
+          status: 'archived',
+          page: 1,
+        });
+        expect(inCategory?.totalItems).toBe(1);
+        const outsideCategory = await reader.findProductsForManager(
+          manager.user_id,
+          manager.tenant_id,
+          {
+            ...query,
+            categoryId: emptyCategory!.id,
+            status: 'archived',
+            page: 1,
+          },
+        );
+        expect(outsideCategory?.totalItems).toBe(0);
         const associations = await reader.findCategoriesForManager(
           manager.user_id,
           manager.tenant_id,

@@ -4,7 +4,12 @@ import { createContext, useContext } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
 import { AppSidebar } from '@/components/app-sidebar';
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarInset, SidebarProvider, useSidebar } from '@/components/ui/sidebar';
+import { DashboardBrandTheme } from '@/features/dashboard/components/dashboard-brand-theme';
+import {
+  publicLogoSource,
+  StoreIdentityLogo,
+} from '@/features/dashboard/components/store-identity-logo';
 import { currentBusiness, type BusinessOption } from '@/features/dashboard/utils/current-business';
 import { TENANT_PARAM } from '@/features/dashboard/utils/tenant-scope';
 
@@ -14,10 +19,14 @@ const DashboardBusinessContext = createContext<BusinessOption | null>(null);
 
 export function DashboardBusinessName(): React.JSX.Element | null {
   const business = useContext(DashboardBusinessContext);
+  const { open, isMobile } = useSidebar();
   if (!business) return null;
 
   return (
     <>
+      {(isMobile || !open) && (
+        <StoreIdentityLogo logoUrl={publicLogoSource(business.logoUrl)} className="size-7" />
+      )}
       <span
         title={business.tenantName}
         className="max-w-[35%] shrink-0 truncate text-sm font-semibold text-foreground"
@@ -55,6 +64,7 @@ export function DashboardShell({
     );
   return (
     <DashboardBusinessContext.Provider value={current}>
+      <DashboardBrandTheme logoUrl={publicLogoSource(current?.logoUrl)} />
       <SidebarProvider
         style={{ '--sidebar-width': '15rem', '--header-height': '3.75rem' } as React.CSSProperties}
       >
