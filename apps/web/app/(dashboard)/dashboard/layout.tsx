@@ -29,6 +29,7 @@ export default async function DashboardLayout({
         tenantId: membership.tenantId,
         tenantName: membership.tenantName,
         tenantSlug: membership.tenantSlug,
+        logoUrl: membership.logoUrl,
         role: membership.role,
         visibleKeys: member
           ? visibleDashboardNavigationKeys(member.baseRole, member.permissions)

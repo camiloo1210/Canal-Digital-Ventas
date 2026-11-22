@@ -4,6 +4,7 @@ export interface BusinessOption {
   tenantId: string;
   tenantName: string;
   tenantSlug: string;
+  logoUrl: string | null;
   role: string;
   /** Navigation destinations this member may see in that business. */
   visibleKeys: string[];
