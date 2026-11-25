@@ -54,13 +54,18 @@ function dto(items: GenerateCommercialOrderDto['items']): GenerateCommercialOrde
     },
   };
 }
-function fixture(products: Product[]): {
+function fixture(
+  products: Product[],
+  eligible = true,
+): {
   useCase: GenerateCommercialOrderUseCase;
   save: ReturnType<typeof vi.fn<(order: Order) => Promise<void>>>;
   decreaseStock: ReturnType<typeof vi.fn>;
+  publish: ReturnType<typeof vi.fn>;
 } {
   const save = vi.fn<(order: Order) => Promise<void>>().mockResolvedValue(undefined);
-  const decreaseStock = vi.fn().mockResolvedValue(undefined);
+  const decreaseStock = vi.fn().mockResolvedValue(95);
+  const publish = vi.fn().mockResolvedValue(undefined);
   const customer = StoreCustomer.create(
     createStoreCustomerId('customer'),
     tenantId,
@@ -74,6 +79,7 @@ function fixture(products: Product[]): {
   return {
     save,
     decreaseStock,
+    publish,
     useCase: new GenerateCommercialOrderUseCase(
       {
         save,
@@ -102,6 +108,8 @@ function fixture(products: Product[]): {
         runInTransaction: async <T>(work: (tx: TransactionContext) => Promise<T>): Promise<T> =>
           work({ executeNative: vi.fn() }),
       },
+      { setEnabled: vi.fn(), isEligible: vi.fn().mockResolvedValue(eligible) },
+      { publish },
     ),
   };
 }
@@ -121,6 +129,23 @@ describe('Commercial checkout monetary authority', (): void => {
     expect(order.getItems()[0].getQuantity()).toBe(5);
     expect(h.decreaseStock).toHaveBeenCalledTimes(1);
   });
+  it('publishes ProductStockAdjustedEvent with the remaining stock so Kivi syncs it', async (): Promise<void> => {
+    const h = fixture([product('product', 125)]);
+    await h.useCase.execute(dto([{ productId: 'product', quantity: 5 }]));
+    expect(h.publish).toHaveBeenCalledTimes(1);
+    const [envelopes] = h.publish.mock.calls[0];
+    expect(envelopes).toHaveLength(1);
+    expect(envelopes[0].event).toMatchObject({
+      eventName: 'ProductStockAdjustedEvent',
+      productId: 'product',
+      stock: 95,
+    });
+    expect(envelopes[0].context).toEqual({
+      tenantId,
+      aggregateType: 'Product',
+      aggregateId: 'product',
+    });
+  });
   it('uses consolidated quantities to cross the wholesale threshold', async (): Promise<void> => {
     const catalogProduct = product('product', 125);
     catalogProduct.changeWholesaleRules(Money.from(80, Currency.COP), 5);
@@ -134,6 +159,13 @@ describe('Commercial checkout monetary authority', (): void => {
     const order = h.save.mock.calls[0][0];
     expect(order.getItems()[0].getUnitPrice().getValue()).toBe(80);
     expect(order.getSubtotal().getValue()).toBe(400);
+  });
+  it('charges retail when the buyer has not enabled wholesale', async (): Promise<void> => {
+    const item = product('product', 125);
+    item.changeWholesaleRules(Money.from(80, Currency.COP), 5);
+    const h = fixture([item], false);
+    await h.useCase.execute(dto([{ productId: 'product', quantity: 5 }]));
+    expect(h.save.mock.calls[0][0].getItems()[0].getUnitPrice().getValue()).toBe(125);
   });
   it('does not persist a cart sum exceeding the commercial limit', async (): Promise<void> => {
     const h = fixture([product('a', MAX_MONEY_CENTS), product('b', 1)]);

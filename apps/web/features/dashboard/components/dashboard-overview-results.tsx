@@ -6,7 +6,10 @@ import type {
 } from '@canaldigital/packages/core';
 import { getDashboardOverviewReadRepository } from '@/features/dashboard/di/dashboard.di';
 import { TenantParamField } from '@/features/dashboard/components/tenant-scope';
-import { DashboardOverview } from '@/features/dashboard/components/dashboard-overview';
+import {
+  DashboardOverview,
+  type DashboardOverviewAccess,
+} from '@/features/dashboard/components/dashboard-overview';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { intelligenceRangeStart } from '@/features/dashboard/utils/business-intelligence-range';
@@ -16,10 +19,14 @@ export async function DashboardOverviewResults({
   userId,
   tenantId,
   period,
+  access,
+  salesFilters,
 }: {
   userId: string;
   tenantId: string;
   period: DashboardOverviewPeriod;
+  access: DashboardOverviewAccess;
+  salesFilters?: React.ReactNode;
 }): Promise<React.JSX.Element> {
   const t = await getTranslations('AdminOverview');
   let overview: DashboardOverviewReadModel | null = null;
@@ -32,40 +39,43 @@ export async function DashboardOverviewResults({
   }
   if (!overview)
     return (
-      <Alert role="alert">
-        <AlertTitle>{t(failed ? 'errorTitle' : 'accessTitle')}</AlertTitle>
-        <AlertDescription>
-          <p>{t(failed ? 'errorDescription' : 'accessDescription')}</p>
-          {failed && (
-            <form action="/dashboard" method="get">
-              <TenantParamField />
-              {period.endDate ? (
-                <>
-                  <input type="hidden" name="from" value={intelligenceRangeStart(period) ?? ''} />
-                  <input type="hidden" name="to" value={period.endDate} />
-                </>
-              ) : (
-                <input type="hidden" name="days" value={period.days} />
-              )}
-              <Button type="submit" variant="outline" className="mt-3 min-h-11">
-                {t('retry')}
-              </Button>
-            </form>
-          )}
-        </AlertDescription>
-      </Alert>
+      <>
+        <Alert role="alert">
+          <AlertTitle>{t(failed ? 'errorTitle' : 'accessTitle')}</AlertTitle>
+          <AlertDescription>
+            <p>{t(failed ? 'errorDescription' : 'accessDescription')}</p>
+            {failed && (
+              <form action="/dashboard" method="get">
+                <TenantParamField />
+                {period.endDate ? (
+                  <>
+                    <input type="hidden" name="from" value={intelligenceRangeStart(period) ?? ''} />
+                    <input type="hidden" name="to" value={period.endDate} />
+                  </>
+                ) : (
+                  <input type="hidden" name="days" value={period.days} />
+                )}
+                <Button type="submit" variant="outline" className="mt-3 min-h-11">
+                  {t('retry')}
+                </Button>
+              </form>
+            )}
+          </AlertDescription>
+        </Alert>
+        {failed && salesFilters}
+      </>
     );
-  return <DashboardOverview overview={overview} />;
+  return <DashboardOverview overview={overview} access={access} salesFilters={salesFilters} />;
 }
 
 export function DashboardOverviewSkeleton({ label }: { label: string }): React.JSX.Element {
   return (
     <div role="status" aria-label={label} aria-busy="true" className="space-y-6">
-      <div aria-hidden="true" className="grid gap-6 xl:grid-cols-3">
-        <Skeleton className="h-80 rounded-xl motion-reduce:animate-none xl:col-span-2" />
+      <div aria-hidden="true" className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <Skeleton className="h-80 rounded-xl motion-reduce:animate-none" />
+        <Skeleton className="h-48 rounded-xl motion-reduce:animate-none lg:h-80" />
       </div>
-      <Skeleton aria-hidden="true" className="h-80 rounded-xl motion-reduce:animate-none" />
+      <Skeleton aria-hidden="true" className="h-56 rounded-xl motion-reduce:animate-none" />
     </div>
   );
 }

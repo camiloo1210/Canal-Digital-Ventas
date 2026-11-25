@@ -66,9 +66,10 @@ export class BuyerCartService {
   public async normalize(
     tenantId: string,
     candidates: readonly CartLineCandidate[],
+    userId: string,
   ): Promise<NormalizedBuyerCart> {
     const deduped = dedupeCandidates(candidates);
-    const products = await this.catalog.findProducts(tenantId, lookupIds(deduped));
+    const products = await this.catalog.findProducts(tenantId, lookupIds(deduped), userId);
     return normalizeBuyerCart(deduped, catalogMap(products));
   }
 
@@ -86,6 +87,7 @@ export class BuyerCartService {
     tenantId: string,
     record: BuyerCartRecord | null,
     now: Date,
+    userId: string,
   ): Promise<BuyerCartReadModel> {
     if (!this.isLive(record, now)) return this.emptyCart(now);
     const { items } = await this.normalize(
@@ -94,6 +96,7 @@ export class BuyerCartService {
         productId: line.productId,
         quantity: line.quantity,
       })),
+      userId,
     );
     return {
       items,
@@ -165,7 +168,7 @@ export class BuyerCartService {
           if (error instanceof BuyerCartWriteConflictException) {
             const current = await this.carts.findActive(identity, tx);
             throw new CartVersionConflictException(
-              await this.viewOf(params.tenantId, current, now),
+              await this.viewOf(params.tenantId, current, now, params.userId),
             );
           }
           throw error;

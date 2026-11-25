@@ -51,12 +51,16 @@ export async function StoreDirectory({
   const showcase = result.items.length >= 3 && Boolean(result.items[0]?.bannerUrl);
   const rest = showcase ? result.items.slice(3) : result.items;
   return (
-    <section aria-labelledby="store-directory-title" className="space-y-4">
-      <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 id="store-directory-title" className="text-lg font-semibold tracking-tight">
+    <section aria-labelledby="store-directory-title" className="space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-5">
+        <h2 id="store-directory-title" className="text-xl font-semibold tracking-tight sm:text-2xl">
           {td(query ? 'searchTitle' : 'allStores')}
         </h2>
-        <p role="status" aria-live="polite" className="text-sm tabular-nums text-muted-foreground">
+        <p
+          role="status"
+          aria-live="polite"
+          className="text-sm font-medium tabular-nums text-muted-foreground"
+        >
           {t('store_results', { count: result.total })}
         </p>
       </div>
@@ -107,10 +111,10 @@ export async function StoreDirectory({
                   ? 'md:grid-cols-2'
                   : rest.length > 2
                     ? 'md:grid-cols-2 lg:grid-cols-3'
-                    : undefined,
+                    : 'max-w-3xl',
               )}
             >
-              {rest.map((tenant): React.JSX.Element => renderStore(tenant))}
+              {rest.map((tenant): React.JSX.Element => renderStore(tenant, result.total === 1))}
             </div>
           )}
         </>

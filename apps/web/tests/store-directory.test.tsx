@@ -30,6 +30,44 @@ describe('buyer directory discovery', (): void => {
     expect(html).not.toContain('aspect-[21/9]');
     expect(html).not.toContain('line-clamp-1');
     expect(html).not.toContain('recent_purchases');
+    expect(html).toContain('max-w-3xl');
+    expect(html).toContain('sm:size-24');
+  });
+  it('lays out multiple stores as a responsive directory', async (): Promise<void> => {
+    const html = renderToStaticMarkup(
+      await StoreDirectory({
+        result: {
+          ...result,
+          items: [...result.items, { ...result.items[0]!, slug: 'books', name: 'Books' }],
+          total: 2,
+        },
+        query: '',
+      }),
+    );
+    expect(html).toContain('md:grid-cols-2');
+    expect(html).toContain('href="/store/books"');
+    expect(html).not.toContain('sm:size-24');
+  });
+  it('shows each store banner when one or multiple stores have one', async (): Promise<void> => {
+    const first = { ...result.items[0]!, bannerUrl: '/first-banner.jpg' };
+    const single = renderToStaticMarkup(
+      await StoreDirectory({ result: { ...result, items: [first] }, query: '' }),
+    );
+    expect(single).toContain('first-banner.jpg');
+    expect(single).toContain('aspect-[21/9]');
+    const multiple = renderToStaticMarkup(
+      await StoreDirectory({
+        result: {
+          ...result,
+          total: 2,
+          items: [first, { ...first, slug: 'books', bannerUrl: '/second-banner.jpg' }],
+        },
+        query: '',
+      }),
+    );
+    expect(multiple).toContain('first-banner.jpg');
+    expect(multiple).toContain('second-banner.jpg');
+    expect(multiple).toContain('aspect-[3/1]');
   });
   it('preserves the search when paging through the complete directory', async (): Promise<void> => {
     const html = renderToStaticMarkup(

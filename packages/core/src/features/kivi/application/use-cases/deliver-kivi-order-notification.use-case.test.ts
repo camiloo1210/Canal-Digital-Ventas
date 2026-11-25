@@ -14,6 +14,19 @@ const event: IntegrationEvent = {
 };
 event.payload.orderId = event.aggregateId;
 describe('Kivi order notifications', (): void => {
+  it('skips shipment metadata changes until Kivi supports them', async (): Promise<void> => {
+    const find = vi.fn();
+    const deliver = vi.fn();
+    const useCase = new DeliverKiviOrderNotificationUseCase({ find }, { deliver });
+    await expect(
+      useCase.execute({ ...event, eventType: 'OrderShipmentUpdatedEvent' }),
+    ).resolves.toBe('DUPLICATE');
+    await expect(useCase.execute({ ...event, eventType: 'OrderRefundedEvent' })).resolves.toBe(
+      'DUPLICATE',
+    );
+    expect(find).not.toHaveBeenCalled();
+    expect(deliver).not.toHaveBeenCalled();
+  });
   it('skips stores without a connection', async (): Promise<void> => {
     const deliver = vi.fn();
     await expect(

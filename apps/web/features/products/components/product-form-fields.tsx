@@ -3,6 +3,12 @@
 import { useTranslations } from 'next-intl';
 import type { ProductFormContextReadModel } from '@canaldigital/packages/core';
 import { Input } from '@/components/ui/input';
+import {
+  DECIMAL_INPUT,
+  SKU_INPUT,
+  WHOLE_NUMBER_INPUT,
+  type TextInputAttributes,
+} from '@/lib/input-attributes';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field';
@@ -44,6 +50,8 @@ function ProductInput({
   revision,
   clearField,
   money = false,
+  fractionDigits,
+  limits,
 }: {
   name: keyof ProductFormValues;
   label: string;
@@ -55,6 +63,9 @@ function ProductInput({
   revision: number;
   clearField: (name: string) => void;
   money?: boolean;
+  fractionDigits?: number;
+  /** Native length/pattern limits that mirror the schema. */
+  limits?: Partial<Pick<TextInputAttributes, 'minLength' | 'maxLength' | 'pattern'>>;
 }): React.JSX.Element {
   return (
     <Field data-invalid={Boolean(error)} className="min-w-0">
@@ -68,7 +79,12 @@ function ProductInput({
         name={name}
         defaultValue={value ?? ''}
         required={required}
-        inputMode={inputMode}
+        {...(inputMode === 'numeric'
+          ? WHOLE_NUMBER_INPUT
+          : inputMode === 'decimal'
+            ? DECIMAL_INPUT
+            : {})}
+        {...limits}
         aria-invalid={Boolean(error)}
         aria-describedby={
           [help ? name + '-help' : '', error ? name + '-error' : ''].filter(Boolean).join(' ') ||
@@ -77,11 +93,12 @@ function ProductInput({
         className="min-h-11 scroll-mt-6"
         onChange={(): void => clearField(name)}
         onBlur={
-          money
+          money || fractionDigits
             ? (event): void => {
-                if (/^\d+(\.\d{1,2})?$/.test(event.target.value)) {
+                const digits = fractionDigits ?? 2;
+                if (new RegExp(String.raw`^\d+(\.\d{1,${digits}})?$`).test(event.target.value)) {
                   const [whole, fraction = ''] = event.target.value.split('.');
-                  event.target.value = whole + '.' + fraction.padEnd(2, '0');
+                  event.target.value = whole + '.' + fraction.padEnd(digits, '0');
                 }
               }
             : undefined
@@ -115,9 +132,9 @@ export function ProductFormFields({
       category.name + (category.status !== 'active' ? ' (' + t('unavailableCategory') + ')' : ''),
   }));
   return (
-    <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_18rem]">
+    <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_26rem]">
       <div className="min-w-0 space-y-6">
-        <Card className="shadow-none">
+        <Card id="section-basic" className="scroll-mt-32 shadow-none">
           <CardHeader>
             <CardTitle>
               <h2>{t('basicTitle')}</h2>
@@ -129,6 +146,7 @@ export function ProductFormFields({
               <ProductInput
                 {...common}
                 name="name"
+                limits={{ minLength: 2, maxLength: 50 }}
                 label={p('form_name')}
                 value={defaultValues?.name}
                 required
@@ -138,6 +156,11 @@ export function ProductFormFields({
               <ProductInput
                 {...common}
                 name="sku"
+                limits={{
+                  minLength: SKU_INPUT.minLength,
+                  maxLength: SKU_INPUT.maxLength,
+                  pattern: SKU_INPUT.pattern,
+                }}
                 label={p('form_sku')}
                 value={defaultValues?.sku}
                 required
@@ -190,6 +213,7 @@ export function ProductFormFields({
                 key={'description-' + revision}
                 id="description"
                 name="description"
+                maxLength={200}
                 defaultValue={defaultValues?.description ?? ''}
                 className="min-h-28 scroll-mt-6"
                 aria-invalid={Boolean(errorFor('description'))}
@@ -205,7 +229,7 @@ export function ProductFormFields({
             </Field>
           </CardContent>
         </Card>
-        <Card className="shadow-none">
+        <Card id="section-pricing" className="scroll-mt-32 shadow-none">
           <CardHeader>
             <CardTitle>
               <h2>{t('pricingTitle')}</h2>
@@ -271,7 +295,7 @@ export function ProductFormFields({
             </Field>
           </CardContent>
         </Card>
-        <Card className="shadow-none">
+        <Card id="section-wholesale" className="scroll-mt-32 shadow-none">
           <CardHeader>
             <CardTitle>
               <h2>{t('wholesaleTitle')}</h2>
@@ -301,8 +325,60 @@ export function ProductFormFields({
             </div>
           </CardContent>
         </Card>
+        <Card id="section-package" className="scroll-mt-32 shadow-none">
+          <CardHeader>
+            <CardTitle>
+              <h2>{t('packageTitle')}</h2>
+            </CardTitle>
+            <CardDescription>{t('packageHelp')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-6 md:grid-cols-2">
+              <ProductInput
+                {...common}
+                name="weightKg"
+                label={t('weightKg')}
+                value={defaultValues?.weightKg}
+                inputMode="decimal"
+                fractionDigits={3}
+                help={t('weightHelp')}
+                error={errorFor('weightKg')}
+              />
+              <ProductInput
+                {...common}
+                name="lengthCm"
+                label={t('lengthCm')}
+                value={defaultValues?.lengthCm}
+                inputMode="decimal"
+                fractionDigits={1}
+                help={t('dimensionHelp')}
+                error={errorFor('lengthCm')}
+              />
+              <ProductInput
+                {...common}
+                name="widthCm"
+                label={t('widthCm')}
+                value={defaultValues?.widthCm}
+                inputMode="decimal"
+                fractionDigits={1}
+                help={t('dimensionHelp')}
+                error={errorFor('widthCm')}
+              />
+              <ProductInput
+                {...common}
+                name="heightCm"
+                label={t('heightCm')}
+                value={defaultValues?.heightCm}
+                inputMode="decimal"
+                fractionDigits={1}
+                help={t('dimensionHelp')}
+                error={errorFor('heightCm')}
+              />
+            </div>
+          </CardContent>
+        </Card>
       </div>
-      <Card className="min-w-0 shadow-none">
+      <Card id="section-images" className="min-w-0 scroll-mt-32 shadow-none">
         <CardHeader>
           <CardTitle>
             <h2>{t('imageTitle')}</h2>

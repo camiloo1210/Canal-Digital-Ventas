@@ -13,6 +13,12 @@ export interface UpdateProductDto {
   stock?: number;
   isVatExempt: boolean;
   seasonIds: string[];
+  packageData?: {
+    weightGrams: number;
+    lengthMm: number;
+    widthMm: number;
+    heightMm: number;
+  } | null;
   imagePath?: string;
   imageUrl?: string;
   gallery?: {

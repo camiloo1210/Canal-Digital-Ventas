@@ -160,7 +160,7 @@ export function renderNotificationEmail(input: TemplateInput): RenderedNotificat
           ? lowStock
             ? '/dashboard/catalog/products'
             : '/dashboard/orders'
-          : `/purchases#order-${encodeURIComponent(order.orderId)}`,
+          : `/purchases/${encodeURIComponent(order.orderId)}`,
         input.appUrl,
       ).href;
       const store = new URL(`/store/${encodeURIComponent(order.tenantSlug)}`, input.appUrl).href;

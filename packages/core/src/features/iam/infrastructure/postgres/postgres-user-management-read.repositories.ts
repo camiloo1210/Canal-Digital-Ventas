@@ -285,8 +285,9 @@ export class PostgresOwnProfileReadRepository implements OwnProfileReadPort {
           last_name: string | null;
           email: string;
           demographic_consent: boolean;
+          wholesale_enabled: boolean;
         }>
-      >`SELECT first_name, last_name, email, demographic_consent
+      >`SELECT first_name, last_name, email, demographic_consent, wholesale_enabled
         FROM core.users WHERE id = ${userId}::uuid`;
       const row = rows[0];
       if (!row) return null;
@@ -295,6 +296,7 @@ export class PostgresOwnProfileReadRepository implements OwnProfileReadPort {
         lastName: row.last_name ?? '',
         email: row.email,
         demographicConsent: row.demographic_consent,
+        wholesaleEnabled: row.wholesale_enabled,
       };
     });
   }

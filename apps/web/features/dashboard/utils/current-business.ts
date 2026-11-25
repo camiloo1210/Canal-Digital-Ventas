@@ -1,9 +1,10 @@
-import { isTenantId } from '@/features/dashboard/utils/tenant-scope';
+import { isTenantId, tenantParam } from '@/features/dashboard/utils/tenant-scope';
 
 export interface BusinessOption {
   tenantId: string;
   tenantName: string;
   tenantSlug: string;
+  logoUrl: string | null;
   role: string;
   /** Navigation destinations this member may see in that business. */
   visibleKeys: string[];
@@ -19,10 +20,11 @@ export function currentBusiness(
   tenantParamValue: string | null,
   defaultTenantId: string | null,
 ): BusinessOption | null {
-  if (tenantParamValue) {
+  const requestedTenant = tenantParam(tenantParamValue);
+  if (requestedTenant) {
     // An explicit value is never second-guessed: unknown or malformed means "no business".
-    if (!isTenantId(tenantParamValue)) return null;
-    return businesses.find((business): boolean => business.tenantId === tenantParamValue) ?? null;
+    if (!isTenantId(requestedTenant)) return null;
+    return businesses.find((business): boolean => business.tenantId === requestedTenant) ?? null;
   }
   if (businesses.length === 1) return businesses[0] ?? null;
   return businesses.find((business): boolean => business.tenantId === defaultTenantId) ?? null;

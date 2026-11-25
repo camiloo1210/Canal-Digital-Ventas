@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
   dashboardNavigation,
+  groupDashboardNavigation,
   isDashboardDestinationActive,
 } from '@/features/dashboard/navigation/dashboard-navigation';
 
@@ -34,5 +35,21 @@ describe('dashboard navigation', (): void => {
     expect(isDashboardDestinationActive('/dashboard/orders-other', '/dashboard/orders')).toBe(
       false,
     );
+  });
+  it('puts daily work first and keeps the personal profile in the account menu', (): void => {
+    const all = groupDashboardNavigation(dashboardNavigation.map((item): string => item.key));
+    expect(
+      all.map((group): [string, string[]] => [
+        group.key,
+        group.items.map((item): string => item.key),
+      ]),
+    ).toEqual([
+      ['operation', ['overview', 'orders']],
+      ['catalog', ['products', 'categories']],
+      ['business', ['businessIntelligence', 'store', 'integrations', 'users']],
+    ]);
+    expect(
+      groupDashboardNavigation(['overview', 'profile']).map((group): string => group.key),
+    ).toEqual(['operation']);
   });
 });

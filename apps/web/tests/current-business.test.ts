@@ -7,6 +7,7 @@ const make = (tenantId: string): BusinessOption => ({
   tenantId,
   tenantName: tenantId,
   tenantSlug: tenantId,
+  logoUrl: null,
   role: 'OWNER',
   visibleKeys: [],
 });
@@ -14,6 +15,10 @@ const make = (tenantId: string): BusinessOption => ({
 describe('currentBusiness', (): void => {
   it('prefers the explicit param over the default', (): void => {
     expect(currentBusiness([make(A), make(B)], B, A)?.tenantId).toBe(B);
+  });
+  it('matches the server tenant normalization for whitespace in URL parameters', (): void => {
+    expect(currentBusiness([make(A), make(B)], ' ' + B + ' ', A)?.tenantId).toBe(B);
+    expect(currentBusiness([make(A), make(B)], '  ', A)?.tenantId).toBe(A);
   });
   it('uses the default when no param is present', (): void => {
     expect(currentBusiness([make(A), make(B)], null, A)?.tenantId).toBe(A);

@@ -344,6 +344,44 @@ describe('business intelligence policy', (): void => {
     expect(flow.stuckCount).toBe(1);
     expect(flow.stuckOrders[0]).toMatchObject({ id: 'slow', status: 'paid', hoursInStatus: 60 });
   });
+  it('does not infer time in a state when its entry is unknown', (): void => {
+    const report = analyzeBusinessIntelligence(
+      {
+        ...snapshot,
+        flowOrders: [
+          {
+            id: 'unknown',
+            orderNumber: 'U1',
+            status: 'processing',
+            createdAt: '2026-01-01T00:00:00Z',
+            transitions: [],
+          },
+        ],
+      },
+      query,
+    );
+    expect(report.orderFlow.stuckOrders.some((order): boolean => order.id === 'unknown')).toBe(
+      false,
+    );
+  });
+  it('reports the count of orders with unknown entry time', (): void => {
+    const report = analyzeBusinessIntelligence(
+      {
+        ...snapshot,
+        flowOrders: [
+          {
+            id: 'unknown',
+            orderNumber: 'U1',
+            status: 'processing',
+            createdAt: '2026-01-01T00:00:00Z',
+            transitions: [],
+          },
+        ],
+      },
+      query,
+    );
+    expect(report.orderFlow.unknownSinceCount).toBe(1);
+  });
   it('counts confirmed checkout orders and their payment latency', (): void => {
     const report = analyzeBusinessIntelligence(
       {

@@ -1,3 +1,4 @@
+import type { BuyerWholesalePort } from '@/iam/application/ports/out/buyer-wholesale.port';
 import { OrderRepositoryPort } from '@/orders/application/ports/out/order-repository.port';
 import { generateOrderNumber } from '@/orders/domain/value-objects/order-number.vo';
 import { StoreCustomerRepositoryPort } from '@/sales/application/ports/out/store-customer-repository.port';
@@ -25,6 +26,8 @@ import { createProductId } from '@/products/domain/types/product-id.type';
 import { ProductStatus } from '@/products/domain/enums/product-status.enum';
 
 import { ProductUnavailableException } from '@/products/application/exceptions/product-unavailable.exception';
+import { EventBusPort } from '@/shared/application/ports/out/event-bus.port';
+import { productStockAdjustedEnvelope } from '@/products/application/outbox/product-stock-adjusted.envelope';
 
 export class GenerateCommercialOrderUseCase {
   constructor(
@@ -33,6 +36,8 @@ export class GenerateCommercialOrderUseCase {
     private readonly orderTenantRepository: OrderTenantRepositoryPort,
     private readonly storeCustomerRepository: StoreCustomerRepositoryPort,
     private readonly transactionManager: TransactionManagerPort,
+    private readonly buyerWholesale: BuyerWholesalePort,
+    private readonly eventBus: EventBusPort,
   ) {}
 
   async execute(dto: GenerateCommercialOrderDto): Promise<void> {
@@ -43,6 +48,7 @@ export class GenerateCommercialOrderUseCase {
           throw new TenantNotAvailableException();
         }
         const tenantId = tenantData.id;
+        const wholesaleEligible = await this.buyerWholesale.isEligible(dto.buyerId, tenantId, tx);
         const customerAddress = Address.create(
           dto.shippingAddress.street,
           dto.shippingAddress.city,
@@ -106,7 +112,17 @@ export class GenerateCommercialOrderUseCase {
           }
 
           product.decreaseStock(itemDto.quantity);
-          await this.productRepository.decreaseStock(productId, tenantId, itemDto.quantity, tx);
+          const remainingStock = await this.productRepository.decreaseStock(
+            productId,
+            tenantId,
+            itemDto.quantity,
+            tx,
+          );
+          // Stock moves by direct SQL, so announce it: Kivi must show the real availability.
+          await this.eventBus.publish(
+            [productStockAdjustedEnvelope(tenantId, productId, remainingStock)],
+            tx,
+          );
 
           if (product.getPrice().getCurrency() !== currency) {
             throw new InvalidMoneyException('Product currency must match tenant currency.');
@@ -118,7 +134,7 @@ export class GenerateCommercialOrderUseCase {
           const authoritativePrice = selectUnitPriceCents(
             {
               retailPriceCents: product.getPrice().getValue(),
-              wholesalePriceCents: wholesalePrice?.getValue() ?? null,
+              wholesalePriceCents: wholesaleEligible ? (wholesalePrice?.getValue() ?? null) : null,
               wholesaleMinQuantity: product.getWholesaleMinQuantity(),
             },
             itemDto.quantity,

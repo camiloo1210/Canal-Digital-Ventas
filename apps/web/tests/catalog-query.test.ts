@@ -2,6 +2,25 @@ import { describe, expect, it } from 'vitest';
 import { catalogHref, parseCatalogQuery } from '@/features/dashboard/queries/catalog-query';
 
 describe('catalog URL state', (): void => {
+  it('round-trips an exact product category alongside text, status, tenant and pagination', (): void => {
+    const categoryId = '550e8400-e29b-41d4-a716-446655440000';
+    const query = parseCatalogQuery(
+      { category: categoryId, q: 'lápiz', status: 'active' },
+      'products',
+    );
+    expect(query.categoryId).toBe(categoryId);
+    const url = new URL(catalogHref('products', query, 2, 'tenant'), 'http://localhost');
+    expect(Object.fromEntries(url.searchParams)).toEqual({
+      q: 'lápiz',
+      status: 'active',
+      category: categoryId,
+      page: '2',
+      tenant: 'tenant',
+    });
+    expect(parseCatalogQuery({ category: [categoryId] }, 'products').categoryId).toBeUndefined();
+    expect(parseCatalogQuery({ category: 'invalid' }, 'products').categoryId).toBeUndefined();
+    expect(parseCatalogQuery({ category: categoryId }, 'categories').categoryId).toBeUndefined();
+  });
   it.each(['0', '-1', '1.5', 'NaN', 'Infinity', '1e3', '999999999999'])(
     'normalizes invalid page %s',
     (page): void => {

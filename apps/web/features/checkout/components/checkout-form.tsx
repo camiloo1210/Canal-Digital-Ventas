@@ -87,12 +87,19 @@ function CheckoutFields({ state }: { state: CheckoutActionState }): React.JSX.El
                       {t(`fields.${field.label}`)}
                     </FieldLabel>
                     <Input
+                      {...('input' in field ? field.input : {})}
                       id={`checkout-${field.label}`}
                       name={field.name}
                       type={field.type}
                       autoComplete={field.autoComplete}
                       required={field.name !== 'shipping.reference'}
-                      maxLength={field.name === 'customer.email' ? 254 : 500}
+                      maxLength={
+                        'input' in field
+                          ? field.input.maxLength
+                          : field.name === 'customer.email'
+                            ? 254
+                            : 500
+                      }
                       defaultValue={state.values?.[field.name] ?? ''}
                       aria-invalid={Boolean(error)}
                       aria-describedby={error ? `checkout-${field.label}-error` : undefined}

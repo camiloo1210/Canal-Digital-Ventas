@@ -2,6 +2,7 @@ export interface ActiveMembershipSummary {
   tenantId: string;
   tenantName: string;
   tenantSlug: string;
+  logoUrl: string | null;
   role: string;
 }
 

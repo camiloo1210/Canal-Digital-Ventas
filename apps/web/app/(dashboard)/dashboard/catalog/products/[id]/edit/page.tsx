@@ -9,7 +9,10 @@ import { TenantScope } from '@/features/dashboard/components/tenant-scope';
 import { tenantParam, type TenantSearchParams } from '@/features/dashboard/utils/tenant-scope';
 import { CatalogFormPage } from '@/features/dashboard/components/catalog-form-page';
 import { formatMinorUnitsForInput } from '@/lib/money';
-import type { ProductEditValues } from '@/features/products/schemas/product-form.schema';
+import {
+  formatPackageFields,
+  type ProductEditValues,
+} from '@/features/products/schemas/product-form.schema';
 
 export async function generateMetadata(): Promise<{ title: string }> {
   const t = await getTranslations('Products');
@@ -53,6 +56,19 @@ export default async function EditProductPage({
       productData.wholesale_min_quantity === null ? '' : String(productData.wholesale_min_quantity),
     stock: String(productData.stock),
     isVatExempt: productData.is_vat_exempt ? 'on' : '',
+    ...formatPackageFields(
+      productData.weight_grams != null &&
+        productData.length_mm != null &&
+        productData.width_mm != null &&
+        productData.height_mm != null
+        ? {
+            weightGrams: productData.weight_grams,
+            lengthMm: productData.length_mm,
+            widthMm: productData.width_mm,
+            heightMm: productData.height_mm,
+          }
+        : null,
+    ),
     imageUrl: productData.image_url,
     galleryUrls:
       productData.gallery_urls && productData.gallery_urls.length > 0

@@ -20,6 +20,7 @@ import {
 import {
   createProductFormSchema,
   createUpdateProductFormSchema,
+  packageFieldsSchema,
   extractProductFormValues,
   readFormString,
   uploadedImagePathsSchema,
@@ -57,6 +58,8 @@ function productFailure(
             wholesaleMinQuantity: [t('wholesaleRules')],
           },
         };
+      case 'InvalidPackageDataException':
+        return { error: t('fixErrors'), fieldErrors: { weightKg: [t('packageRange')] } };
       case 'InvalidSkuException':
         return { error: t('fixErrors'), fieldErrors: { sku: [t('skuFormat')] } };
       case 'InvalidProductNameException':
@@ -130,9 +133,14 @@ async function saveProduct(
     const parsed = editing
       ? createUpdateProductFormSchema(currency).safeParse(input)
       : createProductFormSchema(currency).safeParse(input);
-    if (!parsed.success) {
+    const packageParsed = packageFieldsSchema.safeParse(values);
+    if (!parsed.success || !packageParsed.success) {
       const fieldErrors: Partial<Record<ProductFieldName, string[]>> = {};
-      for (const issue of parsed.error.issues) {
+      const issues = [
+        ...(parsed.success ? [] : parsed.error.issues),
+        ...(packageParsed.success ? [] : packageParsed.error.issues),
+      ];
+      for (const issue of issues) {
         const rawField = String(issue.path[0]);
         const field =
           rawField === 'existingImages' || rawField === 'uploadedImagePaths' ? 'image' : rawField;
@@ -143,6 +151,7 @@ async function saveProduct(
       }
       return { ...rejected, error: t('fixErrors'), fieldErrors };
     }
+    if (!parsed.success || !packageParsed.success) return { ...rejected, error: t('fixErrors') };
     const pathsCheck = uploadedImagePathsSchema(tenantId).safeParse(parsed.data.uploadedImagePaths);
     if (!pathsCheck.success) {
       return imageRejection(rejected, t, pathsCheck.error.issues[0]?.message ?? 'imageFormat');
@@ -174,6 +183,8 @@ async function saveProduct(
       stock: parsed.data.stock,
       seasonIds: [],
       isVatExempt: parsed.data.isVatExempt,
+      // The edit form always submits the group, so empty means null and clears stored package data.
+      packageData: packageParsed.data,
       ...(!editing && uploadedImages.length > 0 ? { galleryUrls: uploadedImages } : {}),
     };
     if (editing) {

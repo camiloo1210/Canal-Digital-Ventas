@@ -221,8 +221,10 @@ export async function acceptInvitationAction(
   }
 
   if (generatedEmail) {
-    // No redirect: the person must see and save the generated login email first.
-    return { success: true, message: null, generatedEmail, revision };
+    // The sign-in cookie re-renders the invitation page, whose last use may now be consumed.
+    // A separate authenticated page keeps the login address visible after that transition.
+    await rememberJoinedBusiness(joinedTenantId);
+    redirect('/invite/complete');
   }
   await rememberJoinedBusiness(joinedTenantId);
   redirect(withTenant('/dashboard', joinedTenantId));

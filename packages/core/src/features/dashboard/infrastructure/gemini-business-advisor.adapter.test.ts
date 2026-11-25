@@ -96,4 +96,25 @@ describe('Gemini business advisor', (): void => {
     expect(advice.tips).toHaveLength(8);
     expect(advice.tips.every((tip): boolean => tip.detail.length <= 700)).toBe(true);
   });
+  it('trims api key whitespace and uses default gemini-2.5-flash-lite model when omitted', async (): Promise<void> => {
+    const fetcher = vi.fn().mockResolvedValue(reply(good));
+    await new GeminiBusinessAdvisorAdapter('  secret-key  ', undefined, fetcher).advise(digest);
+    const [url, init] = fetcher.mock.calls[0] as [string, RequestInit];
+    expect(url).toContain('/models/gemini-2.5-flash-lite:generateContent');
+    expect((init.headers as Record<string, string>)['x-goog-api-key']).toBe('secret-key');
+    const parsedBody = JSON.parse(init.body as string) as {
+      generationConfig: { temperature?: number };
+    };
+    expect(parsedBody.generationConfig.temperature).toBe(0.4);
+  });
+  it('omits temperature from generation config when model starts with gemini-3', async (): Promise<void> => {
+    const fetcher = vi.fn().mockResolvedValue(reply(good));
+    await new GeminiBusinessAdvisorAdapter('secret', 'gemini-3-flash', fetcher).advise(digest);
+    const [url, init] = fetcher.mock.calls[0] as [string, RequestInit];
+    expect(url).toContain('/models/gemini-3-flash:generateContent');
+    const parsedBody = JSON.parse(init.body as string) as {
+      generationConfig: { temperature?: number };
+    };
+    expect(parsedBody.generationConfig.temperature).toBeUndefined();
+  });
 });

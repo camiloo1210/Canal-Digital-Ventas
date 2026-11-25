@@ -1,5 +1,6 @@
 import { Currency } from '@/shared/domain/enums/currency.enum';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, type Mock } from 'vitest';
+import type { ShipmentJobQueuePort } from '@/shipment-creation/application/ports/out/shipment-job-queue.port';
 import { ChangeOrderStatusUseCase } from '@/orders/application/use-cases/change-order-status.use-case';
 import { Order } from '@/orders/domain/entities/order.entity';
 import { OrderItem } from '@/orders/domain/entities/order-item.entity';
@@ -62,7 +63,10 @@ function order(status: OrderStatus): Order {
   });
 }
 
-function fixture(status: OrderStatus = OrderStatus.PAID): {
+function fixture(
+  status: OrderStatus = OrderStatus.PAID,
+  enqueue?: Mock<ShipmentJobQueuePort['enqueue']>,
+): {
   useCase: ChangeOrderStatusUseCase;
   entity: Order;
   access: ReturnType<typeof vi.fn>;
@@ -104,6 +108,7 @@ function fixture(status: OrderStatus = OrderStatus.PAID): {
       { lockAndReadPayment: coordination },
       { publish },
       transactions,
+      enqueue ? { enqueue } : undefined,
     ),
   };
 }
@@ -246,5 +251,38 @@ describe('seller fulfillment transitions', (): void => {
     ]) {
       expect(nextLogisticsStatus(status)).toBeNull();
     }
+  });
+});
+
+describe('shipment creation job enqueue', (): void => {
+  function withQueue(status: OrderStatus): {
+    f: ReturnType<typeof fixture>;
+    enqueue: Mock<ShipmentJobQueuePort['enqueue']>;
+    useCase: ChangeOrderStatusUseCase;
+  } {
+    const enqueue = vi.fn<ShipmentJobQueuePort['enqueue']>().mockResolvedValue(undefined);
+    const f = fixture(status, enqueue);
+    return { f, enqueue, useCase: f.useCase };
+  }
+
+  it('enqueues exactly once inside the transaction after saving when moving to PROCESSING', async (): Promise<void> => {
+    const { f, enqueue, useCase } = withQueue(OrderStatus.PAID);
+    await useCase.execute(dto);
+    expect(enqueue).toHaveBeenCalledTimes(1);
+    expect(enqueue).toHaveBeenCalledWith(tenantId, orderId, f.tx);
+    expect(enqueue.mock.invocationCallOrder[0]).toBeGreaterThan(f.save.mock.invocationCallOrder[0]);
+  });
+
+  it('does not enqueue when moving to SHIPPED', async (): Promise<void> => {
+    const { enqueue, useCase } = withQueue(OrderStatus.PROCESSING);
+    await useCase.execute({ ...dto, status: 'shipped' });
+    expect(enqueue).not.toHaveBeenCalled();
+  });
+
+  it('propagates an enqueue failure so the transaction rolls back', async (): Promise<void> => {
+    const { enqueue, useCase } = withQueue(OrderStatus.PAID);
+    const failure = new Error('queue down');
+    enqueue.mockRejectedValue(failure);
+    await expect(useCase.execute(dto)).rejects.toBe(failure);
   });
 });

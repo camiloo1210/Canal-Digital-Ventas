@@ -12,13 +12,25 @@ export function CatalogStatusBadge({
     <Badge
       variant="outline"
       className={
-        status === 'active'
-          ? 'border-success/25 bg-success/5 text-success'
+        'h-6 gap-1.5 px-2.5 ' +
+        (status === 'active'
+          ? 'border-success/25 bg-success/10 text-success'
           : status === 'out_of_stock'
-            ? 'border-destructive/25 bg-destructive/5 text-destructive'
-            : 'bg-muted text-muted-foreground'
+            ? 'border-destructive/25 bg-destructive/10 text-destructive'
+            : 'bg-muted text-muted-foreground')
       }
     >
+      <span
+        aria-hidden="true"
+        className={
+          'size-1.5 rounded-full ' +
+          (status === 'active'
+            ? 'bg-success'
+            : status === 'out_of_stock'
+              ? 'bg-destructive'
+              : 'bg-muted-foreground/60')
+        }
+      />
       {label}
     </Badge>
   );

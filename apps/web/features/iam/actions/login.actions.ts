@@ -4,7 +4,10 @@ import { getTranslations } from 'next-intl/server';
 import { z } from 'zod';
 import { authenticationLimitMessage } from '@/lib/security/authentication-rate-limit';
 import { getSignInWithEmailUseCase, getGetOAuthSignInUrlUseCase } from '@/features/iam/di/iam.di';
-import { InvalidCredentialsException } from '@canaldigital/packages/core';
+import {
+  InvalidCredentialsException,
+  resolveStaffLoginIdentifier,
+} from '@canaldigital/packages/core';
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { safeAuthReturnPath, buyerAuthHref } from '@/features/iam/utils/auth-return-path';
@@ -31,7 +34,10 @@ export async function loginWithEmailAction(
   const password = formData.get('password');
 
   // Parse, don't validate at the Server Action boundary
-  const validatedFields = loginSchema.safeParse({ email, password });
+  const validatedFields = loginSchema.safeParse({
+    email: typeof email === 'string' ? resolveStaffLoginIdentifier(email) : email,
+    password,
+  });
 
   if (!validatedFields.success) {
     return {

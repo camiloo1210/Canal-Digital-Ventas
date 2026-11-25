@@ -104,6 +104,11 @@ export function BusinessIntelligenceOrders({ flow }: { flow: OrderFlowReport }):
               ))}
             </ul>
           )}
+          {flow.unknownSinceCount > 0 && (
+            <p className="mt-3 text-sm text-muted-foreground">
+              {t('unknownSinceCount', { count: flow.unknownSinceCount })}
+            </p>
+          )}
           {flow.stuckCount > flow.stuckOrders.length && (
             <p className="mt-3 text-sm text-muted-foreground">
               {t('moreStuck', { count: flow.stuckCount - flow.stuckOrders.length })}

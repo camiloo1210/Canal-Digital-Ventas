@@ -116,7 +116,7 @@ describe('CancelOrderUseCase Unit Tests', () => {
       save: vi.fn(),
       delete: vi.fn(),
       decreaseStock: vi.fn(),
-      increaseStock: vi.fn().mockResolvedValue(undefined),
+      increaseStock: vi.fn().mockResolvedValue(7),
       findById: vi.fn(),
       findAll: vi.fn(),
       searchByFilters: vi.fn(),
@@ -140,17 +140,15 @@ describe('CancelOrderUseCase Unit Tests', () => {
     paymentCoordination = { lockAndReadPayment: vi.fn().mockResolvedValue(null) };
     lifecycle = { findByIdForUpdate: vi.fn(), saveLifecycle: vi.fn().mockResolvedValue(undefined) };
     automation = {
-      read: vi
-        .fn()
-        .mockResolvedValue({
-          paymentId: 'payment',
-          tenantId: testTenantId,
-          status: 'expired_unpaid_awaiting_reconciliation',
-          amountCents: 100,
-          providerOrderId: '123',
-          environment: 'test',
-          excluded: false,
-        }),
+      read: vi.fn().mockResolvedValue({
+        paymentId: 'payment',
+        tenantId: testTenantId,
+        status: 'expired_unpaid_awaiting_reconciliation',
+        amountCents: 100,
+        providerOrderId: '123',
+        environment: 'test',
+        excluded: false,
+      }),
       reserveExpiryCancellation: vi.fn().mockResolvedValue(true),
     };
     useCase = new CancelOrderUseCase(
@@ -193,6 +191,22 @@ describe('CancelOrderUseCase Unit Tests', () => {
     );
     expect(lifecycle.saveLifecycle).toHaveBeenCalledWith(order, mockTx);
     expect(eventBus.publish).toHaveBeenCalled();
+    expect(eventBus.publish).toHaveBeenCalledWith(
+      [
+        expect.objectContaining({
+          event: expect.objectContaining({
+            eventName: 'ProductStockAdjustedEvent',
+            productId: testProductId,
+            stock: 7,
+          }),
+          context: expect.objectContaining({
+            aggregateType: 'Product',
+            aggregateId: testProductId,
+          }),
+        }),
+      ],
+      mockTx,
+    );
     expect(
       await expiry.execute({ orderId: testOrderId, tenantId: testTenantId, paymentId: 'payment' }),
     ).toBe('NOOP');
@@ -456,6 +470,22 @@ describe('CancelOrderUseCase Unit Tests', () => {
       mockTx,
     );
     expect(eventBus.publish).toHaveBeenCalled();
+    expect(eventBus.publish).toHaveBeenCalledWith(
+      [
+        expect.objectContaining({
+          event: expect.objectContaining({
+            eventName: 'ProductStockAdjustedEvent',
+            productId: testProductId,
+            stock: 7,
+          }),
+          context: expect.objectContaining({
+            aggregateType: 'Product',
+            aggregateId: testProductId,
+          }),
+        }),
+      ],
+      mockTx,
+    );
   });
 
   it('debe cancelar exitosamente un pedido en estado PROCESSING y restituir stock', async () => {

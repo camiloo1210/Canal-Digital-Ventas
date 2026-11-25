@@ -8,6 +8,8 @@ import {
   sellerOrdersHref,
 } from '@/features/orders/queries/seller-orders-query';
 import { SellerOrdersTable } from '@/features/orders/components/seller-orders-table';
+import { SellerOrderDetails } from '@/features/orders/components/seller-order-details';
+import { SellerOrdersScreen } from '@/features/orders/components/seller-orders-screen';
 import type { SellerOrderReadModel } from '@canaldigital/packages/core';
 
 vi.mock('next-intl/server', (): object => ({
@@ -15,8 +17,40 @@ vi.mock('next-intl/server', (): object => ({
   getTranslations: async (): Promise<ReturnType<typeof createTranslator<typeof es.AdminOrders>>> =>
     createTranslator({ locale: 'es', messages: es.AdminOrders }),
 }));
+vi.mock('@/features/orders/components/buyer-tracking-timeline', (): object => ({
+  BuyerTrackingTimeline: (): React.JSX.Element => <span>tracking-timeline</span>,
+}));
+vi.mock('@/features/orders/components/seller-tracking-form', (): object => ({
+  SellerTrackingForm: (): React.JSX.Element => <span>tracking-control</span>,
+}));
+vi.mock('@/features/orders/components/shipment-job-status', (): object => ({
+  ShipmentJobStatus: ({ job }: { job: { state: string } }): React.JSX.Element => (
+    <span>job-{job.state}</span>
+  ),
+}));
+vi.mock('@/features/orders/components/manual-shipment-form', (): object => ({
+  ManualShipmentForm: ({ recoveryRequired }: { recoveryRequired: boolean }): React.JSX.Element => (
+    <span>{recoveryRequired ? 'shipment-recovery' : 'shipment-form'}</span>
+  ),
+}));
+vi.mock('@/features/orders/components/seller-order-status-form', (): object => ({
+  SellerOrderStatusForm: (): null => null,
+}));
 vi.mock('@/features/orders/components/order-status-badge', (): object => ({
   OrderStatusBadge: ({ status }: { status: string }): React.JSX.Element => <span>{status}</span>,
+}));
+vi.mock('@/features/dashboard/queries/dashboard-context.query', (): object => ({
+  requireDashboardPermission: async (): Promise<{ userId: string; tenantId: string }> => ({
+    userId: 'actor',
+    tenantId: '550e8400-e29b-41d4-a716-446655440001',
+  }),
+}));
+vi.mock('@/components/page-header', (): object => ({ PageHeader: (): null => null }));
+vi.mock('@/features/orders/components/seller-orders-results', (): object => ({
+  SellerOrdersResults: (): null => null,
+}));
+vi.mock('@/features/dashboard/components/catalog-results', (): object => ({
+  CatalogResultsSkeleton: (): null => null,
 }));
 
 const order: SellerOrderReadModel = {
@@ -34,6 +68,133 @@ const order: SellerOrderReadModel = {
 };
 
 describe('seller order URL and queue', (): void => {
+  it('marks the active queue and preserves search and business when switching queues', async (): Promise<void> => {
+    const html = renderToStaticMarkup(
+      await SellerOrdersScreen({
+        searchParams: Promise.resolve({ q: 'ORD-51', status: 'paid', page: '3', order: order.id }),
+      }),
+    );
+    expect(html).toMatch(/<a(?=[^>]*aria-current="page")(?=[^>]*status=paid)[^>]*>/);
+    expect(html).toContain(
+      'href="/dashboard/orders?q=ORD-51&amp;status=processing&amp;tenant=550e8400-e29b-41d4-a716-446655440001"',
+    );
+  });
+  it('shows available tracking to an authorized read-only seller', async (): Promise<void> => {
+    const html = renderToStaticMarkup(
+      await SellerOrderDetails({
+        order: { ...order, canManageShipment: false },
+        tracking: { state: 'pending', lastSuccessfulAt: null, events: [] },
+      }),
+    );
+    expect(html).toContain('tracking-timeline');
+    expect(html).not.toContain('tracking-control');
+  });
+  it('shows the shipment job status only to managers of orders that have a job', async (): Promise<void> => {
+    const job = {
+      state: 'done',
+      reason: null,
+      hasLabel: true,
+      providerTrackingNumber: null,
+    } as const;
+    const manager = renderToStaticMarkup(
+      await SellerOrderDetails({ order: { ...order, canManageShipment: true, shipmentJob: job } }),
+    );
+    expect(manager).toContain('job-done');
+    const viewer = renderToStaticMarkup(
+      await SellerOrderDetails({ order: { ...order, canManageShipment: false, shipmentJob: job } }),
+    );
+    expect(viewer).not.toContain('job-done');
+    const none = renderToStaticMarkup(
+      await SellerOrderDetails({ order: { ...order, canManageShipment: true, shipmentJob: null } }),
+    );
+    expect(none).not.toContain('job-');
+  });
+  it('keeps the shipment form available when automatic creation is in progress', async (): Promise<void> => {
+    const html = renderToStaticMarkup(
+      await SellerOrderDetails({
+        order: {
+          ...order,
+          canManageShipment: true,
+          shipmentJob: {
+            state: 'creating',
+            reason: null,
+            hasLabel: false,
+            providerTrackingNumber: null,
+          },
+        },
+      }),
+    );
+    expect(html).toContain('job-creating');
+    expect(html).toContain('shipment-form');
+  });
+  it('opens manual recovery when FedEx returned a tracking number that could not be recorded', async (): Promise<void> => {
+    const html = renderToStaticMarkup(
+      await SellerOrderDetails({
+        order: {
+          ...order,
+          canManageShipment: true,
+          shipmentJob: {
+            state: 'needs_attention',
+            reason: 'AMBIGUOUS_RESULT',
+            hasLabel: false,
+            providerTrackingNumber: '123',
+          },
+        },
+      }),
+    );
+    expect(html).toContain('shipment-recovery');
+  });
+  it('only shows tracking activation to managers with a guide when the sandbox is configured', async (): Promise<void> => {
+    const shipment = { carrier: 'FedEx', trackingNumber: '123', version: 2 };
+    const allowed = renderToStaticMarkup(
+      await SellerOrderDetails({
+        order: { ...order, canManageShipment: true, shipment },
+        trackingEnabled: true,
+      }),
+    );
+    const viewer = renderToStaticMarkup(
+      await SellerOrderDetails({
+        order: { ...order, canManageShipment: false, shipment },
+        trackingEnabled: true,
+      }),
+    );
+    const disabled = renderToStaticMarkup(
+      await SellerOrderDetails({
+        order: { ...order, canManageShipment: true, shipment },
+        trackingEnabled: false,
+      }),
+    );
+    expect(allowed).toContain('tracking-control');
+    expect(viewer).not.toContain('tracking-control');
+    expect(disabled).not.toContain('tracking-control');
+  });
+  it('tells the seller when shipment storage is unavailable', async (): Promise<void> => {
+    const html = renderToStaticMarkup(
+      await SellerOrderDetails({
+        order: {
+          ...order,
+          canManageShipment: false,
+          nextStatus: null,
+          shipmentAvailability: 'unavailable',
+        },
+      }),
+    );
+    expect(html).toContain('Los datos del envío no están disponibles en este momento.');
+  });
+  it('shows stored shipment details to an authorized read-only viewer', async (): Promise<void> => {
+    const html = renderToStaticMarkup(
+      await SellerOrderDetails({
+        order: {
+          ...order,
+          canManageShipment: false,
+          nextStatus: null,
+          shipment: { carrier: 'Carrier Example', trackingNumber: 'ABC-123', version: 2 },
+        },
+      }),
+    );
+    expect(html).toContain('Carrier Example');
+    expect(html).toContain('ABC-123');
+  });
   it('normalizes malformed parameters and only accepts implemented statuses and UUID detail links', (): void => {
     expect(
       parseSellerOrdersQuery({ page: '-4', status: 'invented', order: 'injected', q: ['a', 'b'] }),

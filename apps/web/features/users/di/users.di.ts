@@ -4,6 +4,8 @@ import { createClient as createSupabaseServerClient } from '@/lib/supabase/serve
 import { getAdminAuthPort } from '@/features/iam/di/iam.di';
 import {
   AcceptInvitationUseCase,
+  SetBuyerWholesaleUseCase,
+  PostgresBuyerWholesaleAdapter,
   AssignMemberRoleUseCase,
   CreateInvitationUseCase,
   CreateStaffAccountUseCase,
@@ -103,9 +105,7 @@ export async function getCreateStaffAccountUseCase(): Promise<CreateStaffAccount
   return new CreateStaffAccountUseCase(
     new SupabaseAuthAdapter(await createSupabaseServerClient()),
     getAdminAuthPort(),
-    new StaffEmailGenerator((length: number): Uint8Array =>
-      crypto.getRandomValues(new Uint8Array(length)),
-    ),
+    new StaffEmailGenerator(),
   );
 }
 
@@ -226,4 +226,11 @@ export function getActiveTenantIdBySlugResolver(): ActiveTenantIdBySlugResolver 
         { userId },
       ),
   };
+}
+
+export function getSetBuyerWholesaleUseCase(): SetBuyerWholesaleUseCase {
+  return new SetBuyerWholesaleUseCase(
+    new PostgresBuyerWholesaleAdapter(),
+    new PostgresTransactionManagerAdapter(sql),
+  );
 }

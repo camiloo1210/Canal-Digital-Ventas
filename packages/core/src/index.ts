@@ -164,6 +164,85 @@ export * from '@/tenants/infrastructure/repositories/supabase-public-tenant-dire
 export { GenerateCommercialOrderUseCase } from '@/orders/application/use-cases/generate-commercial-order.use-case';
 export type { GenerateCommercialOrderDto } from '@/orders/application/dtos/generate-commercial-order.dto';
 export { CancelOrderUseCase } from '@/orders/application/use-cases/cancel-order.use-case';
+export { RegisterManualShipmentUseCase } from '@/orders/application/use-cases/register-manual-shipment.use-case';
+export { PostgresManualShipmentRepository } from '@/orders/infrastructure/repositories/postgres-manual-shipment.repository';
+export type { ShipmentJobQueuePort } from '@/shipment-creation/application/ports/out/shipment-job-queue.port';
+export {
+  PostgresShipmentJobQueueAdapter,
+  ShipmentJobQueueException,
+} from '@/shipment-creation/infrastructure/postgres-shipment-job-queue.adapter';
+export type {
+  ShipmentProviderPort,
+  ShipmentProviderInput,
+  ShipmentProviderResult,
+  ShipmentRecipient,
+} from '@/shipment-creation/application/ports/out/shipment-provider.port';
+export { ShipmentProviderRejectedException } from '@/shipment-creation/application/exceptions/shipment-provider-rejected.exception';
+export { ShipmentProviderAmbiguousException } from '@/shipment-creation/application/exceptions/shipment-provider-ambiguous.exception';
+export { FedexShipAdapter } from '@/shipment-creation/infrastructure/fedex/fedex-ship.adapter';
+export { ShipmentRetryNotAllowedException } from '@/shipment-creation/application/exceptions/shipment-retry-not-allowed.exception';
+export { RetryShipmentUseCase } from '@/shipment-creation/application/use-cases/retry-shipment.use-case';
+export type { RetryShipmentDto } from '@/shipment-creation/application/use-cases/retry-shipment.use-case';
+export {
+  GetLabelUrlUseCase,
+  LABEL_URL_SECONDS,
+} from '@/shipment-creation/application/use-cases/get-label-url.use-case';
+export type { GetLabelUrlDto } from '@/shipment-creation/application/use-cases/get-label-url.use-case';
+export { ShipmentNotRetryableException } from '@/shipment-creation/application/exceptions/shipment-not-retryable.exception';
+export { ShipmentLabelUnavailableException } from '@/shipment-creation/application/exceptions/shipment-label-unavailable.exception';
+export type {
+  ShipmentLabelReadPort,
+  ShipmentLabelRecord,
+} from '@/shipment-creation/application/ports/out/shipment-label-read.port';
+export {
+  PostgresShipmentLabelReadAdapter,
+  ShipmentLabelReadException,
+} from '@/shipment-creation/infrastructure/postgres-shipment-label-read.adapter';
+export { LABEL_UNAVAILABLE_REASON } from '@/shipment-creation/application/ports/out/shipment-job-repository.port';
+export { normalizeCountryCode } from '@/shipment-creation/domain/country-code';
+export type {
+  ClaimedJob,
+  ShipmentJobRepositoryPort,
+  ShipmentNeedsAttentionReason,
+} from '@/shipment-creation/application/ports/out/shipment-job-repository.port';
+export type { LabelStoragePort } from '@/shipment-creation/application/ports/out/label-storage.port';
+export type {
+  ShipmentCreationSource,
+  ShipmentCreationSourcePort,
+} from '@/shipment-creation/application/ports/out/shipment-creation-source.port';
+export type {
+  CarrierShipmentRecord,
+  CarrierShipmentRecordPort,
+} from '@/shipment-creation/application/ports/out/carrier-shipment-record.port';
+export {
+  CreateShipmentUseCase,
+  ShipmentCompletionException,
+} from '@/shipment-creation/application/use-cases/create-shipment.use-case';
+export type { CreateShipmentConfig } from '@/shipment-creation/application/use-cases/create-shipment.use-case';
+export {
+  PostgresShipmentJobRepository,
+  ShipmentJobRepositoryException,
+} from '@/shipment-creation/infrastructure/postgres-shipment-job-repository';
+export {
+  PostgresShipmentCreationSource,
+  ShipmentCreationSourceException,
+} from '@/shipment-creation/infrastructure/postgres-shipment-creation-source';
+export {
+  PostgresCarrierShipmentRecordAdapter,
+  CarrierShipmentRecordException,
+} from '@/shipment-creation/infrastructure/postgres-carrier-shipment-record.adapter';
+export {
+  SupabaseLabelStorageAdapter,
+  LabelStorageException,
+  SHIPMENT_LABELS_BUCKET,
+} from '@/shipment-creation/infrastructure/supabase-label-storage.adapter';
+export type { LabelStorageClient } from '@/shipment-creation/infrastructure/supabase-label-storage.adapter';
+export { createLabelStorageClient } from '@/shipment-creation/infrastructure/create-label-storage-client';
+export {
+  FedexAuthAdapter,
+  FedexTrackingException,
+} from '@/shipment-tracking/infrastructure/fedex/fedex-auth.adapter';
+export { TrackingAuthorizationException } from '@/shipment-tracking/application/tracking-authorization.exception';
 export { ChangeOrderStatusUseCase } from '@/orders/application/use-cases/change-order-status.use-case';
 export { UnsupportedOrderStatusException } from '@/orders/application/exceptions/unsupported-order-status.exception';
 export { PostgresSellerOrderAccessAdapter } from '@/orders/infrastructure/repositories/postgres-seller-order-access.adapter';
@@ -176,6 +255,7 @@ export type {
 export type { CancelOrderDto } from '@/orders/application/dtos/cancel-order.dto';
 export { OrderNotFoundException } from '@/orders/application/exceptions/order-not-found.exception';
 export { InvalidOrderStateException } from '@/orders/domain/exceptions/invalid-order-state.exception';
+export { InvalidOrderAttributeException } from '@/orders/domain/exceptions/invalid-order-attribute.exception';
 export { PostgresOrderRepository } from '@/orders/infrastructure/repositories/postgres-order.repository';
 export { PostgresOrderPaymentCoordinationAdapter } from '@/orders/infrastructure/repositories/postgres-order-payment-coordination.adapter';
 export { PostgresOrderTenantRepository } from '@/orders/infrastructure/repositories/postgres-order-tenant.repository';
@@ -250,6 +330,7 @@ export type { PublicTenantDirectorySearchRepositoryPort } from '@/tenants/applic
 export type {
   CatalogStatus,
   AdminCatalogQuery,
+  AdminCatalogCategoryOption,
   AdminProductCatalogItem,
   AdminCategoryCatalogItem,
   AdminCatalogPage,
@@ -479,6 +560,8 @@ export {
   StaffEmailGenerator,
   slugifyPersonName,
   isGeneratedStaffEmailOf,
+  staffLoginIdentifier,
+  resolveStaffLoginIdentifier,
   STAFF_EMAIL_DOMAIN_SUFFIX,
 } from '@/iam/domain/services/staff-email-generator';
 export {
@@ -637,3 +720,28 @@ export {
   minorUnitsPerMajor,
   type SupportedCurrencyCode,
 } from '@/shared/domain/money-format';
+
+export { runFedexSandboxWorker } from '@/shipment-tracking/infrastructure/fedex-sandbox-worker';
+export type { TrackingReadModel } from '@/shipment-tracking/application/tracking-read-model';
+export { EnableTrackingUseCase } from '@/shipment-tracking/application/use-cases/enable-tracking.use-case';
+export { PostgresTrackingActivationAdapter } from '@/shipment-tracking/infrastructure/postgres-tracking-activation.adapter';
+export { PostgresTrackingInvalidationAdapter } from '@/shipment-tracking/infrastructure/postgres-tracking-invalidation.adapter';
+export { PostgresBuyerTrackingReadAdapter } from '@/shipment-tracking/infrastructure/postgres-buyer-tracking-read.adapter';
+export { assertSandboxEnvironment } from '@/shipment-tracking/application/use-cases/sandbox-environment';
+export type { BuyerTrackingReadPort } from '@/shipment-tracking/application/ports/out/buyer-tracking-read.port';
+export { PostgresSellerTrackingReadAdapter } from '@/shipment-tracking/infrastructure/postgres-seller-tracking-read.adapter';
+export type { SellerTrackingReadPort } from '@/shipment-tracking/application/ports/out/seller-tracking-read.port';
+export { DisableTrackingUseCase } from '@/shipment-tracking/application/use-cases/disable-tracking.use-case';
+export {
+  ShippingOrigin,
+  type ShippingOriginProps,
+} from '@/tenants/domain/value-objects/shipping-origin.vo';
+export { InvalidShippingOriginException } from '@/tenants/domain/exceptions/invalid-shipping-origin.exception';
+export type { ShippingOriginRepositoryPort } from '@/tenants/application/ports/out/shipping-origin-repository.port';
+export { ShippingOriginForbiddenException } from '@/tenants/application/exceptions/shipping-origin-forbidden.exception';
+export { SaveShippingOriginUseCase } from '@/tenants/application/use-cases/save-shipping-origin.use-case';
+export { PostgresShippingOriginRepository } from '@/tenants/infrastructure/repositories/postgres-shipping-origin.repository';
+
+export { SetBuyerWholesaleUseCase } from '@/iam/application/use-cases/set-buyer-wholesale.use-case';
+export { PostgresBuyerWholesaleAdapter } from '@/iam/infrastructure/postgres/postgres-buyer-wholesale.adapter';
+export type { BuyerWholesalePort } from '@/iam/application/ports/out/buyer-wholesale.port';

@@ -1,7 +1,6 @@
 'use server';
 
 import { getTranslations } from 'next-intl/server';
-import { z } from 'zod';
 import { authenticationLimitMessage } from '@/lib/security/authentication-rate-limit';
 import { redirect } from 'next/navigation';
 import {
@@ -11,6 +10,7 @@ import {
 import { DomainException, ApplicationException } from '@canaldigital/packages/core';
 import { buyerAuthHref, safeAuthReturnPath } from '@/features/iam/utils/auth-return-path';
 import { createClient } from '@/lib/supabase/server';
+import { customerSignupSchema, signupBusinessSchema } from '@/features/iam/schemas/auth.schema';
 import { ONBOARDING_BASE_CURRENCY } from '@/features/iam/constants';
 
 export type ActionState = {
@@ -18,28 +18,20 @@ export type ActionState = {
   error: string | null;
 };
 
-const signupSchema = z.object({
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-  storeName: z.string().min(1, 'Store name is required'),
-  storeSlug: z.string().min(1, 'Store URL is required'),
-});
-
 export async function signupBusinessAction(
   prevState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
   const limitMessage = await authenticationLimitMessage();
   if (limitMessage) return { success: false, error: limitMessage };
+  const t = await getTranslations('Storefront.auth.errors');
   const data = Object.fromEntries(formData.entries());
-  const validatedFields = signupSchema.safeParse(data);
+  const validatedFields = signupBusinessSchema.safeParse(data);
 
   if (!validatedFields.success) {
     return {
       success: false,
-      error: validatedFields.error.issues[0]?.message || 'Invalid input provided.',
+      error: t(validatedFields.error.issues[0]?.message ?? 'email'),
     };
   }
 
@@ -106,11 +98,6 @@ export async function signupBusinessAction(
   redirect('/dashboard');
 }
 
-const customerSignupSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-});
-
 export async function signupCustomerAction(
   prevState: ActionState,
   formData: FormData,
@@ -124,7 +111,7 @@ export async function signupCustomerAction(
   if (!validatedFields.success) {
     return {
       success: false,
-      error: t(validatedFields.error.issues[0]?.path[0] === 'email' ? 'email' : 'passwordLength'),
+      error: t(validatedFields.error.issues[0]?.message ?? 'email'),
     };
   }
 

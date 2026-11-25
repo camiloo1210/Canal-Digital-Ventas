@@ -12,6 +12,7 @@ import {
   FieldSeparator,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { EMAIL_INPUT } from '@/lib/input-attributes';
 import {
   loginWithGoogleAction,
   loginWithEmailAction,
@@ -83,11 +84,13 @@ export function LoginForm({
             </Alert>
           )}
           <Field>
-            <FieldLabel htmlFor="email">{t('email')}</FieldLabel>
+            <FieldLabel htmlFor="email">{t('loginIdentifier')}</FieldLabel>
             <Input
               id="email"
               name="email"
-              type="email"
+              type="text"
+              inputMode="email"
+              maxLength={EMAIL_INPUT.maxLength}
               autoComplete="email"
               className="min-h-11"
               placeholder={t('emailPlaceholder')}

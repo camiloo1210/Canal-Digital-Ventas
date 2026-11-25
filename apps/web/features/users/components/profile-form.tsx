@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { PERSON_NAME_INPUT } from '@/lib/input-attributes';
 import { Label } from '@/components/ui/label';
 
 export interface ProfileInitial {
@@ -83,7 +84,8 @@ export function ProfileForm({ initial }: { initial: ProfileInitial }): React.JSX
                 name="firstName"
                 autoComplete="given-name"
                 required
-                maxLength={60}
+                maxLength={PERSON_NAME_INPUT.maxLength}
+                pattern={PERSON_NAME_INPUT.pattern}
                 value={firstName}
                 onChange={(event): void => {
                   setFirstName(event.target.value);
@@ -110,7 +112,8 @@ export function ProfileForm({ initial }: { initial: ProfileInitial }): React.JSX
                 name="lastName"
                 autoComplete="family-name"
                 required
-                maxLength={60}
+                maxLength={PERSON_NAME_INPUT.maxLength}
+                pattern={PERSON_NAME_INPUT.pattern}
                 value={lastName}
                 onChange={(event): void => {
                   setLastName(event.target.value);

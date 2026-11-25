@@ -7,6 +7,13 @@ import type {
 } from '@/iam/application/ports/out/active-tenant-context-read.port';
 import { TenantContextReadException } from '@/iam/application/exceptions/tenant-context-read.exception';
 
+interface TenantIdentityRow {
+  id: string;
+  name: string;
+  slug: string;
+  logo_url: string | null;
+}
+
 export class SupabaseActiveTenantContextReadAdapter implements ActiveTenantContextReadPort {
   constructor(private readonly client: SupabaseClient) {}
 
@@ -56,17 +63,15 @@ export class SupabaseActiveTenantContextReadAdapter implements ActiveTenantConte
       const tenants = await this.client
         .schema('core')
         .from('tenants')
-        .select('id, name, slug')
+        .select('id, name, slug, logo_url')
         .in(
           'id',
           data.map((row): string => row.tenant_id),
         )
-        .returns<{ id: string; name: string; slug: string }[]>();
+        .returns<TenantIdentityRow[]>();
       if (tenants.error) throw tenants.error;
       const byId = new Map(
-        (tenants.data ?? []).map(
-          (row): readonly [string, { id: string; name: string; slug: string }] => [row.id, row],
-        ),
+        (tenants.data ?? []).map((row): readonly [string, TenantIdentityRow] => [row.id, row]),
       );
       const summaries: ActiveMembershipSummary[] = [];
       for (const membership of data) {
@@ -76,6 +81,7 @@ export class SupabaseActiveTenantContextReadAdapter implements ActiveTenantConte
           tenantId: membership.tenant_id,
           tenantName: tenant.name,
           tenantSlug: tenant.slug,
+          logoUrl: tenant.logo_url,
           role: membership.role,
         });
       }

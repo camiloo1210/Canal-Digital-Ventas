@@ -24,9 +24,22 @@ const completeCart = vi.fn();
 const tenantId = crypto.randomUUID();
 const buyerId = crypto.randomUUID();
 const productId = crypto.randomUUID();
+/** Realistic values: the schema rejects placeholders such as "Kept value" for phone, ids and places. */
+const VALID: Record<string, string> = {
+  'customer.name': 'Ana Pérez',
+  'customer.email': 'buyer@example.test',
+  'customer.phone': '+593 99 123 4567',
+  'customer.documentId': '1712345678',
+  'shipping.street': 'Av. Amazonas N24-15',
+  'shipping.city': 'Quito',
+  'shipping.state': 'Pichincha',
+  'shipping.zipCode': '170150',
+  'shipping.country': 'Ecuador',
+  'shipping.reference': 'Frente al parque',
+};
 function form(): FormData {
   const data = new FormData();
-  for (const field of checkoutFields) data.set(field.name, 'Kept value');
+  for (const field of checkoutFields) data.set(field.name, VALID[field.name]);
   data.set('customer.email', 'buyer@example.test');
   data.set('cartItems', JSON.stringify([{ productId, quantity: 2 }]));
   return data;
@@ -54,11 +67,11 @@ describe('checkout adapter validation and retention', (): void => {
     const result = await submitCheckoutAction('store', { success: false, errorCode: null }, data);
     expect(result.errorCode).toBe('INVALID_INPUT');
     expect(result.fieldErrors).toMatchObject({
-      'customer.name': 'invalidField',
+      'customer.name': 'invalidName',
       'customer.email': 'invalidEmail',
     });
     expect(result.values?.['customer.name']).toBe('   ');
-    expect(result.values?.['shipping.street']).toBe('Kept value');
+    expect(result.values?.['shipping.street']).toBe(VALID['shipping.street']);
     expect(result.submissionId).toBeTruthy();
     expect(execute).not.toHaveBeenCalled();
   });
@@ -82,7 +95,7 @@ describe('checkout adapter validation and retention', (): void => {
     } as unknown as Awaited<ReturnType<typeof createClient>>);
     const result = await submitCheckoutAction('store', { success: false, errorCode: null }, form());
     expect(result.errorCode).toBe('UNAUTHORIZED');
-    expect(result.values?.['shipping.city']).toBe('Kept value');
+    expect(result.values?.['shipping.city']).toBe(VALID['shipping.city']);
     expect(execute).not.toHaveBeenCalled();
   });
   it('retains values and masks unexpected failures', async (): Promise<void> => {
@@ -90,7 +103,7 @@ describe('checkout adapter validation and retention', (): void => {
     const result = await submitCheckoutAction('store', { success: false, errorCode: null }, form());
     expect(result.errorCode).toBe('UNEXPECTED');
     expect(result.message).toBe('unexpected');
-    expect(result.values?.['shipping.country']).toBe('Kept value');
+    expect(result.values?.['shipping.country']).toBe(VALID['shipping.country']);
   });
   it('rejects an unsupported monetary total without losing the checkout fields', async (): Promise<void> => {
     const failure = new Error('Monetary limit exceeded');
@@ -98,7 +111,7 @@ describe('checkout adapter validation and retention', (): void => {
     execute.mockRejectedValue(failure);
     const result = await submitCheckoutAction('store', { success: false, errorCode: null }, form());
     expect(result.errorCode).toBe('INVALID_CART');
-    expect(result.values?.['shipping.city']).toBe('Kept value');
+    expect(result.values?.['shipping.city']).toBe(VALID['shipping.city']);
     expect(completeCart).not.toHaveBeenCalled();
   });
   it('injects the authenticated buyer and submits only the allowed DTO fields', async (): Promise<void> => {
@@ -114,18 +127,18 @@ describe('checkout adapter validation and retention', (): void => {
       tenantSlug: 'store',
       items: [{ productId, quantity: 2 }],
       customer: {
-        name: 'Kept value',
+        name: VALID['customer.name'],
         email: 'buyer@example.test',
-        phone: 'Kept value',
-        documentId: 'Kept value',
+        phone: VALID['customer.phone'],
+        documentId: VALID['customer.documentId'],
       },
       shippingAddress: {
-        street: 'Kept value',
-        city: 'Kept value',
-        state: 'Kept value',
-        zipCode: 'Kept value',
-        country: 'Kept value',
-        reference: 'Kept value',
+        street: VALID['shipping.street'],
+        city: VALID['shipping.city'],
+        state: VALID['shipping.state'],
+        zipCode: VALID['shipping.zipCode'],
+        country: VALID['shipping.country'],
+        reference: VALID['shipping.reference'],
       },
     });
   });

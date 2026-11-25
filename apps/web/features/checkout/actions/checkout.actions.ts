@@ -8,6 +8,7 @@ import { checkoutDi } from '@/features/checkout/di/checkout.di';
 import {
   checkoutFields,
   CheckoutDetailsSchema,
+  checkoutFieldMessageKey,
   CartItemsSchema,
   type CheckoutActionState,
   type CheckoutFieldName,
@@ -64,10 +65,7 @@ export async function submitCheckoutAction(
       const fieldErrors: Partial<Record<CheckoutFieldName, string>> = {};
       for (const issue of details.error.issues) {
         const field = checkoutFields.find((candidate): boolean => candidate.name === issue.path[0]);
-        if (field)
-          fieldErrors[field.name] = t(
-            field.name === 'customer.email' ? 'invalidEmail' : 'invalidField',
-          );
+        if (field) fieldErrors[field.name] = t(checkoutFieldMessageKey(field.name));
       }
       return rejected('INVALID_INPUT', t('invalidInput'), fieldErrors);
     }

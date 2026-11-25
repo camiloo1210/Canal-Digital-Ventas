@@ -5,6 +5,7 @@ import { useFormStatus } from 'react-dom';
 import { onboardBusinessAction, ActionState } from '@/features/iam/actions/onboarding.actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PERSON_NAME_INPUT, STORE_NAME_INPUT, STORE_SLUG_INPUT } from '@/lib/input-attributes';
 import { Label } from '@/components/ui/label';
 
 const initialState: ActionState = {
@@ -60,11 +61,29 @@ export function OnboardingForm(): React.JSX.Element {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="firstName">Nombre</Label>
-              <Input id="firstName" name="firstName" type="text" required placeholder="Juan" />
+              <Input
+                id="firstName"
+                name="firstName"
+                type="text"
+                {...PERSON_NAME_INPUT}
+                minLength={2}
+                autoComplete="given-name"
+                required
+                placeholder="Juan"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="lastName">Apellido</Label>
-              <Input id="lastName" name="lastName" type="text" required placeholder="Pérez" />
+              <Input
+                id="lastName"
+                name="lastName"
+                type="text"
+                {...PERSON_NAME_INPUT}
+                minLength={2}
+                autoComplete="family-name"
+                required
+                placeholder="Pérez"
+              />
             </div>
           </div>
         </div>
@@ -78,6 +97,7 @@ export function OnboardingForm(): React.JSX.Element {
                 id="storeName"
                 name="storeName"
                 type="text"
+                {...STORE_NAME_INPUT}
                 required
                 placeholder="Mi Super Tienda"
                 onChange={handleStoreNameChange}
@@ -89,6 +109,9 @@ export function OnboardingForm(): React.JSX.Element {
                 id="storeSlug"
                 name="storeSlug"
                 type="text"
+                {...STORE_SLUG_INPUT}
+                autoCapitalize="none"
+                spellCheck={false}
                 required
                 placeholder="mi-super-tienda"
                 value={storeSlug}

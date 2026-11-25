@@ -1,6 +1,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
+import { UserPermission } from '@canaldigital/packages/core';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { requireDashboardTenantSummary } from '@/features/dashboard/queries/dashboard-context.query';
@@ -12,6 +13,7 @@ import {
 } from '@/features/dashboard/queries/business-intelligence-query';
 import { intelligenceQueryKey } from '@/features/dashboard/utils/business-intelligence-range';
 import { DashboardOverviewFilters } from '@/features/dashboard/components/dashboard-overview-filters';
+import { visibleDashboardNavigationKeys } from '@/features/dashboard/navigation/dashboard-navigation';
 import { tenantParam } from '@/features/dashboard/utils/tenant-scope';
 import { getMemberPermissionsQuery } from '@/features/users/queries/member-permissions.query';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -32,22 +34,28 @@ export default async function DashboardPage({
 }): Promise<React.JSX.Element | null> {
   const params = await searchParams;
   const { context, tenant } = await requireDashboardTenantSummary(tenantParam(params.tenant));
-  const t = await getTranslations('AdminOverview');
+  const [t, shell, member] = await Promise.all([
+    getTranslations('AdminOverview'),
+    getTranslations('AdminShell'),
+    getMemberPermissionsQuery(context.userId, tenant.tenantId),
+  ]);
   const period = parseIntelligencePeriod(params);
   const denied = params.denied !== undefined;
-  const member = await getMemberPermissionsQuery(context.userId, tenant.tenantId);
+  const visible = member ? visibleDashboardNavigationKeys(member.baseRole, member.permissions) : [];
   // The general overview (sales, orders) is its own permission, separate from the reports page.
   const canViewOverview =
     member?.baseRole === 'OWNER' || (member?.permissions.includes('VIEW_OVERVIEW') ?? false);
   return (
     <TenantScope tenantId={tenant.tenantId}>
       <div className="flex flex-1 flex-col">
-        <PageHeader breadcrumbs={[{ label: t('title'), href: null }]} />
-        <div className="space-y-6 px-4 py-6 lg:px-6 lg:py-8">
+        <PageHeader breadcrumbs={[{ label: shell('overview'), href: null }]} />
+        <div className="mx-auto w-full max-w-7xl min-w-0 space-y-6 px-4 py-6 lg:px-8 lg:py-8">
           <header className="flex flex-wrap items-start justify-between gap-4">
             <div className="space-y-2">
-              <h1 className="text-2xl font-semibold tracking-tight sm:text-[2rem]">{t('title')}</h1>
-              <p className="text-base leading-relaxed text-muted-foreground">
+              <h1 className="text-3xl font-semibold tracking-tight text-balance lg:text-4xl">
+                {t('title')}
+              </h1>
+              <p className="max-w-prose text-sm leading-relaxed text-pretty text-muted-foreground sm:text-[0.9375rem]">
                 {t('description', { store: tenant.tenantName })}
               </p>
             </div>
@@ -67,19 +75,24 @@ export default async function DashboardPage({
             </Alert>
           )}
           {canViewOverview ? (
-            <>
-              <DashboardOverviewFilters period={period} maxDate={todayIso()} />
-              <React.Suspense
-                key={intelligenceQueryKey(period)}
-                fallback={<DashboardOverviewSkeleton label={t('loading')} />}
-              >
-                <DashboardOverviewResults
-                  userId={context.userId}
-                  tenantId={tenant.tenantId}
-                  period={period}
-                />
-              </React.Suspense>
-            </>
+            <React.Suspense
+              key={intelligenceQueryKey(period)}
+              fallback={<DashboardOverviewSkeleton label={t('loading')} />}
+            >
+              <DashboardOverviewResults
+                userId={context.userId}
+                tenantId={tenant.tenantId}
+                period={period}
+                access={{
+                  orders: visible.includes('orders'),
+                  catalog: visible.includes('products'),
+                  manageCatalog:
+                    member?.baseRole === 'OWNER' ||
+                    (member?.permissions.includes(UserPermission.MANAGE_CATALOG) ?? false),
+                }}
+                salesFilters={<DashboardOverviewFilters period={period} maxDate={todayIso()} />}
+              />
+            </React.Suspense>
           ) : (
             <p role="status" className="rounded-lg border bg-muted/40 p-4 text-sm">
               {t('limitedAccess')}

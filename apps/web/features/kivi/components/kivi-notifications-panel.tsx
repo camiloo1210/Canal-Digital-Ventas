@@ -1,5 +1,9 @@
 'use client';
 
+import {
+  KIVI_LANGUAGE_PATTERN,
+  KIVI_TEMPLATE_PATTERN,
+} from '@/features/kivi/schemas/kivi-input-patterns';
 import { useActionState, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { KiviNotificationSettings } from '@canaldigital/packages/core';
@@ -113,6 +117,7 @@ export function KiviNotificationsPanel({
               <Input
                 id="notification-template"
                 name="templateName"
+                pattern={KIVI_TEMPLATE_PATTERN}
                 value={values.templateName}
                 onChange={(event): void =>
                   setValues({ ...values, templateName: event.target.value })
@@ -130,6 +135,7 @@ export function KiviNotificationsPanel({
               <Input
                 id="notification-language"
                 name="language"
+                pattern={KIVI_LANGUAGE_PATTERN}
                 value={values.language}
                 onChange={(event): void => setValues({ ...values, language: event.target.value })}
                 className="min-h-11"

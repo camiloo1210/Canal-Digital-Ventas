@@ -18,10 +18,12 @@ export async function StoreDirectorySearch({
       method="get"
       role="search"
       aria-label={t('search_stores_label')}
-      className="max-w-3xl space-y-2.5"
+      className="max-w-2xl space-y-2.5"
     >
-      <Label htmlFor="store-directory-search">{t('search_stores_label')}</Label>
-      <div className="flex flex-wrap items-center gap-3">
+      <Label htmlFor="store-directory-search" className="text-sm font-medium">
+        {t('search_stores_label')}
+      </Label>
+      <div className="flex flex-wrap items-center gap-2">
         <div className="relative min-w-0 flex-1">
           <Search
             aria-hidden="true"
@@ -35,10 +37,10 @@ export async function StoreDirectorySearch({
             key={query}
             maxLength={100}
             placeholder={t('search_stores_placeholder')}
-            className="h-12 pl-10"
+            className="h-12 rounded-xl bg-background pl-10 shadow-sm"
           />
         </div>
-        <Button type="submit" className="h-12 px-5">
+        <Button type="submit" className="h-12 rounded-xl px-5">
           {t('search_stores_button')}
         </Button>
         {query && (

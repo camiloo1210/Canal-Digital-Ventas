@@ -61,6 +61,7 @@ export async function CatalogResults({
               <input type="hidden" name="q" value={query.q} />
               <input type="hidden" name="status" value={query.status} />
               <input type="hidden" name="page" value={query.page} />
+              {query.categoryId && <input type="hidden" name="category" value={query.categoryId} />}
               <TenantParamField />
               <Button type="submit" variant="outline" className="mt-3 min-h-11">
                 {t('retry')}
@@ -73,7 +74,7 @@ export async function CatalogResults({
   // Redirects must stay outside the query catch; Next.js uses a thrown redirect signal.
   if (query.page > result.totalPages)
     redirect(catalogHref(kind, query, result.totalPages, tenantId));
-  const filtered = Boolean(query.q || query.status !== 'all');
+  const filtered = Boolean(query.q || query.status !== 'all' || query.categoryId);
   return (
     <section
       aria-label={t(kind === 'products' ? 'productsTitle' : 'categoriesTitle')}

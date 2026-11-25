@@ -15,5 +15,9 @@ export interface BuyerCartCatalogReadPort {
   findActiveTenantIdBySlug(tenantSlug: string): Promise<string | null>;
 
   /** Active, storefront-visible products of the tenant among `productIds`; others are omitted. */
-  findProducts(tenantId: string, productIds: string[]): Promise<BuyerCartCatalogProduct[]>;
+  findProducts(
+    tenantId: string,
+    productIds: string[],
+    userId: string,
+  ): Promise<BuyerCartCatalogProduct[]>;
 }

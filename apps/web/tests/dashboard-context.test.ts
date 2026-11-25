@@ -39,8 +39,20 @@ vi.mock('next/navigation', (): object => ({
 
 const ALPHA = '3f2b8c1e-9a4d-4e2b-8c7a-1d2e3f4a5b6c';
 const BETA = '7a1d5e2f-0b3c-4d6e-9f81-2a3b4c5d6e7f';
-const alpha = { tenantId: ALPHA, tenantName: 'Alpha', tenantSlug: 'alpha', role: 'OWNER' };
-const beta = { tenantId: BETA, tenantName: 'Beta', tenantSlug: 'beta', role: 'ADMIN' };
+const alpha = {
+  tenantId: ALPHA,
+  tenantName: 'Alpha',
+  tenantSlug: 'alpha',
+  logoUrl: null,
+  role: 'OWNER',
+};
+const beta = {
+  tenantId: BETA,
+  tenantName: 'Beta',
+  tenantSlug: 'beta',
+  logoUrl: null,
+  role: 'ADMIN',
+};
 const FOREIGN = '3b9f2a1c-0000-4000-8000-000000000000';
 
 describe('administrative tenant context', (): void => {

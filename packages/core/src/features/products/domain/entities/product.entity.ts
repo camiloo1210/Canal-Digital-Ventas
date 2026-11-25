@@ -3,6 +3,7 @@ import { ProductStatus } from '@/products/domain/enums/product-status.enum';
 import { ProductVariant } from '@/products/domain/entities/product-variant.entity';
 import { Sku } from '@/products/domain/value-objects/sku.vo';
 import { ProductName } from '@/products/domain/value-objects/product-name.vo';
+import { PackageData } from '@/products/domain/value-objects/package-data.vo';
 import { DomainEvent } from '@/shared/domain/events/domain-event.interface';
 import { ProductId } from '@/products/domain/types/product-id.type';
 import { CategoryId } from '@/products/domain/types/category-id.type';
@@ -38,6 +39,7 @@ export interface ProductProps {
   hasVariants: boolean;
   variants: ProductVariant[];
   isVatExempt: boolean;
+  packageData?: PackageData | null;
   updatedAt: Date;
   version: number;
 }
@@ -70,6 +72,7 @@ export class Product {
     private isVatExempt: boolean,
     private updatedAt: Date,
     private version: number,
+    private packageData: PackageData | null,
   ) {
     this.variants = Product.snapshotVariants(variants);
   }
@@ -92,6 +95,7 @@ export class Product {
     isVatExempt: boolean,
     wholesalePrice: Money | null,
     wholesaleMinQuantity: number | null,
+    packageData: PackageData | null = null,
   ): Product {
     Product.validateId(id);
     Product.validateCategoryId(categoryId);
@@ -134,6 +138,7 @@ export class Product {
       isVatExempt,
       new Date(),
       0, // Initial version
+      packageData,
     );
 
     product.addDomainEvent(new ProductCreatedEvent(id));
@@ -165,6 +170,7 @@ export class Product {
       props.isVatExempt,
       props.updatedAt,
       props.version,
+      props.packageData ?? null,
     );
   }
 
@@ -257,6 +263,7 @@ export class Product {
       throw new InvalidProductStateException('Only archived products can be unarchived.');
     }
     this.status = this.stock > 0 ? ProductStatus.ACTIVE : ProductStatus.OUT_OF_STOCK;
+    this.addDomainEvent(new ProductDetailsChangedEvent(this.id));
     this.version++;
   }
 
@@ -300,6 +307,11 @@ export class Product {
     this.price = price;
     this.cost = cost;
     this.addDomainEvent(new ProductPricingChangedEvent(this.id));
+    this.updateUpdatedAt();
+  }
+
+  public changePackageData(packageData: PackageData | null): void {
+    this.packageData = packageData;
     this.updateUpdatedAt();
   }
 
@@ -363,12 +375,14 @@ export class Product {
     }
 
     this.status = newStatus;
+    this.addDomainEvent(new ProductDetailsChangedEvent(this.id));
     this.updateUpdatedAt();
   }
 
   public updateImages(imagePath: string | null, imageUrl: string | null): void {
     this.imagePath = imagePath;
     this.imageUrl = imageUrl;
+    this.addDomainEvent(new ProductDetailsChangedEvent(this.id));
     this.updateUpdatedAt();
   }
 
@@ -384,6 +398,7 @@ export class Product {
     this.galleryUrls = [...urls];
     this.imageUrl = urls[0] ?? null;
     this.imagePath = urls[0] ?? null;
+    this.addDomainEvent(new ProductDetailsChangedEvent(this.id));
     this.updateUpdatedAt();
   }
 
@@ -485,6 +500,9 @@ export class Product {
   }
   public getUpdatedAt(): Date {
     return this.updatedAt;
+  }
+  public getPackageData(): PackageData | null {
+    return this.packageData;
   }
   public getVersion(): number {
     return this.version;

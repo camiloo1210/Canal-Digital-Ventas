@@ -5,6 +5,7 @@ import { PostgresRelayOutboxAdapter } from '@/shared/infrastructure/adapters/pos
 import { RabbitMqEventPublisherAdapter } from '@/shared/infrastructure/adapters/rabbitmq-event-publisher.adapter';
 import type { MessagingWorkerConfig } from '@/shared/infrastructure/messaging/messaging-worker-config';
 import { MessagingException } from '@/shared/application/exceptions/messaging.exception';
+import type { IntegrationEvent } from '@/shared/application/ports/out/integration-event-publisher.port';
 
 export interface OutboxWorkerLogger {
   info(message: string): void;
@@ -19,6 +20,7 @@ export async function runOutboxWorker(
   eventTypes: string[],
   onReady: (ready: boolean) => void = (): void => {},
   aggregateType: string = 'Order',
+  shouldPublish: (event: IntegrationEvent) => boolean = (): boolean => true,
 ): Promise<void> {
   const sql = postgres(config.databaseUrl, {
     max: 1,
@@ -38,7 +40,7 @@ export async function runOutboxWorker(
           eventTypes,
           aggregateType,
         );
-        const relay = new RelayOutboxUseCase(outbox, publisher);
+        const relay = new RelayOutboxUseCase(outbox, publisher, shouldPublish);
         logger.info('Outbox relay connected');
         while (!signal.aborted) {
           const published = await relay.execute();

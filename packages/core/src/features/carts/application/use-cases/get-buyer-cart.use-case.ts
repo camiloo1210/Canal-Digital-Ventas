@@ -26,6 +26,6 @@ export class GetBuyerCartUseCase {
     assertBuyerCartIdentity(dto.userId, dto.tenantSlug);
     const tenantId = await this.service.requireTenantId(dto.tenantSlug);
     const stored = await this.carts.findActive({ tenantId, buyerUserId: dto.userId });
-    return this.service.viewOf(tenantId, stored, this.service.clock());
+    return this.service.viewOf(tenantId, stored, this.service.clock(), dto.userId);
   }
 }

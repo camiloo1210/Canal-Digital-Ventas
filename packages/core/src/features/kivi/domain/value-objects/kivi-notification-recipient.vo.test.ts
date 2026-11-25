@@ -14,19 +14,27 @@ describe('Kivi notification recipient', (): void => {
   );
 
   it.each(['0999999999', '+593abc', '', '1'.repeat(16)])(
-    'rejects an invalid recipient without guessing a country: %s',
+    'captures no phone, without guessing a country, for %s',
     (phone: string): void => {
-      expect((): KiviNotificationRecipient =>
-        KiviNotificationRecipient.capture(phone, 'ORD-1'),
-      ).toThrow(InvalidKiviNotificationRecipientException);
+      expect(KiviNotificationRecipient.capture(phone, 'ORD-1').toSnapshot()).toEqual({
+        phone: null,
+        orderNumber: 'ORD-1',
+      });
     },
   );
+
+  it('keeps a recipient without a phone when it is restored from its snapshot', (): void => {
+    expect(
+      KiviNotificationRecipient.reconstitute({ phone: null, orderNumber: 'ORD-1' }).toSnapshot(),
+    ).toEqual({ phone: null, orderNumber: 'ORD-1' });
+  });
 
   it.each([
     null,
     [],
     { phone: '0999999999', orderNumber: 'ORD-1' },
     { phone: '593999999999', orderNumber: ' ' },
+    { phone: null, orderNumber: ' ' },
   ])('rejects an invalid stored snapshot: %j', (snapshot: unknown): void => {
     expect((): KiviNotificationRecipient =>
       KiviNotificationRecipient.reconstitute(snapshot),

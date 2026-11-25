@@ -1,4 +1,5 @@
 import { renderToStaticMarkup } from 'react-dom/server';
+import * as React from 'react';
 import { createTranslator } from 'next-intl';
 import { describe, expect, it, vi } from 'vitest';
 import es from '@/messages/es.json';
@@ -14,12 +15,13 @@ vi.mock('@/features/dashboard/di/dashboard.di', (): object => ({
 }));
 
 const period = { days: 30 };
+const access = { orders: true, catalog: true, manageCatalog: true };
 
 describe('overview recovery and access', (): void => {
   it('does not present unauthorized data as zero activity', async (): Promise<void> => {
     mocks.find.mockResolvedValue(null);
     const html = renderToStaticMarkup(
-      await DashboardOverviewResults({ userId: 'actor', tenantId: 'tenant', period }),
+      await DashboardOverviewResults({ userId: 'actor', tenantId: 'tenant', period, access }),
     );
     expect(mocks.find).toHaveBeenLastCalledWith('actor', 'tenant', period);
     expect(html).toContain('Resumen no disponible para esta cuenta');
@@ -30,12 +32,19 @@ describe('overview recovery and access', (): void => {
     const spy = vi.spyOn(console, 'error').mockImplementation((): void => undefined);
     try {
       const html = renderToStaticMarkup(
-        await DashboardOverviewResults({ userId: 'actor', tenantId: 'tenant', period }),
+        await DashboardOverviewResults({
+          userId: 'actor',
+          tenantId: 'tenant',
+          period,
+          access,
+          salesFilters: <form aria-label="Filtrar ventas" />,
+        }),
       );
       expect(html).toContain('No pudimos cargar el resumen');
       expect(html).toContain('action="/dashboard"');
       expect(html).toContain('method="get"');
       expect(html).toContain('name="days" value="30"');
+      expect(html).toContain('Filtrar ventas');
       expect(html).not.toContain('private database detail');
       expect(html).not.toContain('Todavía no hay pedidos');
     } finally {

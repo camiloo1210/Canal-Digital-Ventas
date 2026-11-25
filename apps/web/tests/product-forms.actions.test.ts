@@ -7,6 +7,11 @@ import {
   unarchiveProductAction,
   updateProductAction,
 } from '@/features/products/actions/products.actions';
+import {
+  formatPackageFields,
+  parsePackageFields,
+} from '@/features/products/schemas/product-form.schema';
+import { InvalidPackageDataException } from '@/products/domain/exceptions/invalid-package-data.exception';
 import { InvalidProductAttributeException } from '@/products/domain/exceptions/invalid-product-attribute.exception';
 import { InvalidWholesaleRulesException } from '@/products/domain/exceptions/invalid-wholesale-rules.exception';
 import { CategoryNotFoundException } from '@/categories/application/exceptions/category-not-found.exception';
@@ -302,6 +307,118 @@ describe('product form delivery', (): void => {
         galleryUrls: ['https://example.test/' + pathA, 'https://example.test/' + pathB],
       }),
     );
+  });
+
+  describe('package weight and dimensions', (): void => {
+    function withPackage(data: FormData): FormData {
+      data.set('weightKg', '1.250');
+      data.set('lengthCm', '30.5');
+      data.set('widthCm', '20');
+      data.set('heightCm', '10');
+      return data;
+    }
+    const expectedPackage = { weightGrams: 1250, lengthMm: 305, widthMm: 200, heightMm: 100 };
+
+    it('converts kg and cm decimal strings to integer grams and mm on update', async (): Promise<void> => {
+      await expect(updateProductAction(initial, withPackage(form()))).rejects.toThrow(
+        'NEXT_REDIRECT',
+      );
+      expect(mocks.update).toHaveBeenCalledWith(
+        expect.objectContaining({ packageData: expectedPackage }),
+      );
+    });
+    it('converts kg and cm decimal strings to integer grams and mm on create', async (): Promise<void> => {
+      const data = withPackage(form());
+      data.delete('productId');
+      data.delete('expectedVersion');
+      await expect(createProductAction(initial, data)).rejects.toThrow('NEXT_REDIRECT');
+      expect(mocks.create).toHaveBeenCalledWith(
+        expect.objectContaining({ packageData: expectedPackage }),
+      );
+    });
+    it('passes null (clears package data on update) when all four fields are empty', async (): Promise<void> => {
+      await expect(updateProductAction(initial, form())).rejects.toThrow('NEXT_REDIRECT');
+      expect(mocks.update).toHaveBeenCalledWith(expect.objectContaining({ packageData: null }));
+      const data = form();
+      data.delete('productId');
+      data.delete('expectedVersion');
+      await expect(createProductAction(initial, data)).rejects.toThrow('NEXT_REDIRECT');
+      expect(mocks.create).toHaveBeenCalledWith(expect.objectContaining({ packageData: null }));
+    });
+    it('rejects a malformed value and retains every submitted string', async (): Promise<void> => {
+      const data = withPackage(form());
+      data.set('weightKg', '12abc');
+      const result = await updateProductAction(initial, data);
+      expect(result.fieldErrors?.weightKg?.[0]).toBe(es.CatalogForms.weightFormat);
+      expect(result.values).toMatchObject({
+        weightKg: '12abc',
+        lengthCm: '30.5',
+        widthCm: '20',
+        heightCm: '10',
+      });
+      expect(mocks.update).not.toHaveBeenCalled();
+    });
+    it('rejects too many decimals and zero values', async (): Promise<void> => {
+      const data = withPackage(form());
+      data.set('weightKg', '1.2501');
+      data.set('lengthCm', '30.55');
+      data.set('widthCm', '0');
+      const result = await updateProductAction(initial, data);
+      expect(result.fieldErrors?.weightKg).toBeDefined();
+      expect(result.fieldErrors?.lengthCm?.[0]).toBe(es.CatalogForms.dimensionFormat);
+      expect(result.fieldErrors?.widthCm).toBeDefined();
+      expect(mocks.update).not.toHaveBeenCalled();
+    });
+    it('rejects a partially filled group on the empty fields', async (): Promise<void> => {
+      const data = form();
+      data.set('weightKg', '1.250');
+      const result = await updateProductAction(initial, data);
+      expect(result.fieldErrors?.lengthCm?.[0]).toBe(es.CatalogForms.packageIncomplete);
+      expect(result.fieldErrors?.widthCm?.[0]).toBe(es.CatalogForms.packageIncomplete);
+      expect(result.fieldErrors?.heightCm?.[0]).toBe(es.CatalogForms.packageIncomplete);
+      expect(result.fieldErrors?.weightKg).toBeUndefined();
+      expect(result.values?.weightKg).toBe('1.250');
+      expect(mocks.update).not.toHaveBeenCalled();
+    });
+    it('maps a core package invariant failure to the weight field', async (): Promise<void> => {
+      mocks.update.mockRejectedValue(new InvalidPackageDataException('weightGrams', 0));
+      const result = await updateProductAction(initial, withPackage(form()));
+      expect(result.fieldErrors?.weightKg?.[0]).toBe(es.CatalogForms.packageRange);
+    });
+  });
+  describe('package field helpers', (): void => {
+    it('parses with string arithmetic and no float math', (): void => {
+      expect(
+        parsePackageFields({ weightKg: '1.250', lengthCm: '30.5', widthCm: '2', heightCm: '0.1' }),
+      ).toEqual({ weightGrams: 1250, lengthMm: 305, widthMm: 20, heightMm: 1 });
+      expect(() =>
+        parsePackageFields({ weightKg: '0.001', lengthCm: '', widthCm: '', heightCm: '' }),
+      ).toThrow();
+      expect(() =>
+        parsePackageFields({ weightKg: '12abc', lengthCm: '1', widthCm: '1', heightCm: '1' }),
+      ).toThrow();
+    });
+    it('returns null for all-empty input', (): void => {
+      expect(
+        parsePackageFields({ weightKg: '', lengthCm: '', widthCm: '', heightCm: ' ' }),
+      ).toBeNull();
+    });
+    it('formats stored units back into editable strings', (): void => {
+      expect(
+        formatPackageFields({ weightGrams: 1250, lengthMm: 305, widthMm: 200, heightMm: 7 }),
+      ).toEqual({
+        weightKg: '1.250',
+        lengthCm: '30.5',
+        widthCm: '20.0',
+        heightCm: '0.7',
+      });
+      expect(formatPackageFields(null)).toEqual({
+        weightKg: '',
+        lengthCm: '',
+        widthCm: '',
+        heightCm: '',
+      });
+    });
   });
 
   describe('explicit business on every product mutation', (): void => {

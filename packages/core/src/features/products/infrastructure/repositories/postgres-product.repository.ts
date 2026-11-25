@@ -63,12 +63,13 @@ export class PostgresProductRepository implements ProductRepositoryPort {
           INSERT INTO catalog.products (
             id, tenant_id, category_id, name, description, sku, price_cents, cost_cents,
             wholesale_price_cents, wholesale_min_quantity, stock, is_vat_exempt, status, version, updated_at,
-            image_path, image_url, gallery_urls
+            image_path, image_url, gallery_urls, weight_grams, length_mm, width_mm, height_mm
           ) VALUES (
             ${productData.id}, ${productData.tenant_id}, ${productData.category_id}, ${productData.name},
             ${productData.description}, ${productData.sku}, ${productData.price_cents}, ${productData.cost_cents},
             ${productData.wholesale_price_cents}, ${productData.wholesale_min_quantity}, ${productData.stock}, ${productData.is_vat_exempt},
-            ${productData.status}, ${productData.version}, ${productData.updated_at}, ${productData.image_path}, ${productData.image_url}, ${productData.gallery_urls}::text[]
+            ${productData.status}, ${productData.version}, ${productData.updated_at}, ${productData.image_path}, ${productData.image_url}, ${productData.gallery_urls}::text[],
+            ${productData.weight_grams}, ${productData.length_mm}, ${productData.width_mm}, ${productData.height_mm}
           )
           ON CONFLICT (id) DO UPDATE SET
             category_id = EXCLUDED.category_id,
@@ -86,7 +87,11 @@ export class PostgresProductRepository implements ProductRepositoryPort {
             updated_at = EXCLUDED.updated_at,
             image_path = EXCLUDED.image_path,
             image_url = EXCLUDED.image_url,
-            gallery_urls = EXCLUDED.gallery_urls
+            gallery_urls = EXCLUDED.gallery_urls,
+            weight_grams = EXCLUDED.weight_grams,
+            length_mm = EXCLUDED.length_mm,
+            width_mm = EXCLUDED.width_mm,
+            height_mm = EXCLUDED.height_mm
           WHERE catalog.products.tenant_id = EXCLUDED.tenant_id;
         `;
       });
@@ -115,9 +120,9 @@ export class PostgresProductRepository implements ProductRepositoryPort {
     tenantId: TenantId,
     quantity: number,
     tx: TransactionContext,
-  ): Promise<void> {
+  ): Promise<number> {
     try {
-      await this.executeSql(tx, async (conn): Promise<void> => {
+      return await this.executeSql(tx, async (conn): Promise<number> => {
         const rows = await conn`
           UPDATE catalog.products
           SET stock = stock - ${quantity},
@@ -153,6 +158,7 @@ export class PostgresProductRepository implements ProductRepositoryPort {
             'Failed to decrease stock due to an unknown conflict.',
           );
         }
+        return Number(rows[0].stock);
       });
     } catch (error: unknown) {
       if (
@@ -172,13 +178,13 @@ export class PostgresProductRepository implements ProductRepositoryPort {
     tenantId: TenantId,
     quantity: number,
     tx: TransactionContext,
-  ): Promise<void> {
+  ): Promise<number> {
     if (quantity <= 0) {
       throw new ProductRepositoryException('Quantity to increase must be strictly positive.');
     }
 
     try {
-      await this.executeSql(tx, async (conn): Promise<void> => {
+      return await this.executeSql(tx, async (conn): Promise<number> => {
         const rows = await conn`
           UPDATE catalog.products
           SET stock = stock + ${quantity},
@@ -192,6 +198,7 @@ export class PostgresProductRepository implements ProductRepositoryPort {
         if (rows.length === 0) {
           throw new ProductRepositoryException('Product not found for stock increase.');
         }
+        return Number(rows[0].stock);
       });
     } catch (error: unknown) {
       if (error instanceof ProductRepositoryException) {

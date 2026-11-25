@@ -24,6 +24,8 @@ const subjects = {
   paid: 'Paid {orderNumber}',
   processing: 'Processing {orderNumber}',
   shipped: 'Shipped {orderNumber}',
+  shipment_updated: 'Shipping updated {orderNumber}',
+  refunded: 'Refunded {orderNumber}',
   delivered: 'Delivered {orderNumber}',
 };
 const copies: NotificationCopies = {
@@ -84,7 +86,7 @@ describe('Kiroku SMTP relay adaptation', (): void => {
         from: { name: 'Store', address: 'sales@example.test' },
         envelope: { from: 'sales@example.test', to: 'buyer@example.test' },
         html: expect.stringContaining('https://cdn.example.test/paper.png'),
-        text: expect.stringContaining('https://sales.example.test/purchases#order-order-1'),
+        text: expect.stringContaining('https://sales.example.test/purchases/order-1'),
         disableFileAccess: true,
         disableUrlAccess: true,
       }),

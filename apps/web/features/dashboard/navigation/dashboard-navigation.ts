@@ -37,7 +37,6 @@ export const dashboardNavigation: readonly DashboardNavigationItem[] = [
   { key: 'store', href: '/dashboard/store', permissions: ['MANAGE_STORE'] },
   { key: 'integrations', href: '/dashboard/integrations', permissions: [], ownerOnly: true },
   { key: 'users', href: '/dashboard/users', permissions: [], ownerOnly: true },
-  /** Personal area of every member, whatever their role. */
   { key: 'profile', href: '/dashboard/profile', permissions: [] },
 ];
 
@@ -58,4 +57,41 @@ export function visibleDashboardNavigationKeys(
 
 export function isDashboardDestinationActive(pathname: string, href: string): boolean {
   return pathname === href || (href !== '/dashboard' && pathname.startsWith(href + '/'));
+}
+
+export type DashboardNavigationGroupKey = 'operation' | 'catalog' | 'business';
+
+type DashboardSidebarItem = DashboardNavigationItem & {
+  key: Exclude<DashboardNavigationItem['key'], 'profile'>;
+};
+
+export interface DashboardNavigationGroup {
+  key: DashboardNavigationGroupKey;
+  items: DashboardSidebarItem[];
+}
+
+const GROUP_OF: Record<DashboardSidebarItem['key'], DashboardNavigationGroupKey> = {
+  overview: 'operation',
+  orders: 'operation',
+  products: 'catalog',
+  categories: 'catalog',
+  businessIntelligence: 'business',
+  store: 'business',
+  integrations: 'business',
+  users: 'business',
+};
+
+const GROUP_ORDER: readonly DashboardNavigationGroupKey[] = ['operation', 'catalog', 'business'];
+
+/** Sidebar sections for the destinations a member may see; empty sections are omitted. */
+export function groupDashboardNavigation(
+  visibleKeys: readonly string[],
+): DashboardNavigationGroup[] {
+  return GROUP_ORDER.map((key): DashboardNavigationGroup => ({
+    key,
+    items: dashboardNavigation.filter(
+      (item): item is DashboardSidebarItem =>
+        item.key !== 'profile' && GROUP_OF[item.key] === key && visibleKeys.includes(item.key),
+    ),
+  })).filter((group): boolean => group.items.length > 0);
 }

@@ -16,6 +16,7 @@ import {
 import { CatalogFormActions } from '@/features/dashboard/components/catalog-form-actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { STORE_SLUG_INPUT } from '@/lib/input-attributes';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
@@ -163,6 +164,8 @@ export function StoreSettingsForm({
                 <Input
                   id="store-name"
                   name="name"
+                  minLength={3}
+                  maxLength={100}
                   required
                   value={name}
                   onChange={(event): void => setName(event.target.value)}
@@ -186,6 +189,7 @@ export function StoreSettingsForm({
                   <Input
                     id="store-slug"
                     name="slug"
+                    {...STORE_SLUG_INPUT}
                     required
                     value={slug}
                     aria-invalid={Boolean(errorFor('slug'))}
@@ -216,6 +220,7 @@ export function StoreSettingsForm({
                   id="store-description"
                   name="description"
                   rows={4}
+                  maxLength={255}
                   value={description}
                   onChange={(event): void => setDescription(event.target.value)}
                   aria-invalid={Boolean(errorFor('description'))}

@@ -4,6 +4,7 @@ import { useActionState, useState } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { Check, Copy, TriangleAlert } from 'lucide-react';
+import { staffLoginIdentifier } from '@canaldigital/packages/core/staff-login';
 import {
   acceptInvitationAction,
   acceptInvitationAsCurrentUserAction,
@@ -17,6 +18,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { PERSON_NAME_INPUT } from '@/lib/input-attributes';
 
 const INITIAL: AcceptInvitationActionState = { success: false, message: null, revision: 0 };
 
@@ -53,7 +55,8 @@ function NameFields({ state }: { state: AcceptInvitationActionState }): React.JS
           name="firstName"
           autoComplete="given-name"
           required
-          maxLength={60}
+          maxLength={PERSON_NAME_INPUT.maxLength}
+          pattern={PERSON_NAME_INPUT.pattern}
           defaultValue={state.values?.firstName ?? ''}
           className="min-h-11"
           aria-invalid={Boolean(errors?.firstName)}
@@ -67,7 +70,8 @@ function NameFields({ state }: { state: AcceptInvitationActionState }): React.JS
           name="lastName"
           autoComplete="family-name"
           required
-          maxLength={60}
+          maxLength={PERSON_NAME_INPUT.maxLength}
+          pattern={PERSON_NAME_INPUT.pattern}
           defaultValue={state.values?.lastName ?? ''}
           className="min-h-11"
           aria-invalid={Boolean(errors?.lastName)}
@@ -98,6 +102,7 @@ function PasswordField({
           autoComplete="new-password"
           required
           minLength={8}
+          maxLength={200}
           className="min-h-11"
           aria-invalid={Boolean(errors?.password)}
           aria-describedby="invite-password-help"
@@ -115,6 +120,7 @@ function PasswordField({
             autoComplete="new-password"
             required
             minLength={8}
+            maxLength={200}
             className="min-h-11"
             aria-invalid={Boolean(errors?.confirmPassword)}
           />
@@ -126,7 +132,7 @@ function PasswordField({
 }
 
 /** Shown once the generated login email exists: the person must save it before moving on. */
-function GeneratedEmailNotice({
+export function GeneratedEmailNotice({
   email,
   succeeded,
 }: {
@@ -135,9 +141,10 @@ function GeneratedEmailNotice({
 }): React.JSX.Element {
   const t = useTranslations('Users.invite');
   const [copied, setCopied] = useState(false);
+  const identifier = staffLoginIdentifier(email);
   const copy = async (): Promise<void> => {
     try {
-      await navigator.clipboard.writeText(email);
+      await navigator.clipboard.writeText(identifier);
       setCopied(true);
     } catch {
       setCopied(false);
@@ -157,7 +164,7 @@ function GeneratedEmailNotice({
           <Input
             id="invite-generated-email"
             readOnly
-            value={email}
+            value={identifier}
             className="min-h-11 font-mono text-xs"
             onFocus={(event: React.FocusEvent<HTMLInputElement>): void =>
               event.currentTarget.select()
@@ -251,6 +258,7 @@ export function InviteSignupForm({
             name="email"
             type="email"
             autoComplete="email"
+            maxLength={254}
             required
             defaultValue={state.values?.email ?? ''}
             className="min-h-11"

@@ -16,6 +16,7 @@ import { createTenantId } from '@/shared/domain/types/tenant-id.type';
 import { OrderStatus } from '@/orders/domain/enums/order-status.enum';
 import { ORDER_AGGREGATE_TYPE } from '@/orders/application/outbox/order-aggregate.constants';
 import type { DomainEvent } from '@/shared/domain/events/domain-event.interface';
+import { productStockAdjustedEnvelope } from '@/products/application/outbox/product-stock-adjusted.envelope';
 
 export type ExpireOrderResult = 'APPLIED' | 'NOOP' | 'MISMATCH' | 'EXCLUDED';
 
@@ -56,7 +57,17 @@ export class CancelExpiredOrderUseCase {
             left.getProductId().localeCompare(right.getProductId()),
           );
         for (const item of items) {
-          await this.products.increaseStock(item.getProductId(), tenantId, item.getQuantity(), tx);
+          const restoredStock = await this.products.increaseStock(
+            item.getProductId(),
+            tenantId,
+            item.getQuantity(),
+            tx,
+          );
+          // Stock moves by direct SQL, so announce it: Kivi must show the real availability.
+          await this.events.publish(
+            [productStockAdjustedEnvelope(tenantId, item.getProductId(), restoredStock)],
+            tx,
+          );
         }
         order.cancelDueToPaymentExpiry();
         await this.orders.saveLifecycle(order, tx);

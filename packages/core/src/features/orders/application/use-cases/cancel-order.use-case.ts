@@ -11,6 +11,7 @@ import { ORDER_AGGREGATE_TYPE } from '@/orders/application/outbox/order-aggregat
 import type { OrderPaymentCoordinationPort } from '@/orders/application/ports/out/order-payment-coordination.port';
 import type { OrderItem } from '@/orders/domain/entities/order-item.entity';
 import { InvalidOrderStateException } from '@/orders/domain/exceptions/invalid-order-state.exception';
+import { productStockAdjustedEnvelope } from '@/products/application/outbox/product-stock-adjusted.envelope';
 
 export class CancelOrderUseCase {
   constructor(
@@ -73,10 +74,21 @@ export class CancelOrderUseCase {
               left.getProductId().localeCompare(right.getProductId()),
             );
           for (const item of items) {
-            await this.productRepository.increaseStock(
+            const restoredStock = await this.productRepository.increaseStock(
               item.getProductId(),
               order.getTenantId(),
               item.getQuantity(),
+              tx,
+            );
+            // Stock moves by direct SQL, so announce it: Kivi must show the real availability.
+            await this.eventBus.publish(
+              [
+                productStockAdjustedEnvelope(
+                  order.getTenantId(),
+                  item.getProductId(),
+                  restoredStock,
+                ),
+              ],
               tx,
             );
           }

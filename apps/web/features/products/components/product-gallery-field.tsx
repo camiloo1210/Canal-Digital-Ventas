@@ -23,6 +23,8 @@ import {
   type UploadOutcome,
 } from '@/features/products/utils/image-upload-queue';
 import { compressImageInBrowser } from '@/features/products/utils/compress-image';
+import { sniffImageFile } from '@/features/products/utils/image-signature';
+import { cn } from '@/lib/utils';
 
 const PRODUCT_IMAGE_MAX_SOURCE_BYTES = 30 * 1024 * 1024;
 
@@ -50,11 +52,18 @@ interface PendingImage {
   failure: UploadFailure | null;
 }
 
-function isAcceptableImage(file: File): boolean {
-  return (
-    Object.hasOwn(PRODUCT_IMAGE_MIME_EXTENSIONS, file.type) &&
-    file.size <= PRODUCT_IMAGE_MAX_SOURCE_BYTES
-  );
+/**
+ * Accepts a file only if its bytes are a JPEG, PNG or WebP and it is not oversized. The name and
+ * the browser-declared type are ignored (both come from the extension), and the returned file
+ * carries the real type so the upload's Content-Type matches the content.
+ */
+async function toAcceptableImage(file: File): Promise<File | null> {
+  if (file.size > PRODUCT_IMAGE_MAX_SOURCE_BYTES) return null;
+  const mime = await sniffImageFile(file);
+  if (!mime || !Object.hasOwn(PRODUCT_IMAGE_MIME_EXTENSIONS, mime)) return null;
+  return mime === file.type
+    ? file
+    : new File([file], file.name, { type: mime, lastModified: file.lastModified });
 }
 
 function fingerprint(file: File): string {
@@ -74,6 +83,7 @@ export function ProductGalleryField({
   const [pending, setPending] = useState<PendingImage[]>([]);
   const [rejectedCount, setRejectedCount] = useState(0);
   const [limitHit, setLimitHit] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const pendingRef = useRef<PendingImage[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -141,9 +151,11 @@ export function ProductGalleryField({
     );
   };
 
-  const addFiles = (incoming: File[]): void => {
+  const addFiles = async (incoming: File[]): Promise<void> => {
+    const checked = await Promise.all(incoming.map(toAcceptableImage));
+    const valid = checked.filter((file): file is File => file !== null);
+    // Read the queue only after the async checks, so concurrent selections cannot overbook it.
     const known = new Set(pendingRef.current.map((entry): string => fingerprint(entry.file)));
-    const valid = incoming.filter(isAcceptableImage);
     const fresh = valid.filter((file): boolean => !known.has(fingerprint(file)));
     const room = Math.max(0, remainingSlots - pendingRef.current.length);
     const accepted = fresh.slice(0, room).map((file): PendingImage => ({
@@ -195,8 +207,24 @@ export function ProductGalleryField({
     setExisting((current): string[] => [url, ...current.filter((entry): boolean => entry !== url)]);
   };
 
+  const dropFiles = (event: React.DragEvent<HTMLDivElement>): void => {
+    event.preventDefault();
+    setDragging(false);
+    void addFiles(Array.from(event.dataTransfer.files));
+  };
+
   return (
-    <div className="space-y-4">
+    <div
+      className="space-y-4"
+      onDragOver={(event): void => {
+        event.preventDefault();
+        setDragging(true);
+      }}
+      onDragLeave={(event): void => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragging(false);
+      }}
+      onDrop={dropFiles}
+    >
       {managed && <input type="hidden" name="galleryManaged" value="1" />}
       {existing.map((url): React.JSX.Element => (
         <input key={url} type="hidden" name="existingImages" value={url} />
@@ -207,19 +235,26 @@ export function ProductGalleryField({
         ) : null,
       )}
       {tiles.length > 0 ? (
-        <ul aria-label={t('imageCurrent')} className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <ul aria-label={t('imageCurrent')} className="mx-auto grid max-w-xl grid-cols-2 gap-3">
           {tiles.map((tile, index): React.JSX.Element => (
             <li
               key={tile.key}
-              className="relative aspect-square overflow-hidden rounded-lg border bg-muted/30"
+              className={cn(
+                'relative overflow-hidden rounded-xl border bg-muted/30',
+                index === 0 ? 'col-span-2 aspect-[4/3]' : 'aspect-square',
+              )}
             >
               <Image
                 src={tile.url}
                 alt={t('imagePreview') + ' ' + (index + 1)}
                 fill
                 unoptimized
-                sizes="128px"
-                className="object-cover"
+                sizes={
+                  index === 0
+                    ? '(min-width: 1280px) 26rem, 36rem'
+                    : '(min-width: 1280px) 13rem, 18rem'
+                }
+                className={index === 0 ? 'object-contain' : 'object-cover'}
               />
               <div className="absolute left-1.5 top-1.5 flex gap-1">
                 {index === 0 && (
@@ -289,10 +324,19 @@ export function ProductGalleryField({
           ))}
         </ul>
       ) : (
-        <div className="flex aspect-square w-full max-w-64 flex-col items-center justify-center gap-3 rounded-lg border bg-muted/30 p-4 text-center text-sm text-muted-foreground">
+        <button
+          type="button"
+          data-dropzone="product-images"
+          onClick={(): void => inputRef.current?.click()}
+          className={cn(
+            'flex aspect-[4/3] w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed bg-muted/30 p-4 text-center text-sm text-muted-foreground transition-colors duration-200 hover:border-primary/60 hover:bg-accent/40 motion-reduce:transition-none',
+            dragging && 'border-primary bg-accent/60',
+          )}
+        >
           <ImageIcon aria-hidden="true" className="size-8" />
-          {t('noImage')}
-        </div>
+          <span className="font-medium text-foreground">{t('noImage')}</span>
+          <span className="text-xs">{t('imageDropHint')}</span>
+        </button>
       )}
       <Field data-invalid={Boolean(error)}>
         <FieldLabel htmlFor="image">
@@ -310,8 +354,9 @@ export function ProductGalleryField({
           aria-describedby={'image-help' + (error ? ' image-error' : '')}
           onChange={(event): void => {
             clearField('image');
-            addFiles(Array.from(event.target.files ?? []));
+            const selected = Array.from(event.target.files ?? []);
             event.target.value = '';
+            void addFiles(selected);
           }}
         />
         <FieldDescription id="image-help">

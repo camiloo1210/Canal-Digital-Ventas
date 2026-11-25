@@ -4,6 +4,13 @@ import { useActionState, useState } from 'react';
 import { signupBusinessAction } from '@/features/iam/actions/signup.actions';
 import { loginBusinessWithGoogleAction } from '@/features/iam/actions/login.actions';
 import { Input } from '@/components/ui/input';
+import {
+  EMAIL_INPUT,
+  NEW_PASSWORD_INPUT,
+  PERSON_NAME_INPUT,
+  STORE_NAME_INPUT,
+  STORE_SLUG_INPUT,
+} from '@/lib/input-attributes';
 import { Button } from '@/components/ui/button';
 import {
   Field,
@@ -75,11 +82,27 @@ export function SignupBusinessForm({
           <div className="grid grid-cols-2 gap-4">
             <Field>
               <FieldLabel htmlFor="firstName">First Name</FieldLabel>
-              <Input id="firstName" name="firstName" type="text" required placeholder="John" />
+              <Input
+                id="firstName"
+                name="firstName"
+                type="text"
+                {...PERSON_NAME_INPUT}
+                autoComplete="given-name"
+                required
+                placeholder="John"
+              />
             </Field>
             <Field>
               <FieldLabel htmlFor="lastName">Last Name</FieldLabel>
-              <Input id="lastName" name="lastName" type="text" required placeholder="Doe" />
+              <Input
+                id="lastName"
+                name="lastName"
+                type="text"
+                {...PERSON_NAME_INPUT}
+                autoComplete="family-name"
+                required
+                placeholder="Doe"
+              />
             </Field>
           </div>
 
@@ -90,13 +113,20 @@ export function SignupBusinessForm({
               name="email"
               type="email"
               autoComplete="email"
+              maxLength={EMAIL_INPUT.maxLength}
               required
               placeholder="owner@mybusiness.com"
             />
           </Field>
           <Field>
             <FieldLabel htmlFor="password">Password</FieldLabel>
-            <Input id="password" name="password" type="password" required placeholder="********" />
+            <Input
+              id="password"
+              name="password"
+              {...NEW_PASSWORD_INPUT}
+              required
+              placeholder="********"
+            />
           </Field>
 
           <FieldSeparator className="my-2" />
@@ -107,6 +137,7 @@ export function SignupBusinessForm({
               id="storeName"
               name="storeName"
               type="text"
+              {...STORE_NAME_INPUT}
               required
               placeholder="Acme Corp"
               onChange={handleStoreNameChange}
@@ -118,6 +149,9 @@ export function SignupBusinessForm({
               id="storeSlug"
               name="storeSlug"
               type="text"
+              {...STORE_SLUG_INPUT}
+              autoCapitalize="none"
+              spellCheck={false}
               required
               placeholder="acme-corp"
               value={storeSlug}

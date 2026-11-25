@@ -39,13 +39,17 @@ export class MergeBuyerCartUseCase {
       tenantId,
       // Server lines first: they keep their position and win the line cap; dedupe keeps the max.
       resolve: async (live: BuyerCartRecord | null): Promise<NormalizedBuyerCart> =>
-        this.service.normalize(tenantId, [
-          ...(live?.lines ?? []).map((line: BuyerCartStoredLine): CartLineCandidate => ({
-            productId: line.productId,
-            quantity: line.quantity,
-          })),
-          ...dto.items,
-        ]),
+        this.service.normalize(
+          tenantId,
+          [
+            ...(live?.lines ?? []).map((line: BuyerCartStoredLine): CartLineCandidate => ({
+              productId: line.productId,
+              quantity: line.quantity,
+            })),
+            ...dto.items,
+          ],
+          dto.userId,
+        ),
     });
   }
 }

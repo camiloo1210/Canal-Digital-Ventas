@@ -15,14 +15,6 @@ const input = {
   password: 'secret-123',
 };
 
-function counterBytes(): (length: number) => Uint8Array {
-  let call = 0;
-  return (length: number): Uint8Array => {
-    call += 1;
-    return new Uint8Array(length).fill(call);
-  };
-}
-
 function makeAuth(overrides: Partial<AuthPort> = {}): AuthPort {
   return {
     signInWithEmail: vi.fn().mockResolvedValue({ userId: 'u1' }),
@@ -45,7 +37,7 @@ function makeAdmin(overrides: Partial<AdminAuthPort> = {}): AdminAuthPort {
 }
 
 function generator(): StaffEmailGenerator {
-  return new StaffEmailGenerator(counterBytes());
+  return new StaffEmailGenerator();
 }
 
 describe('CreateStaffAccountUseCase with the admin key', (): void => {
@@ -54,7 +46,7 @@ describe('CreateStaffAccountUseCase with the admin key', (): void => {
     const admin = makeAdmin();
     const result = await new CreateStaffAccountUseCase(auth, admin, generator()).execute(input);
     expect(result.userId).toBe('u1');
-    expect(result.email).toMatch(/^ana-perez\.[a-z2-7]{6}@tienda\.staff\.invalid$/);
+    expect(result.email).toBe('ana.perez@tienda.staff.invalid');
     expect(admin.createConfirmedUser).toHaveBeenCalledWith(result.email, 'secret-123', 'tenant-1');
     expect(auth.signInWithEmail).toHaveBeenCalledWith(result.email, 'secret-123');
     expect(auth.signUpWithEmailDetailed).not.toHaveBeenCalled();
@@ -74,6 +66,11 @@ describe('CreateStaffAccountUseCase with the admin key', (): void => {
     expect(createConfirmedUser).toHaveBeenCalledTimes(3);
     const emails = createConfirmedUser.mock.calls.map((call: string[]): string => call[0]);
     expect(new Set(emails).size).toBe(3);
+    expect(emails).toEqual([
+      'ana.perez@tienda.staff.invalid',
+      'ana.perez2@tienda.staff.invalid',
+      'ana.perez3@tienda.staff.invalid',
+    ]);
     expect(result.email).toBe(emails[2]);
   });
 

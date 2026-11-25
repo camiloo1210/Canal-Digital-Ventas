@@ -37,8 +37,10 @@ describe('DeliverOrderNotificationUseCase', (): void => {
     ['OrderPaidEvent', 'paid'],
     ['OrderProcessingEvent', 'processing'],
     ['OrderShippedEvent', 'shipped'],
+    ['OrderShipmentUpdatedEvent', 'shipment_updated'],
     ['OrderDeliveredEvent', 'delivered'],
     ['OrderCancelledEvent', 'cancelled'],
+    ['OrderRefundedEvent', 'refunded'],
   ])(
     'delivers %s using trusted tenant recipient data before completing',
     async (eventType: string, type: string): Promise<void> => {
