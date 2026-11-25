@@ -36,18 +36,20 @@ describe('dashboard navigation', (): void => {
       false,
     );
   });
-  it('groups every destination exactly once, preserving order and hiding empty groups', (): void => {
+  it('puts daily work first and keeps the personal profile in the account menu', (): void => {
     const all = groupDashboardNavigation(dashboardNavigation.map((item): string => item.key));
-    expect(all.map((group): string => group.key)).toEqual([
-      'operation',
-      'catalog',
-      'store',
-      'account',
+    expect(
+      all.map((group): [string, string[]] => [
+        group.key,
+        group.items.map((item): string => item.key),
+      ]),
+    ).toEqual([
+      ['operation', ['overview', 'orders']],
+      ['catalog', ['products', 'categories']],
+      ['business', ['businessIntelligence', 'store', 'integrations', 'users']],
     ]);
-    expect(all.flatMap((group): string[] => group.items.map((item): string => item.key))).toEqual(
-      dashboardNavigation.map((item): string => item.key),
-    );
-    const limited = groupDashboardNavigation(['overview', 'profile']);
-    expect(limited.map((group): string => group.key)).toEqual(['operation', 'account']);
+    expect(
+      groupDashboardNavigation(['overview', 'profile']).map((group): string => group.key),
+    ).toEqual(['operation']);
   });
 });

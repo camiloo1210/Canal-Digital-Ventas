@@ -9,6 +9,7 @@ import {
 } from '@/features/orders/queries/seller-orders-query';
 import { SellerOrdersTable } from '@/features/orders/components/seller-orders-table';
 import { SellerOrderDetails } from '@/features/orders/components/seller-order-details';
+import { SellerOrdersScreen } from '@/features/orders/components/seller-orders-screen';
 import type { SellerOrderReadModel } from '@canaldigital/packages/core';
 
 vi.mock('next-intl/server', (): object => ({
@@ -38,6 +39,19 @@ vi.mock('@/features/orders/components/seller-order-status-form', (): object => (
 vi.mock('@/features/orders/components/order-status-badge', (): object => ({
   OrderStatusBadge: ({ status }: { status: string }): React.JSX.Element => <span>{status}</span>,
 }));
+vi.mock('@/features/dashboard/queries/dashboard-context.query', (): object => ({
+  requireDashboardPermission: async (): Promise<{ userId: string; tenantId: string }> => ({
+    userId: 'actor',
+    tenantId: '550e8400-e29b-41d4-a716-446655440001',
+  }),
+}));
+vi.mock('@/components/page-header', (): object => ({ PageHeader: (): null => null }));
+vi.mock('@/features/orders/components/seller-orders-results', (): object => ({
+  SellerOrdersResults: (): null => null,
+}));
+vi.mock('@/features/dashboard/components/catalog-results', (): object => ({
+  CatalogResultsSkeleton: (): null => null,
+}));
 
 const order: SellerOrderReadModel = {
   id: '550e8400-e29b-41d4-a716-446655440000',
@@ -54,6 +68,17 @@ const order: SellerOrderReadModel = {
 };
 
 describe('seller order URL and queue', (): void => {
+  it('marks the active queue and preserves search and business when switching queues', async (): Promise<void> => {
+    const html = renderToStaticMarkup(
+      await SellerOrdersScreen({
+        searchParams: Promise.resolve({ q: 'ORD-51', status: 'paid', page: '3', order: order.id }),
+      }),
+    );
+    expect(html).toMatch(/<a(?=[^>]*aria-current="page")(?=[^>]*status=paid)[^>]*>/);
+    expect(html).toContain(
+      'href="/dashboard/orders?q=ORD-51&amp;status=processing&amp;tenant=550e8400-e29b-41d4-a716-446655440001"',
+    );
+  });
   it('shows available tracking to an authorized read-only seller', async (): Promise<void> => {
     const html = renderToStaticMarkup(
       await SellerOrderDetails({

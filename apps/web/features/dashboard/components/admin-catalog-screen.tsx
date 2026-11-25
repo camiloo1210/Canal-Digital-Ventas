@@ -3,7 +3,8 @@ import { TenantLink as Link } from '@/features/dashboard/components/tenant-scope
 import { Plus } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { requireDashboardPermission } from '@/features/dashboard/queries/dashboard-context.query';
-import { UserPermission } from '@canaldigital/packages/core';
+import { UserPermission, type AdminCatalogCategoryOption } from '@canaldigital/packages/core';
+import { getAdminCatalogReadRepository } from '@/features/dashboard/di/dashboard.di';
 import {
   parseCatalogQuery,
   type CatalogKind,
@@ -33,6 +34,18 @@ export async function AdminCatalogScreen({
   );
   const query = parseCatalogQuery(params, kind);
   const title = t(kind === 'products' ? 'productsTitle' : 'categoriesTitle');
+  let categoryOptions: AdminCatalogCategoryOption[] | null = [];
+  if (kind === 'products') {
+    try {
+      categoryOptions = await getAdminCatalogReadRepository().listProductCategoriesForManager(
+        userId,
+        tenantId,
+      );
+    } catch (error: unknown) {
+      console.error('[AdminCatalog] Could not load category options', error);
+      categoryOptions = null;
+    }
+  }
   return (
     <TenantScope tenantId={tenantId}>
       <div className="flex min-w-0 flex-1 flex-col">
@@ -57,7 +70,7 @@ export async function AdminCatalogScreen({
               {t(kind === 'products' ? 'newProduct' : 'newCategory')}
             </Button>
           </header>
-          <CatalogToolbar kind={kind} query={query} />
+          <CatalogToolbar kind={kind} query={query} categoryOptions={categoryOptions} />
           <Suspense
             key={JSON.stringify(query)}
             fallback={<CatalogResultsSkeleton label={t('loading')} />}

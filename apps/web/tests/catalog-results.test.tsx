@@ -38,7 +38,10 @@ describe('catalog recovery and pagination', (): void => {
     vi.clearAllMocks();
   });
   it('keeps actor and tenant server scoped and distinguishes no matches from a new catalog', async (): Promise<void> => {
-    const query = parseCatalogQuery({ q: 'missing', status: 'archived' }, 'products');
+    const query = parseCatalogQuery(
+      { category: '550e8400-e29b-41d4-a716-446655440000' },
+      'products',
+    );
     mocks.products.mockResolvedValue({ items: [], totalItems: 0, totalPages: 1, currentPage: 1 });
     const html = renderToStaticMarkup(
       await CatalogResults({ kind: 'products', query, userId: 'actor', tenantId: 'tenant' }),
@@ -104,13 +107,21 @@ describe('catalog recovery and pagination', (): void => {
     await expect(
       CatalogResults({
         kind: 'products',
-        query: parseCatalogQuery({ q: 'product', status: 'active', page: '9' }, 'products'),
+        query: parseCatalogQuery(
+          {
+            q: 'product',
+            status: 'active',
+            page: '9',
+            category: '550e8400-e29b-41d4-a716-446655440000',
+          },
+          'products',
+        ),
         userId: 'actor',
         tenantId: 'tenant',
       }),
     ).rejects.toBe(signal);
     expect(mocks.redirect).toHaveBeenCalledWith(
-      '/dashboard/catalog/products?q=product&status=active&page=3&tenant=tenant',
+      '/dashboard/catalog/products?q=product&status=active&category=550e8400-e29b-41d4-a716-446655440000&page=3&tenant=tenant',
     );
   });
 });
